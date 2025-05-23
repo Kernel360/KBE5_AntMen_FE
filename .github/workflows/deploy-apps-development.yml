@@ -50,7 +50,7 @@ jobs:
           ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
         run: |
           docker build -f ${{ matrix.dockerfile }} -t $ECR_REGISTRY/${{ matrix.image }}:latest ${{ matrix.context }}
-          docker push $ECR_REGISTRY/${{ matrix.image }}:latest  
+          docker push $ECR_REGISTRY/${{ matrix.image }}:latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -79,7 +79,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           source: "docker-compose.yml"
-          target: ~/apps/client      
+          target: ~/apps/client
 
       - name: SSH into EC2 and restart containers
         uses: appleboy/ssh-action@v0.1.6
@@ -97,12 +97,12 @@ jobs:
 
             echo "정리 전 디스크 사용량:"
             df -h /
-            
+
             echo "미사용 리소스 정리 중..."
             docker container prune -f
             docker image prune -f
             docker network prune -f
-            
+
             echo "정리 후 디스크 사용량:"
             df -h /
 
