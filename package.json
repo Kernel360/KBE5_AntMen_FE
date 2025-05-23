@@ -1,0 +1,22 @@
+{
+    "name": "kbe5-antmen-fe",
+    "private": true,
+    "workspaces": [
+      "apps",
+      "admin"
+    ],
+    "scripts": {
+      "dev:admin": "yarn workspace admin start",
+      "dev:apps": "yarn workspace apps dev",
+      "dev": "concurrently \"yarn dev:admin\" \"yarn dev:apps\"",
+      "build:admin": "yarn workspace admin build",
+      "build:apps": "yarn workspace apps build",
+      "build": "yarn build:admin && yarn build:apps",
+      "lint": "yarn workspace admin lint && yarn workspace apps lint",
+      "clean": "yarn workspace admin clean && yarn workspace apps clean",
+      "install:admin": "yarn workspace admin install",
+      "install:apps": "yarn workspace apps install",
+      "install": "yarn install:admin && yarn install:apps"
+    },
+
+  }
