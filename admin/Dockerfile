@@ -2,9 +2,10 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY ../../package.json ../../yarn.lock ./
-COPY ../../packages ./packages
-COPY ./ ./
+# 루트 기준으로 복사 (context가 루트이기 때문)
+COPY package.json yarn.lock ./
+COPY packages ./packages
+COPY admin ./admin
 
 RUN yarn install --frozen-lockfile
 RUN yarn workspace admin build
