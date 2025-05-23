@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  users-app:
+    image: $ECR_REGISTRY/users-app:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=env
+
+  admin-app:
+    image: $ECR_REGISTRY/admin-app:latest
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=env

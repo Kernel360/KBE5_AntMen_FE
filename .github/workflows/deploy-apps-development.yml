@@ -1,0 +1,126 @@
+name: "CI/CD: Build & Deploy to EC2"
+
+on:
+  push:
+    branches: [feature/#1-cicd]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: users-app
+            dockerfile: apps/Dockerfile
+            context: .
+            image: users-app
+          - name: admin-app
+            dockerfile: admin/Dockerfile
+            context: .
+            image: admin-app
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      # - name: Build UI Package
+      #   run: yarn workspace @antmen/ui build
+
+      - name: Build ${{ matrix.name }}
+        run: |
+          if [ "${{ matrix.name }}" = "users-app" ]; then
+            yarn workspace apps build
+          else
+            yarn workspace admin build
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Docker image
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+        run: |
+          docker build -f ${{ matrix.dockerfile }} -t $ECR_REGISTRY/${{ matrix.image }}:latest ${{ matrix.context }}
+          docker push $ECR_REGISTRY/${{ matrix.image }}:latest  
+
+  deploy:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Clear client folder before upload
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            sudo rm -rf ~/apps/client
+            mkdir -p ~/apps/client
+            sudo chown -R $USER:$USER ~/apps/client
+
+      - name: Copy docker-compose.yml
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          source: "docker-compose.yml"
+          target: ~/apps/client      
+
+      - name: SSH into EC2 and restart containers
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            cd ~/apps/client
+
+            cat <<EOF > .env
+            ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}
+            EOF
+
+            echo "정리 전 디스크 사용량:"
+            df -h /
+            
+            echo "미사용 리소스 정리 중..."
+            docker container prune -f  # 중지된 컨테이너 삭제
+            docker image prune -f      # 사용하지 않는 이미지 삭제
+            docker network prune -f    # 사용하지 않는 네트워크 삭제
+            
+            # 정리 후 디스크 사용량 확인
+            echo "정리 후 디스크 사용량:"
+            df -h /
+
+            # AWS ECR 로그인
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+
+            # 두 이미지 모두 pull
+            docker pull ${{ secrets.ECR_REGISTRY }}/users-app:latest
+            docker pull ${{ secrets.ECR_REGISTRY }}/admin-app:latest
+
+            # 컨테이너 재시작
+            docker compose down
+            docker compose up -d
+
+            # .env 파일 삭제
+            rm -f .env

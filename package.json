@@ -3,7 +3,8 @@
     "private": true,
     "workspaces": [
       "apps",
-      "admin"
+      "admin",
+      "packages/*"
     ],
     "scripts": {
       "dev:admin": "yarn workspace admin start",
@@ -16,7 +17,10 @@
       "clean": "yarn workspace admin clean && yarn workspace apps clean",
       "install:admin": "yarn workspace admin install",
       "install:apps": "yarn workspace apps install",
+      "install:packages": "yarn workspace @antmen/ui install",
       "install": "yarn install:admin && yarn install:apps"
     },
-
+    "devDependencies": {
+      "concurrently": "^8.2.0"
+    }
   }
