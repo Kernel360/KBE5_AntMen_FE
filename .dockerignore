@@ -1,0 +1,13 @@
+node_modules
+.git
+.next
+build
+dist
+yarn-error.log
+*.log
+.DS_Store
+packages/ui/node_modules
+apps/node_modules
+admin/node_modules
+apps/.next
+admin/build
