@@ -1,0 +1,22 @@
+services:
+  users-app:
+    build:
+      context: .
+      dockerfile: apps/Dockerfile
+    image: $ECR_REGISTRY/users-app:latest
+    container_name: apps
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=env
+
+  admin-app:
+    build:
+      context: .
+      dockerfile: admin/Dockerfile
+    image: $ECR_REGISTRY/admin-app:latest
+    container_name: admin
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=env
