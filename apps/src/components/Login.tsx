@@ -6,36 +6,49 @@ import { useForm } from 'react-hook-form';
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { LoginGateway } from './LoginGateway';
+import { useLoginOrigin } from './LoginOrigin';
 
 interface LoginFormData {
-  username: string;
-  password: string;
+  userLoginId: string;
+  userPassword: string;
 }
 
 export function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const code = searchParams?.get('code');
+
+  // 🎯 LoginOrigin Hook 사용
+  const { login } = useLoginOrigin();
+
   const {
     register,
     handleSubmit,
     formState: { errors }
   } = useForm<LoginFormData>();
 
+  // 구글 인가코드 받을 경우 회원 유무 결정 후 로그인 처리
+  if (code) {
+    return <LoginGateway />;
+  }
+
   const onSubmit = async (data: LoginFormData) => {
     console.log('Login attempt with:', data);
+
+    await login(data);
     // 임시로 세션 체크 없이 메인 페이지로 이동
-    router.push('/');
+    //router.push('/');
   };
 
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
 
-      // 임시로 세션 체크 없이 메인 페이지로 이동
-      // router.push('/');
-
       // 구글 인가코드 받기
-      router.push('https://accounts.google.com/o/oauth2/auth?client_id=82365469614-in9gvgoldustrh72dch53nskciqu32fe.apps.googleusercontent.com&redirect_uri=http://localhost:3000/login/redirect&response_type=code&scope=openid email profile');
+      router.push('https://accounts.google.com/o/oauth2/auth?client_id=82365469614-in9gvgoldustrh72dch53nskciqu32fe.apps.googleusercontent.com&redirect_uri=http://localhost:3000/login&response_type=code&scope=openid email profile');
       // await signIn('google', { callbackUrl: '/' });
     } catch (error) {
       console.error('Google login error:', error);
@@ -64,7 +77,7 @@ export function Login() {
           <label className="block text-sm text-gray-600">아이디</label>
           <input
             type="text"
-            {...register('username', {
+            {...register('userLoginId', {
               required: '아이디를 입력해주세요',
               minLength: {
                 value: 4,
@@ -74,8 +87,8 @@ export function Login() {
             placeholder="아이디를 입력하세요"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0fbcd6] text-gray-700"
           />
-          {errors.username && (
-            <p className="text-red-500 text-sm mt-1">{errors.username.message}</p>
+          {errors.userLoginId && (
+            <p className="text-red-500 text-sm mt-1">{errors.userLoginId.message}</p>
           )}
         </div>
         
@@ -83,7 +96,7 @@ export function Login() {
           <label className="block text-sm text-gray-600">비밀번호</label>
           <input
             type="password"
-            {...register('password', {
+            {...register('userPassword', {
               required: '비밀번호를 입력해주세요',
               minLength: {
                 value: 6,
@@ -93,8 +106,8 @@ export function Login() {
             placeholder="비밀번호를 입력하세요"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0fbcd6] text-gray-700"
           />
-          {errors.password && (
-            <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+          {errors.userPassword && (
+            <p className="text-red-500 text-sm mt-1">{errors.userPassword.message}</p>
           )}
         </div>
 
