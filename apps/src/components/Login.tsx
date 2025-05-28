@@ -30,8 +30,12 @@ export function Login() {
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
+
       // 임시로 세션 체크 없이 메인 페이지로 이동
-      router.push('/');
+      // router.push('/');
+
+      // 구글 인가코드 받기
+      router.push('https://accounts.google.com/o/oauth2/auth?client_id=82365469614-in9gvgoldustrh72dch53nskciqu32fe.apps.googleusercontent.com&redirect_uri=http://localhost:3000/login/redirect&response_type=code&scope=openid email profile');
       // await signIn('google', { callbackUrl: '/' });
     } catch (error) {
       console.error('Google login error:', error);
