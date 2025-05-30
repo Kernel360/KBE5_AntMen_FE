@@ -65,7 +65,7 @@ export function useLoginOrigin() {
 
             if (result.success && result.token) {
                 // 성공 처리
-                localStorage.setItem('auth-token', result.token);
+                localStorage.setItem('auth-page', result.token);
                 localStorage.setItem('login-time', new Date().toISOString());
 
                 if (result.user) {

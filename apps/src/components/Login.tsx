@@ -36,35 +36,26 @@ export function Login() {
   }
 
   const onSubmit = async (data: LoginFormData) => {
-    console.log('Login attempt with:', data);
-
+    // 일반 로그인 처리
     await login(data);
-    // 임시로 세션 체크 없이 메인 페이지로 이동
-    //router.push('/');
   };
 
   const handleGoogleLogin = async () => {
     try {
       setIsLoading(true);
 
-      // 구글 인가코드 받기
-      router.push('https://accounts.google.com/o/oauth2/auth?client_id=82365469614-in9gvgoldustrh72dch53nskciqu32fe.apps.googleusercontent.com&redirect_uri=http://localhost:3000/login&response_type=code&scope=openid email profile');
-      // await signIn('google', { callbackUrl: '/' });
+      // 구글 OAuth URL 생성
+      const googleOAuthUrl = `${process.env.NEXT_PUBLIC_GOOGLE_AUTH_URL}?` +
+          `client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&` +
+          `redirect_uri=${process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI}&` +
+          `response_type=${process.env.NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE}&` +
+          `scope=${encodeURIComponent(process.env.NEXT_PUBLIC_GOOGLE_SCOPE as string)}`;
+
+      // 구글 인가코드 받기 위해 구글 로그인 페이지로 이동
+      window.location.href = googleOAuthUrl;
+
     } catch (error) {
       console.error('Google login error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFacebookLogin = async () => {
-    try {
-      setIsLoading(true);
-      // 임시로 세션 체크 없이 메인 페이지로 이동
-      router.push('/');
-      // await signIn('facebook', { callbackUrl: '/' });
-    } catch (error) {
-      console.error('Facebook login error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -126,14 +117,6 @@ export function Login() {
           className="w-full flex items-center justify-center gap-3 bg-white text-gray-700 py-3 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50">
           <Image src="/google-icon.svg" alt="Google" width={20} height={20} />
           <span>Login with Google</span>
-        </button>
-
-        <button
-          onClick={handleFacebookLogin}
-          disabled={isLoading}
-          className="w-full flex items-center justify-center gap-3 bg-[#1877F2] text-white py-3 px-4 rounded-lg border border-gray-300 hover:bg-[#1864D6] transition-colors disabled:opacity-50">
-          <Image src="/facebook-icon.svg" alt="Facebook" width={20} height={20} />
-          <span>Login with Facebook</span>
         </button>
 
         <div className="text-center text-gray-500">
