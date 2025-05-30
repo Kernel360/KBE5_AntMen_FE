@@ -68,7 +68,7 @@ export function LoginGateway() {
             if (result.success && result.token) {
                 console.log('✅ 로그인 성공, 토큰:', result.token);
 
-                localStorage.setItem('auth-page', result.token);
+                localStorage.setItem('auth-token', result.token);
                 localStorage.setItem('login-time', new Date().toISOString());
 
                 console.log('🏠 메인 페이지로 이동');
