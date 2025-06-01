@@ -47,6 +47,11 @@ interface CategoryOption {
   notice?: string;
 }
 
+interface RecommendedTime {
+  minutes: number;
+  area: number;
+}
+
 interface ReservationRequest {
   customerId: number;
   reservationCreatedAt: string;
@@ -96,23 +101,26 @@ export default function ReservationForm() {
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
+  const [warningMessage, setWarningMessage] = useState('');
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [isVisitTimeModalOpen, setIsVisitTimeModalOpen] = useState(false);
-  const [selectedHours, setSelectedHours] = useState(4);
+  const [selectedHours, setSelectedHours] = useState(2);
   const [selectedVisitTime, setSelectedVisitTime] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const [memo, setMemo] = useState('');
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
-  const standardHours = 4;
+  const standardHours = 2;
   const basePrice = 40000;
-  const pricePerHour = 10000;
+  const pricePerHour = 20000;
   const [selectedCategoryOptions, setSelectedCategoryOptions] = useState<number[]>([]);
   const [isCategoryOptionsModalOpen, setIsCategoryOptionsModalOpen] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [recommendedTime, setRecommendedTime] = useState<RecommendedTime>({ minutes: 240, area: 50 });
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
 
   // 방문 가능 시간대 (9시 ~ 18시)
   const visitTimeSlots: string[] = Array.from({ length: 19 }, (_, i) => {
@@ -158,6 +166,21 @@ export default function ReservationForm() {
 
   const handleNext = async () => {
     if (!selectedDate || !selectedVisitTime || !selectedCategory) {
+      setWarningMessage(
+        !selectedCategory 
+          ? '서비스를 선택해주세요.'
+          : !selectedDate 
+            ? '날짜를 선택해주세요.'
+            : '방문 시간을 선택해주세요.'
+      );
+      setShowWarning(true);
+      setTimeout(() => setShowWarning(false), 3000);
+      return;
+    }
+
+    // 추천 시간보다 적은 시간으로 예약 시도할 경우
+    if (recommendedTime && selectedHours < Math.ceil(recommendedTime.minutes / 60)) {
+      setWarningMessage(`${Math.floor(recommendedTime.area)}평 기준 ${Math.ceil(recommendedTime.minutes / 60)}시간이 추천됩니다.`);
       setShowWarning(true);
       setTimeout(() => setShowWarning(false), 3000);
       return;
@@ -252,9 +275,17 @@ export default function ReservationForm() {
   const handleTimeChange = (increment: boolean) => {
     setSelectedHours(prev => {
       const newHours = increment ? prev + 1 : prev - 1;
-      if (newHours < standardHours || newHours > standardHours * 2) {
+      if (newHours < standardHours || newHours > 8) {
         return prev;
       }
+      
+      // 추천 시간보다 적은 시간 선택 시 경고 표시
+      if (recommendedTime && newHours < Math.ceil(recommendedTime.minutes / 60)) {
+        setShowTimeWarning(true);
+      } else {
+        setShowTimeWarning(false);
+      }
+      
       return newHours;
     });
   };
@@ -387,7 +418,16 @@ export default function ReservationForm() {
           <h2 className="text-lg font-bold mb-4">시간 선택</h2>
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-[#666666] mb-1.5 pl-2">서비스 시간</p>
+              <div className="flex items-center gap-2 mb-1.5 pl-2">
+                <p className="text-sm text-[#666666]">서비스 시간</p>
+                {recommendedTime && (
+                  <div className="flex items-center">
+                    <span className="text-xs text-[#0fbcd6] font-medium">
+                      알고리즘 기반 &middot; {Math.floor(recommendedTime.area)}평 {Math.floor(recommendedTime.minutes / 60)}시간 추천
+                    </span>
+                  </div>
+                )}
+              </div>
               <div 
                 className="flex justify-between items-center p-3.5 bg-[#F8F8F8] rounded-xl cursor-pointer"
                 onClick={() => setIsTimeModalOpen(true)}
@@ -581,6 +621,18 @@ export default function ReservationForm() {
 
               {/* Content */}
               <div className="p-6">
+                {recommendedTime && (
+                  <div className="mb-6 bg-[#0fbcd6] text-white p-4">
+                    <div className="mb-2">
+                      <span className="font-medium">사용자 맞춤 알고리즘 기반</span>
+                    </div>
+                    <p className="text-sm opacity-90">
+                      고객님의 공간({Math.floor(recommendedTime.area)}평)에 최적화된 청소 시간은 {Math.floor(recommendedTime.minutes / 60)}시간입니다.
+                      <br />실제 현장 상황에 따라 추가 시간이 필요할 수 있습니다.
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex justify-center items-center gap-8 mb-8">
                   <button
                     onClick={() => handleTimeChange(false)}
@@ -593,18 +645,19 @@ export default function ReservationForm() {
                   >
                     -
                   </button>
+                  {/* TODO 처음 표시되는 기본시간을 추천시간으로 변경 */}
                   <div className="text-center">
                     <p className="text-3xl font-bold text-[#333333]">{selectedHours}시간</p>
-                    <p className="text-sm text-[#666666] mt-1">표준 시간은 {standardHours}시간입니다.</p>
+                    <p className="text-sm text-[#666666] mt-1">기본 시간은 {standardHours}시간입니다.</p>
                   </div>
                   <button
                     onClick={() => handleTimeChange(true)}
                     className={`w-12 h-12 rounded-full flex items-center justify-center
-                      ${selectedHours >= standardHours * 2 
+                      ${selectedHours >= 8
                         ? 'bg-[#F8F8F8] text-[#CCCCCC]' 
                         : 'bg-white border-2 border-[#0fbcd6] text-[#0fbcd6]'
                       }`}
-                    disabled={selectedHours >= standardHours * 2}
+                    disabled={selectedHours >= 8}
                   >
                     +
                   </button>
@@ -614,7 +667,7 @@ export default function ReservationForm() {
                 <div className="bg-[#F8F8F8] rounded-2xl p-6">
                   <div className="flex justify-between items-center mb-4">
                     <div>
-                      <p className="text-[#666666] mb-1">기본 요금 (4시간)</p>
+                      <p className="text-[#666666] mb-1">기본 요금 (2시간)</p>
                       <p className="text-[#666666]">추가 시간당</p>
                     </div>
                     <div className="text-right">
@@ -637,6 +690,11 @@ export default function ReservationForm() {
                         {calculatePrice(selectedHours).toLocaleString()}원
                       </span>
                     </div>
+                    {showTimeWarning && (
+                      <p className="text-sm text-[#FF4444] mt-2">
+                        * {Math.floor(recommendedTime.area)}평 기준 {Math.ceil(recommendedTime.minutes / 60)}시간이 추천됩니다.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -804,13 +862,7 @@ export default function ReservationForm() {
       {showWarning && (
         <div className="fixed bottom-[100px] left-1/2 -translate-x-1/2 w-[328px] py-4 bg-[#333333] rounded-xl shadow-lg">
           <p className="text-center text-white font-medium">
-            {!selectedCategory 
-              ? '서비스를 선택해주세요.'
-              : !selectedDate 
-                ? '날짜를 선택해주세요.'
-                : !selectedVisitTime 
-                  ? '방문 시간을 선택해주세요.'
-                  : '예약 생성 중 오류가 발생했습니다.'}
+            {warningMessage}
           </p>
         </div>
       )}
