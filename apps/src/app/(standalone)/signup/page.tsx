@@ -4,7 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-export default function SignupSelectPage() {
+export default function SignupPage() {
   const router = useRouter();
 
   const handleSelectType = (type: 'manager' | 'customer') => {

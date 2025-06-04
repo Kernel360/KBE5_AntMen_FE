@@ -7,8 +7,8 @@ import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
-import { LoginGateway } from '../features/auth/ui/LoginGateway';
-import { useLoginOrigin } from '../features/auth/ui/LoginOrigin';
+import { LoginGateway } from '@/features/auth/ui/LoginGateway';
+import { useLoginOrigin } from '@/features/auth/ui/LoginOrigin';
 
 interface LoginFormData {
   userLoginId: string;
@@ -121,7 +121,7 @@ export function Login() {
 
         <div className="text-center text-gray-500">
           <span>계정이 없으신가요? </span>
-          <Link href="/signup/select" className="text-[#F97316] hover:underline">
+          <Link href="/signup" className="text-[#F97316] hover:underline">
             회원가입
           </Link>
         </div>
