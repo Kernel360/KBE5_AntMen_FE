@@ -14,17 +14,6 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - name: users-app
-            dockerfile: apps/Dockerfile
-            context: .
-            image: users-app
-          # - name: admin-app
-          #   dockerfile: admin/Dockerfile
-          #   context: .
-          #   image: admin-app
 
     steps:
       - name: Checkout source code
@@ -54,6 +43,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and Push Docker image
+        if: steps.changes.outputs.any_changed == 'true'
         env:
           ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
         run: |
