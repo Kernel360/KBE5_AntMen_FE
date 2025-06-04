@@ -83,7 +83,7 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
         <div className="flex h-[400px] items-center justify-center" />
 
         {/* Service Notice */}
-        <div className="flex justify-center">
+        <div className="flex justify-center py-4">
           <span className="font-inter text-sm font-medium text-[#666666]">
             서비스 가능지역
           </span>
