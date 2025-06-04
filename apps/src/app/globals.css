@@ -2,20 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  @font-face {
+    font-family: 'Apple SD Gothic Neo';
+    src: local('Apple SD Gothic Neo');
+    font-weight: 400;
+  }
+  
+  @font-face {
+    font-family: 'Apple SD Gothic Neo';
+    src: local('Apple SD Gothic Neo');
+    font-weight: 600;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 242, 242, 247;
 }
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+} 

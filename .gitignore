@@ -12,9 +12,9 @@ dist
 .next
 
 # misc
-.env
+apps/.env
 .DS_Store
-.env.local
+apps/.env
 .env.development.local
 .env.test.local
 .env.production.local
@@ -26,3 +26,5 @@ yarn-error.log*
 # IDE
 .idea
 .vscode
+
+.package-lock.json
