@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import AccountInfoPageUI from "@/components/account/AccountInfoPageUI";
+import AccountInfo from "@/features/account/ui/AccountInfo";
 
 export default function AccountPage() {
-  return <AccountInfoPageUI />;
+  return <AccountInfo />;
 } 
