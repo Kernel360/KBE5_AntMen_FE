@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { MAX_MANAGER_COUNT } from '@/constants/manager';
-import { MANAGER_NAMES } from '@/constants/manager';
+import { MAX_MANAGER_COUNT } from '@/widgets/manager/model/manager';
+import { MANAGER_NAMES } from '@/widgets/manager/model/manager';
 
 interface BottomSectionProps {
   selectedManagers: string[];

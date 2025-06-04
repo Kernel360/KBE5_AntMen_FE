@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
-import { MANAGER_LIST } from '@/constants/manager';
+import { MANAGER_LIST } from '@/widgets/manager/model/manager';
 
 interface ManagerListProps {
   selectedManagers: string[];

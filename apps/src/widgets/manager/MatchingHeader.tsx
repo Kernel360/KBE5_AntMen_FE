@@ -2,7 +2,7 @@
 
 import { ChevronLeftIcon as ChevronLeftIconOutline } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
-import { MAX_MANAGER_COUNT } from '@/constants/manager';
+import { MAX_MANAGER_COUNT } from '@/widgets/manager/model/manager';
 
 interface MatchingHeaderProps {
   selectedCount: number;

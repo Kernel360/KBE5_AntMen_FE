@@ -47,15 +47,21 @@ export function BottomNavigation() {
       />
       <NavItem
         icon={<CalendarIcon className="w-full h-full" />}
+        label="실시간 상담"
+        isActive={pathname === '/chats'}
+        href="/chats"
+      />
+      <NavItem
+        icon={<CalendarIcon className="w-full h-full" />}
         label="내 예약"
-        isActive={pathname === '/reservations'}
-        href="/reservations"
+        isActive={pathname === '/'}
+        href="/"
       />
       <NavItem
         icon={<BellIcon className="w-full h-full" />}
-        label="활동소식"
-        isActive={pathname === '/notifications'}
-        href="/notifications"
+        label="이벤트"
+        isActive={pathname === '/events'}
+        href="/events"
         hasBadge
       />
       <NavItem
