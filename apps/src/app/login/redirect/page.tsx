@@ -1,5 +1,4 @@
 import { LoginGateway } from '@/features/auth/ui/LoginGateway';
-import {Login} from "@/components/Login";
 
 export default function LoginRedirect() {
     return (

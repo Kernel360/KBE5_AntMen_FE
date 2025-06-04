@@ -1,20 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { Header } from '@/widgets/header/Header';
-import { PostTabs } from '@/widgets/tabs/PostTabs';
-import { PostList } from '@/widgets/post/PostList';
+import { HomeHeader } from '@/features/home/ui/HomeHeader';
+import { CategorySection } from '@/features/home/ui/CategorySection';
+import { NoticeSection } from '@/features/home/ui/NoticeSection';
+
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<'notice' | 'work'>('notice');
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="pt-[88px]">
-        <PostTabs activeTab={activeTab} onTabChange={setActiveTab} />
-        <PostList />
-      </div>
+      <HomeHeader />
+      <CategorySection />
+      <NoticeSection />
     </main>
   );
 } 

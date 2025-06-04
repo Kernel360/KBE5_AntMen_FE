@@ -7,8 +7,8 @@ import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSearchParams } from 'next/navigation';
-import { LoginGateway } from '../features/auth/ui/LoginGateway';
-import { useLoginOrigin } from '../features/auth/ui/LoginOrigin';
+import { LoginGateway } from '@/features/auth/ui/LoginGateway';
+import { useLoginOrigin } from '@/features/auth/ui/LoginOrigin';
 
 interface LoginFormData {
   userLoginId: string;

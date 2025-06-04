@@ -1,7 +1,7 @@
 "use client";
 
+import MoreMenu from "@/features/more/ui/MoreMenu";
 import React from "react";
-import MoreMenu from "@/components/more/MoreMenu";
 
 export default function MorePage() {
   return <MoreMenu />;
