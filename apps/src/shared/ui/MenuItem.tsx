@@ -9,10 +9,9 @@ interface MenuItemProps {
 export const MenuItem = ({ icon: Icon, label, href = "#" }: MenuItemProps) => {
   return (
     <Link href={href} className="flex justify-between items-center w-full px-4 py-4">
+      <a>
       <div className="flex items-center gap-4">
-        <div className="w-6 h-6 flex items-center justify-center text-gray-800">
-          <Icon />
-        </div>
+        <Icon className="w-6 h-6 flex items-center justify-center text-gray-800" />
         <span className="text-black text-base font-medium">{label}</span>
       </div>
       <svg 
@@ -31,6 +30,8 @@ export const MenuItem = ({ icon: Icon, label, href = "#" }: MenuItemProps) => {
           strokeLinejoin="round"
         />
       </svg>
+      </a>
+
     </Link>
   );
 };

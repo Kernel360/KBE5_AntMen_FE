@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { MatchingHeader } from '@/widgets/manager/MatchingHeader';
 import { ManagerList } from '@/widgets/manager/ManagerList';
 import { BottomSection } from '@/widgets/manager/BottomSection';
-import { MAX_MANAGER_COUNT } from '@/constants/manager';
+import { MAX_MANAGER_COUNT } from '@/widgets/manager/model/manager';
 
 export default function MatchingPage() {
   const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
