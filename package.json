@@ -10,6 +10,7 @@
         "dev:admin": "yarn workspace admin start",
         "dev:apps": "yarn workspace apps dev",
         "dev": "concurrently \"yarn dev:admin\" \"yarn dev:apps\"",
+        "dev:apps:https": "yarn workspace apps dev:https",
         "build:admin": "yarn workspace admin build",
         "build:apps": "yarn workspace apps build",
         "build": "yarn build:admin && yarn build:apps",
@@ -18,10 +19,16 @@
         "install:admin": "yarn workspace admin install",
         "install:apps": "yarn workspace apps install",
         "install:packages": "yarn workspace @antmen/ui install",
-        "install": "yarn install:admin && yarn install:apps"
+        "install": "yarn install:admin && yarn install:apps",
+        "setup-https": "mkcert -install && mkcert localhost 127.0.0.1"
     },
     "devDependencies": {
-        "concurrently": "^8.2.0"
+        "@types/js-cookie": "^3.0.6",
+        "concurrently": "^8.2.0",
+        "mkcert": "^3.2.0"
     },
-    "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+    "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+    "dependencies": {
+        "js-cookie": "^3.0.5"
+    }
 }
