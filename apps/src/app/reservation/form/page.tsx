@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
@@ -25,17 +26,101 @@ interface TimeSlot {
   formatted: string;
 }
 
+interface Category {
+  id: number;
+  name: string;
+  description: string;
+}
+
+interface Option {
+  id: number;
+  name: string;
+  price: number;
+}
+
+interface CategoryOption {
+  id: number;
+  name: string;
+  price: number;
+  time: number;
+  description: string;
+  notice?: string;
+}
+
+interface RecommendedTime {
+  minutes: number;
+  area: number;
+}
+
+interface ReservationRequest {
+  customerId: number;
+  reservationCreatedAt: string;
+  reservationDate: string;
+  reservationTime: string;
+  categoryId: number;
+  reservationDuration: number;
+  reservationMemo: string;
+  reservationAmount: number;
+  additionalDuration: number;
+  optionIds: number[];
+}
+
+// 임시 데이터 (실제로는 API에서 가져와야 함)
+const categories: Category[] = [
+  { id: 1, name: '대청소', description: '일반 가정집 청소' },
+  { id: 2, name: '사무실 청소', description: '사무실, 상업공간 청소' },
+  { id: 3, name: '부분 청소', description: '이사 후 또는 입주 전 청소' },
+];
+
+const options: Option[] = [
+  { id: 1, name: '냉장고 청소', price: 20000 },
+  { id: 2, name: '베란다 청소', price: 15000 },
+  { id: 3, name: '화장실 청소', price: 10000 },
+];
+
+// 임시 카테고리별 옵션 데이터
+const TEMP_CATEGORY_OPTIONS: Record<number, CategoryOption[]> = {
+  1: [ // 대청소
+    { id: 1, name: "요리", price: 20000, time: 60, description: "요리와 청소가 필요하신 경우" },
+    { id: 2, name: "다림질", price: 15000, time: 60, description: "다림질 서비스가 필요하신 경우" },
+    { id: 3, name: "화장실 청소", price: 30000, time: 60, description: "화장실 청소가 필요하신 경우" }
+  ],
+  2: [ // 사무실 청소
+    { id: 4, name: "유리창 청소", price: 40000, time: 60, description: "유리창 청소가 필요하신 경우" },
+    { id: 5, name: "카페트 청소", price: 30000, time: 60, description: "카페트 청소가 필요하신 경우" }
+  ],
+  3: [ // 부분 청소
+    { id: 6, name: "베란다 청소", price: 20000, time: 30, description: "베란다 청소가 필요하신 경우" },
+    { id: 7, name: "곰팡이 제거", price: 40000, time: 60, description: "곰팡이 제거가 필요하신 경우" },
+    { id: 8, name: "냉장고 청소", price: 20000, time: 30, description: "냉장고 청소가 필요하신 경우" }
+  ]
+};
+
 export default function ReservationForm() {
+  const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
+  const [warningMessage, setWarningMessage] = useState('');
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [isVisitTimeModalOpen, setIsVisitTimeModalOpen] = useState(false);
-  const [selectedHours, setSelectedHours] = useState(4);
+  const [selectedHours, setSelectedHours] = useState(2);
   const [selectedVisitTime, setSelectedVisitTime] = useState<string | null>(null);
-  const standardHours = 4;
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
+  const [memo, setMemo] = useState('');
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
+  const standardHours = 2;
   const basePrice = 40000;
-  const pricePerHour = 10000;
+  const pricePerHour = 20000;
+  const [selectedCategoryOptions, setSelectedCategoryOptions] = useState<number[]>([]);
+  const [isCategoryOptionsModalOpen, setIsCategoryOptionsModalOpen] = useState(false);
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [recommendedTime, setRecommendedTime] = useState<RecommendedTime>({ minutes: 240, area: 50 });
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
 
   // 방문 가능 시간대 (9시 ~ 18시)
   const visitTimeSlots: string[] = Array.from({ length: 19 }, (_, i) => {
@@ -44,19 +129,120 @@ export default function ReservationForm() {
     return `${hour}:${minute}`;
   });
 
-  const handleNext = () => {
-    if (!selectedDate) {
+  // 현재 선택된 카테고리의 추가 옵션 목록
+  const currentCategoryOptions = selectedCategory ? categoryOptions[selectedCategory] : [];
+
+  // 카테고리별 옵션 데이터 가져오기
+  useEffect(() => {
+    if (!selectedCategory) {
+      setCategoryOptions([]);
+      return;
+    }
+
+    // TODO: API 구현 후 아래 주석 해제
+    // const fetchCategoryOptions = async () => {
+    //   setIsLoading(true);
+    //   setError(null);
+    //   try {
+    //     const response = await fetch(`/api/categories/${selectedCategory}/options`);
+    //     if (!response.ok) throw new Error('옵션을 불러오는데 실패했습니다.');
+    //     const data = await response.json();
+    //     setCategoryOptions(data);
+    //   } catch (err) {
+    //     setError(err instanceof Error ? err.message : '옵션을 불러오는데 실패했습니다.');
+    //     setCategoryOptions([]);
+    //   } finally {
+    //     setIsLoading(false);
+    //   }
+    // };
+
+    // 임시 데이터 사용
+    setIsLoading(true);
+    setTimeout(() => {
+      setCategoryOptions(TEMP_CATEGORY_OPTIONS[selectedCategory] || []);
+      setIsLoading(false);
+    }, 500); // 로딩 상태를 보여주기 위한 지연
+  }, [selectedCategory]);
+
+  const handleNext = async () => {
+    if (!selectedDate || !selectedVisitTime || !selectedCategory) {
+      setWarningMessage(
+        !selectedCategory 
+          ? '서비스를 선택해주세요.'
+          : !selectedDate 
+            ? '날짜를 선택해주세요.'
+            : '방문 시간을 선택해주세요.'
+      );
       setShowWarning(true);
       setTimeout(() => setShowWarning(false), 3000);
       return;
     }
-    // TODO: 다음 페이지로 이동
+
+    // 추천 시간보다 적은 시간으로 예약 시도할 경우
+    if (recommendedTime && selectedHours < Math.ceil(recommendedTime.minutes / 60)) {
+      setWarningMessage(`${Math.floor(recommendedTime.area)}평 기준 ${Math.ceil(recommendedTime.minutes / 60)}시간이 추천됩니다.`);
+      setShowWarning(true);
+      setTimeout(() => setShowWarning(false), 3000);
+      return;
+    }
+
+    try {
+      const requestData = {
+        customerId: 1, // TODO: 실제 로그인 사용자 ID로 대체
+        reservationCreatedAt: dayjs().format('YYYY-MM-DD'),
+        reservationDate: selectedDate.format('YYYY-MM-DD'),
+        reservationTime: selectedVisitTime,
+        categoryId: selectedCategory,
+        reservationDuration: Math.ceil(calculateTotalTime() / 60), // 총 시간을 시간 단위로 변환
+        reservationMemo: memo,
+        reservationAmount: calculateTotalPrice(),
+        additionalDuration: selectedHours - standardHours,
+        optionIds: selectedCategoryOptions
+      };
+
+      const response = await fetch('/api/reservations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (!response.ok) {
+        throw new Error('예약 생성 실패');
+      }
+
+      router.push('/reservation/success');
+    } catch (error) {
+      console.error('예약 생성 중 오류 발생:', error);
+      setShowWarning(true);
+      setTimeout(() => setShowWarning(false), 3000);
+    }
+  };
+
+  const calculateTotalPrice = () => {
+    const baseAmount = calculatePrice(selectedHours);
+    const optionsAmount = selectedCategoryOptions.reduce((total, optionId) => {
+      const option = categoryOptions.find((opt: CategoryOption) => opt.id === optionId);
+      return total + (option?.price || 0);
+    }, 0);
+    return baseAmount + optionsAmount;
+  };
+
+  const calculateTotalTime = () => {
+    const baseTime = selectedHours * 60;
+    const optionsTime = selectedCategoryOptions.reduce((total, optionId) => {
+      const option = categoryOptions.find((opt: CategoryOption) => opt.id === optionId);
+      return total + (option?.time || 0);
+    }, 0);
+    return baseTime + optionsTime;
   };
 
   const formatDate = (date: Dayjs) => {
+    const koreanDays = ['일', '월', '화', '수', '목', '금', '토'];
     return {
-      full: date.format('YYYY년 M월 D일'),
-      day: date.format('dddd')
+      full: date.format('YYYY.MM.DD'),
+      day: `(${koreanDays[date.day()]})`
     };
   };
 
@@ -89,9 +275,17 @@ export default function ReservationForm() {
   const handleTimeChange = (increment: boolean) => {
     setSelectedHours(prev => {
       const newHours = increment ? prev + 1 : prev - 1;
-      if (newHours < standardHours || newHours > standardHours * 2) {
+      if (newHours < standardHours || newHours > 8) {
         return prev;
       }
+      
+      // 추천 시간보다 적은 시간 선택 시 경고 표시
+      if (recommendedTime && newHours < Math.ceil(recommendedTime.minutes / 60)) {
+        setShowTimeWarning(true);
+      } else {
+        setShowTimeWarning(false);
+      }
+      
       return newHours;
     });
   };
@@ -110,33 +304,42 @@ export default function ReservationForm() {
         </Link>
       </div>
 
-      {/* Content */}
-      <div className="px-4 py-6">
-        <h1 className="text-lg font-bold text-[#333333]">날짜/시간을 선택해 주세요.</h1>
-        {/* Manager Info */}
-        <div className="flex items-start gap-4 mb-8">
-          <div className="text-[#666666]">
-            <p className="font-medium">교육받은 매니저님이 방문합니다.</p>
-            <button className="text-sm text-[#999999] flex items-center">
-              어떤 교육을 받나요?
-              <Image 
-                src="/icons/chevron-right.svg" 
-                alt="More" 
-                width={16} 
-                height={16}
-              />
-            </button>
-          </div>
-          <div className="flex-shrink-0">
-            <Image 
-              src="/images/manager.png" 
-              alt="Manager" 
-              width={48} 
-              height={48}
-              className="rounded-full"
-            />
+      {/* Category Tabs */}
+      <div className="border-b border-[#EEEEEE]">
+        <div className="px-4">
+          <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide">
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`py-3 whitespace-nowrap relative ${
+                  category.id === selectedCategory
+                    ? 'text-[#0fbcd6] font-bold'
+                    : 'text-[#666666]'
+                }`}
+              >
+                {category.name}
+                {category.id === selectedCategory && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0fbcd6]" />
+                )}
+              </button>
+            ))}
           </div>
         </div>
+      </div>
+
+      {/* Selected Category Description */}
+      {selectedCategory && (
+        <div className="px-4 py-3 bg-[#F8F8F8]">
+          <p className="text-sm text-[#666666]">
+            {categories.find(category => category.id === selectedCategory)?.description}
+          </p>
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="px-4 py-6">
+        <h1 className="text-lg font-bold text-[#333333] mb-8">예약 정보를 입력해 주세요.</h1>
 
         {/* Calendar Selection */}
         <div className="mb-8">
@@ -144,18 +347,22 @@ export default function ReservationForm() {
             <h2 className="text-lg font-bold">날짜 선택</h2>
           </div>
           
+          <p className="text-sm text-[#666666] mb-1.5 pl-2">방문일</p>
+          
           {/* Selected Date Display */}
           <div 
-            className="flex justify-between items-center p-4 bg-[#F8F8F8] rounded-xl mb-4 cursor-pointer"
+            className="flex justify-between items-center p-3.5 bg-[#F8F8F8] rounded-xl mb-4 cursor-pointer"
             onClick={() => setIsCalendarOpen(!isCalendarOpen)}
           >
             <div>
-              <p className="text-lg font-bold text-[#333333]">
-                {selectedDate ? formatDate(selectedDate).full : '날짜 선택'}
-              </p>
-              {selectedDate && (
-                <p className="text-sm text-[#666666]">{formatDate(selectedDate).day}</p>
-              )}
+              <div className="flex items-center gap-1.5">
+                <p className="text-base font-medium text-[#333333]">
+                  {selectedDate ? formatDate(selectedDate).full : '선택해주세요'}
+                </p>
+                {selectedDate && (
+                  <p className="text-base text-[#666666]">{formatDate(selectedDate).day}</p>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {selectedDate && (
@@ -210,64 +417,179 @@ export default function ReservationForm() {
         <div className="mb-8">
           <h2 className="text-lg font-bold mb-4">시간 선택</h2>
           <div className="space-y-4">
-            <div 
-              className="flex justify-between items-center p-4 bg-[#F8F8F8] rounded-xl cursor-pointer"
-              onClick={() => setIsTimeModalOpen(true)}
-            >
-              <div>
-                <p className="text-lg font-bold text-[#333333]">{selectedHours}시간</p>
+            <div>
+              <div className="flex items-center gap-2 mb-1.5 pl-2">
                 <p className="text-sm text-[#666666]">서비스 시간</p>
-              </div>
-              <div className="flex items-center gap-2">
-                {selectedHours !== standardHours && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleResetTime();
-                    }}
-                    className="px-3 py-1.5 rounded-full bg-white text-sm font-medium text-[#666666] hover:bg-gray-50"
-                  >
-                    초기화
-                  </button>
+                {recommendedTime && (
+                  <div className="flex items-center">
+                    <span className="text-xs text-[#0fbcd6] font-medium">
+                      알고리즘 기반 &middot; {Math.floor(recommendedTime.area)}평 {Math.floor(recommendedTime.minutes / 60)}시간 추천
+                    </span>
+                  </div>
                 )}
+              </div>
+              <div 
+                className="flex justify-between items-center p-3.5 bg-[#F8F8F8] rounded-xl cursor-pointer"
+                onClick={() => setIsTimeModalOpen(true)}
+              >
+                <div>
+                  <p className="text-base font-medium text-[#333333]">{selectedHours}시간</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedHours !== standardHours && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleResetTime();
+                      }}
+                      className="px-3 py-1.5 rounded-full bg-white text-sm font-medium text-[#666666] hover:bg-gray-50"
+                    >
+                      초기화
+                    </button>
+                  )}
+                  <Image 
+                    src="/icons/chevron-right.svg" 
+                    alt="Open Time Selection" 
+                    width={24} 
+                    height={24}
+                    className="rotate-90"
+                  />
+                </div>
+              </div>
+            </div>
+            <div>
+              <p className="text-sm text-[#666666] mb-1.5 pl-2">방문 시간</p>
+              <div 
+                className="flex justify-between items-center p-3.5 bg-[#F8F8F8] rounded-xl cursor-pointer"
+                onClick={() => setIsVisitTimeModalOpen(true)}
+              >
+                <div>
+                  {selectedVisitTime ? (
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-base font-medium text-[#333333]">
+                        {selectedVisitTime} - {calculateEndTime(selectedVisitTime, selectedHours)}
+                      </p>
+                      <p className="text-base text-[#666666]">{selectedHours}시간</p>
+                    </div>
+                  ) : (
+                    <p className="text-base font-medium text-[#333333]">선택해주세요</p>
+                  )}
+                </div>
                 <Image 
                   src="/icons/chevron-right.svg" 
-                  alt="Open Time Selection" 
+                  alt="Select Visit Time" 
                   width={24} 
                   height={24}
                   className="rotate-90"
                 />
               </div>
             </div>
-            <div 
-              className="flex justify-between items-center p-4 bg-[#F8F8F8] rounded-xl cursor-pointer"
-              onClick={() => setIsVisitTimeModalOpen(true)}
-            >
-              <div>
-                {selectedVisitTime ? (
-                  <>
-                    <p className="text-lg font-bold text-[#333333]">
-                      {selectedVisitTime} - {calculateEndTime(selectedVisitTime, selectedHours)}
-                    </p>
-                    <p className="text-sm text-[#666666]">방문 시간 · {selectedHours}시간</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-lg font-bold text-[#333333]">방문 시간</p>
-                    <p className="text-sm text-[#666666]">선택해주세요</p>
-                  </>
-                )}
-              </div>
-              <Image 
-                src="/icons/chevron-right.svg" 
-                alt="Select Visit Time" 
-                width={24} 
-                height={24}
-                className="rotate-90"
-              />
-            </div>
           </div>
         </div>
+
+        {/* Additional Services Options */}
+        <div className="mb-8">
+          <h2 className="text-lg font-bold mb-4">추가 서비스 옵션</h2>
+          {isLoading ? (
+            <div className="p-3.5 bg-[#F8F8F8] rounded-xl text-center">
+              <p className="text-[#666666]">옵션을 불러오는 중...</p>
+            </div>
+          ) : error ? (
+            <div className="p-3.5 bg-[#F8F8F8] rounded-xl text-center">
+              <p className="text-[#FF4444]">{error}</p>
+              <button 
+                onClick={() => {
+                  setCategoryOptions([]);
+                  setError(null);
+                }}
+                className="mt-2 text-sm text-[#0fbcd6]"
+              >
+                다시 시도
+              </button>
+            </div>
+          ) : categoryOptions.length > 0 ? (
+            <div className="space-y-3">
+              {categoryOptions.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => {
+                    setSelectedCategoryOptions(prev => 
+                      prev.includes(option.id)
+                        ? prev.filter(id => id !== option.id)
+                        : [...prev, option.id]
+                    );
+                  }}
+                  className={`w-full p-3.5 rounded-xl
+                    ${selectedCategoryOptions.includes(option.id)
+                      ? 'bg-[#0fbcd6] text-white'
+                      : 'bg-[#F8F8F8] text-[#333333]'
+                    }`}
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-base font-medium">{option.name}</span>
+                    <span className="text-base font-medium">
+                      {option.price > 0 ? `+${option.price.toLocaleString()}원` : ''}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm opacity-80">{option.description}</span>
+                    <span className="text-sm opacity-80">+{option.time}분</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="p-3.5 bg-[#F8F8F8] rounded-xl text-center">
+              <p className="text-[#666666]">이 서비스에 대한 추가 서비스 옵션이 없습니다.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Selected Additional Services Summary */}
+        {selectedCategoryOptions.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-lg font-bold mb-4">선택된 추가 서비스 옵션</h2>
+            <div className="bg-[#F8F8F8] rounded-xl p-4">
+              <div className="space-y-4">
+                {categoryOptions
+                  .filter(option => selectedCategoryOptions.includes(option.id))
+                  .map(option => (
+                    <div key={option.id} className="flex flex-col">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold">{option.name}</span>
+                        <span className="font-medium text-[#0fbcd6]">
+                          +{option.price.toLocaleString()}원
+                        </span>
+                      </div>
+                      {option.notice && (
+                        <p className="text-sm text-[#666666] mt-1">{option.notice}</p>
+                      )}
+                    </div>
+                  ))
+                }
+              </div>
+              <div className="mt-4 pt-4 border-t border-[#EEEEEE]">
+                <div className="flex justify-between items-center">
+                  <span className="text-[#666666]">총 추가 시간</span>
+                  <span className="font-bold">
+                    +{categoryOptions
+                      .filter(option => selectedCategoryOptions.includes(option.id))
+                      .reduce((total, option) => total + option.time, 0)}분
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-[#666666]">총 추가 금액</span>
+                  <span className="font-bold text-[#0fbcd6]">
+                    +{categoryOptions
+                      .filter(option => selectedCategoryOptions.includes(option.id))
+                      .reduce((total, option) => total + option.price, 0)
+                      .toLocaleString()}원
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Time Selection Bottom Modal */}
         {isTimeModalOpen && (
@@ -299,6 +621,18 @@ export default function ReservationForm() {
 
               {/* Content */}
               <div className="p-6">
+                {recommendedTime && (
+                  <div className="mb-6 bg-[#0fbcd6] text-white p-4">
+                    <div className="mb-2">
+                      <span className="font-medium">사용자 맞춤 알고리즘 기반</span>
+                    </div>
+                    <p className="text-sm opacity-90">
+                      고객님의 공간({Math.floor(recommendedTime.area)}평)에 최적화된 청소 시간은 {Math.floor(recommendedTime.minutes / 60)}시간입니다.
+                      <br />실제 현장 상황에 따라 추가 시간이 필요할 수 있습니다.
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex justify-center items-center gap-8 mb-8">
                   <button
                     onClick={() => handleTimeChange(false)}
@@ -311,18 +645,19 @@ export default function ReservationForm() {
                   >
                     -
                   </button>
+                  {/* TODO 처음 표시되는 기본시간을 추천시간으로 변경 */}
                   <div className="text-center">
                     <p className="text-3xl font-bold text-[#333333]">{selectedHours}시간</p>
-                    <p className="text-sm text-[#666666] mt-1">표준 시간은 {standardHours}시간입니다.</p>
+                    <p className="text-sm text-[#666666] mt-1">기본 시간은 {standardHours}시간입니다.</p>
                   </div>
                   <button
                     onClick={() => handleTimeChange(true)}
                     className={`w-12 h-12 rounded-full flex items-center justify-center
-                      ${selectedHours >= standardHours * 2 
+                      ${selectedHours >= 8
                         ? 'bg-[#F8F8F8] text-[#CCCCCC]' 
                         : 'bg-white border-2 border-[#0fbcd6] text-[#0fbcd6]'
                       }`}
-                    disabled={selectedHours >= standardHours * 2}
+                    disabled={selectedHours >= 8}
                   >
                     +
                   </button>
@@ -332,14 +667,14 @@ export default function ReservationForm() {
                 <div className="bg-[#F8F8F8] rounded-2xl p-6">
                   <div className="flex justify-between items-center mb-4">
                     <div>
-                      <p className="text-[#666666] mb-1">기본 요금 (4시간)</p>
+                      <p className="text-[#666666] mb-1">기본 요금 (2시간)</p>
                       <p className="text-[#666666]">추가 시간당</p>
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-medium text-[#333333] mb-1">
                         {basePrice.toLocaleString()}원
                       </p>
-                      <p className="text-lg font-medium text-[#333333]">
+                      <p className="text-lg font-bold text-[#333333]">
                         {pricePerHour.toLocaleString()}원
                       </p>
                     </div>
@@ -355,6 +690,11 @@ export default function ReservationForm() {
                         {calculatePrice(selectedHours).toLocaleString()}원
                       </span>
                     </div>
+                    {showTimeWarning && (
+                      <p className="text-sm text-[#FF4444] mt-2">
+                        * {Math.floor(recommendedTime.area)}평 기준 {Math.ceil(recommendedTime.minutes / 60)}시간이 추천됩니다.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -421,12 +761,109 @@ export default function ReservationForm() {
             </div>
           </>
         )}
+
+        {/* Category Selection Modal */}
+        {isCategoryModalOpen && (
+          <>
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-40 z-40"
+              onClick={() => setIsCategoryModalOpen(false)}
+            />
+            <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50">
+              <div className="flex justify-between items-center p-4 border-b border-[#EEEEEE]">
+                <button 
+                  className="text-[#999999]"
+                  onClick={() => setIsCategoryModalOpen(false)}
+                >
+                  취소
+                </button>
+                <h3 className="text-lg font-bold">서비스 선택</h3>
+                <button 
+                  className="text-[#0fbcd6] font-medium"
+                  onClick={() => setIsCategoryModalOpen(false)}
+                >
+                  확인
+                </button>
+              </div>
+              <div className="p-4">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => {
+                      setSelectedCategory(category.id);
+                      setIsCategoryModalOpen(false);
+                    }}
+                    className={`w-full p-4 rounded-xl mb-2 text-left
+                      ${selectedCategory === category.id 
+                        ? 'bg-[#0fbcd6] text-white' 
+                        : 'bg-[#F8F8F8] text-[#333333]'
+                      }`}
+                  >
+                    <p className="font-bold">{category.name}</p>
+                    <p className="text-sm opacity-80">{category.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Options Selection Modal */}
+        {isOptionsModalOpen && (
+          <>
+            <div 
+              className="fixed inset-0 bg-black bg-opacity-40 z-40"
+              onClick={() => setIsOptionsModalOpen(false)}
+            />
+            <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50">
+              <div className="flex justify-between items-center p-4 border-b border-[#EEEEEE]">
+                <button 
+                  className="text-[#999999]"
+                  onClick={() => setIsOptionsModalOpen(false)}
+                >
+                  취소
+                </button>
+                <h3 className="text-lg font-bold">추가 서비스 옵션 선택</h3>
+                <button 
+                  className="text-[#0fbcd6] font-medium"
+                  onClick={() => setIsOptionsModalOpen(false)}
+                >
+                  확인
+                </button>
+              </div>
+              <div className="p-4">
+                {options.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => {
+                      setSelectedOptions(prev => 
+                        prev.includes(option.id)
+                          ? prev.filter(id => id !== option.id)
+                          : [...prev, option.id]
+                      );
+                    }}
+                    className={`w-full p-4 rounded-xl mb-2 flex justify-between items-center
+                      ${selectedOptions.includes(option.id)
+                        ? 'bg-[#0fbcd6] text-white'
+                        : 'bg-[#F8F8F8] text-[#333333]'
+                      }`}
+                  >
+                    <span className="font-bold">{option.name}</span>
+                    <span>{option.price.toLocaleString()}원</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Warning Toast */}
       {showWarning && (
         <div className="fixed bottom-[100px] left-1/2 -translate-x-1/2 w-[328px] py-4 bg-[#333333] rounded-xl shadow-lg">
-          <p className="text-center text-white font-medium">날짜를 먼저 선택해 주세요.</p>
+          <p className="text-center text-white font-medium">
+            {warningMessage}
+          </p>
         </div>
       )}
 
@@ -435,13 +872,14 @@ export default function ReservationForm() {
         <div className="flex justify-between items-end">
           <div>
             <p className="text-2xl font-bold text-[#333333]">
-              {calculatePrice(selectedHours).toLocaleString()}원
+              {calculateTotalPrice().toLocaleString()}원
             </p>
             <div className="flex items-center gap-1">
               <span className="text-sm text-[#666666]">
                 {selectedHours > standardHours 
                   ? `기본 ${standardHours}시간 + ${selectedHours - standardHours}시간` 
                   : `${selectedHours}시간`}
+                {selectedOptions.length > 0 && ` · 옵션 ${selectedOptions.length}개`}
               </span>
               <button 
                 className="text-sm text-[#999999] flex items-center"
@@ -461,7 +899,7 @@ export default function ReservationForm() {
             onClick={handleNext}
             className="w-[120px] h-12 bg-[#0fbcd6] text-white rounded-xl font-medium"
           >
-            다음
+            예약하기
           </button>
         </div>
       </div>
