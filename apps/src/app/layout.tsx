@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "../styles/globals.css";
-//import "./globals.css";
+import "./globals.css";
 import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -20,7 +19,7 @@ export default function RootLayout({
     <html lang="ko">
       <body className={inter.className}>
         <Providers>
-          <main className="min-h-screen max-w-[370px] mx-auto bg-white">
+          <main className="w-full max-w-[390px] mx-auto min-h-screen bg-white relative">
             {children}
           </main>
         </Providers>
