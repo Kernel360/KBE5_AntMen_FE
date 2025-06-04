@@ -178,46 +178,48 @@ export default function ReservationForm() {
       return;
     }
 
-    // 추천 시간보다 적은 시간으로 예약 시도할 경우
+    // 추천 시간보다 적은 시간으로 예약 시도할 경우 경고 메시지만 표시하고 계속 진행
     if (recommendedTime && selectedHours < Math.ceil(recommendedTime.minutes / 60)) {
-      setWarningMessage(`${Math.floor(recommendedTime.area)}평 기준 ${Math.ceil(recommendedTime.minutes / 60)}시간이 추천됩니다.`);
-      setShowWarning(true);
-      setTimeout(() => setShowWarning(false), 3000);
-      return;
+      setShowTimeWarning(true); // 경고 메시지 표시
+      setTimeout(() => setShowTimeWarning(false), 3000);
     }
 
-    try {
-      const requestData = {
-        customerId: 1, // TODO: 실제 로그인 사용자 ID로 대체
-        reservationCreatedAt: dayjs().format('YYYY-MM-DD'),
-        reservationDate: selectedDate.format('YYYY-MM-DD'),
-        reservationTime: selectedVisitTime,
-        categoryId: selectedCategory,
-        reservationDuration: Math.ceil(calculateTotalTime() / 60), // 총 시간을 시간 단위로 변환
-        reservationMemo: memo,
-        reservationAmount: calculateTotalPrice(),
-        additionalDuration: selectedHours - standardHours,
-        optionIds: selectedCategoryOptions
-      };
+    // TODO: API 구현 후 아래 주석 해제
+    // try {
+    //   const requestData = {
+    //     customerId: 1,
+    //     reservationCreatedAt: dayjs().format('YYYY-MM-DD'),
+    //     reservationDate: selectedDate.format('YYYY-MM-DD'),
+    //     reservationTime: selectedVisitTime,
+    //     categoryId: selectedCategory,
+    //     reservationDuration: Math.ceil(calculateTotalTime() / 60),
+    //     reservationMemo: memo,
+    //     reservationAmount: calculateTotalPrice(),
+    //     additionalDuration: selectedHours - standardHours,
+    //     optionIds: selectedCategoryOptions
+    //   };
 
-      const response = await fetch('/api/reservations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData)
-      });
+    //   const response = await fetch('/api/reservations', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify(requestData)
+    //   });
 
-      if (!response.ok) {
-        throw new Error('예약 생성 실패');
-      }
+    //   if (!response.ok) {
+    //     throw new Error('예약 생성 실패');
+    //   }
+    // } catch (error) {
+    //   console.error('예약 생성 중 오류 발생:', error);
+    //   setWarningMessage('예약 생성 중 오류가 발생했습니다.');
+    //   setShowWarning(true);
+    //   setTimeout(() => setShowWarning(false), 3000);
+    //   return;
+    // }
 
-      router.push('/reservation/success');
-    } catch (error) {
-      console.error('예약 생성 중 오류 발생:', error);
-      setShowWarning(true);
-      setTimeout(() => setShowWarning(false), 3000);
-    }
+    // 매칭 페이지로 이동
+    router.push('/matching');
   };
 
   const calculateTotalPrice = () => {
@@ -428,6 +430,13 @@ export default function ReservationForm() {
                   </div>
                 )}
               </div>
+              {showTimeWarning && (
+                <div className="mb-2 pl-2">
+                  <p className="text-xs text-[#FF4444]">
+                    {Math.floor(recommendedTime.area)}평 기준 {Math.ceil(recommendedTime.minutes / 60)}시간이 추천됩니다.
+                  </p>
+                </div>
+              )}
               <div 
                 className="flex justify-between items-center p-3.5 bg-[#F8F8F8] rounded-xl cursor-pointer"
                 onClick={() => setIsTimeModalOpen(true)}
@@ -601,7 +610,7 @@ export default function ReservationForm() {
             />
             
             {/* Modal */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 pb-8">
+            <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[328px] bg-white rounded-t-2xl z-50 pb-8">
               {/* Header */}
               <div className="flex justify-between items-center p-4 border-b border-[#EEEEEE]">
                 <button 
@@ -620,23 +629,23 @@ export default function ReservationForm() {
               </div>
 
               {/* Content */}
-              <div className="p-6">
+              <div className="p-4">
                 {recommendedTime && (
-                  <div className="mb-6 bg-[#0fbcd6] text-white p-4">
+                  <div className="mb-6 bg-[#0fbcd6] text-white p-4 rounded-xl">
                     <div className="mb-2">
-                      <span className="font-medium">사용자 맞춤 알고리즘 기반</span>
+                      <span className="text-sm font-medium">사용자 맞춤 알고리즘 기반</span>
                     </div>
-                    <p className="text-sm opacity-90">
+                    <p className="text-sm opacity-90 break-keep">
                       고객님의 공간({Math.floor(recommendedTime.area)}평)에 최적화된 청소 시간은 {Math.floor(recommendedTime.minutes / 60)}시간입니다.
                       <br />실제 현장 상황에 따라 추가 시간이 필요할 수 있습니다.
                     </p>
                   </div>
                 )}
 
-                <div className="flex justify-center items-center gap-8 mb-8">
+                <div className="flex justify-center items-center gap-6 mb-6">
                   <button
                     onClick={() => handleTimeChange(false)}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center
+                    className={`w-10 h-10 rounded-full flex items-center justify-center
                       ${selectedHours <= standardHours 
                         ? 'bg-[#F8F8F8] text-[#CCCCCC]' 
                         : 'bg-white border-2 border-[#0fbcd6] text-[#0fbcd6]'
@@ -645,14 +654,13 @@ export default function ReservationForm() {
                   >
                     -
                   </button>
-                  {/* TODO 처음 표시되는 기본시간을 추천시간으로 변경 */}
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-[#333333]">{selectedHours}시간</p>
-                    <p className="text-sm text-[#666666] mt-1">기본 시간은 {standardHours}시간입니다.</p>
+                  <div className="text-center min-w-[80px]">
+                    <p className="text-2xl font-bold text-[#333333]">{selectedHours}시간</p>
+                    <p className="text-xs text-[#666666] mt-1">기본 시간은 {standardHours}시간입니다.</p>
                   </div>
                   <button
                     onClick={() => handleTimeChange(true)}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center
+                    className={`w-10 h-10 rounded-full flex items-center justify-center
                       ${selectedHours >= 8
                         ? 'bg-[#F8F8F8] text-[#CCCCCC]' 
                         : 'bg-white border-2 border-[#0fbcd6] text-[#0fbcd6]'
@@ -664,34 +672,34 @@ export default function ReservationForm() {
                 </div>
 
                 {/* Price Information */}
-                <div className="bg-[#F8F8F8] rounded-2xl p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <div>
-                      <p className="text-[#666666] mb-1">기본 요금 (2시간)</p>
-                      <p className="text-[#666666]">추가 시간당</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-medium text-[#333333] mb-1">
+                <div className="bg-[#F8F8F8] rounded-xl p-4">
+                  <div className="flex flex-col gap-2 mb-4">
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm text-[#666666]">기본 요금 (2시간)</p>
+                      <p className="text-base font-medium text-[#333333]">
                         {basePrice.toLocaleString()}원
                       </p>
-                      <p className="text-lg font-bold text-[#333333]">
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm text-[#666666]">추가 시간당</p>
+                      <p className="text-base font-bold text-[#333333]">
                         {pricePerHour.toLocaleString()}원
                       </p>
                     </div>
                   </div>
                   <div className="pt-4 border-t border-[#EEEEEE]">
                     <div className="flex justify-between items-center">
-                      <span className="text-[#666666]">
+                      <span className="text-sm text-[#666666]">
                         {selectedHours > standardHours 
                           ? `${standardHours}시간 + ${selectedHours - standardHours}시간` 
                           : `${selectedHours}시간`}
                       </span>
-                      <span className="text-2xl font-bold text-[#333333]">
+                      <span className="text-xl font-bold text-[#333333]">
                         {calculatePrice(selectedHours).toLocaleString()}원
                       </span>
                     </div>
                     {showTimeWarning && (
-                      <p className="text-sm text-[#FF4444] mt-2">
+                      <p className="text-xs text-[#FF4444] mt-2 break-keep">
                         * {Math.floor(recommendedTime.area)}평 기준 {Math.ceil(recommendedTime.minutes / 60)}시간이 추천됩니다.
                       </p>
                     )}
@@ -712,7 +720,7 @@ export default function ReservationForm() {
             />
             
             {/* Modal */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 max-h-[80vh] overflow-auto">
+            <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[328px] bg-white rounded-t-2xl z-50 max-h-[80vh] overflow-auto">
               {/* Header */}
               <div className="flex justify-between items-center p-4 border-b border-[#EEEEEE] sticky top-0 bg-white">
                 <button 
@@ -732,7 +740,7 @@ export default function ReservationForm() {
 
               {/* Time Slots */}
               <div className="p-4">
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   {visitTimeSlots.map((time) => (
                     <button
                       key={time}
@@ -740,7 +748,7 @@ export default function ReservationForm() {
                         setSelectedVisitTime(time);
                         setIsVisitTimeModalOpen(false);
                       }}
-                      className={`py-3 rounded-xl text-center
+                      className={`py-2.5 rounded-lg text-center text-sm
                         ${selectedVisitTime === time 
                           ? 'bg-[#0fbcd6] text-white' 
                           : 'bg-[#F8F8F8] text-[#333333]'
@@ -769,7 +777,7 @@ export default function ReservationForm() {
               className="fixed inset-0 bg-black bg-opacity-40 z-40"
               onClick={() => setIsCategoryModalOpen(false)}
             />
-            <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50">
+            <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[328px] bg-white rounded-t-2xl z-50">
               <div className="flex justify-between items-center p-4 border-b border-[#EEEEEE]">
                 <button 
                   className="text-[#999999]"
@@ -815,7 +823,7 @@ export default function ReservationForm() {
               className="fixed inset-0 bg-black bg-opacity-40 z-40"
               onClick={() => setIsOptionsModalOpen(false)}
             />
-            <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50">
+            <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[328px] bg-white rounded-t-2xl z-50">
               <div className="flex justify-between items-center p-4 border-b border-[#EEEEEE]">
                 <button 
                   className="text-[#999999]"
