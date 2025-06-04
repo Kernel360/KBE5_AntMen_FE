@@ -6,7 +6,6 @@ on:
     paths:
       - 'apps/**'
 
-
 permissions:
   id-token: write
   contents: read
@@ -46,6 +45,10 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Create ECR repository if not exists
+        run: |
+          aws ecr describe-repositories --repository-names users-app || aws ecr create-repository --repository-name users-app
+
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
@@ -53,8 +56,8 @@ jobs:
         env:
           ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
         run: |
-          docker build -f apps/Dockerfile -t $ECR_REGISTRY/users-app:latest .
-          docker push $ECR_REGISTRY/users-app:latest
+          docker build -f ${{ matrix.dockerfile }} -t $ECR_REGISTRY/${{ matrix.image }}:latest ${{ matrix.context }}
+          docker push $ECR_REGISTRY/${{ matrix.image }}:latest
 
   deploy:
     runs-on: ubuntu-latest
