@@ -1,3 +1,5 @@
+// 매칭 거절 시 표시되는 모달 컴포넌트: 예약 취소 또는 다시 매칭 선택 가능
+
 'use client';
 
 interface RejectionModalProps {

@@ -1,3 +1,5 @@
+// 매칭 결과 페이지의 메타데이터 설정 (페이지 제목, 설명)
+
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {

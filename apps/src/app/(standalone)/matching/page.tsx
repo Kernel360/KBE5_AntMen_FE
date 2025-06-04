@@ -1,3 +1,5 @@
+// 매칭 메인 페이지: 매니저 목록을 표시하고 최대 3명까지 선택하여 매칭 요청을 보낼 수 있는 페이지
+
 'use client';
 
 import { useState } from 'react';
