@@ -3,8 +3,11 @@ name: "CI/CD: Build & Deploy to EC2"
 on:
   push:
     branches: [feature/#1-cicd]
-    # paths:
-    #   - 'apps/**'
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'yarn.lock'
 
 permissions:
   id-token: write
@@ -56,8 +59,8 @@ jobs:
         env:
           ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
         run: |
-          docker build -f ${{ matrix.dockerfile }} -t $ECR_REGISTRY/${{ matrix.image }}:latest ${{ matrix.context }}
-          docker push $ECR_REGISTRY/${{ matrix.image }}:latest
+          docker build -f ${{ matrix.dockerfile }} -t $ECR_REGISTRY/users-app:latest ${{ matrix.context }}
+          docker push $ECR_REGISTRY/users-app:latest
 
   deploy:
     runs-on: ubuntu-latest
