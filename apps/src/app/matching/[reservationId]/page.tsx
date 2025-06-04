@@ -10,23 +10,26 @@ import { BiTimeFive } from 'react-icons/bi';
 import { MdThumbUp } from 'react-icons/md';
 import { MANAGER_LIST } from '@/constants/manager';
 import type { IconType } from 'react-icons';
-import { IconContext, IconBaseProps } from 'react-icons';
-import { createElement, FC } from 'react';
 
 const DynamicIcon = ({ icon, ...props }: { icon: IconType } & { className?: string; size?: number }) => {
   const Component = icon as React.ComponentType<any>;
   return <Component {...props} />;
 };
 
-export default function ManagerDetailPage() {
+export default function ReservationDetailPage() {
   const params = useParams();
-  const managerId = typeof params?.managerId === 'string' ? params.managerId : '';
-  const manager = MANAGER_LIST.find(m => m.id === managerId);
+  const reservationId = typeof params?.reservationId === 'string' ? params.reservationId : '';
+  // TODO: Fetch reservation data using reservationId
+  // const reservation = await getReservationById(reservationId);
+  // const manager = reservation.manager;
+  
+  // Temporary: Using mock data
+  const manager = MANAGER_LIST[0]; // Replace with actual data fetching
 
   if (!manager) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">매니저를 찾을 수 없습니다.</p>
+        <p className="text-gray-500">예약 정보를 찾을 수 없습니다.</p>
       </div>
     );
   }
@@ -68,7 +71,7 @@ export default function ManagerDetailPage() {
           <Link href="/matching" className="text-gray-800">
             <DynamicIcon icon={IoChevronBack} size={24} />
           </Link>
-          <h1 className="text-lg font-medium">목록으로 돌아가기</h1>
+          <h1 className="text-lg font-medium">매칭 상세</h1>
           <button className="text-gray-800">
             <DynamicIcon icon={IoEllipsisHorizontal} size={24} />
           </button>
@@ -96,68 +99,65 @@ export default function ManagerDetailPage() {
             </div>
           </div>
 
-          {/* Introduction Section */}
+          {/* Reservation Details Section */}
           <section className="px-4 py-6 border-t">
-            <h3 className="text-xl font-bold mb-4">자기소개</h3>
+            <h3 className="text-xl font-bold mb-4">예약 정보</h3>
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-gray-600">날짜</span>
+                <span className="font-medium">2024년 3월 15일</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">시간</span>
+                <span className="font-medium">오후 2:00 - 4:00</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">위치</span>
+                <span className="font-medium">서울시 강남구</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Manager Message Section */}
+          <section className="px-4 py-6 border-t">
+            <h3 className="text-xl font-bold mb-4">매니저 메시지</h3>
             <p className="text-gray-700 leading-relaxed">
-              {manager.introduction}
+              안녕하세요! 매칭 요청 감사합니다. 고객님의 요구사항을 꼼꼼히 확인했습니다.
+              최선을 다해 서비스를 제공하도록 하겠습니다.
             </p>
           </section>
 
-          {/* Characteristics Section */}
+          {/* Additional Options Section */}
           <section className="px-4 py-6 border-t">
-            <h3 className="text-xl font-bold mb-4">성격 특징</h3>
-            <div className="flex gap-3">
-              {manager.characteristics.map(characteristic => {
-                const { icon, style, color } = getCharacteristicContent(characteristic.type as 'kind' | 'punctual' | 'thorough');
-                return (
-                  <div 
-                    key={characteristic.id} 
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${style}`}
-                  >
-                    <DynamicIcon icon={icon} className={color} size={14} />
-                    <span className="text-xs">{characteristic.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* Reviews Section */}
-          <section className="px-4 py-6 border-t">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">고객 리뷰</h3>
-              <Link href="#" className="text-blue-500">
-                전체보기 &gt;
-              </Link>
-            </div>
-            {manager.reviews.map(review => (
-              <div key={review.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="font-medium">{review.userName}</span>
-                  <div className="flex">
-                    {Array(review.rating).fill(null).map((_, index) => (
-                      <DynamicIcon key={index} icon={AiFillStar} className="text-yellow-400" size={16} />
-                    ))}
-                  </div>
-                </div>
-                <p className="text-gray-700 mb-2">{review.content}</p>
-                <p className="text-gray-500 text-sm">{review.date}</p>
+            <h3 className="text-xl font-bold mb-4">추가 옵션</h3>
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-gray-600">기본 서비스</span>
+                <span className="font-medium">50,000원</span>
               </div>
-            ))}
+              <div className="flex justify-between">
+                <span className="text-gray-600">심화 청소</span>
+                <span className="font-medium">+20,000원</span>
+              </div>
+              <div className="flex justify-between font-bold mt-4">
+                <span>총 금액</span>
+                <span>70,000원</span>
+              </div>
+            </div>
           </section>
         </div>
 
-        {/* Bottom Button */}
+        {/* Bottom Buttons */}
         <div className="fixed bottom-0 w-full max-w-[370px] bg-white">
           <div className="px-4">
             <div className="border-t border-slate-200">
-              <div className="py-4">
-                <Link href="/matching" className="block">
-                  <button className="w-full h-14 rounded-2xl font-semibold text-white text-lg bg-primary">
-                    목록으로 돌아가기
-                  </button>
-                </Link>
+              <div className="py-4 flex gap-4">
+                <button className="flex-1 h-14 rounded-2xl font-semibold text-primary text-lg border-2 border-primary">
+                  거절하기
+                </button>
+                <button className="flex-1 h-14 rounded-2xl font-semibold text-white text-lg bg-primary">
+                  매칭 수락
+                </button>
               </div>
             </div>
           </div>
