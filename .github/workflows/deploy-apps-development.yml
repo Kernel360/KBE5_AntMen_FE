@@ -3,11 +3,11 @@ name: "CI/CD: Build & Deploy to EC2"
 on:
   push:
     branches: [feature/#1-cicd]
-    paths:
-      - 'apps/**'
-      - 'packages/**'
-      - 'package.json'
-      - 'yarn.lock'
+    # paths:
+    #   - 'apps/**'
+    #   - 'packages/**'
+    #   - 'package.json'
+    #   - 'yarn.lock'
 
 permissions:
   id-token: write
