@@ -50,8 +50,7 @@ jobs:
 
       - name: Create ECR repository if not exists
         run: |
-          aws ecr describe-repositories --repository-names ${{ matrix.image }} || \
-          aws ecr create-repository --repository-name ${{ matrix.image }}
+          aws ecr describe-repositories --repository-names users-app || aws ecr create-repository --repository-name users-app
 
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
