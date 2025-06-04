@@ -1,25 +1,24 @@
-FROM node:20-alpine AS builder
+# apps/Dockerfile
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY ../../package.json ../../yarn.lock ./
-COPY ../../packages ./packages
-COPY ../../apps ./apps
-COPY ./admin ./admin
+# package.json과 yarn.lock 복사
+COPY package.json yarn.lock ./
+COPY apps/package.json ./apps/
 
-RUN yarn install --frozen-lockfile
-RUN yarn workspace apps-web build  # 또는 정확한 워크스페이스 이름
+# 의존성 설치
+RUN yarn install --frozen-lockfile --ignore-scripts && \
+    yarn workspace apps install
 
-FROM node:20-alpine AS runner
+# 소스 코드 복사
+COPY apps/ ./apps/
 
-WORKDIR /app
-ENV NODE_ENV=production
+# 빌드
+RUN yarn workspace apps build
 
-COPY --from=builder /app/apps/apps-web/.next ./.next
-COPY --from=builder /app/apps/apps-web/public ./public
-COPY --from=builder /app/apps/apps-web/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
-
+# 포트 설정
 EXPOSE 3000
-CMD ["yarn", "workspace", "apps-web", "start"]
+
+# 실행
+CMD ["yarn", "workspace", "apps", "start"]

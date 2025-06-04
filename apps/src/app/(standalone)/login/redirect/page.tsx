@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { LoginGateway } from '@/features/auth/ui/LoginGateway';
 
 export default function LoginRedirect() {
@@ -7,7 +8,9 @@ export default function LoginRedirect() {
                 <div className="text-center">
                     <h1 className="text-2xl font-bold text-gray-900">로그인 분기점</h1>
                 </div>
-                <LoginGateway />
+                <Suspense>
+                  <LoginGateway />
+                </Suspense>
             </div>
         </main>
     );

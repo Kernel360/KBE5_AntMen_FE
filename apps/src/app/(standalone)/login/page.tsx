@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Login } from "@/features/auth/ui/Login";
 
 export default function LoginPage() {
@@ -7,7 +8,9 @@ export default function LoginPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900">로그인</h1>
         </div>
-        <Login />
+        <Suspense>
+          <Login />
+        </Suspense>
       </div>
     </main>
   );
