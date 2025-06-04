@@ -121,7 +121,7 @@ export function Login() {
 
         <div className="text-center text-gray-500">
           <span>계정이 없으신가요? </span>
-          <Link href="/signup/select" className="text-[#F97316] hover:underline">
+          <Link href="/signup" className="text-[#F97316] hover:underline">
             회원가입
           </Link>
         </div>
