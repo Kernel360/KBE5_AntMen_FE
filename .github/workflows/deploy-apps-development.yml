@@ -3,8 +3,8 @@ name: "CI/CD: Build & Deploy to EC2"
 on:
   push:
     branches: [feature/#1-cicd]
-    paths:
-      - 'apps/**'
+    # paths:
+    #   - 'apps/**'
 
 permissions:
   id-token: write
