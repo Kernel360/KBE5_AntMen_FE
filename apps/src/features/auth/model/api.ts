@@ -1,5 +1,5 @@
 // ./src/lib/api.ts - 수정된 버전
-import {getAuthToken, removeAuthToken} from './auth';
+import {getAuthToken, removeAuthToken} from '../lib/auth';
 
 export const apiClient = {
     get: async (url: string, options: RequestInit = {}) => {

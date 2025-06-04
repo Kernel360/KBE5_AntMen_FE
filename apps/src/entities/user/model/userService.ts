@@ -1,5 +1,5 @@
-import { apiClient } from '@/lib/api';
-import { User } from '@/types/user';
+import { apiClient } from '@/features/auth/model/api';
+import { User } from '@/entities/user/model/user';
 
 const BASE_URL = 'http://localhost:9081';
 

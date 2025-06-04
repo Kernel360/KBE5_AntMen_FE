@@ -75,15 +75,7 @@ export default function ReservationPage() {
             height={24}
           />
         </Link>
-        <div className="flex items-center gap-1">
-          <span className="text-sm font-medium text-[#666666]">전체</span>
-          <Image 
-            src="/icons/chevron-down.svg" 
-            alt="Down" 
-            width={16} 
-            height={16}
-          />
-        </div>
+
         <div className="w-6" /> {/* Spacer for alignment */}
       </div>
 
