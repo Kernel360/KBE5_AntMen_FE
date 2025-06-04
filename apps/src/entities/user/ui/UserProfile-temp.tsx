@@ -1,10 +1,10 @@
 // ./src/components/UserProfile-temp.tsx - 테스트 완료 후 삭제 예정
 'use client';
 import { useState, useEffect } from 'react';
-import { useAuthContext } from '@/contexts/AuthContext';
-import { userService } from '@/services/userService';
-import { User } from '@/types/user';
-import { getAuthToken } from '@/lib/auth';
+import { useAuthContext } from '@/features/auth/model/AuthContext';
+import { userService } from '@/entities/user/model/userService';
+import { User } from '@/entities/user/model/user';
+import { getAuthToken } from '@/features/auth/lib/auth';
 
 export default function UserProfileDebug() {
     const { isAuthenticated, token, logout } = useAuthContext();

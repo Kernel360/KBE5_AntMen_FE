@@ -1,4 +1,4 @@
-import ChatListScreen from '@/components/chats/ChatListScreen';
+import ChatListScreen from '@/widgets/chatList/ui/ChatListScreen';
 
 export default function ChatsPage() {
   return (

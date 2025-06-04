@@ -1,6 +1,6 @@
 'use client';
 import { createContext, useContext, ReactNode } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/features/auth/model/useAuth';
 
 interface AuthContextType {
     token: string | null;
