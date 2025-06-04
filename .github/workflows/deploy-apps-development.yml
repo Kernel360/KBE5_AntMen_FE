@@ -14,6 +14,13 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: users-app
+            dockerfile: apps/Dockerfile
+            context: .
+            image: users-app
 
     steps:
       - name: Checkout source code
