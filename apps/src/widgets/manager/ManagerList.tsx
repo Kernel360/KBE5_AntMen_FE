@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
 import { MANAGER_LIST } from '@/constants/manager';
 
@@ -86,9 +87,11 @@ export function ManagerList({ selectedManagers, onManagerSelect }: ManagerListPr
                 </div>
               </div>
               <div className="mt-4 flex justify-end">
-                <button className="px-3 py-1.5 rounded-lg bg-slate-50 text-sm text-slate-600 hover:bg-slate-100">
-                  상세보기
-                </button>
+                <Link href={`/matching/${manager.id}`}>
+                  <button className="px-3 py-1.5 rounded-lg bg-slate-50 text-sm text-slate-600 hover:bg-slate-100">
+                    상세보기
+                  </button>
+                </Link>
               </div>
             </div>
           );

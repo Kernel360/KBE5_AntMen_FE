@@ -64,116 +64,120 @@ const ServiceIcon: React.FC<ServiceIconProps> = ({ name, icon, isNew, discount }
 
 export default function ReservationPage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation Header */}
-      <div className="h-14 flex justify-between items-center px-4 border-b border-[#EEEEEE]">
-        <Link href="/" className="w-6 h-6 flex items-center justify-center">
-          <Image 
-            src="/icons/arrow-left.svg" 
-            alt="Back" 
-            width={24} 
-            height={24}
-          />
-        </Link>
-        <div className="flex items-center gap-1">
-          <span className="text-sm font-medium text-[#666666]">전체</span>
-          <Image 
-            src="/icons/chevron-down.svg" 
-            alt="Down" 
-            width={16} 
-            height={16}
-          />
-        </div>
-        <div className="w-6" /> {/* Spacer for alignment */}
-      </div>
-
-      {/* Content */}
-      <div className="px-4 py-4 space-y-2.5">
-        {/* 가사 청소 카드 */}
-        <ServiceCard
-          title="가사"
-          description={['1회, 정기로 받는 가사 청소']}
-          isNew
-          className="h-[120px]"
-        />
-        
-        {/* 사무실, 이사·입주 카드 그리드 */}
-        <div className="grid grid-cols-2 gap-2.5">
-          <ServiceCard
-            title="사무실"
-            description={[
-              '병원, 학원, 체육관',
-              '청소도 가능'
-            ]}
-            className="h-[160px]"
-          />
-          <ServiceCard
-            title="이사·입주"
-            description={['전문 인력 청소']}
-            className="h-[160px]"
-          />
-        </div>
-
-        {/* 에어컨 청소 카드 */}
-        <ServiceCard
-          title="에어컨"
-          description={['에어컨 전문 청소']}
-          isNew
-          className="h-[80px]"
-        />
-
-        {/* Promotion Banner */}
-        <div className="bg-[#0A3A6D] rounded-xl h-20 flex justify-between overflow-hidden">
-          <div className="p-4 space-y-1">
-            <p className="text-base font-bold text-white">사무실 청소, 정기 100% 할인!</p>
-            <p className="text-sm text-white opacity-90">정기 청소차 무료, 이후 10% 할인</p>
+    <div className="min-h-screen bg-white flex justify-center">
+      <div className="w-full max-w-[370px] min-h-screen flex flex-col">
+        {/* Navigation Header */}
+        <div className="h-14 flex justify-between items-center px-4 border-b border-[#EEEEEE]">
+          <Link href="/" className="w-6 h-6 flex items-center justify-center">
+            <Image 
+              src="/icons/arrow-left.svg" 
+              alt="Back" 
+              width={24} 
+              height={24}
+            />
+          </Link>
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-medium text-[#666666]">전체</span>
+            <Image 
+              src="/icons/chevron-down.svg" 
+              alt="Down" 
+              width={16} 
+              height={16}
+            />
           </div>
-          <div className="flex items-end p-4">
-            <div className="bg-[#FF7A7A] bg-opacity-90 w-[60px] h-[30px] flex items-center justify-center rounded text-sm font-bold text-white">
-              FREE
+          <div className="w-6" /> {/* Spacer for alignment */}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-4 py-4 space-y-2.5">
+            {/* 가사 청소 카드 */}
+            <ServiceCard
+              title="가사"
+              description={['1회, 정기로 받는 가사 청소']}
+              isNew
+              className="h-[120px]"
+            />
+            
+            {/* 사무실, 이사·입주 카드 그리드 */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <ServiceCard
+                title="사무실"
+                description={[
+                  '병원, 학원, 체육관',
+                  '청소도 가능'
+                ]}
+                className="h-[160px]"
+              />
+              <ServiceCard
+                title="이사·입주"
+                description={['전문 인력 청소']}
+                className="h-[160px]"
+              />
+            </div>
+
+            {/* 에어컨 청소 카드 */}
+            <ServiceCard
+              title="에어컨"
+              description={['에어컨 전문 청소']}
+              isNew
+              className="h-[80px]"
+            />
+
+            {/* Promotion Banner */}
+            <div className="bg-[#0A3A6D] rounded-xl h-20 flex justify-between overflow-hidden">
+              <div className="p-4 space-y-1">
+                <p className="text-base font-bold text-white">사무실 청소, 정기 100% 할인!</p>
+                <p className="text-sm text-white opacity-90">정기 청소차 무료, 이후 10% 할인</p>
+              </div>
+              <div className="flex items-end p-4">
+                <div className="bg-[#FF7A7A] bg-opacity-90 w-[60px] h-[30px] flex items-center justify-center rounded text-sm font-bold text-white">
+                  FREE
+                </div>
+              </div>
+            </div>
+
+            {/* Recommended Services */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-bold text-[#333333]">이런 서비스 어때요?</h2>
+              <div className="grid grid-cols-4 gap-0">
+                <ServiceIcon
+                  name="주방 청소"
+                  icon="/icons/kitchen.svg"
+                  isNew
+                />
+                <ServiceIcon
+                  name="화장실 청소"
+                  icon="/icons/bathroom.svg"
+                />
+                <ServiceIcon
+                  name="냉장실 청소"
+                  icon="/icons/fridge.svg"
+                />
+                <ServiceIcon
+                  name="입주 청소"
+                  icon="/icons/moving.svg"
+                />
+              </div>
+              <div className="grid grid-cols-4 gap-0">
+                <ServiceIcon
+                  name="병원 청소"
+                  icon="/icons/hospital.svg"
+                  discount="20%"
+                />
+                <ServiceIcon
+                  name="에어컨 청소"
+                  icon="/icons/aircon.svg"
+                  isNew
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Recommended Services */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-bold text-[#333333]">이런 서비스 어때요?</h2>
-          <div className="grid grid-cols-4 gap-0">
-            <ServiceIcon
-              name="주방 청소"
-              icon="/icons/kitchen.svg"
-              isNew
-            />
-            <ServiceIcon
-              name="화장실 청소"
-              icon="/icons/bathroom.svg"
-            />
-            <ServiceIcon
-              name="냉장실 청소"
-              icon="/icons/fridge.svg"
-            />
-            <ServiceIcon
-              name="입주 청소"
-              icon="/icons/moving.svg"
-            />
-          </div>
-          <div className="grid grid-cols-4 gap-0">
-            <ServiceIcon
-              name="병원 청소"
-              icon="/icons/hospital.svg"
-              discount="20%"
-            />
-            <ServiceIcon
-              name="에어컨 청소"
-              icon="/icons/aircon.svg"
-              isNew
-            />
-          </div>
-        </div>
+        {/* Bottom Navigation Bar */}
+        <div className="h-[5px] w-full bg-black" />
       </div>
-
-      {/* Bottom Navigation Bar */}
-      <div className="h-[5px] w-full bg-black fixed bottom-0" />
     </div>
   );
 } 

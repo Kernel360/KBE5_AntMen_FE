@@ -18,8 +18,8 @@ export function BottomSection({ selectedManagers }: BottomSectionProps) {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white w-full max-w-[420px] mx-auto">
-      <div className="px-5">
+    <div>
+      <div className="px-4">
         {selectedManagers.length > 0 && (
           <div className="flex items-center gap-2 py-4">
             <div className="w-5 h-5 flex items-center justify-center rounded-full bg-primary/10">
