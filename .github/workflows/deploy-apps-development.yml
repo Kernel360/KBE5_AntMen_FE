@@ -115,6 +115,8 @@ jobs:
             ECR_REGISTRY=${{ env.ECR_REGISTRY }}
             EOF
 
+            echo "ECR_REGISTRY 값: $ECR_REGISTRY"
+
             echo "정리 전 디스크 사용량:"
             df -h /
 
