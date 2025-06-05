@@ -16,6 +16,8 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    env:
+      ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
     strategy:
       matrix:
         include:
@@ -38,10 +40,6 @@ jobs:
 
       - name: Build apps
         run: yarn workspace apps build
-
-      - name: Write env file from secret
-        run: |
-          echo "${{ secrets.ENV_FILES }}" > .env
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -92,10 +90,6 @@ jobs:
             mkdir -p ~/apps/client
             sudo chown -R $USER:$USER ~/apps/client
 
-      - name: Write env file from secret
-        run: |
-          echo "${{ secrets.ENV_FILES }}" > .env
-
       - name: Copy docker-compose.yml
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -103,7 +97,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          source: 'docker-compose.yml, .env'
+          source: 'docker-compose.yml'
           target: ~/apps/client
 
       - name: SSH into EC2 and restart containers
@@ -139,5 +133,3 @@ jobs:
 
             docker compose down
             docker compose up -d users-app
-
-            rm -f .env
