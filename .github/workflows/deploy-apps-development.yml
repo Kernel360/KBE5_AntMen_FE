@@ -36,7 +36,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn workspace apps install --frozen-lockfile
 
       - name: Build apps
         run: yarn workspace apps build
@@ -130,5 +130,5 @@ jobs:
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
             docker pull ${{ env.ECR_REGISTRY }}/users-app:latest || { echo "이미지 pull 실패"; exit 1; }
 
-            docker compose down
+            docker compose down users-app
             docker compose up -d users-app

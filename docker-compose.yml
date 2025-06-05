@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: apps/Dockerfile
+      args:
+        - YARN_WORKSPACE=apps
     image: $ECR_REGISTRY/users-app:latest
     container_name: apps
     ports:
