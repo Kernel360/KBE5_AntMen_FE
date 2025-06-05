@@ -44,7 +44,7 @@ export default function ReservationDetailPage({ params }: { params: { id: string
   };
 
   return (
-    <main className="flex min-h-screen flex-col bg-white">
+    <main className="flex min-h-screen flex-col bg-white pb-20">
       {/* Header */}
       <header className="flex items-center justify-between p-5">
         <button onClick={() => router.back()} className="flex h-6 w-6 items-center justify-center">
