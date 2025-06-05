@@ -1,4 +1,4 @@
-name: "CI/CD: Build & Deploy to EC2"
+name: 'CI/CD: Build & Deploy to EC2'
 
 on:
   push:
@@ -100,7 +100,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          source: "docker-compose.yml"
+          source: 'docker-compose.yml'
           target: ~/apps/client
 
       - name: SSH into EC2 and restart containers
@@ -133,6 +133,6 @@ jobs:
             docker pull ${{ env.CLEAN_ECR_REGISTRY }}/users-app:latest
 
             docker compose down
-            docker compose up -d
+            docker compose up -d users-app
 
             rm -f .env
