@@ -174,6 +174,8 @@ export default function ReservationForm() {
         optionIds: selectedCategoryOptions
       };
 
+      console.log('예약 요청 데이터:', requestData);
+
       const response = await fetch('/api/reservations', {
         method: 'POST',
         headers: {
@@ -183,17 +185,28 @@ export default function ReservationForm() {
       });
 
       if (!response.ok) {
-        throw new Error('예약 생성 실패');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
+      console.log('API 응답 데이터:', result);
       
+      // API 응답 구조에 맞게 수정: { success: true, data: { reservationId, ... } }
       if (!result.success) {
         throw new Error(result.message || '예약 생성 실패');
       }
+      
+      const reservationId = result.data?.reservationId;
+      
+      if (!reservationId) {
+        console.error('reservationId를 찾을 수 없습니다:', result);
+        throw new Error('예약 ID를 받지 못했습니다.');
+      }
 
+      console.log('예약 ID:', reservationId);
+      
       // 매칭 페이지로 이동
-      router.push('/matching');
+      router.push(`/reservation/${reservationId}/matching/managers`);
       
     } catch (error) {
       console.error('예약 생성 중 오류 발생:', error);
