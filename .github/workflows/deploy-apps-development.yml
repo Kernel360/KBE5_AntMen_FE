@@ -127,13 +127,8 @@ jobs:
             echo "정리 후 디스크 사용량:"
             df -h /
 
-            echo "==== ECR 로그인 시도 ===="
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
-            echo "==== ECR 로그인 완료 ===="
-
-            echo "==== 이미지 pull 시도 ===="
             docker pull ${{ env.ECR_REGISTRY }}/users-app:latest || { echo "이미지 pull 실패"; exit 1; }
-            echo "==== 이미지 pull 완료 ===="
 
             docker compose down
             docker compose up -d users-app
