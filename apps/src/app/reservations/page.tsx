@@ -4,7 +4,9 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ReservationCard } from '@/entities/reservation/ui/ReservationCard';
+import { ReviewModal } from '@/features/review';
 import type { Reservation, ReservationTab } from '@/entities/reservation/model/types';
+import type { CreateReviewData } from '@/entities/review';
 
 // 임시 데이터
 const MOCK_RESERVATIONS: Reservation[] = [
@@ -32,12 +34,38 @@ const MOCK_RESERVATIONS: Reservation[] = [
     },
     amount: 54000,
   },
+  {
+    id: '3',
+    serviceType: '대청소',
+    location: '서울시 서초구',
+    status: 'completed',
+    dateTime: '2024년 2월 28일 · 오전 9:00',
+    worker: {
+      id: '2',
+      name: '이수정',
+    },
+    amount: 75000,
+  },
+  {
+    id: '4',
+    serviceType: '부분 청소',
+    location: '서울시 마포구',
+    status: 'completed',
+    dateTime: '2024년 2월 20일 · 오후 2:00',
+    worker: {
+      id: '3',
+      name: '박영호',
+    },
+    amount: 45000,
+  },
 ];
 
 export default function ReservationsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<ReservationTab>('upcoming');
-  const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS); // 실제로는 API에서 가져와야 함
+  const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [selectedReservationId, setSelectedReservationId] = useState<string>('');
 
   const handleCancel = (id: string) => {
     // TODO: Implement reservation cancellation
@@ -51,6 +79,18 @@ export default function ReservationsPage() {
   const handleNewReservation = () => {
     // TODO: Navigate to reservation creation page
     router.push('/reservation/form');
+  };
+
+  const handleReview = (id: string) => {
+    setSelectedReservationId(id);
+    setIsReviewModalOpen(true);
+  };
+
+  const handleReviewSubmit = (reviewData: CreateReviewData) => {
+    // TODO: Implement review submission API call
+    console.log('Submit review:', reviewData);
+    // 실제 구현에서는 API 호출 후 성공 메시지 표시
+    alert('리뷰가 등록되었습니다.');
   };
 
   const filteredReservations = reservations.filter((reservation) =>
@@ -113,6 +153,7 @@ export default function ReservationsPage() {
               reservation={reservation}
               onCancel={handleCancel}
               onViewDetails={handleViewDetails}
+              onReview={handleReview}
             />
           ))
         ) : (
@@ -138,6 +179,14 @@ export default function ReservationsPage() {
           </div>
         )}
       </div>
+
+      {/* Review Modal */}
+      <ReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        onSubmit={handleReviewSubmit}
+        reservationId={selectedReservationId}
+      />
     </main>
   );
 } 

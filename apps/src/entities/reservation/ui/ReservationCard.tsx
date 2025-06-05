@@ -8,12 +8,14 @@ interface ReservationCardProps {
   reservation: Reservation;
   onCancel?: (id: string) => void;
   onViewDetails?: (id: string) => void;
+  onReview?: (id: string) => void;
 }
 
 export const ReservationCard: React.FC<ReservationCardProps> = ({
   reservation,
   onCancel,
   onViewDetails,
+  onReview,
 }) => {
   const { id, serviceType, location, status, dateTime, worker, amount } = reservation;
 
@@ -70,6 +72,14 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
             className="flex-1 rounded-[22px] border border-[#CCCCCC] py-3 text-sm font-medium text-[#666666]"
           >
             취소
+          </button>
+        )}
+        {status === 'completed' && onReview && (
+          <button
+            onClick={() => onReview(id)}
+            className="flex-1 rounded-[22px] border border-[#0fbcd6] py-3 text-sm font-medium text-[#0fbcd6]"
+          >
+            리뷰
           </button>
         )}
         <button
