@@ -77,13 +77,13 @@ export default function ReservationsPage() {
           >
             <span
               className={`text-base ${
-                activeTab === 'upcoming' ? 'font-extrabold text-[#2563EB]' : 'font-medium text-[#999999]'
+                activeTab === 'upcoming' ? 'font-extrabold text-[#0fbcd6]' : 'font-medium text-[#999999]'
               }`}
             >
               예정된 예약
             </span>
             {activeTab === 'upcoming' && (
-              <div className="h-0.5 w-full bg-[#2563EB]" />
+              <div className="h-0.5 w-full bg-[#0fbcd6]" />
             )}
           </button>
           <button
@@ -92,13 +92,13 @@ export default function ReservationsPage() {
           >
             <span
               className={`text-base ${
-                activeTab === 'past' ? 'font-extrabold text-[#2563EB]' : 'font-medium text-[#999999]'
+                activeTab === 'past' ? 'font-extrabold text-[#0fbcd6]' : 'font-medium text-[#999999]'
               }`}
             >
               지난 예약
             </span>
             {activeTab === 'past' && (
-              <div className="h-0.5 w-full bg-[#2563EB]" />
+              <div className="h-0.5 w-full bg-[#0fbcd6]" />
             )}
           </button>
         </div>
@@ -131,7 +131,7 @@ export default function ReservationsPage() {
             </div>
             <button
               onClick={handleNewReservation}
-              className="mt-3 w-[280px] rounded-xl bg-[#2563EB] py-4 text-base font-bold text-white"
+              className="mt-3 w-[280px] rounded-xl bg-[#0fbcd6] py-4 text-base font-bold text-white"
             >
               청소 서비스 예약하기
             </button>

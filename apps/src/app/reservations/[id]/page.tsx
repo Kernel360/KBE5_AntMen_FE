@@ -61,7 +61,7 @@ export default function ReservationDetailPage({ params }: { params: { id: string
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold">예약 상태</h2>
             <div className="rounded-xl bg-[#E8F0FE] px-3 py-1.5">
-              <span className="text-xs font-medium text-[#2563EB]">
+              <span className="text-xs font-medium text-[#0fbcd6]">
                 {reservation.status === 'scheduled' ? '예정됨' : reservation.status === 'completed' ? '완료' : '취소됨'}
               </span>
             </div>
@@ -105,7 +105,7 @@ export default function ReservationDetailPage({ params }: { params: { id: string
         <section className="flex flex-col gap-4">
           <h2 className="text-lg font-bold">청소 도우미</h2>
           <div className="flex items-center gap-4">
-            <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#2563EB]">
+            <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#0fbcd6]">
               <span className="text-base font-extrabold text-white">
                 {reservation.worker.name.charAt(0)}
               </span>
@@ -174,7 +174,7 @@ export default function ReservationDetailPage({ params }: { params: { id: string
         </button>
         <button
           onClick={handleContact}
-          className="flex-1 rounded-xl bg-[#2563EB] py-4 text-base font-extrabold text-white"
+          className="flex-1 rounded-xl bg-[#0fbcd6] py-4 text-base font-extrabold text-white"
         >
           청소 도우미에게 연락하기
         </button>

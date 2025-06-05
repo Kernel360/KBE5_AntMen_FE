@@ -40,7 +40,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
           </div>
         </div>
         <div className="rounded-xl bg-[#E8F0FE] px-3 py-1.5">
-          <span className="text-xs font-medium text-[#2563EB]">
+          <span className="text-xs font-medium text-[#0fbcd6]">
             {status === 'scheduled' ? '예정됨' : status === 'completed' ? '완료' : '취소됨'}
           </span>
         </div>
@@ -74,7 +74,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
         )}
         <button
           onClick={() => onViewDetails?.(id)}
-          className="flex-1 rounded-[22px] bg-[#2563EB] py-3 text-sm font-extrabold text-white"
+          className="flex-1 rounded-[22px] bg-[#0fbcd6] py-3 text-sm font-extrabold text-white"
         >
           상세보기
         </button>
