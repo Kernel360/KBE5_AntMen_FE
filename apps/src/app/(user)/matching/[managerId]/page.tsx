@@ -61,8 +61,8 @@ export default function ManagerDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex justify-center">
-      <div className="w-full max-w-[370px] min-h-screen flex flex-col relative">
+    <div className="min-h-screen bg-gray-50">
+      <div className="w-full max-w-[370px] mx-auto min-h-screen flex flex-col relative bg-white">
         {/* Header */}
         <header className="flex items-center justify-between p-4 border-b">
           <Link href="/matching" className="text-gray-800">

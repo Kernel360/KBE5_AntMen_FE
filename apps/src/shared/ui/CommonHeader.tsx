@@ -41,7 +41,7 @@ export const CommonHeader = ({
 
   return (
     <div className="w-full bg-white border-b border-gray-200">
-      <div className="flex justify-between items-center px-4 py-2">
+      <div className="h-[64px] flex justify-between items-center px-4">
         {showBackButton && (
           <button 
             onClick={handleBack}
@@ -60,12 +60,14 @@ export const CommonHeader = ({
         )}
         {!showBackButton && !showCloseButton && <div className="w-5 h-5" />}
         
-        <div className="flex flex-col items-center flex-1">
-          <h1 className="text-[17px] font-semibold font-[Apple_SD_Gothic_Neo]">
+        <div className={`flex flex-col items-center flex-1 ${subtitle ? 'gap-1' : 'py-1'}`}>
+          <h1 className={`font-semibold font-[Apple_SD_Gothic_Neo] ${
+            subtitle ? 'text-[18px]' : 'text-[20px]'
+          }`}>
             {title}
           </h1>
           {subtitle && (
-            <p className="text-sm text-slate-500 mt-0.5">
+            <p className="text-sm text-slate-500">
               {subtitle}
             </p>
           )}

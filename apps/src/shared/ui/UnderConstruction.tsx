@@ -10,9 +10,10 @@ const UnderConstruction: FC<UnderConstructionProps> = ({
   return (
     <div className="flex min-h-[50vh] items-center justify-center">
       <div className="text-center">
-        <h4 className="text-xl font-Apple_SD_Gothic_Neo font-semibold text-gray-400">
-          {message}
-        </h4>
+        <h4 
+          className="text-xl font-Apple_SD_Gothic_Neo font-semibold text-gray-400"
+          dangerouslySetInnerHTML={{ __html: message }}
+        />
       </div>
     </div>
   );

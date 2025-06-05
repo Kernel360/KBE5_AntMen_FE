@@ -29,8 +29,8 @@ export default function MatchingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex justify-center">
-      <div className="w-full max-w-[370px] min-h-screen flex flex-col relative">
+    <div className="min-h-screen bg-gray-50">
+      <div className="w-full max-w-[370px] mx-auto min-h-screen flex flex-col relative">
         <MatchingHeader selectedCount={selectedManagers.length} />
         <div className="flex-1 overflow-y-auto pb-[140px]">
           <ManagerList 
