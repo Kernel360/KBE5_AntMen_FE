@@ -3,6 +3,7 @@
 import {useSearchParams} from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 interface AuthResponse {
     success: boolean;
@@ -68,8 +69,20 @@ export function LoginGateway() {
             if (result.success && result.token) {
                 console.log('✅ 로그인 성공, 토큰:', result.token);
 
-                localStorage.setItem('auth-token', result.token);
-                localStorage.setItem('login-time', new Date().toISOString());
+                // 쿠키에 토큰 저장 (7일 만료)
+                Cookies.set('auth-token', formatTokenForServer(result.token), {
+                    expires: 7,           // 7일 후 만료
+                    secure: false,         // HTTPS에서만 전송
+                    sameSite: 'strict',   // CSRF 공격 방지
+                    path: '/'            // 모든 경로에서 접근 가능
+                });
+
+                Cookies.set('auth-time', new Date().toISOString(), {
+                    expires: 7,
+                    secure: false,
+                    sameSite: 'strict',
+                    path: '/'
+                });
 
                 console.log('🏠 메인 페이지로 이동');
                 router.push('/');
@@ -93,6 +106,13 @@ export function LoginGateway() {
             // 주의: 여기서 isProcessing을 false로 하지 말 것!
             // 한 번 처리된 코드는 다시 처리하지 않도록 함
         }
+    };
+
+    const formatTokenForServer = (token: string): string => {
+        // 기존 "Bearer " 접두사 제거 (공백 포함/미포함 모두 처리)
+        const cleanToken = token.replace(/^Bearer\s*/i, '');
+        // "Bearer " (공백 포함) + 토큰 형태로 반환
+        return `Bearer ${cleanToken}`;
     };
 
     return null;
