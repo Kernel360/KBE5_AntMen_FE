@@ -1,3 +1,5 @@
+"use client";
+
 import { BellIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -11,10 +13,18 @@ export function HomeHeader() {
     router.push('/reservation');
   };
 
+  const handleNotificationClick = () => {
+    router.push('/notifications');
+  };
+
   return (
     <div className="bg-[#0fbcd6] p-4 pb-6">
       <div className="flex justify-end mb-6">
-        <button className="relative">
+        <button 
+          className="relative"
+          onClick={handleNotificationClick}
+          aria-label="알림 보기"
+        >
           <BellIcon className="w-6 h-6 text-white" />
           <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
             1
