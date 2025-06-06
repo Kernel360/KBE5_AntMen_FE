@@ -5,15 +5,15 @@
  * 
  * 1. 결제하면 결제 컴포넌트 불러오기 ✅
  * 2. 예약 취소 버튼 누르면 예약 취소 모달 띄우기 RejectReservationModal ✅
- * 3. 결제 페이지 이동 필요
+ * 3. 결제 페이지 이동 필요 ✅
  * 4. 예약 리스트 예약 상태 수정
  * 5. 매니저 리스트 추가 필요
  **/ 
 
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronLeft, Star, X, CreditCard } from 'lucide-react';
 
 interface ReservationDetailPageProps {
@@ -483,7 +483,22 @@ const mockReservationDetail: ReservationDetail = {
 
 export default function ReservationDetailPage({ params }: ReservationDetailPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [reservation, setReservation] = useState<ReservationDetail>(mockReservationDetail);
+
+  // 결제 성공 시 처리
+  useEffect(() => {
+    if (searchParams) {
+      const paymentSuccess = searchParams.get('payment');
+      if (paymentSuccess === 'success') {
+        setReservation(prev => ({
+          ...prev,
+          paymentStatus: 'paid',
+          paymentMethod: '신한카드 (1234-56XX-XXXX-7890)'
+        }));
+      }
+    }
+  }, [searchParams]);
 
   const handleCancel = () => {
     console.log('Cancel reservation:', params.id);
@@ -491,13 +506,9 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
   };
 
   const handlePayment = () => {
-    console.log('Process payment for reservation:', params.id);
-    // TODO: 결제 페이지로 이동하거나 결제 모달 띄우기
-    // 임시로 결제 완료 상태로 변경
-    setReservation(prev => ({
-      ...prev,
-      paymentStatus: 'paid'
-    }));
+    console.log('Navigate to payment page for reservation:', params.id);
+    // 결제 페이지로 이동
+    router.push(`/myreservation/${params.id}/payment`);
   };
 
   return (
