@@ -87,7 +87,7 @@ export function ManagerList({ selectedManagers, onManagerSelect }: ManagerListPr
                 </div>
               </div>
               <div className="mt-4 flex justify-end">
-                <Link href={`/matching/${manager.id}`}>
+                <Link href={`/matching/manager/${manager.id}`}>
                   <button className="px-3 py-1.5 rounded-lg bg-slate-50 text-sm text-slate-600 hover:bg-slate-100">
                     상세보기
                   </button>

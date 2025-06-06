@@ -90,7 +90,7 @@ export default function ReservationDetailPage() {
                 {manager.profileImage}
               </div>
               <h2 className="text-2xl font-bold mb-2">{manager.name} 매니저</h2>
-              <p className="text-gray-600 mb-2">{manager.gender} · {manager.age}세 · {manager.experience}년 경력</p>
+              <p className="text-gray-600 mb-2">{manager.gender} · {manager.age}세 </p>
               <div className="flex items-center gap-1 mb-4">
                 {Array(Math.floor(manager.rating)).fill(null).map((_, index) => (
                   <DynamicIcon key={index} icon={AiFillStar} className="text-yellow-400" size={20} />
