@@ -7,7 +7,7 @@ export default function NavigationLayout({
 }) {
   return (
     <>
-      <div id="page-container" className="min-h-screen">
+      <div id="page-container" className="min-h-screen pb-[72px]">
         {children}
       </div>
       <BottomNavigation />

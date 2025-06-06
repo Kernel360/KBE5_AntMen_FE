@@ -61,7 +61,7 @@ export default function ReservationsPage() {
   return (
     <main className="flex min-h-screen flex-col bg-white">
       {/* Header */}
-      <header className="flex items-center justify-between p-5">
+      <header className="sticky top-0 z-30 flex items-center justify-between p-5 bg-white">
         <button onClick={() => router.back()} className="flex h-6 w-6 items-center justify-center">
           <Image src="/icons/arrow-left.svg" alt="뒤로가기" width={24} height={24} />
         </button>
@@ -70,52 +70,56 @@ export default function ReservationsPage() {
       </header>
 
       {/* Tab Section */}
-      <div className="flex flex-col gap-4 px-5">
-        <div className="flex gap-10">
-          <button
-            onClick={() => setActiveTab('upcoming')}
-            className="flex flex-col items-center gap-2"
-          >
-            <span
-              className={`text-base ${
-                activeTab === 'upcoming' ? 'font-extrabold text-[#0fbcd6]' : 'font-medium text-[#999999]'
-              }`}
+      <div className="sticky top-[72px] z-20 bg-white">
+        <div className="flex flex-col gap-4 px-5">
+          <div className="flex gap-10">
+            <button
+              onClick={() => setActiveTab('upcoming')}
+              className="flex flex-col items-center gap-2"
             >
-              예정된 예약
-            </span>
-            {activeTab === 'upcoming' && (
-              <div className="h-0.5 w-full bg-[#0fbcd6]" />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('past')}
-            className="flex flex-col items-center gap-2"
-          >
-            <span
-              className={`text-base ${
-                activeTab === 'past' ? 'font-extrabold text-[#0fbcd6]' : 'font-medium text-[#999999]'
-              }`}
+              <span
+                className={`text-base ${
+                  activeTab === 'upcoming' ? 'font-extrabold text-[#0fbcd6]' : 'font-medium text-[#999999]'
+                }`}
+              >
+                예정된 예약
+              </span>
+              {activeTab === 'upcoming' && (
+                <div className="h-0.5 w-full bg-[#0fbcd6]" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('past')}
+              className="flex flex-col items-center gap-2"
             >
-              지난 예약
-            </span>
-            {activeTab === 'past' && (
-              <div className="h-0.5 w-full bg-[#0fbcd6]" />
-            )}
-          </button>
+              <span
+                className={`text-base ${
+                  activeTab === 'past' ? 'font-extrabold text-[#0fbcd6]' : 'font-medium text-[#999999]'
+                }`}
+              >
+                지난 예약
+              </span>
+              {activeTab === 'past' && (
+                <div className="h-0.5 w-full bg-[#0fbcd6]" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Reservation List or Empty State */}
-      <div className="flex flex-1 flex-col gap-6 p-5">
+      <div className="flex-1 overflow-y-auto">
         {filteredReservations.length > 0 ? (
-          filteredReservations.map((reservation) => (
-            <ReservationCard
-              key={reservation.id}
-              reservation={reservation}
-              onCancel={handleCancel}
-              onViewDetails={handleViewDetails}
-            />
-          ))
+          <div className="space-y-4 p-5">
+            {filteredReservations.map((reservation) => (
+              <ReservationCard
+                key={reservation.id}
+                reservation={reservation}
+                onCancel={handleCancel}
+                onViewDetails={handleViewDetails}
+              />
+            ))}
+          </div>
         ) : (
           <div className="flex h-[500px] flex-col items-center justify-center gap-6 p-6">
             <div className="relative h-[120px] w-[120px]">

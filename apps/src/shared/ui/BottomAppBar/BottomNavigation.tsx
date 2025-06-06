@@ -48,12 +48,6 @@ export function BottomNavigation() {
         isActive={pathname === '/boards'}
         href="/boards"
       />
-        <NavItem
-            icon={<MapPinIcon className="h-full w-full" />}
-            label="주소 관리"
-            isActive={pathname === '/address'}
-            href="/address"
-        />
       <NavItem
         icon={<CalendarIcon className="h-full w-full" />}
         label="내 예약"

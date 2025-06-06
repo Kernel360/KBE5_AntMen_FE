@@ -26,20 +26,22 @@ export default function UserBoardsPage() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <BoardHeader />
-      <BoardSearchBar 
-        onSearch={handleSearch}
-        onFilterClick={() => setIsSortModalOpen(true)}
-      />
-      <BoardTabs
-        userRole="user"
-        activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab as typeof activeTab)}
-      />
-      <div className="flex-1 overflow-y-auto">
+      <div className="sticky top-0 z-10">
+        <BoardHeader />
+        <BoardSearchBar 
+          onSearch={handleSearch}
+          onFilterClick={() => setIsSortModalOpen(true)}
+        />
+        <BoardTabs
+          userRole="customer"
+          activeTab={activeTab}
+          onTabChange={(tab) => setActiveTab(tab as typeof activeTab)}
+        />
+      </div>
+      <div className="pb-[72px]">
         <div className="mx-auto w-full max-w-[430px]">
           <PostList 
-            userRole="user"
+            userRole="customer"
             boardType={activeTab}
           />
         </div>
@@ -49,6 +51,7 @@ export default function UserBoardsPage() {
         onClose={() => setIsSortModalOpen(false)}
         selectedSort={selectedSort}
         onSortChange={handleSortChange}
+        boardType={activeTab}
       />
     </main>
   );

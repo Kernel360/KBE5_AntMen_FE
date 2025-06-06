@@ -2,13 +2,13 @@ import { useRef, useState } from 'react';
 import { BoardType, UserRole } from '@/shared/types/board';
 
 interface BoardTabsProps {
-  userRole: 'user' | 'manager';
+  userRole: 'customer' | 'manager';
   activeTab: '공지사항' | '서비스 문의' | '업무 문의';
   onTabChange: (tab: '공지사항' | '서비스 문의' | '업무 문의') => void;
 }
 
 export const BoardTabs = ({ userRole, activeTab, onTabChange }: BoardTabsProps) => {
-  const tabs = userRole === 'user' 
+  const tabs = userRole === 'customer' 
     ? ['공지사항', '서비스 문의'] as const
     : ['공지사항', '업무 문의'] as const;
 

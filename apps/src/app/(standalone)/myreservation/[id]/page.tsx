@@ -760,29 +760,35 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[375px] mx-auto min-h-screen bg-white">
-        <ReservationHeader />
-        
-        <div className="divide-y divide-gray-100">
-          <ReservationStatusSection reservation={reservation} />
-          <ServiceInfoSection reservation={reservation} />
-          <CleanerInfoSection worker={reservation.worker} />
-          
-          {/* 결제 상태에 따라 다른 컴포넌트 표시 */}
-          {reservation.paymentStatus === 'pending' ? (
-            <PaymentPreviewSection reservation={reservation} />
-          ) : (
-            <PaymentInfoSection reservation={reservation} />
-          )}
+      <div className="max-w-[375px] mx-auto min-h-screen bg-white flex flex-col">
+        <div className="sticky top-0 z-30 bg-white">
+          <ReservationHeader />
         </div>
         
-        <ActionButtonsSection 
-          reservation={reservation} 
-          onCancel={handleCancel}
-          onPayment={handlePayment}
-          onRefund={handleRefund}
-          reservationId={params.id}
-        />
+        <div className="flex-1 overflow-y-auto pb-[140px]">
+          <div className="divide-y divide-gray-100">
+            <ReservationStatusSection reservation={reservation} />
+            <ServiceInfoSection reservation={reservation} />
+            <CleanerInfoSection worker={reservation.worker} />
+            
+            {/* 결제 상태에 따라 다른 컴포넌트 표시 */}
+            {reservation.paymentStatus === 'pending' ? (
+              <PaymentPreviewSection reservation={reservation} />
+            ) : (
+              <PaymentInfoSection reservation={reservation} />
+            )}
+          </div>
+        </div>
+        
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[375px] bg-white border-t border-gray-100">
+          <ActionButtonsSection 
+            reservation={reservation} 
+            onCancel={handleCancel}
+            onPayment={handlePayment}
+            onRefund={handleRefund}
+            reservationId={params.id}
+          />
+        </div>
       </div>
     </div>
   );

@@ -11,9 +11,7 @@ const NOTICE_SORT_OPTIONS = [
 const INQUIRY_SORT_OPTIONS = [
   { id: 'latest', label: '최신순' },
   { id: 'oldest', label: '오래된순' },
-  { id: 'mostComments', label: '댓글 많은 순' },
-  { id: 'waiting', label: '답변 대기 순' },
-  { id: 'completed', label: '답변 완료 순' },
+  { id: 'waiting', label: '미답변순' },
 ] as const;
 
 interface BoardSortModalProps {
@@ -44,27 +42,37 @@ export const BoardSortModal = ({
       />
 
       {/* Modal */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[370px] bg-white rounded-t-2xl z-50 overflow-hidden">
-        <div className="p-4">
-          <h3 className="text-lg font-semibold mb-2">정렬</h3>
-          <div className="space-y-2">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[370px] bg-white rounded-t-2xl z-50">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-bold text-gray-900">정렬</h3>
+        </div>
+
+        {/* Options */}
+        <div className="px-5 py-2">
+          <div className="divide-y divide-gray-100">
             {sortOptions.map((option) => (
               <button
                 key={option.id}
-                className="flex items-center justify-between w-full p-3 rounded-xl hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-between w-full py-3.5"
                 onClick={() => {
                   onSortChange(option.id);
                   onClose();
                 }}
               >
-                <span className="text-base text-gray-900">{option.label}</span>
+                <span className={`text-base font-medium ${selectedSort === option.id ? 'text-gray-900' : 'text-gray-600/70'}`}>
+                  {option.label}
+                </span>
                 {selectedSort === option.id && (
-                  <Check className="h-5 w-5 text-primary" />
+                  <Check className="h-5 w-5 text-primary" strokeWidth={2.5} />
                 )}
               </button>
             ))}
           </div>
         </div>
+
+        {/* Bottom Padding */}
+        <div className="h-6" />
       </div>
     </>
   );

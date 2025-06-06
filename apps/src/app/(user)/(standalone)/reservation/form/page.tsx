@@ -295,9 +295,9 @@ export default function ReservationForm() {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-[140px] relative">
+    <div className="min-h-screen bg-white">
       {/* Navigation Header */}
-      <div className="h-14 flex items-center px-4 border-b border-[#EEEEEE]">
+      <div className="sticky top-0 z-30 h-14 flex items-center px-4 border-b border-[#EEEEEE] bg-white">
         {/* @ts-ignore */}
         <Link href="/reservation" className="w-6 h-6 flex items-center justify-center">
           {/* @ts-ignore */}
@@ -727,7 +727,7 @@ export default function ReservationForm() {
             />
             
             {/* Modal */}
-            <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[328px] bg-white rounded-t-2xl z-50 max-h-[80vh] overflow-auto">
+            <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[328px] bg-white rounded-t-2xl z-50 max-h-[80vh] overflow-y-auto">
               {/* Header */}
               <div className="flex justify-between items-center p-4 border-b border-[#EEEEEE] sticky top-0 bg-white">
                 <button 

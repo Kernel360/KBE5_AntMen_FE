@@ -312,21 +312,23 @@ export default function MatchingConfirmationPage({ params }: MatchingConfirmatio
 
   return (
     <div className="min-h-screen bg-slate-50 flex justify-center">
-      <div className="w-full max-w-[375px] min-h-screen flex flex-col bg-slate-50">
-        <MatchingHeader />
+      <div className="w-full max-w-[375px] min-h-screen flex flex-col bg-white">
+        <div className="sticky top-0 z-30 bg-white">
+          <MatchingHeader />
+        </div>
         
-        <div className="flex-1 px-5 py-5 space-y-5">
+        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5 pb-[140px]">
           <ManagerCards managers={matchingData.managers} />
-          
           <ReservationSummary reservation={matchingData.reservation} />
-          
           <OptionsSummary 
             options={matchingData.options}
             totalAmount={matchingData.totalAmount}
           />
         </div>
         
-        <MatchingActions matchingId={matchingData.id} />
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[375px] bg-white border-t border-slate-100">
+          <MatchingActions matchingId={matchingData.id} />
+        </div>
       </div>
     </div>
   );
