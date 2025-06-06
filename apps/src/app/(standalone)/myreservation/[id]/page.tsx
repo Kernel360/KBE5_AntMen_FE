@@ -8,13 +8,14 @@
  * 3. 결제 페이지 이동 필요 ✅
  * 4. 예약 리스트 예약 상태 수정
  * 5. 매니저 리스트 추가 필요
+ * 6. 환불 기능 구현 ✅
  **/ 
 
 "use client";
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, Star, X, CreditCard } from 'lucide-react';
+import { ChevronLeft, Star, X, CreditCard, AlertTriangle } from 'lucide-react';
 
 interface ReservationDetailPageProps {
   params: {
@@ -56,15 +57,183 @@ interface ReservationDetail {
   createdAt: string;
 }
 
-// 예약 취소 모달 컴포넌트
-const RejectReservationModal = ({ 
+// 환불 사유 입력 모달 컴포넌트
+const RefundReasonModal = ({ 
   isOpen, 
   onClose, 
   onConfirm 
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
+  onConfirm: (reason: string) => void;
+}) => {
+  const [reason, setReason] = useState('');
+  const [selectedReason, setSelectedReason] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const predefinedReasons = [
+    '개인 사정으로 인한 취소',
+    '일정 변경이 어려워서',
+    '서비스가 더 이상 필요하지 않음',
+    '다른 업체를 이용하기로 함',
+    '기타'
+  ];
+
+  const handleConfirm = async () => {
+    const finalReason = selectedReason === '기타' ? reason : selectedReason;
+    
+    if (!finalReason.trim()) {
+      alert('취소 사유를 입력해주세요.');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      // 환불 처리 시뮬레이션
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      onConfirm(finalReason);
+    } catch (error) {
+      console.error('Refund request failed:', error);
+      alert('환불 신청 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    setReason('');
+    setSelectedReason('');
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50">
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={handleClose} />
+
+      {/* Modal */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[335px] max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-xl">
+          {/* Modal Header */}
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-black">환불 신청</h2>
+                  <p className="text-sm text-gray-500">취소 사유를 선택해주세요</p>
+                </div>
+              </div>
+              <button onClick={handleClose} className="text-gray-500">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+
+          {/* Reason Selection */}
+          <div className="p-6 space-y-4">
+            <div className="space-y-3">
+              {predefinedReasons.map((reasonOption) => (
+                <button
+                  key={reasonOption}
+                  onClick={() => setSelectedReason(reasonOption)}
+                  className={`w-full text-left p-4 border rounded-xl transition-colors ${
+                    selectedReason === reasonOption
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-black">{reasonOption}</span>
+                    {selectedReason === reasonOption && (
+                      <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" viewBox="0 0 14 14" fill="none" stroke="currentColor">
+                          <path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Custom Reason Input */}
+            {selectedReason === '기타' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">상세 사유</label>
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="취소 사유를 자세히 입력해주세요."
+                  className="w-full p-3 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  rows={4}
+                  maxLength={200}
+                />
+                <div className="text-right">
+                  <span className="text-xs text-gray-500">{reason.length}/200</span>
+                </div>
+              </div>
+            )}
+
+            {/* Refund Info */}
+            <div className="bg-blue-50 rounded-xl p-4">
+              <h4 className="text-sm font-semibold text-blue-900 mb-2">환불 안내</h4>
+              <ul className="text-xs text-blue-700 space-y-1">
+                <li>• 환불 처리는 영업일 기준 3-5일 소요됩니다</li>
+                <li>• 결제 수단과 동일한 방법으로 환불됩니다</li>
+                <li>• 환불 완료 시 SMS로 알림을 보내드립니다</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Modal Actions */}
+          <div className="p-6 pt-0">
+            <div className="flex gap-3">
+              <button
+                onClick={handleClose}
+                disabled={isLoading}
+                className="flex-1 py-3.5 rounded-lg bg-gray-50 text-gray-600 font-semibold text-base border border-gray-200 disabled:opacity-50"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={isLoading || !selectedReason}
+                className="flex-1 py-3.5 rounded-lg bg-red-500 text-white font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>처리 중...</span>
+                  </div>
+                ) : (
+                  '환불 신청'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 예약 취소 모달 컴포넌트 (수정)
+const RejectReservationModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm,
+  isPaid = false
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
   onConfirm: (option: 'cancel' | 'reschedule') => void;
+  isPaid?: boolean;
 }) => {
   if (!isOpen) return null;
 
@@ -84,7 +253,9 @@ const RejectReservationModal = ({
                 <X className="w-6 h-6" />
               </button>
             </div>
-            <p className="text-sm text-gray-500">취소 후 진행 방법을 선택해주세요</p>
+            <p className="text-sm text-gray-500">
+              {isPaid ? '결제가 완료된 예약입니다. 취소 후 진행 방법을 선택해주세요.' : '취소 후 진행 방법을 선택해주세요'}
+            </p>
           </div>
 
           {/* Options List */}
@@ -100,9 +271,11 @@ const RejectReservationModal = ({
                 </svg>
               </div>
               <div className="text-left">
-                <h3 className="text-sm font-semibold text-black">예약 완전 취소</h3>
+                <h3 className="text-sm font-semibold text-black">
+                  {isPaid ? '예약 취소 및 환불 신청' : '예약 완전 취소'}
+                </h3>
                 <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                  예약을 완전히 취소하고 환불을 받습니다
+                  {isPaid ? '예약을 취소하고 환불을 신청합니다' : '예약을 완전히 취소합니다'}
                 </p>
               </div>
             </button>
@@ -180,6 +353,10 @@ const ReservationHeader = () => {
 // 예약 상태 섹션
 const ReservationStatusSection = ({ reservation }: { reservation: ReservationDetail }) => {
   const getStatusInfo = (status: string, paymentStatus: string) => {
+    if (paymentStatus === 'refunded') {
+      return { text: '환불 완료', bgColor: 'bg-gray-50', textColor: 'text-gray-600' };
+    }
+    
     if (paymentStatus === 'pending') {
       return { text: '결제 대기', bgColor: 'bg-orange-50', textColor: 'text-orange-600' };
     }
@@ -221,6 +398,20 @@ const ReservationStatusSection = ({ reservation }: { reservation: ReservationDet
           <span className="text-sm font-medium text-gray-600">예약일</span>
           <span className="text-sm font-medium text-black">{new Date(reservation.createdAt).toLocaleDateString('ko-KR')}</span>
         </div>
+
+        {/* 환불 완료 시 환불 정보 추가 표시 */}
+        {reservation.paymentStatus === 'refunded' && (
+          <>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-600">취소일</span>
+              <span className="text-sm font-medium text-black">{new Date().toLocaleDateString('ko-KR')}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-600">환불 금액</span>
+              <span className="text-sm font-medium text-red-600">₩{reservation.amount.toLocaleString()}</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -362,34 +553,47 @@ const PaymentInfoSection = ({ reservation }: { reservation: ReservationDetail })
   );
 };
 
-// 액션 버튼 섹션
-const ActionButtonsSection = ({ reservation, onCancel, onPayment }: { 
+// 액션 버튼 섹션 (수정)
+const ActionButtonsSection = ({ reservation, onCancel, onPayment, onRefund, reservationId }: { 
   reservation: ReservationDetail; 
   onCancel: () => void;
   onPayment: () => void;
+  onRefund: (reason: string) => void;
+  reservationId: string;
 }) => {
-  const [showRejectModal, setShowRejectModal] = useState(false);
   const router = useRouter();
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showRefundModal, setShowRefundModal] = useState(false);
 
   const handleContactWorker = () => {
-    console.log('Contact worker:', reservation.worker.phone);
+    console.log('Contact worker:', reservation.worker.id);
   };
 
   const handleRejectConfirm = (option: 'cancel' | 'reschedule') => {
     console.log('Reject option selected:', option);
     
     if (option === 'cancel') {
-      // 완전 취소 로직
-      console.log('Complete cancellation');
-      onCancel();
-      setShowRejectModal(false);
+      // 결제 완료 상태면 환불 모달, 아니면 바로 취소
+      if (reservation.paymentStatus === 'paid') {
+        setShowRejectModal(false);
+        setShowRefundModal(true);
+      } else {
+        console.log('Complete cancellation');
+        onCancel();
+        setShowRejectModal(false);
+      }
     } else if (option === 'reschedule') {
-      // 일정 변경 로직 - 예약 폼으로 이동하거나 일정 변경 페이지로 이동
-      console.log('Reschedule reservation');
+      // 일정 변경 로직 - 재매칭 페이지로 이동 (예약 ID 포함)
+      console.log('Reschedule reservation with ID:', reservationId);
       setShowRejectModal(false);
-      // TODO: 일정 변경 페이지로 이동
-      router.push('/reservation/form');
+      router.push(`/reservation/${reservationId}/matching/managers`);
     }
+  };
+
+  const handleRefundConfirm = (reason: string) => {
+    console.log('Refund requested with reason:', reason);
+    onRefund(reason);
+    setShowRefundModal(false);
   };
 
   if (reservation.status === 'cancelled') {
@@ -424,8 +628,29 @@ const ActionButtonsSection = ({ reservation, onCancel, onPayment }: {
           isOpen={showRejectModal}
           onClose={() => setShowRejectModal(false)}
           onConfirm={handleRejectConfirm}
+          isPaid={false}
         />
       </>
+    );
+  }
+
+  // 환불 상태
+  if (reservation.paymentStatus === 'refunded') {
+    return (
+      <div className="bg-white px-5 py-6">
+        <div className="bg-gray-50 rounded-xl p-4 text-center">
+          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <svg className="w-6 h-6 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <h3 className="text-sm font-semibold text-gray-600 mb-2">환불 완료</h3>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            예약이 취소되고 환불이 완료되었습니다.<br />
+            환불 금액은 영업일 기준 3-5일 내에 입금됩니다.
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -447,6 +672,14 @@ const ActionButtonsSection = ({ reservation, onCancel, onPayment }: {
         isOpen={showRejectModal}
         onClose={() => setShowRejectModal(false)}
         onConfirm={handleRejectConfirm}
+        isPaid={true}
+      />
+
+      {/* 환불 사유 입력 모달 */}
+      <RefundReasonModal
+        isOpen={showRefundModal}
+        onClose={() => setShowRefundModal(false)}
+        onConfirm={handleRefundConfirm}
       />
     </>
   );
@@ -511,6 +744,20 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
     router.push(`/myreservation/${params.id}/payment`);
   };
 
+  const handleRefund = (reason: string) => {
+    console.log('Process refund for reservation:', params.id, 'Reason:', reason);
+    
+    // 환불 처리 및 상태 업데이트
+    setReservation(prev => ({
+      ...prev,
+      status: 'cancelled',
+      paymentStatus: 'refunded'
+    }));
+
+    // TODO: 실제 환불 API 호출
+    // API를 통해 환불 사유와 함께 환불 요청을 서버에 전송
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-[375px] mx-auto min-h-screen bg-white">
@@ -533,6 +780,8 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
           reservation={reservation} 
           onCancel={handleCancel}
           onPayment={handlePayment}
+          onRefund={handleRefund}
+          reservationId={params.id}
         />
       </div>
     </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { MAX_MANAGER_COUNT } from '@/widgets/manager/model/manager';
 import { MANAGER_NAMES } from '@/widgets/manager/model/manager';
 
@@ -11,6 +12,17 @@ interface BottomSectionProps {
 
 export function BottomSection({ selectedManagers, reservationId }: BottomSectionProps) {
   const router = useRouter();
+  const [currentReservationId, setCurrentReservationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // 처음 예약의 경우 localStorage에서 reservationId 가져오기
+    if (!reservationId && typeof window !== 'undefined') {
+      const storedId = localStorage.getItem('currentReservationId');
+      setCurrentReservationId(storedId);
+    } else {
+      setCurrentReservationId(reservationId || null);
+    }
+  }, [reservationId]);
 
   const getSelectedManagerNames = () => {
     if (selectedManagers.length === 0) return '';
@@ -31,21 +43,26 @@ export function BottomSection({ selectedManagers, reservationId }: BottomSection
       //   headers: { 'Content-Type': 'application/json' },
       //   body: JSON.stringify({ 
       //     selectedManagers,
-      //     reservationId // 기존 예약 ID가 있다면 함께 전송
+      //     reservationId: currentReservationId // localStorage에서 가져온 ID 또는 prop으로 받은 ID
       //   })
       // });
       // const { reservationId: newReservationId } = await response.json();
       
       console.log('Creating reservation with managers:', selectedManagers);
-      if (reservationId) {
-        console.log('Existing reservation ID:', reservationId);
+      if (currentReservationId) {
+        console.log('Using reservation ID:', currentReservationId);
       }
       
-      // 임시 예약 ID 생성 (실제로는 API에서 받아올 값)
-      const newReservationId = reservationId || 'CL-20230510-1234';
+      // 실제 예약 ID 사용 (localStorage에서 가져온 것 또는 prop으로 받은 것)
+      const finalReservationId = currentReservationId || 'CL-20230510-1234';
+      
+      // localStorage 정리 (처음 예약 완료 후)
+      if (!reservationId && typeof window !== 'undefined') {
+        localStorage.removeItem('currentReservationId');
+      }
       
       // 예약 상세 페이지로 이동
-      router.push(`/reservation/${newReservationId}/confirmation`);
+      router.push(`/reservation/${finalReservationId}/confirmation`);
     } catch (error) {
       console.error('매니저 선택 제출 오류:', error);
       alert('매니저 선택 중 오류가 발생했습니다.');

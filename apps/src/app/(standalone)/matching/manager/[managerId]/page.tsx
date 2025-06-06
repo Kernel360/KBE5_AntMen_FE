@@ -1,19 +1,51 @@
-// 매칭 요청 검토 페이지
+// 매니저 상세 페이지
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { ChevronLeftIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
-import { MANAGER_LIST } from '@/widgets/manager/model/manager';
+import { MANAGER_LIST, type Manager } from '@/widgets/manager/model/manager';
+import { ManagerDetailLoading } from '@/widgets/manager';
 
 export default function ManagerDetailPage() {
   const params = useParams();
   const router = useRouter();
   const managerId = params?.managerId as string;
   
-  const manager = MANAGER_LIST.find(m => m.id === managerId);
+  const [manager, setManager] = useState<Manager | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // 매니저 상세 데이터 로딩 시뮬레이션
+    const loadManagerDetail = async () => {
+      try {
+        // 실제 API 호출 시:
+        // const response = await fetch(`/api/managers/${managerId}`);
+        // const data = await response.json();
+        
+        // 현재는 상수 데이터에서 찾기
+        await new Promise(resolve => setTimeout(resolve, 600));
+        const foundManager = MANAGER_LIST.find(m => m.id === managerId);
+        setManager(foundManager || null);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('매니저 정보 로딩 실패:', error);
+        setManager(null);
+        setIsLoading(false);
+      }
+    };
+
+    if (managerId) {
+      loadManagerDetail();
+    }
+  }, [managerId]);
+
+  if (isLoading) {
+    return <ManagerDetailLoading />;
+  }
   
   if (!manager) {
     return (
