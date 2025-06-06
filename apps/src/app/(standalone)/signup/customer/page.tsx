@@ -1,4 +1,4 @@
-'use client';
+ 'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -132,7 +132,7 @@ const CustomerSignUpPage = () => {
       <div className="w-[375px] px-4 pt-4 pb-8">
         {/* Header */}
         <div className="mb-8">
-          <button onClick={handleBack} className="p-2 text-2xl font-bold">&larr;  고객 회원가입</button>
+          <button onClick={handleBack} className="p-2 text-2xl font-bold">&larr; 고객 회원가입</button>
         </div>
 
         {/* Main Content */}

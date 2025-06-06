@@ -12,7 +12,7 @@ import { AiFillStar } from 'react-icons/ai';
 import { IoMdHeart } from 'react-icons/io';
 import { BiTimeFive } from 'react-icons/bi';
 import { MdThumbUp } from 'react-icons/md';
-import { MANAGER_LIST } from '@/constants/manager';
+import { MANAGER_LIST } from '@/widgets/manager/model/manager';
 import type { IconType } from 'react-icons';
 
 const DynamicIcon = ({ icon, ...props }: { icon: IconType } & { className?: string; size?: number }) => {

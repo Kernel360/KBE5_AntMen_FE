@@ -17,14 +17,14 @@ function NavItem({ icon, label, isActive, href, hasBadge }: NavItemProps) {
   return (
     <button
       onClick={() => router.push(href)}
-      className="flex-1 flex flex-col items-center gap-1"
+      className="flex flex-1 flex-col items-center gap-1"
     >
       <div className="relative">
-        <div className={`w-7 h-7 ${isActive ? 'text-[#333333]' : 'text-[#999999]'}`}>
+        <div className={`h-7 w-7 ${isActive ? 'text-[#333333]' : 'text-[#999999]'}`}>
           {icon}
         </div>
         {hasBadge && (
-          <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+          <div className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-red-500" />
         )}
       </div>
       <span className={`text-xs ${isActive ? 'text-[#333333]' : 'text-[#999999]'}`}>
@@ -38,28 +38,34 @@ export function BottomNavigation() {
   const pathname = usePathname();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 max-w-[390px] mx-auto h-16 bg-white border-t flex items-center px-4">
+    <div className="fixed bottom-0 left-0 right-0 mx-auto flex h-16 max-w-[390px] items-center border-t bg-white px-4">
       <NavItem
-        icon={<HomeIcon className="w-full h-full" />}
+        icon={<HomeIcon className="h-full w-full" />}
         label="홈"
         isActive={pathname === '/'}
         href="/"
       />
       <NavItem
-        icon={<CalendarIcon className="w-full h-full" />}
+        icon={<CalendarIcon className="h-full w-full" />}
+        label="실시간 상담"
+        isActive={pathname === '/chats'}
+        href="/chats"
+      />
+      <NavItem
+        icon={<CalendarIcon className="h-full w-full" />}
         label="내 예약"
         isActive={pathname === '/reservations'}
         href="/reservations"
       />
       <NavItem
-        icon={<BellIcon className="w-full h-full" />}
-        label="활동소식"
-        isActive={pathname === '/notifications'}
-        href="/notifications"
+        icon={<BellIcon className="h-full w-full" />}
+        label="이벤트"
+        isActive={pathname === '/events'}
+        href="/events"
         hasBadge
       />
       <NavItem
-        icon={<EllipsisHorizontalIcon className="w-full h-full" />}
+        icon={<EllipsisHorizontalIcon className="h-full w-full" />}
         label="더보기"
         isActive={pathname === '/more'}
         href="/more"
