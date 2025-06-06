@@ -1,4 +1,4 @@
-// 매칭 결과 페이지: 매니저의 매칭 수락 후 사용자가 최종 수락/거절을 선택하는 페이지
+// 수요자 매칭 결과 페이지: 매니저의 매칭 수락 후 사용자가 최종 수락/거절을 선택하는 페이지
 
 'use client';
 
@@ -93,8 +93,8 @@ export default function MatchingResultPage({
       // 예약 취소 처리
       router.push('/reservation/cancel');
     } else {
-      // 다시 매칭 처리
-      router.push('/matching/rematch');
+      // 재매칭 - 매니저 리스트 페이지로 이동
+      router.push(`/reservation/${params.reservationId}/matching/managers`);
     }
   };
 

@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { ChevronLeftIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
-import { MANAGER_LIST } from '@/constants/manager';
+import { MANAGER_LIST } from '@/widgets/manager/model/manager';
 
 export default function ManagerDetailPage() {
   const params = useParams();

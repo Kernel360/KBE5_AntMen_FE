@@ -6,7 +6,7 @@ import { MANAGER_NAMES } from '@/widgets/manager/model/manager';
 
 interface BottomSectionProps {
   selectedManagers: string[];
-  reservationId: string;
+  reservationId?: string;
 }
 
 export function BottomSection({ selectedManagers, reservationId }: BottomSectionProps) {
@@ -25,17 +25,24 @@ export function BottomSection({ selectedManagers, reservationId }: BottomSection
     }
 
     try {
-      // 실제 API 호출 시:
-      // const response = await fetch(`/api/reservations/${reservationId}/managers`, {
+      // 매니저 선택 완료 후 새 예약 생성
+      // const response = await fetch('/api/reservations', {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ selectedManagers })
+      //   body: JSON.stringify({ 
+      //     selectedManagers,
+      //     reservationId // 기존 예약 ID가 있다면 함께 전송
+      //   })
       // });
+      // const { reservationId: newReservationId } = await response.json();
       
-      console.log('Selected managers:', selectedManagers);
+      console.log('Creating reservation with managers:', selectedManagers);
+      if (reservationId) {
+        console.log('Existing reservation ID:', reservationId);
+      }
       
-      // 매칭 요청 페이지로 이동
-      router.push(`/reservation/${reservationId}/matching/request`);
+      // 예약 생성 완료 페이지로 이동
+      router.push('/reservation/confirmation');
     } catch (error) {
       console.error('매니저 선택 제출 오류:', error);
       alert('매니저 선택 중 오류가 발생했습니다.');

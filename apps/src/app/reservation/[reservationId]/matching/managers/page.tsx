@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { MatchingHeader } from '@/widgets/manager/MatchingHeader';
 import { ManagerList } from '@/widgets/manager/ManagerList';
 import { BottomSection } from '@/widgets/manager/BottomSection';
-import { MANAGER_LIST, MAX_MANAGER_COUNT } from '@/constants/manager';
+import { MANAGER_LIST, MAX_MANAGER_COUNT } from '@/widgets/manager/model/manager';
 
 export default function ManagerListPage() {
   const params = useParams();
