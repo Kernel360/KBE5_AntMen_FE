@@ -170,8 +170,8 @@ const ManagerSignUpPage = () => {
       const data = await response.json();
       console.log('회원가입 성공:', data);
       
-      // Redirect to success page or login page
-      router.push('/login');
+      // Redirect to pending page instead of login page
+      router.push('/signup/manager/pending');
     } catch (error) {
       console.error('회원가입 실패:', error);
       alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.');

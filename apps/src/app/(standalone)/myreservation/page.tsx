@@ -1,3 +1,4 @@
+// 내 예약 페이지 (예약리스트)
 "use client";
 
 import React, { useState } from 'react';
@@ -45,12 +46,12 @@ export default function ReservationsPage() {
   };
 
   const handleViewDetails = (id: string) => {
-    router.push(`/reservations/${id}`);
+    router.push(`/myreservation/${id}`); // 예약 상세 페이지 경로
   };
 
   const handleNewReservation = () => {
     // TODO: Navigate to reservation creation page
-    router.push('/reservation/form');
+    router.push('/reservation/form'); 
   };
 
   const filteredReservations = reservations.filter((reservation) =>
