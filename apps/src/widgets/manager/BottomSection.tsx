@@ -41,8 +41,11 @@ export function BottomSection({ selectedManagers, reservationId }: BottomSection
         console.log('Existing reservation ID:', reservationId);
       }
       
-      // 예약 생성 완료 페이지로 이동
-      router.push('/reservation/confirmation');
+      // 임시 예약 ID 생성 (실제로는 API에서 받아올 값)
+      const newReservationId = reservationId || 'CL-20230510-1234';
+      
+      // 예약 상세 페이지로 이동
+      router.push(`/reservation/${newReservationId}/confirmation`);
     } catch (error) {
       console.error('매니저 선택 제출 오류:', error);
       alert('매니저 선택 중 오류가 발생했습니다.');

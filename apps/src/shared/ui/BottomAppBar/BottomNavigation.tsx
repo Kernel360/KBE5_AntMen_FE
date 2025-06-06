@@ -1,6 +1,6 @@
 'use client';
 
-import { HomeIcon, CalendarIcon, BellIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, CalendarIcon, BellIcon, EllipsisHorizontalIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { useRouter, usePathname } from 'next/navigation';
 
 interface NavItemProps {
@@ -46,16 +46,16 @@ export function BottomNavigation() {
         href="/"
       />
       <NavItem
-        icon={<CalendarIcon className="h-full w-full" />}
-        label="실시간 상담"
-        isActive={pathname === '/chats'}
-        href="/chats"
+        icon={<MapPinIcon className="h-full w-full" />}
+        label="주소 관리"
+        isActive={pathname === '/address'}
+        href="/address"
       />
       <NavItem
         icon={<CalendarIcon className="h-full w-full" />}
         label="내 예약"
-        isActive={pathname === '/reservations'}
-        href="/reservations"
+        isActive={pathname === '/myreservation'}
+        href="/myreservation"
       />
       <NavItem
         icon={<BellIcon className="h-full w-full" />}
