@@ -1,4 +1,4 @@
-import { CommonHeader } from '@/shared/ui/CommonHeader';
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
 
 export default function Header() {
   return (

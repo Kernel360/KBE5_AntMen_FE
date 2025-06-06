@@ -1,6 +1,6 @@
 'use client';
 
-import { CommonHeader } from "@/shared/ui/CommonHeader";
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
 import UnderConstruction from "@/shared/ui/UnderConstruction";
 import { useRouter } from 'next/navigation';
 

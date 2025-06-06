@@ -1,7 +1,7 @@
-import StatusBar from '../../../features/chat/ui/StatusBar';
+import StatusBar from '@/features/chat/ui/StatusBar';
 import ChatListHeader from './ChatListHeader';
 import ChatList from './ChatList';
-import HomeIndicator from '../../../features/chat/ui/HomeIndicator';
+import HomeIndicator from '@/features/chat/ui/HomeIndicator';
 import Link from 'next/link';
 
 export default function ChatListScreen() {

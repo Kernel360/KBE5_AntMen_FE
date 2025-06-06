@@ -45,8 +45,8 @@ export function BottomNavigation() {
       <NavItem
         icon={<ClipboardDocumentListIcon className="h-full w-full" />}
         label="게시판"
-        isActive={pathname === '/chats'}
-        href="/chats"
+        isActive={pathname === '/boards'}
+        href="/boards"
       />
       <NavItem
         icon={<CalendarIcon className="h-full w-full" />}
