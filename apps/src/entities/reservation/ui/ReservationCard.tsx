@@ -2,25 +2,184 @@
 
 import React from 'react';
 import Image from 'next/image';
-import type { Reservation } from '../model/types';
+import type { Reservation, ManagerReservation } from '../model/types';
 
 interface ReservationCardProps {
   reservation: Reservation;
   onCancel?: (id: string) => void;
   onViewDetails?: (id: string) => void;
+  onCheckIn?: (id: string) => void;
+  onCheckOut?: (id: string) => void;
+  onWriteReview?: (id: string) => void;
 }
 
-export const ReservationCard: React.FC<ReservationCardProps> = ({
+interface ManagerReservationCardProps {
+  reservation: ManagerReservation;
+  onCancel?: (id: string) => void;
+  onViewDetails?: (id: string) => void;
+  onCheckIn?: (id: string) => void;
+  onCheckOut?: (id: string) => void;
+  onWriteReview?: (id: string) => void;
+  isManager: true;
+}
+
+type CombinedReservationCardProps = ReservationCardProps | ManagerReservationCardProps;
+
+export const ReservationCard: React.FC<CombinedReservationCardProps> = ({
   reservation,
   onCancel,
   onViewDetails,
+  onCheckIn,
+  onCheckOut,
+  onWriteReview,
+  ...props
 }) => {
-  const { id, serviceType, location, status, dateTime, worker, amount } = reservation;
+  const isManager = 'isManager' in props && props.isManager;
+  const { id, serviceType, location, status, dateTime, amount } = reservation;
 
   const formattedAmount = new Intl.NumberFormat('ko-KR', {
     style: 'currency',
     currency: 'KRW',
   }).format(amount);
+
+  const personName = isManager 
+    ? (reservation as ManagerReservation).customer.name
+    : (reservation as Reservation).worker.name;
+
+  const personLabel = isManager ? '고객' : '담당자';
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'scheduled': return '예정됨';
+      case 'in-progress': return '진행 중';
+      case 'completed': return '완료';
+      case 'completed-pending-review': return '완료';
+      case 'cancelled': return '취소됨';
+      default: return '알 수 없음';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'scheduled': return 'bg-[#E8F8FC] text-[#4DD0E1]'; // 파란색
+      case 'in-progress': return 'bg-[#FFF3E0] text-[#FFB74D]'; // 주황색
+      case 'completed': return 'bg-[#F5F5F5] text-[#B0BEC5]'; // 회색
+      case 'completed-pending-review': return 'bg-[#F3E5F5] text-[#CE93D8]'; // 보라색
+      case 'cancelled': return 'bg-[#FFEBEE] text-[#E57373]'; // 빨간색
+      default: return 'bg-[#E8F8FC] text-[#4DD0E1]';
+    }
+  };
+
+  const renderManagerButtons = () => {
+    if (!isManager) return null;
+
+    switch (status) {
+      case 'scheduled':
+        return (
+          <>
+            <button
+              onClick={() => onCheckIn?.(id)}
+              className="flex-1 rounded-[22px] bg-[#4DD0E1] py-3 text-sm font-medium text-white hover:bg-[#26C6DA] transition-colors"
+            >
+              Check-in
+            </button>
+            <button
+              onClick={() => onViewDetails?.(id)}
+              className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
+            >
+              상세보기
+            </button>
+          </>
+        );
+      
+      case 'in-progress':
+        return (
+          <>
+            <button
+              onClick={() => onCheckOut?.(id)}
+              className="flex-1 rounded-[22px] bg-[#FFB74D] py-3 text-sm font-medium text-white hover:bg-[#FFA726] transition-colors"
+            >
+              Check-out
+            </button>
+            <button
+              onClick={() => onViewDetails?.(id)}
+              className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
+            >
+              상세보기
+            </button>
+          </>
+        );
+      
+      case 'completed-pending-review':
+        return (
+          <>
+            <button
+              onClick={() => onWriteReview?.(id)}
+              className="flex-1 rounded-[22px] bg-[#CE93D8] py-3 text-sm font-medium text-white hover:bg-[#BA68C8] transition-colors"
+            >
+              후기 작성
+            </button>
+            <button
+              onClick={() => onViewDetails?.(id)}
+              className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
+            >
+              상세보기
+            </button>
+          </>
+        );
+      
+      case 'completed':
+        return (
+          <>
+            <button
+              disabled
+              className="flex-1 rounded-[22px] bg-[#B0BEC5] py-3 text-sm font-medium text-white cursor-not-allowed"
+            >
+              완료됨
+            </button>
+            <button
+              onClick={() => onViewDetails?.(id)}
+              className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
+            >
+              상세보기
+            </button>
+          </>
+        );
+      
+      default:
+        return (
+          <button
+            onClick={() => onViewDetails?.(id)}
+            className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
+          >
+            상세보기
+          </button>
+        );
+    }
+  };
+
+  const renderCustomerButtons = () => {
+    if (isManager) return null;
+
+    return (
+      <>
+        {status === 'scheduled' && (
+          <button
+            onClick={() => onCancel?.(id)}
+            className="flex-1 rounded-[22px] border border-[#E0E0E0] py-3 text-sm font-medium text-[#9E9E9E] hover:bg-[#FAFAFA] transition-colors"
+          >
+            취소
+          </button>
+        )}
+        <button
+          onClick={() => onViewDetails?.(id)}
+          className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
+        >
+          상세보기
+        </button>
+      </>
+    );
+  };
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-[#E5E7EB] bg-white p-5">
@@ -39,9 +198,9 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
             <span className="text-sm text-[#666666]">{location}</span>
           </div>
         </div>
-        <div className="rounded-xl bg-[#E8F0FE] px-3 py-1.5">
-          <span className="text-xs font-medium text-[#0fbcd6]">
-            {status === 'scheduled' ? '예정됨' : status === 'completed' ? '완료' : '취소됨'}
+        <div className={`rounded-xl px-3 py-1.5 ${getStatusColor(status)}`}>
+          <span className="text-xs font-medium">
+            {getStatusText(status)}
           </span>
         </div>
       </div>
@@ -53,31 +212,20 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
           <span className="text-sm font-medium text-black">{dateTime}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-[#666666]">담당자</span>
-          <span className="text-sm font-medium text-black">{worker.name}</span>
+          <span className="text-sm font-medium text-[#666666]">{personLabel}</span>
+          <span className="text-sm font-medium text-black">{personName}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-[#666666]">결제 금액</span>
+          <span className="text-sm font-medium text-[#666666]">
+            {isManager ? '수입 금액' : '결제 금액'}
+          </span>
           <span className="text-sm font-extrabold text-black">{formattedAmount}</span>
         </div>
       </div>
 
       {/* Action Buttons */}
       <div className="flex gap-3">
-        {status === 'scheduled' && (
-          <button
-            onClick={() => onCancel?.(id)}
-            className="flex-1 rounded-[22px] border border-[#CCCCCC] py-3 text-sm font-medium text-[#666666]"
-          >
-            취소
-          </button>
-        )}
-        <button
-          onClick={() => onViewDetails?.(id)}
-          className="flex-1 rounded-[22px] bg-[#0fbcd6] py-3 text-sm font-extrabold text-white"
-        >
-          상세보기
-        </button>
+        {isManager ? renderManagerButtons() : renderCustomerButtons()}
       </div>
     </div>
   );
