@@ -78,24 +78,6 @@ const options: Option[] = [
   { id: 3, name: '화장실 청소', price: 10000 },
 ];
 
-// 임시 카테고리별 옵션 데이터
-const TEMP_CATEGORY_OPTIONS: Record<number, CategoryOption[]> = {
-  1: [ // 대청소
-    { id: 1, name: "요리", price: 20000, time: 60, description: "요리와 청소가 필요하신 경우" },
-    { id: 2, name: "다림질", price: 15000, time: 60, description: "다림질 서비스가 필요하신 경우" },
-    { id: 3, name: "화장실 청소", price: 30000, time: 60, description: "화장실 청소가 필요하신 경우" }
-  ],
-  2: [ // 사무실 청소
-    { id: 4, name: "유리창 청소", price: 40000, time: 60, description: "유리창 청소가 필요하신 경우" },
-    { id: 5, name: "카페트 청소", price: 30000, time: 60, description: "카페트 청소가 필요하신 경우" }
-  ],
-  3: [ // 부분 청소
-    { id: 6, name: "베란다 청소", price: 20000, time: 30, description: "베란다 청소가 필요하신 경우" },
-    { id: 7, name: "곰팡이 제거", price: 40000, time: 60, description: "곰팡이 제거가 필요하신 경우" },
-    { id: 8, name: "냉장고 청소", price: 20000, time: 30, description: "냉장고 청소가 필요하신 경우" }
-  ]
-};
-
 export default function ReservationForm() {
   const router = useRouter();
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
@@ -139,29 +121,23 @@ export default function ReservationForm() {
       return;
     }
 
-    // TODO: API 구현 후 아래 주석 해제
-    // const fetchCategoryOptions = async () => {
-    //   setIsLoading(true);
-    //   setError(null);
-    //   try {
-    //     const response = await fetch(`/api/categories/${selectedCategory}/options`);
-    //     if (!response.ok) throw new Error('옵션을 불러오는데 실패했습니다.');
-    //     const data = await response.json();
-    //     setCategoryOptions(data);
-    //   } catch (err) {
-    //     setError(err instanceof Error ? err.message : '옵션을 불러오는데 실패했습니다.');
-    //     setCategoryOptions([]);
-    //   } finally {
-    //     setIsLoading(false);
-    //   }
-    // };
+    const fetchCategoryOptions = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/categories/${selectedCategory}/options`);
+        if (!response.ok) throw new Error('옵션을 불러오는데 실패했습니다.');
+        const data = await response.json();
+        setCategoryOptions(data as CategoryOption[]);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '옵션을 불러오는데 실패했습니다.');
+        setCategoryOptions([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    // 임시 데이터 사용
-    setIsLoading(true);
-    setTimeout(() => {
-      setCategoryOptions(TEMP_CATEGORY_OPTIONS[selectedCategory] || []);
-      setIsLoading(false);
-    }, 500); // 로딩 상태를 보여주기 위한 지연
+    fetchCategoryOptions();
   }, [selectedCategory]);
 
   const handleNext = async () => {
@@ -184,42 +160,61 @@ export default function ReservationForm() {
       setTimeout(() => setShowTimeWarning(false), 3000);
     }
 
-    // TODO: API 구현 후 아래 주석 해제
-    // try {
-    //   const requestData = {
-    //     customerId: 1,
-    //     reservationCreatedAt: dayjs().format('YYYY-MM-DD'),
-    //     reservationDate: selectedDate.format('YYYY-MM-DD'),
-    //     reservationTime: selectedVisitTime,
-    //     categoryId: selectedCategory,
-    //     reservationDuration: Math.ceil(calculateTotalTime() / 60),
-    //     reservationMemo: memo,
-    //     reservationAmount: calculateTotalPrice(),
-    //     additionalDuration: selectedHours - standardHours,
-    //     optionIds: selectedCategoryOptions
-    //   };
+    try {
+      const requestData = {
+        customerId: 1, // TODO: 실제 로그인된 사용자 ID로 대체
+        reservationCreatedAt: dayjs().format('YYYY-MM-DD'),
+        reservationDate: selectedDate.format('YYYY-MM-DD'),
+        reservationTime: selectedVisitTime,
+        categoryId: selectedCategory,
+        reservationDuration: Math.ceil(calculateTotalTime() / 60),
+        reservationMemo: memo,
+        reservationAmount: calculateTotalPrice(),
+        additionalDuration: selectedHours - standardHours,
+        optionIds: selectedCategoryOptions
+      };
 
-    //   const response = await fetch('/api/reservations', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify(requestData)
-    //   });
+      console.log('예약 요청 데이터:', requestData);
 
-    //   if (!response.ok) {
-    //     throw new Error('예약 생성 실패');
-    //   }
-    // } catch (error) {
-    //   console.error('예약 생성 중 오류 발생:', error);
-    //   setWarningMessage('예약 생성 중 오류가 발생했습니다.');
-    //   setShowWarning(true);
-    //   setTimeout(() => setShowWarning(false), 3000);
-    //   return;
-    // }
+      const response = await fetch('/api/reservations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+      });
 
-    // 매칭 페이지로 이동
-    router.push('/matching');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('API 응답 데이터:', result);
+      
+      // API 응답 구조에 맞게 수정: { success: true, data: { reservationId, ... } }
+      if (!result.success) {
+        throw new Error(result.message || '예약 생성 실패');
+      }
+      
+      const reservationId = result.data?.reservationId;
+      
+      if (!reservationId) {
+        console.error('reservationId를 찾을 수 없습니다:', result);
+        throw new Error('예약 ID를 받지 못했습니다.');
+      }
+
+      console.log('예약 ID:', reservationId);
+      
+      // 매칭 페이지로 이동
+      router.push(`/reservation/${reservationId}/matching/managers`);
+      
+    } catch (error) {
+      console.error('예약 생성 중 오류 발생:', error);
+      setWarningMessage(error instanceof Error ? error.message : '예약 생성 중 오류가 발생했습니다.');
+      setShowWarning(true);
+      setTimeout(() => setShowWarning(false), 3000);
+      return;
+    }
   };
 
   const calculateTotalPrice = () => {
