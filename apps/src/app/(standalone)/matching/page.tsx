@@ -39,16 +39,18 @@ export default function MatchingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] max-w-[420px] mx-auto">
-      <MatchingHeader selectedCount={selectedManagers.length} />
-      <ManagerList 
-        selectedManagers={selectedManagers}
-        onManagerSelect={handleManagerSelect}
-      />
-      <div className="sticky bottom-0 bg-white border-t border-slate-200">
-        <BottomSection 
-          selectedManagers={selectedManagers}
-        />
+    <div className="min-h-screen bg-gray-50 flex justify-center">
+      <div className="w-full max-w-[370px] min-h-screen flex flex-col relative">
+        <MatchingHeader selectedCount={selectedManagers.length} />
+        <div className="flex-1 overflow-y-auto pb-[140px]">
+          <ManagerList 
+            selectedManagers={selectedManagers}
+            onManagerSelect={handleManagerSelect}
+          />
+        </div>
+        <div className="fixed bottom-0 w-full max-w-[370px] bg-white">
+          <BottomSection selectedManagers={selectedManagers} />
+        </div>
       </div>
     </div>
   );
