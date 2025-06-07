@@ -106,7 +106,7 @@ export const useReservationForm = () => {
     }
 
     try {
-      const requestData = {
+      const reservationDetails = {
         customerId: 1, // TODO: Replace with actual logged-in user ID
         reservationCreatedAt: dayjs().format('YYYY-MM-DD'),
         reservationDate: selectedDate.format('YYYY-MM-DD'),
@@ -119,28 +119,19 @@ export const useReservationForm = () => {
         optionIds: selectedCategoryOptions
       };
 
-      console.log('Reservation Request Data:', requestData);
+      console.log('Saving reservation details to localStorage:', reservationDetails);
       
-      const response = await fetch('/api/reservations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestData)
-      });
-
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (typeof window !== 'undefined') {
+        // API 호출 대신 localStorage에 예약 정보 저장
+        localStorage.setItem('pendingReservation', JSON.stringify(reservationDetails));
+      }
       
-      const result = await response.json();
-      if (!result.success) throw new Error(result.message || '예약 생성 실패');
-      
-      const reservationId = result.data?.reservationId;
-      if (!reservationId) throw new Error('예약 ID를 받지 못했습니다.');
-      
-      localStorage.setItem('currentReservationId', reservationId);
+      // 매니저 선택 페이지로 이동
       router.push('/matching');
       
     } catch (error) {
-      console.error('Reservation creation failed:', error);
-      setWarningMessage(error instanceof Error ? error.message : '예약 생성 중 오류가 발생했습니다.');
+      console.error('Failed to save reservation details:', error);
+      setWarningMessage('다음 단계로 진행하는 중 오류가 발생했습니다.');
       setShowWarning(true);
       setTimeout(() => setShowWarning(false), 3000);
     }
