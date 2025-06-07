@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
-import { MANAGER_LIST } from '@/constants/manager';
+import { MANAGER_LIST } from '@/widgets/manager/model/manager';
 
 interface ManagerListProps {
   selectedManagers: string[];
@@ -80,14 +80,14 @@ export function ManagerList({ selectedManagers, onManagerSelect }: ManagerListPr
                   <div className="flex flex-col gap-1">
                     <h3 className="text-lg font-semibold text-slate-800">{manager.name} 매니저</h3>
                     <p className="text-sm text-slate-500">
-                      {manager.gender} · {manager.age}세 · {manager.experience}년 경력
+                      {manager.gender} · {manager.age}세
                     </p>
                   </div>
                   <p className="text-sm text-slate-600 leading-relaxed break-keep">{manager.description}</p>
                 </div>
               </div>
               <div className="mt-4 flex justify-end">
-                <Link href={`/matching/${manager.id}`}>
+                <Link href={`/matching/manager/${manager.id}`}>
                   <button className="px-3 py-1.5 rounded-lg bg-slate-50 text-sm text-slate-600 hover:bg-slate-100">
                     상세보기
                   </button>

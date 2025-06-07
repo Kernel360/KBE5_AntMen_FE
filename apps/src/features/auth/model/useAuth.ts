@@ -1,35 +1,28 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { getAuthToken, setAuthToken, removeAuthToken } from '@/features/auth/lib/auth';
+import { useState } from 'react'
+import {
+  getAuthToken,
+  setAuthToken,
+  removeAuthToken,
+} from '@/features/auth/lib/auth'
 
-export const useAuth = () => {
-    const [token, setTokenState] = useState<string | null>(null);
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+export function useAuth() {
+  // 초기값을 localStorage에서 불러옴
+  const [token, setTokenState] = useState<string | null>(getAuthToken())
 
-    useEffect(() => {
-        const storedToken = getAuthToken();
-        if (storedToken) {
-            setTokenState(storedToken);
-            setIsAuthenticated(true);
-        }
-    }, []);
+  const login = (newToken: string) => {
+    setTokenState(newToken)
+    setAuthToken(newToken) // localStorage에 저장
+  }
 
-    const login = (newToken: string) => {
-        setAuthToken(newToken);
-        setTokenState(newToken);
-        setIsAuthenticated(true);
-    };
+  const logout = () => {
+    setTokenState(null)
+    removeAuthToken() // localStorage에서 삭제
+  }
 
-    const logout = () => {
-        removeAuthToken();
-        setTokenState(null);
-        setIsAuthenticated(false);
-    };
-
-    return {
-        token,
-        isAuthenticated,
-        login,
-        logout,
-    };
-};
+  return {
+    token,
+    isAuthenticated: !!token,
+    login,
+    logout,
+  }
+}

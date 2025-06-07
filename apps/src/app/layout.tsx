@@ -19,7 +19,7 @@ export default function RootLayout({
     <html lang="ko">
       <body className={inter.className}>
         <Providers>
-          <main className="w-full max-w-[390px] mx-auto min-h-screen bg-white relative">
+          <main className={`w-full max-w-[370px] mx-auto min-h-screen bg-gray-50 relative`}>
             {children}
           </main>
         </Providers>

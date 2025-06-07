@@ -1,12 +1,20 @@
-name: "CI/CD: Build & Deploy to EC2"
+name: 'CI/CD: Build & Deploy to EC2'
 
 on:
   push:
-    branches: [feature/#1-cicd]
+    branches: [develop]
+    paths:
+      - 'apps/**'
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    env:
+      ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
     strategy:
       matrix:
         include:
@@ -14,10 +22,6 @@ jobs:
             dockerfile: apps/Dockerfile
             context: .
             image: users-app
-          - name: admin-app
-            dockerfile: admin/Dockerfile
-            context: .
-            image: admin-app
 
     steps:
       - name: Checkout source code
@@ -29,32 +33,44 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn workspace apps install --frozen-lockfile
 
-      - name: Build ${{ matrix.name }}
-        run: |
-          if [ "${{ matrix.name }}" = "users-app" ]; then
-            yarn workspace apps build
-          else
-            yarn workspace admin build
-          fi
+      - name: Build apps
+        run: yarn workspace apps build
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Create ECR repository if not exists
+        run: |
+          aws ecr describe-repositories --repository-names users-app || aws ecr create-repository --repository-name users-app
+        env:
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry: ${{ env.ECR_REGISTRY }}
 
       - name: Build and Push Docker image
         env:
-          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
         run: |
-          docker build -f ${{ matrix.dockerfile }} -t $ECR_REGISTRY/${{ matrix.image }}:latest ${{ matrix.context }}
-          docker push $ECR_REGISTRY/${{ matrix.image }}:latest
+          docker build -f ${{ matrix.dockerfile }} -t $ECR_REGISTRY/users-app:latest ${{ matrix.context }}
+          docker push $ECR_REGISTRY/users-app:latest
 
   deploy:
     runs-on: ubuntu-latest
     needs: build-and-push
+    env:
+      ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -71,14 +87,18 @@ jobs:
             mkdir -p ~/apps/client
             sudo chown -R $USER:$USER ~/apps/client
 
-      - name: Copy docker-compose.yml
+      - name: Create .env file
+        run: |
+          echo "ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}" > .env
+
+      - name: Copy docker-compose.yml and .env
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.EC2_PUBLIC_IP }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          source: "docker-compose.yml"
+          source: 'docker-compose.yml,.env'
           target: ~/apps/client
 
       - name: SSH into EC2 and restart containers
@@ -91,9 +111,7 @@ jobs:
           script: |
             cd ~/apps/client
 
-            cat <<EOF > .env
-            ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}
-            EOF
+            echo "ECR_REGISTRY 값: $ECR_REGISTRY"
 
             echo "정리 전 디스크 사용량:"
             df -h /
@@ -106,12 +124,8 @@ jobs:
             echo "정리 후 디스크 사용량:"
             df -h /
 
-            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+            docker pull ${{ env.ECR_REGISTRY }}/users-app:latest || { echo "이미지 pull 실패"; exit 1; }
 
-            docker pull ${{ secrets.ECR_REGISTRY }}/users-app:latest
-            docker pull ${{ secrets.ECR_REGISTRY }}/admin-app:latest
-
-            docker compose down
-            docker compose up -d
-
-            rm -f .env
+            docker compose down users-app
+            docker compose up -d users-app

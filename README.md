@@ -72,4 +72,12 @@ yarn lint
 # 전체 앱 캐시 정리
 yarn clean
 ```
+
+
+### HTTPS 개발환경 설정 방법
+```bash
+1. 처음 한 번만 실행: yarn setup-https
+2. 이후 개발할 때: yarn dev:apps:https or dev:admin:https 
+
+※ 첫 번째 명령어는 개인 PC에서 한 번만 실행하면 됩니다.
 ```
