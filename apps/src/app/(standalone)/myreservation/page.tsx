@@ -1,4 +1,10 @@
 // 내 예약 페이지 (예약리스트)
+
+/**
+ * TODO
+ * 1. 예약 폼 데이터 연동
+ * 2. 지난 예약 연결
+ */
 "use client";
 
 import React, { useState } from 'react';
@@ -39,11 +45,6 @@ export default function ReservationsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<ReservationTab>('upcoming');
   const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS); // 실제로는 API에서 가져와야 함
-
-  const handleCancel = (id: string) => {
-    // TODO: Implement reservation cancellation
-    console.log('Cancel reservation:', id);
-  };
 
   const handleViewDetails = (id: string) => {
     router.push(`/myreservation/${id}`); // 예약 상세 페이지 경로
@@ -115,7 +116,6 @@ export default function ReservationsPage() {
               <ReservationCard
                 key={reservation.id}
                 reservation={reservation}
-                onCancel={handleCancel}
                 onViewDetails={handleViewDetails}
               />
             ))}

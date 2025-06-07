@@ -2,6 +2,10 @@
  * 매칭 거절/취소 후 다시 매칭 요청 페이지
  * 
  * /reservation/[reservationId]/matching/managers 페이지로 이동 (예약 ID 있는 URL)
+ * 
+ * TODO 
+ * http://localhost:3000/reservation/undefined/matching/managers
+ * undefined 처리 필요
  */
 
 'use client';
@@ -9,18 +13,23 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MatchingHeader, ManagerList, BottomSection, ManagerListLoading } from '@/widgets/manager';
-import { MANAGER_LIST, MAX_MANAGER_COUNT } from '@/widgets/manager/model/manager';
+import { useManagerSelection } from '@/features/manager-selection';
 
 export default function ManagerListPage() {
   const params = useParams();
   const router = useRouter();
   const reservationId = params?.reservationId as string;
   
-  // 기본 선택: 아무것도 선택되지 않은 상태
-  const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
+  const { selectedManagers, handleManagerSelect } = useManagerSelection({ strategy: 'slide-on-max' });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // `reservationId`가 없거나 'undefined' 문자열인 경우, 초기 매칭 페이지로 리디렉션
+    if (!reservationId || reservationId === 'undefined') {
+      router.replace('/matching');
+      return;
+    }
+
     // 매니저 데이터 로딩 시뮬레이션
     const loadManagers = async () => {
       try {
@@ -37,25 +46,8 @@ export default function ManagerListPage() {
       }
     };
 
-    if (reservationId) {
-      loadManagers();
-    }
-  }, [reservationId]);
-
-  const handleManagerSelect = (managerId: string) => {
-    setSelectedManagers(prev => {
-      if (prev.includes(managerId)) {
-        // 이미 선택된 매니저 제거
-        return prev.filter(id => id !== managerId);
-      } else if (prev.length < MAX_MANAGER_COUNT) {
-        // 최대 선택 수를 넘지 않으면 추가
-        return [...prev, managerId];
-      } else {
-        // 최대 선택 수 도달 시 첫 번째를 제거하고 새로 추가
-        return [...prev.slice(1), managerId];
-      }
-    });
-  };
+    loadManagers();
+  }, [reservationId, router]);
 
   if (isLoading) {
     return <ManagerListLoading />;
