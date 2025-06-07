@@ -68,10 +68,10 @@ export default function ReservationDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex justify-center">
-      <div className="w-full max-w-[370px] min-h-screen flex flex-col relative">
+    <div className="min-h-screen bg-gray-50">
+      <div className="w-full max-w-[370px] mx-auto min-h-screen flex flex-col bg-white">
         {/* Header */}
-        <header className="flex items-center justify-between p-4 border-b">
+        <header className="sticky top-0 z-30 flex items-center justify-between p-4 border-b bg-white">
           <Link href="/matching" className="text-gray-800">
             <DynamicIcon icon={IoChevronBack} size={24} />
           </Link>
@@ -152,17 +152,15 @@ export default function ReservationDetailPage() {
         </div>
 
         {/* Bottom Buttons */}
-        <div className="fixed bottom-0 w-full max-w-[370px] bg-white">
+        <div className="fixed bottom-0 w-full max-w-[370px] bg-white border-t border-slate-200">
           <div className="px-4">
-            <div className="border-t border-slate-200">
-              <div className="py-4 flex gap-4">
-                <button className="flex-1 h-14 rounded-2xl font-semibold text-primary text-lg border-2 border-primary">
-                  거절하기
-                </button>
-                <button className="flex-1 h-14 rounded-2xl font-semibold text-white text-lg bg-primary">
-                  매칭 수락
-                </button>
-              </div>
+            <div className="py-4 flex gap-4">
+              <button className="flex-1 h-14 rounded-2xl font-semibold text-primary text-lg border-2 border-primary">
+                거절하기
+              </button>
+              <button className="flex-1 h-14 rounded-2xl font-semibold text-white text-lg bg-primary">
+                매칭 수락
+              </button>
             </div>
           </div>
         </div>

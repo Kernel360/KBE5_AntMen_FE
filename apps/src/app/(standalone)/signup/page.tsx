@@ -25,14 +25,14 @@ export default function SignupPage() {
           {/* Manager Card */}
           <button
             onClick={() => handleSelectType('manager')}
-            className="w-full p-6 border border-[#E5E7EB] rounded-xl space-y-4 text-left hover:border-[#2563EB] transition-colors"
+            className="w-full p-6 border border-[#E5E7EB] rounded-xl space-y-4 text-left hover:border-[#0fbcd6] transition-colors"
           >
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <h2 className="text-lg font-bold">매니저로 가입</h2>
                 <p className="text-sm text-[#666666]">서비스를 제공하는 매니저로 활동합니다.</p>
               </div>
-              <div className="w-12 h-12 bg-[#2563EB] rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[#0fbcd6] rounded-xl flex items-center justify-center">
                 <Image 
                   src="/icons/manager.svg"
                   alt="Manager Icon"
@@ -54,14 +54,14 @@ export default function SignupPage() {
           {/* Customer Card */}
           <button
             onClick={() => handleSelectType('customer')}
-            className="w-full p-6 border border-[#E5E7EB] rounded-xl space-y-4 text-left hover:border-[#2563EB] transition-colors"
+            className="w-full p-6 border border-[#E5E7EB] rounded-xl space-y-4 text-left hover:border-[#0fbcd6] transition-colors"
           >
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <h2 className="text-lg font-bold">고객으로 가입</h2>
                 <p className="text-sm text-[#666666]">서비스를 이용하는 고객으로 가입합니다.</p>
               </div>
-              <div className="w-12 h-12 bg-[#2563EB] rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-[#0fbcd6] rounded-xl flex items-center justify-center">
                 <Image 
                   src="/icons/customer.svg"
                   alt="Customer Icon"
