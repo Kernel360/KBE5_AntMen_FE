@@ -167,9 +167,31 @@ const MANAGER_INQUIRIES: Post[] = [
   },
 ];
 
-// 현재 로그인한 사용자의 ID (임시)
-const CURRENT_USER_ID = 'user123';
-const CURRENT_MANAGER_ID = 'manager456';
+// 현재 로그인한 사용자의 ID 관리
+let CURRENT_USER_ID = 'user123';
+let CURRENT_MANAGER_ID = 'manager456';
+
+// 테스트용 사용자 정보 설정 함수
+export const setCurrentUser = (userId: string | null, role: 'customer' | 'manager' | null) => {
+  if (!userId || !role) {
+    // 로그아웃 처리
+    CURRENT_USER_ID = '';
+    CURRENT_MANAGER_ID = '';
+    return;
+  }
+
+  if (role === 'customer') {
+    CURRENT_USER_ID = userId;
+  } else {
+    CURRENT_MANAGER_ID = userId;
+  }
+};
+
+// 현재 로그인한 사용자 정보 조회
+export const getCurrentUser = () => ({
+  userId: CURRENT_USER_ID || CURRENT_MANAGER_ID,
+  role: CURRENT_USER_ID ? 'customer' : CURRENT_MANAGER_ID ? 'manager' : null
+});
 
 export const getPosts = (
   userRole: 'customer' | 'manager',

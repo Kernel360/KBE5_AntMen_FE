@@ -27,9 +27,9 @@ export const Comments = ({ comments, onSubmitComment, isSubmitting }: CommentsPr
   return (
     <div className="flex flex-col">
       <div className="px-4 py-3 border-b bg-white">
-        <div className="flex items-center justify-between">
-          <h2 className="font-medium text-gray-900">
-            댓글 <span className="text-primary font-bold">{comments.length}</span>
+        <div className="flex items-center justify-between h-6">
+          <h2 className="font-medium text-gray-900 flex items-center">
+            댓글 <span className="text-primary font-bold ml-1">{comments.length}</span>
           </h2>
           {!session && (
             <p className="text-sm text-gray-500">
@@ -51,7 +51,7 @@ export const Comments = ({ comments, onSubmitComment, isSubmitting }: CommentsPr
               <span className="text-xs text-gray-600 mb-1">
                 {comment.author.name}
               </span>
-              <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-primary/10 text-gray-800 shadow-lg">
+              <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-primary/10 text-gray-800">
                 <p className="text-sm whitespace-pre-wrap break-words">
                   {comment.content}
                 </p>
