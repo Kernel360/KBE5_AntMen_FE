@@ -2,7 +2,7 @@
 
 import { Toggle } from '@/shared/ui/Toggle';
 import { ArrowLeft } from '@/shared/icons/ArrowLeft';
-import { EditProfileModal } from '@/shared/ui/EditProfileModal';
+import { EditProfileModal } from '@/shared/ui/modal/EditProfileModal';
 import Link from 'next/link';
 import { useState } from 'react';
 

@@ -9,13 +9,15 @@
  * 4. 예약 리스트 예약 상태 수정
  * 5. 매니저 리스트 추가 필요
  * 6. 환불 기능 구현 ✅
+ * 7. 모달 컴포넌트 분리 ✅
  **/ 
 
 "use client";
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronLeft, Star, X, CreditCard, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, Star, CreditCard } from 'lucide-react';
+import { CancellationModal, RefundModal, ReservationActionModal } from '@/shared/ui/modal';
 
 interface ReservationDetailPageProps {
   params: {
@@ -56,278 +58,6 @@ interface ReservationDetail {
   }>;
   createdAt: string;
 }
-
-// 환불 사유 입력 모달 컴포넌트
-const RefundReasonModal = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  onConfirm: (reason: string) => void;
-}) => {
-  const [reason, setReason] = useState('');
-  const [selectedReason, setSelectedReason] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const predefinedReasons = [
-    '개인 사정으로 인한 취소',
-    '일정 변경이 어려워서',
-    '서비스가 더 이상 필요하지 않음',
-    '다른 업체를 이용하기로 함',
-    '기타'
-  ];
-
-  const handleConfirm = async () => {
-    const finalReason = selectedReason === '기타' ? reason : selectedReason;
-    
-    if (!finalReason.trim()) {
-      alert('취소 사유를 입력해주세요.');
-      return;
-    }
-
-    setIsLoading(true);
-    
-    try {
-      // 환불 처리 시뮬레이션
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      onConfirm(finalReason);
-    } catch (error) {
-      console.error('Refund request failed:', error);
-      alert('환불 신청 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleClose = () => {
-    setReason('');
-    setSelectedReason('');
-    onClose();
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50">
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={handleClose} />
-
-      {/* Modal */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[335px] max-h-[90vh] overflow-y-auto">
-        <div className="bg-white rounded-xl">
-          {/* Modal Header */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
-                  <AlertTriangle className="w-5 h-5 text-red-500" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-black">환불 신청</h2>
-                  <p className="text-sm text-gray-500">취소 사유를 선택해주세요</p>
-                </div>
-              </div>
-              <button onClick={handleClose} className="text-gray-500">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-          </div>
-
-          {/* Reason Selection */}
-          <div className="p-6 space-y-4">
-            <div className="space-y-3">
-              {predefinedReasons.map((reasonOption) => (
-                <button
-                  key={reasonOption}
-                  onClick={() => setSelectedReason(reasonOption)}
-                  className={`w-full text-left p-4 border rounded-xl transition-colors ${
-                    selectedReason === reasonOption
-                      ? 'border-red-500 bg-red-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-black">{reasonOption}</span>
-                    {selectedReason === reasonOption && (
-                      <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white" viewBox="0 0 14 14" fill="none" stroke="currentColor">
-                          <path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-
-            {/* Custom Reason Input */}
-            {selectedReason === '기타' && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">상세 사유</label>
-                <textarea
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  placeholder="취소 사유를 자세히 입력해주세요."
-                  className="w-full p-3 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                  rows={4}
-                  maxLength={200}
-                />
-                <div className="text-right">
-                  <span className="text-xs text-gray-500">{reason.length}/200</span>
-                </div>
-              </div>
-            )}
-
-            {/* Refund Info */}
-            <div className="bg-blue-50 rounded-xl p-4">
-              <h4 className="text-sm font-semibold text-blue-900 mb-2">환불 안내</h4>
-              <ul className="text-xs text-blue-700 space-y-1">
-                <li>• 환불 처리는 영업일 기준 3-5일 소요됩니다</li>
-                <li>• 결제 수단과 동일한 방법으로 환불됩니다</li>
-                <li>• 환불 완료 시 SMS로 알림을 보내드립니다</li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Modal Actions */}
-          <div className="p-6 pt-0">
-            <div className="flex gap-3">
-              <button
-                onClick={handleClose}
-                disabled={isLoading}
-                className="flex-1 py-3.5 rounded-lg bg-gray-50 text-gray-600 font-semibold text-base border border-gray-200 disabled:opacity-50"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleConfirm}
-                disabled={isLoading || !selectedReason}
-                className="flex-1 py-3.5 rounded-lg bg-red-500 text-white font-semibold text-base disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>처리 중...</span>
-                  </div>
-                ) : (
-                  '환불 신청'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// 예약 취소 모달 컴포넌트 (수정)
-const RejectReservationModal = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm,
-  isPaid = false
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  onConfirm: (option: 'cancel' | 'reschedule') => void;
-  isPaid?: boolean;
-}) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50">
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
-
-      {/* Modal */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[335px]">
-        <div className="bg-white rounded-xl">
-          {/* Modal Header */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-start justify-between mb-4">
-              <h2 className="text-lg font-bold text-black">예약을 취소하시겠습니까?</h2>
-              <button onClick={onClose} className="text-gray-500">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <p className="text-sm text-gray-500">
-              {isPaid ? '결제가 완료된 예약입니다. 취소 후 진행 방법을 선택해주세요.' : '취소 후 진행 방법을 선택해주세요'}
-            </p>
-          </div>
-
-          {/* Options List */}
-          <div className="p-6 space-y-4">
-            {/* Option 1: 완전 취소 */}
-            <button
-              onClick={() => onConfirm('cancel')}
-              className="w-full flex items-start gap-4 p-4 border border-gray-200 rounded-xl hover:border-red-500 transition-colors"
-            >
-              <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-red-500" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-                  <path d="M15 5L5 15M5 5l10 10" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div className="text-left">
-                <h3 className="text-sm font-semibold text-black">
-                  {isPaid ? '예약 취소 및 환불 신청' : '예약 완전 취소'}
-                </h3>
-                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                  {isPaid ? '예약을 취소하고 환불을 신청합니다' : '예약을 완전히 취소합니다'}
-                </p>
-              </div>
-            </button>
-
-            {/* Option 2: 일정 변경 */}
-            <button
-              onClick={() => onConfirm('reschedule')}
-              className="w-full flex items-start gap-4 p-4 border border-[#4abed9] rounded-xl relative"
-            >
-              <div className="w-10 h-10 bg-[#E0F7FA] rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-[#4abed9]" viewBox="0 0 20 20" fill="none" stroke="currentColor">
-                  <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div className="text-left pr-8">
-                <h3 className="text-sm font-semibold text-black">일정 변경하기</h3>
-                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                  다른 날짜와 시간으로 예약을 변경합니다
-                </p>
-              </div>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                <div className="w-6 h-6 bg-[#4abed9] rounded-full flex items-center justify-center">
-                  <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 14 14" fill="none" stroke="currentColor">
-                    <path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-              </div>
-            </button>
-          </div>
-
-          {/* Modal Actions */}
-          <div className="p-6 pt-0">
-            <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                className="flex-1 py-3.5 rounded-lg bg-gray-50 text-gray-600 font-semibold text-base border border-gray-200"
-              >
-                돌아가기
-              </button>
-              <button
-                onClick={() => onConfirm('reschedule')}
-                className="flex-1 py-3.5 rounded-lg bg-[#4abed9] text-white font-semibold text-base"
-              >
-                일정 변경
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // 헤더 컴포넌트
 const ReservationHeader = () => {
@@ -556,38 +286,44 @@ const PaymentInfoSection = ({ reservation }: { reservation: ReservationDetail })
 // 액션 버튼 섹션 (수정)
 const ActionButtonsSection = ({ reservation, onCancel, onPayment, onRefund, reservationId }: { 
   reservation: ReservationDetail; 
-  onCancel: () => void;
+  onCancel: (reason: string) => void;
   onPayment: () => void;
   onRefund: (reason: string) => void;
   reservationId: string;
 }) => {
   const router = useRouter();
-  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
 
   const handleContactWorker = () => {
     console.log('Contact worker:', reservation.worker.id);
   };
 
-  const handleRejectConfirm = (option: 'cancel' | 'reschedule') => {
-    console.log('Reject option selected:', option);
+  const handleActionConfirm = (option: 'cancel' | 'reschedule') => {
+    console.log('Action option selected:', option);
     
     if (option === 'cancel') {
-      // 결제 완료 상태면 환불 모달, 아니면 바로 취소
+      setShowActionModal(false);
+      
+      // 결제 완료 상태면 환불 모달, 아니면 취소 사유 모달
       if (reservation.paymentStatus === 'paid') {
-        setShowRejectModal(false);
         setShowRefundModal(true);
       } else {
-        console.log('Complete cancellation');
-        onCancel();
-        setShowRejectModal(false);
+        setShowCancelModal(true);
       }
     } else if (option === 'reschedule') {
       // 일정 변경 로직 - 재매칭 페이지로 이동 (예약 ID 포함)
       console.log('Reschedule reservation with ID:', reservationId);
-      setShowRejectModal(false);
+      setShowActionModal(false);
       router.push(`/reservation/${reservationId}/matching/managers`);
     }
+  };
+
+  const handleCancelConfirm = (reason: string) => {
+    console.log('Cancel requested with reason:', reason);
+    onCancel(reason);
+    setShowCancelModal(false);
   };
 
   const handleRefundConfirm = (reason: string) => {
@@ -607,7 +343,7 @@ const ActionButtonsSection = ({ reservation, onCancel, onPayment, onRefund, rese
         <div className="bg-white px-5 py-6 space-y-3">
           {/* 예약 취소 버튼 */}
           <button
-            onClick={() => setShowRejectModal(true)}
+            onClick={() => setShowActionModal(true)}
             className="w-full h-14 bg-white border border-gray-300 rounded-xl flex items-center justify-center"
           >
             <span className="text-base font-black text-gray-600">예약 취소</span>
@@ -623,12 +359,18 @@ const ActionButtonsSection = ({ reservation, onCancel, onPayment, onRefund, rese
           </button>
         </div>
         
-        {/* 예약 취소 모달 */}
-        <RejectReservationModal
-          isOpen={showRejectModal}
-          onClose={() => setShowRejectModal(false)}
-          onConfirm={handleRejectConfirm}
+        {/* 모달 컴포넌트 */}
+        <ReservationActionModal
+          isOpen={showActionModal}
+          onClose={() => setShowActionModal(false)}
+          onConfirm={handleActionConfirm}
           isPaid={false}
+        />
+
+        <CancellationModal
+          isOpen={showCancelModal}
+          onClose={() => setShowCancelModal(false)}
+          onConfirm={handleCancelConfirm}
         />
       </>
     );
@@ -660,23 +402,21 @@ const ActionButtonsSection = ({ reservation, onCancel, onPayment, onRefund, rese
       <div className="bg-white px-5 py-6 space-y-3">
         {/* 예약 취소 버튼 */}
         <button
-          onClick={() => setShowRejectModal(true)}
+          onClick={() => setShowActionModal(true)}
           className="w-full h-14 bg-white border border-gray-300 rounded-xl flex items-center justify-center"
         >
           <span className="text-base font-black text-gray-600">예약 취소</span>
         </button>
       </div>
       
-      {/* 예약 취소 모달 */}
-      <RejectReservationModal
-        isOpen={showRejectModal}
-        onClose={() => setShowRejectModal(false)}
-        onConfirm={handleRejectConfirm}
+      <ReservationActionModal
+        isOpen={showActionModal}
+        onClose={() => setShowActionModal(false)}
+        onConfirm={handleActionConfirm}
         isPaid={true}
       />
 
-      {/* 환불 사유 입력 모달 */}
-      <RefundReasonModal
+      <RefundModal
         isOpen={showRefundModal}
         onClose={() => setShowRefundModal(false)}
         onConfirm={handleRefundConfirm}
@@ -733,9 +473,18 @@ export default function ReservationDetailPage({ params }: ReservationDetailPageP
     }
   }, [searchParams]);
 
-  const handleCancel = () => {
-    console.log('Cancel reservation:', params.id);
-    router.push('/myreservation');
+  const handleCancel = (reason: string) => {
+    console.log('Cancel reservation:', params.id, 'Reason:', reason);
+    
+    // 취소 처리 및 상태 업데이트
+    setReservation(prev => ({
+      ...prev,
+      status: 'cancelled',
+      paymentStatus: prev.paymentStatus === 'paid' ? 'refunded' : 'pending'
+    }));
+
+    // TODO: 실제 취소 API 호출
+    // API를 통해 취소 사유와 함께 취소 요청을 서버에 전송
   };
 
   const handlePayment = () => {

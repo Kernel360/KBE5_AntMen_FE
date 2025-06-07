@@ -2,21 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  ChevronLeft,
-  MoreHorizontal,
-  Check,
-  Star,
-  Calendar,
-  Plus,
-} from 'lucide-react';
-import ConfirmationView from './ConfirmationView';
-
-interface MatchingConfirmationPageProps {
-  params: {
-    reservationId: string;
-  };
-}
+import { ChevronLeft, MoreHorizontal, Star, Check, Calendar, Plus } from 'lucide-react';
 
 // 타입 정의
 interface Manager {
@@ -36,6 +22,23 @@ interface Option {
   name: string;
   price: number;
 }
+
+interface MatchingData {
+  id: string;
+  status: string;
+  managers: Manager[];
+  reservation: {
+    service: string;
+    duration: string;
+    date: string;
+    time: string;
+    location: string;
+    floor: string;
+  };
+  options: Option[];
+  totalAmount: number;
+}
+
 
 // 헤더 컴포넌트
 const MatchingHeader = () => {
@@ -263,59 +266,10 @@ const MatchingActions = ({ matchingId }: { matchingId: string }) => {
   );
 };
 
-// 임시 매칭 확인 데이터
-const mockMatchingData = {
-  id: 'CL-20230510-1234',
-  status: '매칭 요청',
-  managers: [
-    {
-      id: 'manager-1',
-      name: '김민지',
-      rating: 4.8,
-      experience: '5년 경력',
-      age: 28,
-      gender: '여성',
-      avatar: '김',
-      description: '고객 만족도가 높으며 세심한 서비스를 제공합니다.',
-      status: '매칭 요청'
-    },
-    {
-      id: 'manager-2', 
-      name: '이수진',
-      rating: 4.9,
-      experience: '3년 경력',
-      age: 25,
-      gender: '여성',
-      avatar: '이',
-      description: '꼼꼼하고 친절한 서비스로 많은 고객들이 재예약합니다.',
-      status: '매칭 요청'
-    }
-  ],
-  reservation: {
-    service: '기본 청소',
-    duration: '4시간',
-    date: '2024.02.15 (목)',
-    time: '10:00 ~ 14:00',
-    location: '서울시 강남구 역삼동',
-    floor: '3층'
-  },
-  options: [
-    {
-      id: 'option-1',
-      name: '냉장고 청소',
-      price: 15000
-    },
-    {
-      id: 'option-2',
-      name: '오븐 청소', 
-      price: 10000
-    }
-  ],
-  totalAmount: 85000
-};
-
-export default function MatchingConfirmationPage({ params }: MatchingConfirmationPageProps) {
-  const matchingData = mockMatchingData; // 실제로는 params.reservationId를 사용해서 API에서 데이터 가져오기
+export default function ConfirmationView({ matchingData }: { matchingData: MatchingData }) {
+  if (!matchingData) {
+    return <div>로딩 중...</div>; // 또는 다른 로딩 상태 표시
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex justify-center">
