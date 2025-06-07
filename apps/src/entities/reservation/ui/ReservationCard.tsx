@@ -6,7 +6,6 @@ import type { Reservation, ManagerReservation } from '../model/types';
 
 interface ReservationCardProps {
   reservation: Reservation;
-  onCancel?: (id: string) => void;
   onViewDetails?: (id: string) => void;
   onCheckIn?: (id: string) => void;
   onCheckOut?: (id: string) => void;
@@ -15,7 +14,6 @@ interface ReservationCardProps {
 
 interface ManagerReservationCardProps {
   reservation: ManagerReservation;
-  onCancel?: (id: string) => void;
   onViewDetails?: (id: string) => void;
   onCheckIn?: (id: string) => void;
   onCheckOut?: (id: string) => void;
@@ -27,7 +25,6 @@ type CombinedReservationCardProps = ReservationCardProps | ManagerReservationCar
 
 export const ReservationCard: React.FC<CombinedReservationCardProps> = ({
   reservation,
-  onCancel,
   onViewDetails,
   onCheckIn,
   onCheckOut,
@@ -162,22 +159,12 @@ export const ReservationCard: React.FC<CombinedReservationCardProps> = ({
     if (isManager) return null;
 
     return (
-      <>
-        {status === 'scheduled' && (
-          <button
-            onClick={() => onCancel?.(id)}
-            className="flex-1 rounded-[22px] border border-[#E0E0E0] py-3 text-sm font-medium text-[#9E9E9E] hover:bg-[#FAFAFA] transition-colors"
-          >
-            취소
-          </button>
-        )}
-        <button
-          onClick={() => onViewDetails?.(id)}
-          className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
-        >
-          상세보기
-        </button>
-      </>
+      <button
+        onClick={() => onViewDetails?.(id)}
+        className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
+      >
+        상세보기
+      </button>
     );
   };
 
