@@ -1,10 +1,18 @@
 export interface Review {
   id: string;
-  reservationId: string;
+  workId: string;
   rating: number;
-  content: string;
+  serviceCompletionComment?: string;
+  customerFeedback?: string;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface CreateReviewRequest {
+  workId: string;
+  rating: number;
+  serviceCompletionComment?: string;
+  customerFeedback?: string;
 }
 
 export interface CreateReviewData {

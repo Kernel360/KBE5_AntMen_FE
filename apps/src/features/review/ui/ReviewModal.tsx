@@ -43,70 +43,65 @@ export const ReviewModal = ({ isOpen, onClose, onSubmit, reservationId }: Review
   if (!isOpen) return null;
 
   return (
-    <>
-      {/* Backdrop */}
+    <div 
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div 
-        className="fixed inset-0 bg-black bg-opacity-40 z-50"
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[375px] bg-white rounded-t-[20px] z-50">
-        {/* Header */}
+        className="w-full max-w-md bg-white rounded-t-[20px] animate-slide-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 헤더 */}
         <header className="flex items-center justify-between px-6 pt-5">
           <h2 className="text-lg font-black text-[#333333]">리뷰</h2>
           <button
             onClick={onClose}
-            className="flex h-6 w-6 items-center justify-center"
-            aria-label="모달 닫기"
+            className="w-6 h-6 flex items-center justify-center"
+            aria-label="닫기"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M6 6L18 18M6 18L18 6"
-                stroke="#666666"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M6 6L18 18" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
         </header>
 
-        {/* Content */}
-        <div className="flex flex-col gap-8 px-6 py-6 pb-8">
-          {/* Question Section */}
-          <section className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2 text-center">
-              <h3 className="text-base font-medium text-[#333333]">
+        {/* 콘텐츠 */}
+        <main className="px-6 pt-6 pb-8 space-y-8">
+          {/* 질문 섹션 */}
+          <section className="space-y-4">
+            <div className="space-y-2">
+              <h3 className="text-base font-medium text-[#333333] text-center">
                 서비스에 만족하셨나요?
               </h3>
-              <p className="text-sm text-[#666666]">
+              <p className="text-sm text-[#666666] text-center">
                 고객님의 소중한 의견을 남겨주세요.
               </p>
             </div>
             
+            {/* 별점 */}
             <StarRating 
               rating={rating} 
               onRatingChange={setRating}
+              size={32}
             />
           </section>
 
-          {/* Feedback Section */}
-          <section className="flex flex-col gap-4">
-            <label htmlFor="review-content" className="text-sm text-[#666666]">
-              내용
-            </label>
-            
-            <div className="bg-[#F5F5F5] rounded-lg p-4 h-[120px]">
+          {/* 피드백 섹션 */}
+          <section className="space-y-4">
+            <div className="bg-[#F5F5F5] rounded-lg p-4 h-[120px] flex flex-col">
               <textarea
-                id="review-content"
                 value={content}
                 onChange={handleContentChange}
                 placeholder="고객님의 의견을 함께 남겨주세요.&#10;더 나은 서비스로 보답하겠습니다.&#10;(선택사항, 비밀 주소 등 개인정보 입력 불가)"
-                className="w-full h-full bg-transparent text-sm text-[#333333] placeholder:text-[#999999] resize-none outline-none leading-relaxed"
+                className="flex-1 bg-transparent resize-none outline-none text-sm text-[#333333] placeholder-[#999999] leading-relaxed"
                 maxLength={500}
               />
-              <div className="flex justify-end mt-2">
+              <div className="flex justify-end">
                 <span className="text-xs text-[#CCCCCC]">
                   {content.length}/500
                 </span>
@@ -114,15 +109,18 @@ export const ReviewModal = ({ isOpen, onClose, onSubmit, reservationId }: Review
             </div>
           </section>
 
-          {/* Submit Button */}
+          {/* 등록 버튼 */}
           <button
             onClick={handleSubmit}
-            className="w-full bg-[#4ABED9] text-white font-black text-base py-4 rounded-lg"
+            disabled={rating === 0}
+            className="w-full h-12 bg-[#4ABED9] rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            등록
+            <span className="text-base font-black text-white">
+              등록
+            </span>
           </button>
-        </div>
+        </main>
       </div>
-    </>
+    </div>
   );
 }; 

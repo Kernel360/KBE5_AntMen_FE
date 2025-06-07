@@ -1,1 +1,1 @@
-export type { Review, CreateReviewData } from './model/types'; 
+export * from './model/types'; 

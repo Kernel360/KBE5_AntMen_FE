@@ -1,49 +1,57 @@
 "use client";
 
-import React from 'react';
+import { useState } from 'react';
 
 interface StarRatingProps {
   rating: number;
   onRatingChange: (rating: number) => void;
-  readonly?: boolean;
+  size?: number;
 }
 
-export const StarRating = ({ rating, onRatingChange, readonly = false }: StarRatingProps) => {
-  const handleStarClick = (starIndex: number) => {
-    if (!readonly) {
-      onRatingChange(starIndex + 1);
-    }
+export const StarRating = ({ rating, onRatingChange, size = 32 }: StarRatingProps) => {
+  const [hoverRating, setHoverRating] = useState(0);
+
+  const handleStarClick = (selectedRating: number) => {
+    onRatingChange(selectedRating);
+  };
+
+  const handleStarHover = (selectedRating: number) => {
+    setHoverRating(selectedRating);
+  };
+
+  const handleStarLeave = () => {
+    setHoverRating(0);
   };
 
   return (
-    <div className="flex items-center justify-center gap-2">
-      {[...Array(5)].map((_, index) => (
-        <button
-          key={index}
-          type="button"
-          onClick={() => handleStarClick(index)}
-          disabled={readonly}
-          className={`h-12 w-12 transition-colors ${readonly ? 'cursor-default' : 'cursor-pointer'}`}
-          aria-label={`${index + 1}점 평가`}
-        >
-          <svg
-            width="49"
-            height="48"
-            viewBox="0 0 49 48"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-full w-full"
+    <div className="flex justify-center items-center gap-2">
+      {[1, 2, 3, 4, 5].map((star) => {
+        const isActive = star <= (hoverRating || rating);
+        return (
+          <button
+            key={star}
+            type="button"
+            className={`transition-colors duration-200 ${
+              isActive ? 'text-[#4ABED9]' : 'text-[#EDECEC]'
+            }`}
+            style={{ width: size, height: size }}
+            onClick={() => handleStarClick(star)}
+            onMouseEnter={() => handleStarHover(star)}
+            onMouseLeave={handleStarLeave}
+            aria-label={`${star}점 선택`}
           >
-            <path
-              d="M24.5 37.5L10.5 45L13.5 29.25L2 18.75L18 16.5L24.5 3L31 16.5L47 18.75L35.5 29.25L38.5 45L24.5 37.5Z"
-              fill={index < rating ? '#4ABED9' : '#EDECEC'}
-              stroke={index < rating ? '#4ABED9' : '#E5E5E5'}
-              strokeWidth="1"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-      ))}
+            <svg
+              width="100%"
+              height="100%"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M12 2L14.09 8.26L22 9L16 14.74L17.18 22.5L12 19.77L6.82 22.5L8 14.74L2 9L9.91 8.26L12 2Z" />
+            </svg>
+          </button>
+        );
+      })}
     </div>
   );
 }; 
