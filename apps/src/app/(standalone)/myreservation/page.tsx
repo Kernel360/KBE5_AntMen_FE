@@ -1,4 +1,11 @@
 // 내 예약 페이지 (예약리스트)
+
+/**
+ * TODO
+ * 1. 취소 버튼 제거
+ * 2. 예약 폼 데이터 연동
+ * 3. 지난 예약 연결
+ */
 "use client";
 
 import React, { useState } from 'react';

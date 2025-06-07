@@ -16,7 +16,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ReservationCard } from '@/entities/reservation/ui/ReservationCard';
-import { ReviewModal } from '@/components/ReviewModal';
+import { ReviewModal } from '@/shared/ui/modal/ReviewModal';
 import type { ManagerReservation, ReservationTab } from '@/entities/reservation/model/types';
 
 // 매니저용 임시 데이터 - 다양한 상태 포함
