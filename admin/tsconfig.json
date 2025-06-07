@@ -21,7 +21,8 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@antmen/ui": ["../../packages/ui"]
+      "@antmen/ui": ["../../packages/ui"],
+      "@/*": ["./src/*"]
     }
   },
   "include": [
