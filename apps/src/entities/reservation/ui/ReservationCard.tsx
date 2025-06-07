@@ -2,52 +2,36 @@
 
 import React from 'react';
 import Image from 'next/image';
-import type {
-  Reservation,
-  ManagerReservation,
-  ReservationStatus,
-} from '../model/types';
+import type { Reservation, ReservationStatus } from '../model/types';
 
 interface ReservationCardProps {
   reservation: Reservation;
+  userType: 'customer' | 'manager';
   onViewDetails?: (id: string) => void;
   onCheckIn?: (id: string) => void;
   onCheckOut?: (id: string) => void;
   onWriteReview?: (id: string) => void;
+  onCancel?: (id: string) => void;
 }
 
-interface ManagerReservationCardProps {
-  reservation: ManagerReservation;
-  onViewDetails?: (id: string) => void;
-  onCheckIn?: (id: string) => void;
-  onCheckOut?: (id: string) => void;
-  onWriteReview?: (id: string) => void;
-  isManager: true;
-}
-
-type CombinedReservationCardProps = ReservationCardProps | ManagerReservationCardProps;
-
-export const ReservationCard: React.FC<CombinedReservationCardProps> = ({
+export const ReservationCard: React.FC<ReservationCardProps> = ({
   reservation,
+  userType,
   onViewDetails,
   onCheckIn,
   onCheckOut,
   onWriteReview,
-  ...props
+  onCancel,
 }) => {
-  const isManager = 'isManager' in props && props.isManager;
-  const { id, serviceType, location, status, dateTime, amount } = reservation;
+  const { id, serviceType, location, status, dateTime, amount, customer, worker } = reservation;
 
   const formattedAmount = new Intl.NumberFormat('ko-KR', {
     style: 'currency',
     currency: 'KRW',
   }).format(amount);
 
-  const personName = isManager
-    ? (reservation as ManagerReservation).customer.name
-    : (reservation as Reservation).worker.name;
-
-  const personLabel = isManager ? '고객' : '담당자';
+  const personName = userType === 'manager' ? customer?.name : worker.name;
+  const personLabel = userType === 'manager' ? '고객' : '담당자';
 
   const getStatusText = (status: ReservationStatus | string) => {
     switch (status) {
@@ -83,7 +67,7 @@ export const ReservationCard: React.FC<CombinedReservationCardProps> = ({
   };
 
   const renderManagerButtons = () => {
-    if (!isManager) return null;
+    if (userType !== 'manager') return null;
 
     switch (status) {
       case 'scheduled':
@@ -171,7 +155,7 @@ export const ReservationCard: React.FC<CombinedReservationCardProps> = ({
   };
 
   const renderCustomerButtons = () => {
-    if (isManager) return null;
+    if (userType !== 'customer') return null;
 
     return (
       <button
@@ -219,7 +203,7 @@ export const ReservationCard: React.FC<CombinedReservationCardProps> = ({
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-[#666666]">
-            {isManager ? '수입 금액' : '결제 금액'}
+            {userType === 'manager' ? '수입 금액' : '결제 금액'}
           </span>
           <span className="text-sm font-extrabold text-black">{formattedAmount}</span>
         </div>
@@ -227,7 +211,7 @@ export const ReservationCard: React.FC<CombinedReservationCardProps> = ({
 
       {/* Action Buttons */}
       <div className="flex gap-3">
-        {isManager ? renderManagerButtons() : renderCustomerButtons()}
+        {userType === 'manager' ? renderManagerButtons() : renderCustomerButtons()}
       </div>
     </div>
   );
