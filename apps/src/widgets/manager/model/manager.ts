@@ -1,11 +1,23 @@
 export const MAX_MANAGER_COUNT = 3;
 
+export const MANAGER_SELECTION_COLORS = {
+  FIRST: '#3b82f6',   // 파란색 (1순위)
+  SECOND: '#10b981',  // 초록색 (2순위) 
+  THIRD: '#f59e0b',   // 주황색 (3순위)
+  DEFAULT: '#e2e8f0'  // 기본색
+} as const;
+
+export const MANAGER_SELECTION_PRIORITIES = {
+  FIRST: '1순위',
+  SECOND: '2순위', 
+  THIRD: '3순위'
+} as const;
+
 export interface Manager {
   id: string;
   name: string;
   gender: string;
   age: number;
-  experience: number;
   rating: number;
   description: string;
   profileImage: string;
@@ -31,7 +43,6 @@ export const MANAGER_LIST: Manager[] = [
     name: '김민지',
     gender: '여성',
     age: 28,
-    experience: 5,
     rating: 4.8,
     description: '꼼꼼하고 친절한 서비스로 고객님의 만족을 최우선으로 생각합니다.',
     profileImage: '김',
@@ -57,7 +68,6 @@ export const MANAGER_LIST: Manager[] = [
     name: '이영희',
     gender: '여성',
     age: 32,
-    experience: 5,
     rating: 4.9,
     description: '5년간의 경험을 바탕으로 최고의 청소 서비스를 제공해드립니다.',
     profileImage: '이',
@@ -83,7 +93,6 @@ export const MANAGER_LIST: Manager[] = [
     name: '박지민',
     gender: '여성',
     age: 25,
-    experience: 2,
     rating: 4.7,
     description: '성실하고 열정적인 서비스로 깨끗한 공간을 만들어드립니다.',
     profileImage: '박',
@@ -109,7 +118,6 @@ export const MANAGER_LIST: Manager[] = [
     name: '최민수',
     gender: '남성',
     age: 35,
-    experience: 7,
     rating: 5.0,
     description: '오랜 경력으로 쌓은 노하우로 완벽한 청소를 약속드립니다.',
     profileImage: '최',

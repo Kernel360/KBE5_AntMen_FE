@@ -1,24 +1,24 @@
-FROM node:20-alpine AS builder
+# admin/Dockerfile
+FROM node:18-alpine
 
 WORKDIR /app
 
-# 루트 기준으로 복사 (context가 루트이기 때문)
+# 패키지 파일 복사
 COPY package.json yarn.lock ./
-COPY packages ./packages
-COPY admin ./admin
+COPY admin/package.json ./admin/
+COPY packages/ui/package.json ./packages/ui/
 
-RUN yarn install --frozen-lockfile
-RUN yarn workspace admin build
+# 의존성 설치
+RUN yarn install
 
-FROM node:20-alpine AS runner
+# 소스 코드 복사
+COPY . .
 
-WORKDIR /app
+# 빌드
+RUN yarn build:admin
 
-COPY --from=builder /app/admin/build ./build
-COPY --from=builder /app/admin/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
-
+# 포트 설정
 EXPOSE 3001
 
-CMD ["yarn", "workspace", "admin", "start"]
+# 실행
+CMD ["yarn", "start:admin"]
