@@ -1,5 +1,5 @@
-export { CancellationModal } from './CancellationModal';
+export { default as CancellationModal } from './CancellationModal';
 export { RefundModal } from './RefundModal';
-export { ReservationActionModal } from './ReservationActionModal'; 
+export { default as ReservationActionModal } from './ReservationActionModal'; 
 export { ReviewModal } from './ReviewModal';
 export { EditProfileModal } from './EditProfileModal';

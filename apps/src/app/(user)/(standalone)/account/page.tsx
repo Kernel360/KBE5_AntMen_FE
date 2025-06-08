@@ -1,38 +1,38 @@
-"use client";
+'use client'
 
-import { Toggle } from '@/shared/ui/Toggle';
-import { ArrowLeft } from '@/shared/icons/ArrowLeft';
-import { EditProfileModal } from '@/shared/ui/modal/EditProfileModal';
-import Link from 'next/link';
-import { useState } from 'react';
+import { Toggle } from '@/shared/ui/Toggle'
+import { ArrowLeft } from '@/shared/icons/ArrowLeft'
+import { EditProfileModal } from '@/shared/ui/modal/EditProfileModal'
+import Link from 'next/link'
+import { useState } from 'react'
 
 export default function AccountPage() {
-  const [eventNotification, setEventNotification] = useState(false);
-  const [appNotification, setAppNotification] = useState(true);
-  const [profileImage, setProfileImage] = useState<File | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [eventNotification, setEventNotification] = useState(false)
+  const [appNotification, setAppNotification] = useState(true)
+  const [profileImage, setProfileImage] = useState<File | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [userInfo, setUserInfo] = useState({
     name: '홍길동',
     phone: '010-1111-2222',
     birthDate: '2025-06-05',
     email: 'test@gmail.com',
-  });
+  })
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setProfileImage(e.target.files[0]);
+      setProfileImage(e.target.files[0])
     }
-  };
+  }
 
   const handleEditSubmit = (data: {
-    name: string;
-    phone: string;
-    birthDate: string;
-    email: string;
+    name: string
+    phone: string
+    birthDate: string
+    email: string
   }) => {
-    setUserInfo(data);
-    setIsEditModalOpen(false);
-  };
+    setUserInfo(data)
+    setIsEditModalOpen(false)
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -48,16 +48,16 @@ export default function AccountPage() {
       <main className="p-4 flex flex-col gap-y-4">
         {/* Profile Image Upload */}
         <div className="flex flex-col items-center mb-6">
-          <label 
+          <label
             htmlFor="profileImage"
             className="cursor-pointer group relative"
           >
             <div className="w-24 h-24 bg-[#F9F9F9] rounded-full flex items-center justify-center overflow-hidden">
               {profileImage ? (
                 <>
-                  <img 
-                    src={URL.createObjectURL(profileImage)} 
-                    alt="Profile preview" 
+                  <img
+                    src={URL.createObjectURL(profileImage)}
+                    alt="Profile preview"
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full flex items-center justify-center">
@@ -96,7 +96,9 @@ export default function AccountPage() {
           </div>
           <div className="flex justify-between items-center py-1">
             <span className="text-black">생년월일</span>
-            <span className="text-[#00BCD4]">{userInfo.birthDate.replace(/-/g, '.')}</span>
+            <span className="text-[#00BCD4]">
+              {userInfo.birthDate.replace(/-/g, '.')}
+            </span>
           </div>
           <div className="flex justify-between items-center py-1">
             <span className="text-black">이메일</span>
@@ -107,16 +109,20 @@ export default function AccountPage() {
         <hr className="border-[#F0F0F0] mt-2" />
 
         {/* Actions Section */}
-        <button 
+        <button
           className="text-left py-2 text-black hover:text-[#00BCD4] transition-colors"
           onClick={() => setIsEditModalOpen(true)}
         >
           정보 수정
         </button>
         <hr className="border-[#F0F0F0]" />
-        <button className="text-left py-2 text-black hover:text-[#00BCD4] transition-colors">로그아웃</button>
+        <button className="text-left py-2 text-black hover:text-[#00BCD4] transition-colors">
+          로그아웃
+        </button>
         <hr className="border-[#F0F0F0]" />
-        <button className="text-left py-2 text-black hover:text-[#00BCD4] transition-colors">탈퇴</button>
+        <button className="text-left py-2 text-black hover:text-[#00BCD4] transition-colors">
+          탈퇴
+        </button>
         <hr className="border-[#F0F0F0]" />
 
         {/* Notifications Section */}
@@ -124,7 +130,10 @@ export default function AccountPage() {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-black">이벤트 소식 알림</span>
-              <Toggle enabled={eventNotification} onChange={setEventNotification} />
+              <Toggle
+                enabled={eventNotification}
+                onChange={setEventNotification}
+              />
             </div>
             <p className="text-xs text-[#999999]">
               카카오톡, SMS, 앱푸시를 통해 이벤트 소식을 알려드립니다.
@@ -155,5 +164,5 @@ export default function AccountPage() {
         onSubmit={handleEditSubmit}
       />
     </div>
-  );
-} 
+  )
+}

@@ -1,6 +1,8 @@
-/** 
+// 내 예약 -> 예약 상세 페이지
+
+/**
  * TODO: 예약 상세 페이지 디자인 수정 필요
- * 
+ *
  * 1. 결제하면 결제 컴포넌트 불러오기 ✅
  * 2. 예약 취소 버튼 누르면 예약 취소 모달 띄우기 RejectReservationModal ✅
  * 3. 결제 페이지 이동 필요 ✅
@@ -8,7 +10,7 @@
  * 5. 매니저 리스트 추가 필요 
  * 6. 환불 기능 구현 ✅
  * 7. 모달 컴포넌트 분리 ✅
- **/ 
+ **/
 
 import { Suspense } from 'react';
 import type { Reservation } from '@/entities/reservation/model/types';

@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import React from 'react';
 import Image from 'next/image';
@@ -28,7 +28,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
   const formattedAmount = new Intl.NumberFormat('ko-KR', {
     style: 'currency',
     currency: 'KRW',
-  }).format(amount);
+  }).format(amount)
 
   const personName = userType === 'manager' ? customer?.name : worker.name;
   const personLabel = userType === 'manager' ? '고객' : '담당자';
@@ -36,35 +36,35 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
   const getStatusText = (status: ReservationStatus | string) => {
     switch (status) {
       case 'scheduled':
-        return '예정됨';
+        return '예정됨'
       case 'in-progress':
-        return '진행 중';
+        return '진행 중'
       case 'completed':
       case 'completed-pending-review':
-        return '완료';
+        return '완료'
       case 'cancelled':
-        return '취소됨';
+        return '취소됨'
       default:
-        return '알 수 없음';
+        return '알 수 없음'
     }
-  };
+  }
 
   const getStatusColor = (status: ReservationStatus | string) => {
     switch (status) {
       case 'scheduled':
-        return 'bg-[#E8F8FC] text-[#4DD0E1]'; // 파란색
+        return 'bg-[#E8F8FC] text-[#4DD0E1]' // 파란색
       case 'in-progress':
-        return 'bg-[#FFF3E0] text-[#FFB74D]'; // 주황색
+        return 'bg-[#FFF3E0] text-[#FFB74D]' // 주황색
       case 'completed':
-        return 'bg-[#F5F5F5] text-[#B0BEC5]'; // 회색
+        return 'bg-[#F5F5F5] text-[#B0BEC5]' // 회색
       case 'completed-pending-review':
-        return 'bg-[#F3E5F5] text-[#CE93D8]'; // 보라색
+        return 'bg-[#F3E5F5] text-[#CE93D8]' // 보라색
       case 'cancelled':
-        return 'bg-[#FFEBEE] text-[#E57373]'; // 빨간색
+        return 'bg-[#FFEBEE] text-[#E57373]' // 빨간색
       default:
-        return 'bg-[#E8F8FC] text-[#4DD0E1]';
+        return 'bg-[#E8F8FC] text-[#4DD0E1]'
     }
-  };
+  }
 
   const renderManagerButtons = () => {
     if (userType !== 'manager') return null;
@@ -86,7 +86,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
               상세보기
             </button>
           </>
-        );
+        )
 
       case 'in-progress':
         return (
@@ -104,7 +104,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
               상세보기
             </button>
           </>
-        );
+        )
 
       case 'completed-pending-review':
         return (
@@ -122,7 +122,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
               상세보기
             </button>
           </>
-        );
+        )
 
       case 'completed':
         return (
@@ -140,7 +140,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
               상세보기
             </button>
           </>
-        );
+        )
 
       default:
         return (
@@ -150,9 +150,9 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
           >
             상세보기
           </button>
-        );
+        )
     }
-  };
+  }
 
   const renderCustomerButtons = () => {
     if (userType !== 'customer') return null;
@@ -164,8 +164,8 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
       >
         상세보기
       </button>
-    );
-  };
+    )
+  }
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-[#E5E7EB] bg-white p-5">
@@ -174,7 +174,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-bold text-black">{serviceType}</h3>
           <div className="flex items-center gap-2">
-            <img
+            <Image
               src="/icons/map-pin.svg"
               alt="위치"
               width={16}
@@ -185,20 +185,22 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
           </div>
         </div>
         <div className={`rounded-xl px-3 py-1.5 ${getStatusColor(status)}`}>
-          <span className="text-xs font-medium">
-            {getStatusText(status)}
-          </span>
+          <span className="text-xs font-medium">{getStatusText(status)}</span>
         </div>
       </div>
 
       {/* Details */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-[#666666]">날짜 및 시간</span>
+          <span className="text-sm font-medium text-[#666666]">
+            날짜 및 시간
+          </span>
           <span className="text-sm font-medium text-black">{dateTime}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-[#666666]">{personLabel}</span>
+          <span className="text-sm font-medium text-[#666666]">
+            {personLabel}
+          </span>
           <span className="text-sm font-medium text-black">{personName}</span>
         </div>
         <div className="flex items-center justify-between">
@@ -214,5 +216,5 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
         {userType === 'manager' ? renderManagerButtons() : renderCustomerButtons()}
       </div>
     </div>
-  );
-};
+  )
+}
