@@ -218,6 +218,38 @@ export const mockBoards: Record<number, BoardDetail> = {
     ]
   },
 
+  2002: {
+    id: 2002,
+    title: '결제 취소 및 환불은 언제 처리되나요?',
+    content: '결제 취소 시 환불 처리 기간이 궁금합니다.\n카드 결제와 계좌이체는 각각 얼마나 걸리나요?',
+    author: {
+      id: 102,
+      name: '익명의 사용자',
+      profileImage: '/images/default-profile.png'
+    },
+    createdAt: '2024-03-12T16:45:00.000Z',
+    updatedAt: '2024-03-12T16:45:00.000Z',
+    viewCount: 156,
+    isAnswered: true,
+    category: '서비스 문의',
+    isPinned: true,
+    order: 2,
+    comments: [
+      {
+        id: 20,
+        content: '안녕하세요. 환불 처리 기간 안내드립니다:\n\n1. 카드결제: 3-5영업일\n2. 계좌이체: 1-2영업일\n\n단, 카드사나 은행 사정에 따라 다소 지연될 수 있습니다.',
+        author: {
+          id: 1,
+          name: '고객지원팀',
+          profileImage: '/images/support-team.png'
+        },
+        createdAt: '2024-03-12T17:00:00.000Z',
+        updatedAt: '2024-03-12T17:00:00.000Z',
+        isAnswer: true
+      }
+    ]
+  },
+
   2003: {
     id: 2003,
     title: '매칭 일정 변경 문의드립니다',

@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { TestToolModal } from '@/widgets/test/TestToolModal';
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "AntMen",
-  description: "AntMen Frontend Application",
+  description: "AntMen - 개미들의 공간",
 };
 
 export default function RootLayout({
@@ -23,6 +24,7 @@ export default function RootLayout({
             {children}
           </main>
         </Providers>
+        <TestToolModal />
       </body>
     </html>
   );
