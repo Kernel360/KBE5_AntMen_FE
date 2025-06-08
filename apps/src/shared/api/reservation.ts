@@ -76,4 +76,36 @@ export const updateReservationManager = async (
     method: 'PATCH',
     body: JSON.stringify({ managerId }),
   });
+};
+
+/**
+ * 예약 상태를 변경하는 API 함수
+ * @param reservationId - 상태를 변경할 예약의 ID
+ * @param status - 변경할 새로운 상태
+ * @returns ReservationResponse - 업데이트된 예약 정보
+ */
+export const updateReservationStatus = async (
+  reservationId: number,
+  status: string,
+): Promise<ReservationResponse> => {
+  return customFetch<ReservationResponse>(`/reservation/${reservationId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+};
+
+/**
+ * 예약을 취소하는 API 함수
+ * @param reservationId - 취소할 예약의 ID
+ * @param reason - 취소 사유 (선택 사항)
+ * @returns ReservationResponse - 업데이트된 예약 정보
+ */
+export const cancelReservation = async (
+  reservationId: number,
+  reason?: string,
+): Promise<ReservationResponse> => {
+  return customFetch<ReservationResponse>(`/reservation/${reservationId}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
 }; 
