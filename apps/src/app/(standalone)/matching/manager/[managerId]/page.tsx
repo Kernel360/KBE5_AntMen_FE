@@ -154,7 +154,9 @@ export default function ManagerDetailPage() {
         <section className="px-5 py-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-slate-900">고객 리뷰</h2>
-            <button className="text-primary text-sm font-medium">
+            <button
+              onClick={() => router.push(`/manager/reviews/${managerId}`)}
+              className="text-primary text-sm font-medium">
               전체보기 &gt;
             </button>
           </div>
