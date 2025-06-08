@@ -48,6 +48,10 @@ export default function ManagerReviewsPage() {
     );
   }
 
+  const averageRating = manager.reviews.length > 0
+    ? manager.reviews.reduce((sum, r) => sum + r.rating, 0) / manager.reviews.length
+    : 0;
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-[420px] mx-auto">
@@ -64,8 +68,8 @@ export default function ManagerReviewsPage() {
             <div className="flex-1">
               <h2 className="text-base font-semibold text-slate-600 mb-2">전체 평점</h2>
               <div className="flex items-center gap-2">
-                <StaticStarRating rating={manager.rating} />
-                <span className="text-2xl font-bold text-slate-800">{manager.rating.toFixed(1)}</span>
+                <StaticStarRating rating={averageRating} />
+                <span className="text-2xl font-bold text-slate-800">{averageRating.toFixed(1)}</span>
               </div>
             </div>
             <div className="flex-1">
