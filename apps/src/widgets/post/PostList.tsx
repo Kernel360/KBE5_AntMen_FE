@@ -38,10 +38,24 @@ export const PostList = ({ userRole, boardType }: PostListProps) => {
 
   const router = useRouter();
 
+  const getTabCode = (boardType: string) => {
+    switch(boardType) {
+      case '공지사항':
+        return 'n';
+      case '서비스 문의':
+        return 'i';
+      case '업무 문의':
+        return 'w';
+      default:
+        return 'n';
+    }
+  };
+
   const handlePostClick = (postId: number) => {
     const basePath = userRole === 'manager' ? '/manager/boards' : '/boards';
-    const boardPath = `${basePath}/${postId}`;
-    console.log('Clicking post:', { postId, userRole, boardPath });
+    const tabCode = getTabCode(boardType);
+    const boardPath = `${basePath}/${postId}?t=${tabCode}`;
+    console.log('Clicking post:', { postId, userRole, boardPath, boardType });
     router.push(boardPath);
   };
 

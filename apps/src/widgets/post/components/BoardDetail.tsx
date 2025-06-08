@@ -43,8 +43,8 @@ export const BoardDetail = ({ initialData, boardType }: BoardDetailProps) => {
       <div className="max-w-[370px] mx-auto">
         <div className="bg-white shadow-sm">
           <div className="px-4 py-5">
-            <h1 className="text-xl font-bold mb-3 text-accent-foreground">{post.title}</h1>
-            <div className="flex items-center text-sm text-accent-foreground/70 pb-4 border-b border-accent/10">
+            <h1 className="text-xl font-bold mb-2 text-accent-foreground">{post.title}</h1>
+            <div className="flex items-center text-sm text-accent-foreground/70 pb-4">
               <span className="font-medium text-primary/80">{post.author.name}</span>
               <span className="mx-2 text-accent/30">|</span>
               <span>{formatDate(post.createdAt)}</span>
@@ -58,8 +58,8 @@ export const BoardDetail = ({ initialData, boardType }: BoardDetailProps) => {
                 </span>
               )}
             </div>
-            <div className="h-px bg-accent/10 my-5" />
-            <div className="py-6">
+            <div className="h-[1px] bg-gray-200" />
+            <div className="px-2 pt-4 pb-1">
               <p className="text-accent-foreground whitespace-pre-wrap break-words leading-relaxed">
                 {post.content}
               </p>
