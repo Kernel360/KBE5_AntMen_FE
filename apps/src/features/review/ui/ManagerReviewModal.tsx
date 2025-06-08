@@ -1,82 +1,88 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { StarRating } from './StarRating';
-import type { CreateReviewRequest } from '@/entities/review';
+import { useState } from 'react'
+import { StarRating } from './StarRating'
+import type { CreateReviewRequest } from '@/entities/review'
 
 interface ManagerReviewModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  workId: string;
-  onSubmit: (reviewData: CreateReviewRequest) => Promise<void>;
+  isOpen: boolean
+  onClose: () => void
+  workId: string
+  onSubmit: (reviewData: CreateReviewRequest) => Promise<void>
 }
 
-export const ManagerReviewModal = ({ 
-  isOpen, 
-  onClose, 
-  workId, 
-  onSubmit 
+export const ManagerReviewModal = ({
+  isOpen,
+  onClose,
+  workId,
+  onSubmit,
 }: ManagerReviewModalProps) => {
-  const [rating, setRating] = useState(0);
-  const [serviceComment, setServiceComment] = useState('');
-  const [customerFeedback, setCustomerFeedback] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rating, setRating] = useState(0)
+  const [serviceComment, setServiceComment] = useState('')
+  const [customerFeedback, setCustomerFeedback] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      alert('별점을 선택해주세요.');
-      return;
+      alert('별점을 선택해주세요.')
+      return
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     try {
       await onSubmit({
         workId,
         rating,
         serviceCompletionComment: serviceComment || undefined,
         customerFeedback: customerFeedback || undefined,
-      });
-      
+      })
+
       // 초기화
-      setRating(0);
-      setServiceComment('');
-      setCustomerFeedback('');
-      onClose();
+      setRating(0)
+      setServiceComment('')
+      setCustomerFeedback('')
+      onClose()
     } catch (error) {
-      console.error('리뷰 등록 실패:', error);
-      alert('리뷰 등록에 실패했습니다. 다시 시도해주세요.');
+      console.error('리뷰 등록 실패:', error)
+      alert('리뷰 등록에 실패했습니다. 다시 시도해주세요.')
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
-  const handleServiceCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
+  const handleServiceCommentChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+  ) => {
+    const value = e.target.value
     if (value.length <= 500) {
-      setServiceComment(value);
+      setServiceComment(value)
     }
-  };
+  }
 
-  const handleCustomerFeedbackChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
+  const handleCustomerFeedbackChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+  ) => {
+    const value = e.target.value
     if (value.length <= 500) {
-      setCustomerFeedback(value);
+      setCustomerFeedback(value)
     }
-  };
+  }
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
-          onClose();
+          onClose()
         }
       }}
     >
-      <div className="w-full max-w-md bg-white rounded-t-[20px] animate-slide-up"
-           onClick={(e) => e.stopPropagation()}>
+      <div
+        className="w-full max-w-mobile bg-white rounded-t-[20px] animate-slide-up"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* 헤더 */}
         <header className="flex items-center justify-between px-6 pt-5">
           <h2 className="text-lg font-black text-[#333333]">리뷰</h2>
@@ -85,9 +91,27 @@ export const ManagerReviewModal = ({
             className="w-6 h-6 flex items-center justify-center"
             aria-label="닫기"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M18 6L6 18" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M6 6L18 18" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6L6 18"
+                stroke="#666666"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M6 6L18 18"
+                stroke="#666666"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
         </header>
@@ -104,13 +128,9 @@ export const ManagerReviewModal = ({
                 매니저님의 소중한 의견을 남겨주세요.
               </p>
             </div>
-            
+
             {/* 별점 */}
-            <StarRating
-              rating={rating}
-              onRatingChange={setRating}
-              size={32}
-            />
+            <StarRating rating={rating} onRatingChange={setRating} size={32} />
           </section>
 
           {/* 피드백 섹션 */}
@@ -131,10 +151,10 @@ export const ManagerReviewModal = ({
                   </span>
                 </div>
               </div>
-              
+
               {/* 고객님에 대한 평가 */}
               <p className="text-sm text-[#666666]">고객님에 대한 평가</p>
-              
+
               <div className="bg-[#F5F5F5] rounded-lg p-4 h-[120px] flex flex-col">
                 <textarea
                   value={customerFeedback}
@@ -165,5 +185,5 @@ export const ManagerReviewModal = ({
         </main>
       </div>
     </div>
-  );
-}; 
+  )
+}

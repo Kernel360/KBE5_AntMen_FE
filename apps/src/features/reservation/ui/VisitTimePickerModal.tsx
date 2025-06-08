@@ -1,14 +1,14 @@
-'use client';
+'use client'
 
-import { Transition } from '@headlessui/react';
-import React from 'react';
+import { Transition } from '@headlessui/react'
+import React from 'react'
 
 interface VisitTimePickerModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  visitTimeSlots: string[];
-  selectedVisitTime: string | null;
-  onSelectVisitTime: (time: string) => void;
+  isOpen: boolean
+  onClose: () => void
+  visitTimeSlots: string[]
+  selectedVisitTime: string | null
+  onSelectVisitTime: (time: string) => void
 }
 
 export const VisitTimePickerModal = ({
@@ -31,12 +31,12 @@ export const VisitTimePickerModal = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div 
+          <div
             className="absolute inset-0 bg-black bg-opacity-50"
             onClick={onClose}
           />
         </Transition.Child>
-        
+
         {/* Modal */}
         <Transition.Child
           as={React.Fragment}
@@ -47,18 +47,25 @@ export const VisitTimePickerModal = ({
           leaveFrom="translate-y-0"
           leaveTo="translate-y-full"
         >
-          <div className="fixed bottom-0 left-0 right-0 sm:left-1/2 sm:-translate-x-1/2 w-full sm:max-w-md bg-white rounded-t-2xl z-50 shadow-2xl max-h-[80vh]">
-            <div className="py-3 flex justify-center cursor-pointer" onClick={onClose}>
+          <div className="fixed bottom-0 left-0 right-0 sm:left-1/2 sm:-translate-x-1/2 w-full max-w-mobile bg-white rounded-t-2xl z-50 shadow-2xl max-h-[80vh]">
+            <div
+              className="py-3 flex justify-center cursor-pointer"
+              onClick={onClose}
+            >
               <div className="w-10 h-1.5 bg-gray-300 rounded-full" />
             </div>
-            
+
             {/* Header */}
             <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white">
-              <button className="text-gray-500" onClick={onClose}>취소</button>
+              <button className="text-gray-500" onClick={onClose}>
+                취소
+              </button>
               <h3 className="text-lg font-bold">방문 시간 선택</h3>
-              <button className="text-cyan-500 font-medium" onClick={onClose}>확인</button>
+              <button className="text-cyan-500 font-medium" onClick={onClose}>
+                확인
+              </button>
             </div>
-            
+
             <div className="overflow-y-auto pb-safe-bottom">
               {/* Time Slots */}
               <div className="p-4">
@@ -67,13 +74,14 @@ export const VisitTimePickerModal = ({
                     <button
                       key={time}
                       onClick={() => {
-                        onSelectVisitTime(time);
-                        onClose();
+                        onSelectVisitTime(time)
+                        onClose()
                       }}
                       className={`py-3 rounded-lg text-center text-sm font-medium transition-colors
-                        ${selectedVisitTime === time 
-                          ? 'bg-cyan-500 text-white shadow' 
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                        ${
+                          selectedVisitTime === time
+                            ? 'bg-cyan-500 text-white shadow'
+                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                         }`}
                     >
                       {time}
@@ -93,5 +101,5 @@ export const VisitTimePickerModal = ({
         </Transition.Child>
       </div>
     </Transition>
-  );
-}; 
+  )
+}

@@ -9,14 +9,50 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        'Apple_SD_Gothic_Neo': ['Apple SD Gothic Neo', 'sans-serif'],
+        Apple_SD_Gothic_Neo: ['Apple SD Gothic Neo', 'sans-serif'],
       },
       colors: {
-        primary: '#4ABED9',
-        secondary: '#F3F4F6',
-        'secondary-foreground': '#374151',
-        accent: '#F3F4F6',
-        'accent-foreground': '#111827',
+        primary: {
+          DEFAULT: '#0fbcd6',
+        },
+        secondary: {
+          DEFAULT: '#F3F4F6',
+        },
+        dark: 'rgba(2, 9, 19, 0.91)',
+        white: '#fff',
+        blue: {
+          50: '#e8f3ff',
+          100: '#c9e2ff',
+          200: '#90c2ff',
+          300: '#64a8ff',
+          400: '#4593fc',
+          500: '#3182f6',
+          600: '#2272eb',
+          700: '#1b64da',
+          800: '#1957c2',
+          900: '#194aa6',
+        },
+        red: {
+          50: '#fee',
+          100: '#ffd4d6',
+        },
+        accent: {
+          DEFAULT: '#F3F4F6',
+          dark: '#E5E7EB',
+          foreground: '#111827',
+        },
+        gray: {
+          50: '#F9FAFB',
+          100: '#F3F4F6',
+          200: '#E5E7EB',
+          300: '#D1D5DB',
+          400: '#9CA3AF',
+          500: '#6B7280',
+          600: '#4B5563',
+          700: '#374151',
+          800: '#1F2937',
+          900: '#111827',
+        },
       },
       keyframes: {
         'slide-up': {
@@ -27,8 +63,22 @@ module.exports = {
       animation: {
         'slide-up': 'slide-up 0.3s ease-out',
       },
+      maxWidth: {
+        mobile: '390px', // 모바일 기준
+        tablet: '768px', // 태블릿
+        desktop: '1200px',
+      },
+    },
+    container: {
+      center: true,
+      padding: '10px',
+      screens: {
+        DEFAULT: '100%',
+        mobile: '390px',
+        tablet: '768px',
+        desktop: '1200px',
+      },
     },
   },
   plugins: [],
 }
-
