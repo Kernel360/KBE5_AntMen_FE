@@ -4,11 +4,16 @@ import {useSearchParams} from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import { useSocialProfileStore } from "@/shared/stores/socialProfileStore";
+
 
 interface AuthResponse {
     success: boolean;
     token?: string;
     message?: string;
+    user_email?: string;
+    user_id?: string;
+    user_type?: string;
 }
 
 export function LoginGateway() {
@@ -17,6 +22,7 @@ export function LoginGateway() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const { setSocialProfile } = useSocialProfileStore();
 
     // 🔥 중복 실행 방지를 위한 ref
     const isProcessing = useRef(false);
@@ -48,7 +54,7 @@ export function LoginGateway() {
         try {
             console.log('📡 서버 요청 시작');
 
-            const response = await fetch('http://localhost:9080/api/v1/auth/google/login', {
+            const response = await fetch('http://localhost:9090/api/v1/auth/google/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -87,10 +93,20 @@ export function LoginGateway() {
                 console.log('🏠 메인 페이지로 이동');
                 router.push('/');
 
+            } else if (!result.success && result.user_email) {
+                console.log('✨ 신규 소셜 사용자, 회원가입 페이지로 이동');
+                setSocialProfile({
+                    id: result.user_id as string,
+                    email: result.user_email,
+                    provider: result.user_type as string,
+                });
+                router.push('/signup');
             } else {
-                console.log('❌ 회원이 아님 - 메인 페이지로 이동');
-                router.push('/');
+                console.log('❌ 알 수 없는 응답, 로그인 페이지로 이동');
+                setError(result.message || '로그인에 실패했습니다. 다시 시도해주세요.');
+                setTimeout(() => router.push('/login'), 3000);
             }
+
 
         } catch (err) {
             console.error('❌ 구글 로그인 처리 중 오류:', err);
