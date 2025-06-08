@@ -1,12 +1,14 @@
-"use client";
+'use client'
 
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { ReservationCard } from '@/entities/reservation/ui/ReservationCard';
-import { ReviewModal } from '@/features/review';
-import type { Reservation, ReservationTab } from '@/entities/reservation/model/types';
-import type { CreateReviewData } from '@/entities/review';
+import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { ReservationCard } from '@/entities/reservation/ui/ReservationCard'
+import { ReviewModal } from '@/features/review'
+import type {
+  Reservation,
+  ReservationTab,
+} from '@/entities/reservation/model/types'
+import type { CreateReviewData } from '@/entities/review'
 
 // 임시 데이터
 const MOCK_RESERVATIONS: Reservation[] = [
@@ -58,51 +60,61 @@ const MOCK_RESERVATIONS: Reservation[] = [
     },
     amount: 45000,
   },
-];
+]
 
 export default function ReservationsPage() {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<ReservationTab>('upcoming');
-  const [reservations, setReservations] = useState<Reservation[]>(MOCK_RESERVATIONS);
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [selectedReservationId, setSelectedReservationId] = useState<string>('');
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState<ReservationTab>('upcoming')
+  const [reservations, setReservations] =
+    useState<Reservation[]>(MOCK_RESERVATIONS)
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
+  const [selectedReservationId, setSelectedReservationId] = useState<string>('')
 
   const handleCancel = (id: string) => {
     // TODO: Implement reservation cancellation
-    console.log('Cancel reservation:', id);
-  };
+    console.log('Cancel reservation:', id)
+  }
 
   const handleViewDetails = (id: string) => {
-    router.push(`/reservations/${id}`);
-  };
+    router.push(`/reservations/${id}`)
+  }
 
   const handleNewReservation = () => {
     // TODO: Navigate to reservation creation page
-    router.push('/reservation/form');
-  };
+    router.push('/reservation/form')
+  }
 
   const handleReview = (id: string) => {
-    setSelectedReservationId(id);
-    setIsReviewModalOpen(true);
-  };
+    setSelectedReservationId(id)
+    setIsReviewModalOpen(true)
+  }
 
   const handleReviewSubmit = (reviewData: CreateReviewData) => {
     // TODO: Implement review submission API call
-    console.log('Submit review:', reviewData);
+    console.log('Submit review:', reviewData)
     // 실제 구현에서는 API 호출 후 성공 메시지 표시
-    alert('리뷰가 등록되었습니다.');
-  };
+    alert('리뷰가 등록되었습니다.')
+  }
 
   const filteredReservations = reservations.filter((reservation) =>
-    activeTab === 'upcoming' ? reservation.status === 'scheduled' : reservation.status !== 'scheduled'
-  );
+    activeTab === 'upcoming'
+      ? reservation.status === 'scheduled'
+      : reservation.status !== 'scheduled',
+  )
 
   return (
     <main className="flex min-h-screen flex-col bg-white">
       {/* Header */}
       <header className="flex items-center justify-between p-5">
-        <button onClick={() => router.back()} className="flex h-6 w-6 items-center justify-center">
-          <Image src="/icons/arrow-left.svg" alt="뒤로가기" width={24} height={24} />
+        <button
+          onClick={() => router.back()}
+          className="flex h-6 w-6 items-center justify-center"
+        >
+          <img
+            src="/icons/arrow-left.svg"
+            alt="뒤로가기"
+            className="size-6"
+          />
         </button>
         <h1 className="flex-1 text-center text-2xl font-bold">예약 내역</h1>
         <div className="h-6 w-6" /> {/* Spacer for alignment */}
@@ -117,7 +129,9 @@ export default function ReservationsPage() {
           >
             <span
               className={`text-base ${
-                activeTab === 'upcoming' ? 'font-extrabold text-[#0fbcd6]' : 'font-medium text-[#999999]'
+                activeTab === 'upcoming'
+                  ? 'font-extrabold text-[#0fbcd6]'
+                  : 'font-medium text-[#999999]'
               }`}
             >
               예정된 예약
@@ -132,7 +146,9 @@ export default function ReservationsPage() {
           >
             <span
               className={`text-base ${
-                activeTab === 'past' ? 'font-extrabold text-[#0fbcd6]' : 'font-medium text-[#999999]'
+                activeTab === 'past'
+                  ? 'font-extrabold text-[#0fbcd6]'
+                  : 'font-medium text-[#999999]'
               }`}
             >
               지난 예약
@@ -151,9 +167,9 @@ export default function ReservationsPage() {
             <ReservationCard
               key={reservation.id}
               reservation={reservation}
-              onCancel={handleCancel}
+              // onCancel={handleCancel}
               onViewDetails={handleViewDetails}
-              onReview={handleReview}
+              onWriteReview={handleReview}
             />
           ))
         ) : (
@@ -163,7 +179,9 @@ export default function ReservationsPage() {
               <div className="absolute left-[60px] top-[40px] h-[20px] w-[20px] rounded-full border-[6px] border-[#BBBBBB]" />
             </div>
             <div className="flex flex-col items-center gap-3">
-              <h2 className="text-xl font-bold text-[#222222]">예약 내역이 없습니다</h2>
+              <h2 className="text-xl font-bold text-[#222222]">
+                예약 내역이 없습니다
+              </h2>
               <p className="text-center text-base text-[#AAAAAA]">
                 아직 예약한 청소 서비스가 없습니다.
                 <br />
@@ -188,5 +206,5 @@ export default function ReservationsPage() {
         reservationId={selectedReservationId}
       />
     </main>
-  );
-} 
+  )
+}

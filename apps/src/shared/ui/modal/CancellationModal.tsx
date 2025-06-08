@@ -11,7 +11,7 @@ interface CancellationModalProps {
   description?: string;
 }
 
-export const CancellationModal: React.FC<CancellationModalProps> = ({
+const CancellationModal: React.FC<CancellationModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
@@ -174,3 +174,5 @@ export const CancellationModal: React.FC<CancellationModalProps> = ({
     </div>
   );
 }; 
+
+export default CancellationModal
