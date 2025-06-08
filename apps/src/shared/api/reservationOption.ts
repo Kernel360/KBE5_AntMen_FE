@@ -24,17 +24,17 @@ export const getOptionsForReservation = async (
 };
 
 /**
- * 특정 예약에 새로운 옵션을 추가하는 API 함수
+ * 특정 예약에 선택된 옵션 목록 전체를 저장하는 API 함수
  * @param reservationId - 옵션을 추가할 예약의 ID
- * @param optionId - 추가할 옵션의 ID
- * @returns ReservationOption - 추가된 옵션 정보
+ * @param optionIds - 저장할 옵션들의 ID 배열
+ * @returns void
  */
-export const addOptionToReservation = async (
+export const saveOptionsForReservation = async (
   reservationId: number,
-  optionId: number,
-): Promise<ReservationOption> => {
-  return customFetch<ReservationOption>(`/reservation-option/${reservationId}`, {
+  optionIds: number[],
+): Promise<void> => {
+  return customFetch<void>(`/reservation-option/${reservationId}`, {
     method: 'POST',
-    body: JSON.stringify({ optionId }),
+    body: JSON.stringify(optionIds),
   });
 }; 
