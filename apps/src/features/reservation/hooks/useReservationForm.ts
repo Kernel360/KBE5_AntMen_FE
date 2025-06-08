@@ -18,7 +18,7 @@ export const useReservationForm = ({ initialCategory, initialOptions }: { initia
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [isVisitTimeModalOpen, setIsVisitTimeModalOpen] = useState(false);
   const [selectedHours, setSelectedHours] = useState(initialCategory.categoryTime);
-  const [selectedVisitTime, setSelectedVisitTime] = useState<string | null>(null);
+  const [selectedVisitTime, setSelectedVisitTime] = useState<Dayjs | string | null>(null);
   const [selectedCategoryOptions, setSelectedCategoryOptions] = useState<number[]>([]);
   const [memo, setMemo] = useState('');
   const [recommendedTime, setRecommendedTime] = useState({ minutes: 240, area: 50 });
@@ -54,17 +54,36 @@ export const useReservationForm = ({ initialCategory, initialOptions }: { initia
       return newHours;
     });
   };
-
+  console.log('selectedVisitTime', selectedVisitTime);
+  console.log('typeof selectedVisitTime:', typeof selectedVisitTime);
+  
   const handleNext = async () => {
     if (!selectedDate || !selectedVisitTime || !initialCategory.categoryId) {
       setWarningMessage(
-        !initialCategory.categoryId ? '서비스를 선택해주세요.' :
-        !selectedDate ? '날짜를 선택해주세요.' : '방문 시간을 선택해주세요.'
+        !initialCategory.categoryId
+          ? '서비스를 선택해주세요.'
+          : !selectedDate
+            ? '날짜를 선택해주세요.'
+            : '방문 시간을 선택해주세요.',
       );
       setShowWarning(true);
       setTimeout(() => setShowWarning(false), 3000);
       return;
     }
+
+    let formattedTime: string | null = null;
+
+  if (typeof selectedVisitTime === 'string') {
+    const visitTime = dayjs(`2000-01-01 ${selectedVisitTime}`, 'YYYY-MM-DD HH:mm');
+    if (!visitTime.isValid()) {
+      setWarningMessage('방문 시간이 올바르지 않습니다.');
+      setShowWarning(true);
+      setTimeout(() => setShowWarning(false), 3000);
+      return;
+    }
+    formattedTime = visitTime.format('HH:mm');
+  }
+
 
     // API 호출 대신, 사용자가 입력한 정보를 객체로 만듭니다.
     const reservationDetails = {
@@ -74,12 +93,12 @@ export const useReservationForm = ({ initialCategory, initialOptions }: { initia
       categoryId: initialCategory.categoryId,
       categoryName: initialCategory.categoryName, // 페이지 이동 시 필요할 수 있으므로 추가
       reservationDate: selectedDate.format('YYYY-MM-DD'),
-      reservationTime: selectedVisitTime,
+      reservationTime: formattedTime,
       reservationDuration: selectedHours,
       reservationMemo: memo,
       reservationAmount: totalPrice, // 계산된 총액
       additionalDuration: selectedHours - initialCategory.categoryTime,
-      optionIds: selectedCategoryOptions
+      optionIds: selectedCategoryOptions,
     };
 
     try {
@@ -103,7 +122,8 @@ export const useReservationForm = ({ initialCategory, initialOptions }: { initia
   const visitTimeSlots: string[] = Array.from({ length: 19 }, (_, i) => {
     const hour = 9 + Math.floor(i / 2);
     const minute = i % 2 === 0 ? '00' : '30';
-    return `${hour}:${minute}`;
+    // dayjs를 사용하여 HH:mm 형식으로 포맷팅합니다.
+    return dayjs().hour(hour).minute(Number(minute)).format('HH:mm');
   });
 
   return {
