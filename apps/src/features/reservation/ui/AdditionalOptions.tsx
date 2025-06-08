@@ -1,6 +1,6 @@
 'use client';
 
-import type { CategoryOption } from '@/shared/types/reservation';
+import type { CategoryOption } from '@/shared/api/category';
 
 interface AdditionalOptionsProps {
   selectedCategory: number | null;
@@ -30,9 +30,9 @@ export const AdditionalOptions = ({
     );
   };
 
-  const selectedOptionsDetails = categoryOptions.filter(option => selectedCategoryOptions.includes(option.id));
-  const totalOptionsTime = selectedOptionsDetails.reduce((total, option) => total + option.time, 0);
-  const totalOptionsPrice = selectedOptionsDetails.reduce((total, option) => total + option.price, 0);
+  const selectedOptionsDetails = categoryOptions.filter(option => selectedCategoryOptions.includes(option.coId));
+  const totalOptionsTime = selectedOptionsDetails.reduce((total, option) => total + option.coTime, 0);
+  const totalOptionsPrice = selectedOptionsDetails.reduce((total, option) => total + option.coPrice, 0);
 
   return (
     <>
@@ -56,23 +56,23 @@ export const AdditionalOptions = ({
           <div className="space-y-3">
             {categoryOptions.map((option) => (
               <button
-                key={option.id}
-                onClick={() => handleOptionClick(option.id)}
+                key={option.coId}
+                onClick={() => handleOptionClick(option.coId)}
                 className={`w-full p-4 rounded-xl text-left transition-all duration-200
-                  ${selectedCategoryOptions.includes(option.id)
+                  ${selectedCategoryOptions.includes(option.coId)
                     ? 'bg-cyan-500 text-white shadow-lg scale-105'
                     : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                   }`}
               >
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-base font-bold">{option.name}</span>
+                  <span className="text-base font-bold">{option.coName}</span>
                   <span className="text-base font-bold">
-                    {option.price > 0 ? `+${option.price.toLocaleString()}원` : '추가비용 없음'}
+                    {option.coPrice > 0 ? `+${option.coPrice.toLocaleString()}원` : '추가비용 없음'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm opacity-90">{option.description}</span>
-                  <span className="text-sm opacity-90">+{option.time}분</span>
+                  <span className="text-sm opacity-90"></span>
+                  <span className="text-sm opacity-90">+{option.coTime}분</span>
                 </div>
               </button>
             ))}
@@ -89,12 +89,12 @@ export const AdditionalOptions = ({
           <h2 className="text-lg font-bold mb-4">선택된 추가 서비스</h2>
           <div className="bg-gray-100 rounded-xl p-4 space-y-2">
             {selectedOptionsDetails.map(option => (
-              <div key={option.id} className="flex justify-between items-center text-sm">
-                <span className="text-gray-800">{option.name}</span>
+              <div key={option.coId} className="flex justify-between items-center text-sm">
+                <span className="text-gray-800">{option.coName}</span>
                 <div className="flex items-center space-x-4">
-                  <span className="text-gray-600">+{option.time}분</span>
+                  <span className="text-gray-600">+{option.coTime}분</span>
                   <span className="font-semibold text-cyan-600 w-20 text-right">
-                    +{option.price.toLocaleString()}원
+                    +{option.coPrice.toLocaleString()}원
                   </span>
                 </div>
               </div>

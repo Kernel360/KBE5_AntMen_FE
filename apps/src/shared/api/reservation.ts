@@ -1,0 +1,79 @@
+import { customFetch } from './base';
+import { Category, CategoryOption } from './category';
+
+// Swagger의 ReservationRequestDto를 기반으로 타입을 정의합니다.
+// LocalTime 타입은 string으로 처리하거나, 필요 시 별도 유틸로 파싱합니다.
+export interface ReservationRequest {
+  customerId: number;
+  categoryId: number;
+  addressId: number;
+  reservationDate: string; // "YYYY-MM-DD"
+  reservationTime: string; // "HH:mm"
+  reservationDuration: number;
+  reservationMemo: string;
+  reservationAmount: number;
+  additionalDuration: number;
+  optionIds: number[];
+}
+
+// Swagger의 ReservationResponseDto를 기반으로 타입을 정의합니다.
+export interface ReservationResponse {
+  reservationId: number;
+  customerId: number;
+  reservationCreatedAt: string;
+  reservationDate: string;
+  reservationTime: string; // LocalTime이 string으로 변환되었다고 가정
+  categoryId: number;
+  categoryName: string;
+  recommendDuration: number;
+  reservationDuration: number;
+  managerId: number | null;
+  matchedAt: string | null;
+  reservationStatus: string;
+  reservationCancelReason: string | null;
+  reservationMemo: string;
+  reservationAmount: number;
+  optionIds: number[];
+  optionNames: string[];
+}
+
+/**
+ * 신규 예약을 생성하는 API 함수 (매칭 대기 상태)
+ * @param reservationData - 생성할 예약 정보
+ * @returns ReservationResponse - 생성된 예약 상세 정보 (ID 포함)
+ */
+export const createReservation = async (
+  reservationData: ReservationRequest,
+): Promise<ReservationResponse> => {
+  return customFetch<ReservationResponse>('/reservation', {
+    method: 'POST',
+    body: JSON.stringify(reservationData),
+  });
+};
+
+/**
+ * 특정 ID의 예약 정보를 조회하는 API 함수
+ * @param reservationId - 조회할 예약의 ID
+ * @returns ReservationResponse - 조회된 예약 상세 정보
+ */
+export const getReservationById = async (
+  reservationId: number,
+): Promise<ReservationResponse> => {
+  return customFetch<ReservationResponse>(`/reservation/${reservationId}`);
+};
+
+/**
+ * 예약에 매니저를 배정(매칭)하는 API 함수
+ * @param reservationId - 매니저를 배정할 예약의 ID
+ * @param managerId - 배정할 매니저의 ID
+ * @returns ReservationResponse - 업데이트된 예약 정보
+ */
+export const updateReservationManager = async (
+  reservationId: number,
+  managerId: number,
+): Promise<ReservationResponse> => {
+  return customFetch<ReservationResponse>(`/reservation/${reservationId}/match`, {
+    method: 'PATCH',
+    body: JSON.stringify({ managerId }),
+  });
+}; 

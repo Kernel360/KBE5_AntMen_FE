@@ -3,14 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dayjs, { Dayjs } from 'dayjs';
-import type { CategoryOption, RecommendedTime } from '@/shared/types/reservation';
+import { Category, CategoryOption } from '@/shared/api/category';
+import { createReservation } from '@/shared/api/reservation';
 import { calculatePrice } from '@/shared/lib/utils';
 
-const STANDARD_HOURS = 2;
-const BASE_PRICE = 40000;
-const PRICE_PER_HOUR = 20000;
-
-export const useReservationForm = () => {
+export const useReservationForm = ({ initialCategory, initialOptions }: { initialCategory: Category; initialOptions: CategoryOption[] }) => {
   const router = useRouter();
 
   // State
@@ -20,57 +17,26 @@ export const useReservationForm = () => {
   const [warningMessage, setWarningMessage] = useState('');
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [isVisitTimeModalOpen, setIsVisitTimeModalOpen] = useState(false);
-  const [selectedHours, setSelectedHours] = useState(STANDARD_HOURS);
+  const [selectedHours, setSelectedHours] = useState(initialCategory.categoryTime);
   const [selectedVisitTime, setSelectedVisitTime] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(1); // Default to first category
   const [selectedCategoryOptions, setSelectedCategoryOptions] = useState<number[]>([]);
   const [memo, setMemo] = useState('');
-  const [recommendedTime, setRecommendedTime] = useState<RecommendedTime>({ minutes: 240, area: 50 });
+  const [recommendedTime, setRecommendedTime] = useState({ minutes: 240, area: 50 });
   const [showTimeWarning, setShowTimeWarning] = useState(false);
-
-  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>([]);
-  const [isOptionsLoading, setIsOptionsLoading] = useState(false);
-  const [optionsError, setOptionsError] = useState<string | null>(null);
-
-  // Data Fetching
-  const fetchCategoryOptions = async () => {
-    if (!selectedCategory) {
-      setCategoryOptions([]);
-      return;
-    }
-    setIsOptionsLoading(true);
-    setOptionsError(null);
-    try {
-      // NOTE: Using a placeholder API. Replace with your actual API endpoint.
-      const response = await fetch(`/api/categories/${selectedCategory}/options`);
-      if (!response.ok) throw new Error('옵션을 불러오는데 실패했습니다.');
-      const data = await response.json();
-      setCategoryOptions(data as CategoryOption[]);
-    } catch (err) {
-      setOptionsError(err instanceof Error ? err.message : '옵션을 불러오는데 실패했습니다.');
-      setCategoryOptions([]);
-    } finally {
-      setIsOptionsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCategoryOptions();
-  }, [selectedCategory]);
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Computed Values
   const totalOptionsPrice = selectedCategoryOptions.reduce((total, optionId) => {
-    const option = categoryOptions.find((opt) => opt.id === optionId);
-    return total + (option?.price || 0);
+    const option = initialOptions.find((opt) => opt.coId === optionId);
+    return total + (option?.coPrice || 0);
   }, 0);
 
   const totalOptionsTime = selectedCategoryOptions.reduce((total, optionId) => {
-    const option = categoryOptions.find((opt) => opt.id === optionId);
-    return total + (option?.time || 0);
+    const option = initialOptions.find((opt) => opt.coId === optionId);
+    return total + (option?.coTime || 0);
   }, 0);
 
-  const baseServicePrice = calculatePrice(selectedHours, BASE_PRICE, PRICE_PER_HOUR, STANDARD_HOURS);
+  const baseServicePrice = calculatePrice(selectedHours, initialCategory.categoryPrice, initialCategory.categoryPrice, initialCategory.categoryTime);
   const totalPrice = baseServicePrice + totalOptionsPrice;
   const totalDuration = selectedHours * 60 + totalOptionsTime;
 
@@ -78,7 +44,7 @@ export const useReservationForm = () => {
   const handleTimeChange = (increment: boolean) => {
     setSelectedHours(prev => {
       const newHours = increment ? prev + 1 : prev - 1;
-      if (newHours < STANDARD_HOURS || newHours > 8) return prev;
+      if (newHours < initialCategory.categoryTime || newHours > 8) return prev;
       
       if (recommendedTime && newHours < Math.ceil(recommendedTime.minutes / 60)) {
         setShowTimeWarning(true);
@@ -90,9 +56,9 @@ export const useReservationForm = () => {
   };
 
   const handleNext = async () => {
-    if (!selectedDate || !selectedVisitTime || !selectedCategory) {
+    if (!selectedDate || !selectedVisitTime || !initialCategory.categoryId) {
       setWarningMessage(
-        !selectedCategory ? '서비스를 선택해주세요.' :
+        !initialCategory.categoryId ? '서비스를 선택해주세요.' :
         !selectedDate ? '날짜를 선택해주세요.' : '방문 시간을 선택해주세요.'
       );
       setShowWarning(true);
@@ -100,37 +66,34 @@ export const useReservationForm = () => {
       return;
     }
 
-    if (recommendedTime && selectedHours < Math.ceil(recommendedTime.minutes / 60)) {
-      setShowTimeWarning(true);
-      setTimeout(() => setShowTimeWarning(false), 3000);
-    }
+    // API 호출 대신, 사용자가 입력한 정보를 객체로 만듭니다.
+    const reservationDetails = {
+      // customerId와 addressId는 로그인 정보와 주소 선택 로직이 구현된 후 채워져야 합니다.
+      customerId: 1, // 임시 ID
+      addressId: 1, // 임시 ID
+      categoryId: initialCategory.categoryId,
+      categoryName: initialCategory.categoryName, // 페이지 이동 시 필요할 수 있으므로 추가
+      reservationDate: selectedDate.format('YYYY-MM-DD'),
+      reservationTime: selectedVisitTime,
+      reservationDuration: selectedHours,
+      reservationMemo: memo,
+      reservationAmount: totalPrice, // 계산된 총액
+      additionalDuration: selectedHours - initialCategory.categoryTime,
+      optionIds: selectedCategoryOptions
+    };
 
     try {
-      const reservationDetails = {
-        customerId: 1, // TODO: Replace with actual logged-in user ID
-        reservationCreatedAt: dayjs().format('YYYY-MM-DD'),
-        reservationDate: selectedDate.format('YYYY-MM-DD'),
-        reservationTime: selectedVisitTime,
-        categoryId: selectedCategory,
-        reservationDuration: Math.ceil(totalDuration / 60),
-        reservationMemo: memo,
-        reservationAmount: totalPrice,
-        additionalDuration: selectedHours - STANDARD_HOURS,
-        optionIds: selectedCategoryOptions
-      };
-
-      console.log('Saving reservation details to localStorage:', reservationDetails);
-      
+      // 브라우저의 localStorage에 예약 정보를 임시 저장합니다.
+      // /matching 페이지에서 이 데이터를 읽어 사용하게 됩니다.
       if (typeof window !== 'undefined') {
-        // API 호출 대신 localStorage에 예약 정보 저장
         localStorage.setItem('pendingReservation', JSON.stringify(reservationDetails));
       }
       
-      // 매니저 선택 페이지로 이동
+      // /matching 경로로 이동합니다.
       router.push('/matching');
       
     } catch (error) {
-      console.error('Failed to save reservation details:', error);
+      console.error('Failed to save reservation details to localStorage:', error);
       setWarningMessage('다음 단계로 진행하는 중 오류가 발생했습니다.');
       setShowWarning(true);
       setTimeout(() => setShowWarning(false), 3000);
@@ -144,7 +107,6 @@ export const useReservationForm = () => {
   });
 
   return {
-    // State
     selectedDate,
     setSelectedDate,
     isCalendarOpen,
@@ -158,31 +120,26 @@ export const useReservationForm = () => {
     selectedHours,
     selectedVisitTime,
     setSelectedVisitTime,
-    selectedCategory,
-    setSelectedCategory,
     selectedCategoryOptions,
     setSelectedCategoryOptions,
     memo,
     setMemo,
     recommendedTime,
     showTimeWarning,
-    categoryOptions,
-    isOptionsLoading,
-    optionsError,
+    categoryOptions: initialOptions,
+    isOptionsLoading: false,
+    optionsError: null,
     
-    // Constants
-    standardHours: STANDARD_HOURS,
-    basePrice: BASE_PRICE,
-    pricePerHour: PRICE_PER_HOUR,
+    standardHours: initialCategory.categoryTime,
+    basePrice: initialCategory.categoryPrice,
+    pricePerHour: initialCategory.categoryPrice,
     
-    // Computed
     totalPrice,
     
-    // Handlers & Data
     handleTimeChange,
     handleNext,
-    handleResetTime: () => setSelectedHours(STANDARD_HOURS),
-    fetchCategoryOptions,
+    handleResetTime: () => setSelectedHours(initialCategory.categoryTime),
     visitTimeSlots,
+    isSubmitting,
   };
 }; 
