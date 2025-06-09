@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
@@ -24,28 +24,25 @@ const ServiceCard = ({ title, description, isNew, className, categoryId }: Servi
       )}
     </div>
     {description.map((text, index) => (
-      <p key={index} className="text-sm text-[#666666] mt-2">{text}</p>
+      <p key={index} className="text-sm text-[#666666] mt-2">
+        {text}
+      </p>
     ))}
   </Link>
-);
+)
 
 interface ServiceIconProps {
-  name: string;
-  icon: string;
-  isNew?: boolean;
-  discount?: string;
+  name: string
+  icon: string
+  isNew?: boolean
+  discount?: string
 }
 
 const ServiceIcon = ({ name, icon, isNew, discount }: ServiceIconProps) => (
   <Link href="/reservation/form" className="flex flex-col items-center gap-2 w-[89px] h-20">
     <div className="relative">
       <div className="w-14 h-14 bg-[#F5F5F5] rounded-full flex items-center justify-center">
-        <Image 
-          src={icon} 
-          alt={name} 
-          width={32} 
-          height={32}
-        />
+        <Image src={icon} alt={name} width={32} height={32} />
       </div>
       {isNew && (
         <div className="absolute -right-1 top-2 flex justify-center items-center w-4 h-4 bg-[#FF5757] rounded-full">
@@ -62,7 +59,7 @@ const ServiceIcon = ({ name, icon, isNew, discount }: ServiceIconProps) => (
       {name}
     </span>
   </Link>
-);
+)
 
 export default function ReservationPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -103,14 +100,14 @@ export default function ReservationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white relative">
       {/* Navigation Header */}
       <div className="h-14 flex justify-between items-center px-4 border-b border-[#EEEEEE]">
         <Link href="/" className="w-6 h-6 flex items-center justify-center">
-          <Image 
-            src="/icons/arrow-left.svg" 
-            alt="Back" 
-            width={24} 
+          <Image
+            src="/icons/arrow-left.svg"
+            alt="Back"
+            width={24}
             height={24}
           />
         </Link>
@@ -133,8 +130,12 @@ export default function ReservationPage() {
         {/* Promotion Banner */}
         <div className="bg-[#0A3A6D] rounded-xl h-20 flex justify-between overflow-hidden mt-4">
           <div className="p-4 space-y-1">
-            <p className="text-base font-bold text-white">사무실 청소, 정기 100% 할인!</p>
-            <p className="text-sm text-white opacity-90">정기 청소차 무료, 이후 10% 할인</p>
+            <p className="text-base font-bold text-white">
+              사무실 청소, 정기 100% 할인!
+            </p>
+            <p className="text-sm text-white opacity-90">
+              정기 청소차 무료, 이후 10% 할인
+            </p>
           </div>
           <div className="flex items-end p-4">
             <div className="bg-[#FF7A7A] bg-opacity-90 w-[60px] h-[30px] flex items-center justify-center rounded text-sm font-bold text-white">
@@ -147,23 +148,10 @@ export default function ReservationPage() {
         <div className="space-y-4 mt-6">
           <h2 className="text-lg font-bold text-[#333333]">이런 서비스 어때요?</h2>
           <div className="grid grid-cols-4 gap-0">
-            <ServiceIcon
-              name="주방 청소"
-              icon="/icons/kitchen.svg"
-              isNew
-            />
-            <ServiceIcon
-              name="화장실 청소"
-              icon="/icons/bathroom.svg"
-            />
-            <ServiceIcon
-              name="냉장실 청소"
-              icon="/icons/fridge.svg"
-            />
-            <ServiceIcon
-              name="입주 청소"
-              icon="/icons/moving.svg"
-            />
+            <ServiceIcon name="주방 청소" icon="/icons/kitchen.svg" isNew />
+            <ServiceIcon name="화장실 청소" icon="/icons/bathroom.svg" />
+            <ServiceIcon name="냉장실 청소" icon="/icons/fridge.svg" />
+            <ServiceIcon name="입주 청소" icon="/icons/moving.svg" />
           </div>
           <div className="grid grid-cols-4 gap-0">
             <ServiceIcon
@@ -171,17 +159,10 @@ export default function ReservationPage() {
               icon="/icons/hospital.svg"
               discount="20%"
             />
-            <ServiceIcon
-              name="에어컨 청소"
-              icon="/icons/aircon.svg"
-              isNew
-            />
+            <ServiceIcon name="에어컨 청소" icon="/icons/aircon.svg" isNew />
           </div>
         </div>
       </div>
-
-      {/* Bottom Navigation Bar */}
-      <div className="h-[5px] w-full bg-black fixed bottom-0" />
     </div>
-  );
-} 
+  )
+}

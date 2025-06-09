@@ -29,7 +29,7 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
       href: '/promotions',
     },
     { icon: '/icons/heart.svg', label: '찜한 도우미', href: '/favorites' },
-    { icon: '/icons/slash.svg', label: '블랙리스트', href: '/blacklist' },
+    { icon: '/icons/slash.svg', label: '리뷰 관리', href: '/reviews' },
     { icon: '/icons/clock.svg', label: '이용 내역', href: '/history' },
     { icon: '/icons/settings.svg', label: '설정', href: '/settings' },
   ]

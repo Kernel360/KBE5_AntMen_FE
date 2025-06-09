@@ -1,8 +1,8 @@
-/** 
+/**
  * 예약 폼 페이지
  *
  */
-'use client';
+'use client'
 
 import React, { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -60,11 +60,14 @@ const ReservationForm = ({ initialCategory, initialOptions }: { initialCategory:
         {/* Navigation Header */}
         <header className="sticky top-0 bg-white z-10 shadow-sm">
           <div className="h-14 flex items-center px-4">
-            <Link href="/reservation" className="w-6 h-6 flex items-center justify-center">
-              <Image 
-                src="/icons/arrow-left.svg" 
-                alt="Back" 
-                width={24} 
+            <Link
+              href="/reservation"
+              className="w-6 h-6 flex items-center justify-center"
+            >
+              <Image
+                src="/icons/arrow-left.svg"
+                alt="Back"
+                width={24}
                 height={24}
               />
             </Link>
@@ -81,7 +84,9 @@ const ReservationForm = ({ initialCategory, initialOptions }: { initialCategory:
         
         {/* Content */}
         <main className="px-4 py-6">
-          <h1 className="text-xl font-bold text-gray-800 mb-8">예약 정보를 입력해 주세요.</h1>
+          <h1 className="text-xl font-bold text-gray-800 mb-8">
+            예약 정보를 입력해 주세요.
+          </h1>
 
           <DateSelector
             selectedDate={selectedDate}
@@ -115,17 +120,17 @@ const ReservationForm = ({ initialCategory, initialOptions }: { initialCategory:
 
           {/* Memo Section */}
           <div className="mb-8">
-              <h2 className="text-lg font-bold mb-4">요청사항</h2>
-              <textarea
-                  className="w-full h-28 p-4 bg-gray-100 rounded-xl text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-shadow"
-                  placeholder="특별히 신경 써주길 바라는 점이나 요청사항을 입력해주세요. (선택사항)"
-                  value={memo}
-                  onChange={(e) => setMemo(e.target.value)}
-              />
+            <h2 className="text-lg font-bold mb-4">요청사항</h2>
+            <textarea
+              className="w-full h-28 p-4 bg-gray-100 rounded-xl text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-shadow"
+              placeholder="특별히 신경 써주길 바라는 점이나 요청사항을 입력해주세요. (선택사항)"
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+            />
           </div>
         </main>
       </div>
-      
+
       {/* Modals */}
       <TimePickerModal
         isOpen={isTimeModalOpen}
@@ -157,7 +162,7 @@ const ReservationForm = ({ initialCategory, initialOptions }: { initialCategory:
       )}
 
       {/* Price Info - Fixed at bottom */}
-      <footer className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-screen-sm bg-white/80 backdrop-blur-sm shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
+      <section className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile bg-white/80 backdrop-blur-sm shadow-[0_-2px_12px_rgba(0,0,0,0.08)]">
         <div className="px-4 py-3">
           <div className="flex justify-between items-center">
             <div>
@@ -175,7 +180,7 @@ const ReservationForm = ({ initialCategory, initialOptions }: { initialCategory:
             </button>
           </div>
         </div>
-      </footer>
+      </section>
     </div>
   );
 }
