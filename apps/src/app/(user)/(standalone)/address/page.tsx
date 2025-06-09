@@ -45,6 +45,20 @@ const AddressPageUI = () => {
     }
   };
 
+  const handleAddAddress = (address: { main: string; detail: string; addressName: string; area: number }) => {
+    setAddresses(prev => [
+      ...prev,
+      {
+        id: `addr${prev.length + 1}`,
+        addressName: address.addressName,
+        addr: address.main,
+        detail: address.detail,
+        area: address.area,
+      },
+    ]);
+    setAddModalOpen(false);
+  };
+
   // 주소 정보 카드
   function AddressInfoBlock({ 
     address, onEdit, onDelete 
@@ -205,7 +219,11 @@ const AddressPageUI = () => {
       </footer>
 
       {/* 모달 렌더링 */}
-      <AddAddressModal isOpen={isAddModalOpen} onClose={() => setAddModalOpen(false)} />
+      <AddAddressModal
+        isOpen={isAddModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onAddAddress={handleAddAddress}
+      />
       <EditAddressModal isOpen={isEditModalOpen} onClose={handleCloseModals} address={selectedAddress} onSave={handleSaveAddress} />
       <DeleteConfirmModal isOpen={isDeleteModalOpen} onClose={handleCloseModals} onConfirm={handleDeleteAddress} />
     </div>
