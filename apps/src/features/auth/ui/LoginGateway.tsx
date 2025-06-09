@@ -5,12 +5,19 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { useSocialProfileStore } from "@/shared/stores/socialProfileStore";
+import { useAuthStore } from "@/shared/stores/authStore";
 
+interface User {
+    userId: number;
+    userName: string;
+    userRole: 'CUSTOMER' | 'MANAGER' | 'ADMIN';
+}
 
 interface AuthResponse {
     success: boolean;
     token?: string;
     message?: string;
+    user?: User;
     user_email?: string;
     user_id?: string;
     user_type?: string;
@@ -23,6 +30,7 @@ export function LoginGateway() {
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
     const { setSocialProfile } = useSocialProfileStore();
+    const { login: loginToStore } = useAuthStore();
 
     // 🔥 중복 실행 방지를 위한 ref
     const isProcessing = useRef(false);
@@ -71,9 +79,12 @@ export function LoginGateway() {
 
             const result: AuthResponse = await response.json();
             console.log('✅ 서버 응답:', result);
-
-            if (result.success && result.token) {
-                console.log('✅ 로그인 성공, 토큰:', result.token);
+            
+            if (result.success && result.token && result.user) {
+                console.log('✅ 구글 로그인 성공, 토큰:', result.token);
+    
+                // Zustand 스토어에 로그인 정보 저장
+                loginToStore(result.user, result.token);
 
                 // 쿠키에 토큰 저장 (7일 만료)
                 Cookies.set('auth-token', formatTokenForServer(result.token), {

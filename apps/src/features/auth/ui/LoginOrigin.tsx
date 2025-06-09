@@ -3,27 +3,31 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from "js-cookie";
+import { useAuthStore } from '@/shared/stores/authStore';
 
 interface LoginFormData {
     userLoginId: string;
     userPassword: string;
 }
 
+interface User {
+    userId: number;
+    userName: string;
+    userRole: 'CUSTOMER' | 'MANAGER' | 'ADMIN';
+}
+
 interface LoginResponse {
     success: boolean;
     token?: string;
     message?: string;
-    user?: {
-        id: string;
-        name: string;
-        email: string;
-    };
+    user ?: User;
 }
 
 export function useLoginOrigin() {
     const [isLoading, setIsLoading] = useState(false);
     const [loginError, setLoginError] = useState<string | null>(null);
     const router = useRouter();
+    const { login: loginToStore } = useAuthStore();
 
     const login = async (data: LoginFormData) => {
         console.log('Login attempt with:', data);
@@ -64,7 +68,11 @@ export function useLoginOrigin() {
             const result: LoginResponse = await response.json();
             console.log('서버 응답:', result);
 
-            if (result.success && result.token) {
+            if (result.success && result.token && result.user) {
+                
+                // Zustand 스토어에 로그인 정보 저장
+                loginToStore(result.user, result.token);
+
                 // 쿠키에 토큰 저장 (7일 만료)
                 Cookies.set('auth-token', formatTokenForServer(result.token), {
                     expires: 7,           // 7일 후 만료
