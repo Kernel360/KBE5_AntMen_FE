@@ -7,14 +7,21 @@
     "dev:https": "next dev -p 3000 --experimental-https",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "dev:common": "cp .env.common .env.local && yarn dev",
+    "dev:customer": "cp .env.customer .env.local && yarn dev",
+    "dev:manager": "cp .env.manager .env.local && yarn dev"
+  },
+  "resolutions": {
+    "@types/react": "18.2.43",
+    "@types/react-dom": "18.2.19"
   },
   "dependencies": {
     "@auth/core": "^0.34.2",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@headlessui/react": "^2.2.4",
-    "@heroicons/react": "^2.2.0",
+    "@headlessui/react": "^2.0.3",
+    "@heroicons/react": "^2.1.3",
     "@mui/material": "^7.1.0",
     "@mui/x-date-pickers": "^8.4.0",
     "clsx": "^2.1.1",

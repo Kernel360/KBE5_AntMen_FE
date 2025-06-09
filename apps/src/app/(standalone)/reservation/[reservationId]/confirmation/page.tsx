@@ -1,3 +1,12 @@
+/**
+ * 매칭 확인
+ * 
+ * 예약 폼 -> 매니저 선택 -> 예약 확인 페이지
+ * 
+ * TODO
+ * 매니저 리스트에서 선택한 데이터 전송받기
+ */
+
 'use client';
 
 import { useState } from 'react';
