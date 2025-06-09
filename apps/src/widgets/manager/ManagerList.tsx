@@ -1,15 +1,30 @@
 'use client';
 
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline';
-import { MANAGER_LIST } from '@/widgets/manager/model/manager';
+import { MANAGER_LIST, type Manager } from '@/widgets/manager/model/manager';
 
 interface ManagerListProps {
+  managers: Manager[];
   selectedManagers: string[];
   onManagerSelect: (managerId: string) => void;
 }
 
-export function ManagerList({ selectedManagers, onManagerSelect }: ManagerListProps) {
+export function ManagerList({ managers, selectedManagers, onManagerSelect }: ManagerListProps) {
+  const [managersState, setManagersState] = useState<Manager[]>([]);
+
+  useEffect(() => {
+    // localStorage에서 매니저 리스트 가져오기
+    const availableManagers = localStorage.getItem('availableManagers');
+    if (availableManagers) {
+      setManagersState(JSON.parse(availableManagers));
+    } else {
+      // localStorage에 데이터가 없으면 기본 리스트 사용
+      setManagersState(MANAGER_LIST);
+    }
+  }, []);
+
   const getManagerPriority = (managerId: string) => {
     const index = selectedManagers.indexOf(managerId);
     if (index === -1) return null;
@@ -47,7 +62,7 @@ export function ManagerList({ selectedManagers, onManagerSelect }: ManagerListPr
   return (
     <div className="flex flex-col gap-4 p-5">
       <div className="max-w-[420px] mx-auto flex flex-col gap-4">
-        {MANAGER_LIST.map((manager) => {
+        {managers.map((manager) => {
           const priority = getManagerPriority(manager.id);
           const isSelected = priority !== null;
 

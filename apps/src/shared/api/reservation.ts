@@ -1,20 +1,6 @@
 import { customFetch } from './base';
 import { Category, CategoryOption } from './category';
-
-// Swagger의 ReservationRequestDto를 기반으로 타입을 정의합니다.
-// LocalTime 타입은 string으로 처리하거나, 필요 시 별도 유틸로 파싱합니다.
-export interface ReservationRequest {
-  customerId: number;
-  categoryId: number;
-  addressId: number;
-  reservationDate: string; // "YYYY-MM-DD"
-  reservationTime: string; // "HH:mm"
-  reservationDuration: number;
-  reservationMemo: string;
-  reservationAmount: number;
-  additionalDuration: number;
-  optionIds: number[];
-}
+import type { ReservationRequest } from '.';
 
 // Swagger의 ReservationResponseDto를 기반으로 타입을 정의합니다.
 export interface ReservationResponse {

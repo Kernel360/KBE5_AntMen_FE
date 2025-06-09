@@ -4,9 +4,6 @@
  * reservationid가 발급되지 않은 상태에서 매니저 선택 페이지
  * 매칭 매니저 선택 후 id 발급
  */
-'use client'
-
-import { useState, useEffect } from 'react'
 import {
   MatchingHeader,
   ManagerList,
@@ -14,49 +11,48 @@ import {
   ManagerListLoading,
 } from '@/widgets/manager'
 import { useManagerSelection } from '@/features/manager-selection'
+import MatchingPageClient from './MatchingPageClient'
+import { notFound } from 'next/navigation'
 
-export default function MatchingPage() {
-  const { selectedManagers, handleManagerSelect } = useManagerSelection()
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    // 매니저 데이터 로딩 시뮬레이션
-    const loadManagers = async () => {
-      try {
-        // 실제 API 호출 시:
-        // const response = await fetch('/api/managers/available');
-        // const data = await response.json();
-
-        // 현재는 상수 데이터 사용
-        await new Promise((resolve) => setTimeout(resolve, 800))
-        setIsLoading(false)
-      } catch (error) {
-        console.error('매니저 목록 로딩 실패:', error)
-        setIsLoading(false)
-      }
-    }
-
-    loadManagers()
-  }, [])
-
-  if (isLoading) {
-    return <ManagerListLoading />
+// 서버에서 매니저 리스트를 가져오는 함수
+async function getAvailableManagers(reservationInfo: any) {
+  if (!reservationInfo?.reservationDate || !reservationInfo?.reservationTime || !reservationInfo?.reservationDuration) {
+    throw new Error('예약 정보가 없습니다.');
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex justify-center">
-      <div className="w-full max-w-mobile min-h-screen flex flex-col relative">
-        <MatchingHeader selectedCount={selectedManagers.length} />
-        <div className="flex-1 overflow-y-auto pb-[140px]">
-          <ManagerList
-            selectedManagers={selectedManagers}
-            onManagerSelect={handleManagerSelect}
-          />
-        </div>
-        <div className="fixed bottom-0 w-full max-w-mobile bg-white">
-          <BottomSection selectedManagers={selectedManagers} />
-        </div>
-      </div>
-    </div>
-  )
+  try {
+    const response = await fetch('http://localhost:9091/api/v1/matching', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        reservationDate: reservationInfo.reservationDate,
+        reservationTime: reservationInfo.reservationTime,
+        reservationDuration: reservationInfo.reservationDuration,
+        location: {
+          district: reservationInfo.addressId
+        }
+      }),
+      cache: 'no-store',
+      next: { revalidate: 0 }
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        notFound();
+      }
+      throw new Error(`매니저 조회 실패: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('매니저 목록 로딩 실패:', error);
+    throw error;
+  }
+}
+
+export default async function MatchingPage() {
+  return <MatchingPageClient />;
 }
