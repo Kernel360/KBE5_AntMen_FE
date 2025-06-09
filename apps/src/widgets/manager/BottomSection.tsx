@@ -2,6 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import {
+  createReservation,
+  updateReservationManager,
+  ReservationRequest,
+} from '@/shared/api';
 import { MANAGER_NAMES } from '@/widgets/manager/model/manager';
 
 interface BottomSectionProps {
@@ -9,7 +14,10 @@ interface BottomSectionProps {
   reservationId?: string;
 }
 
-export function BottomSection({ selectedManagers, reservationId }: BottomSectionProps) {
+export function BottomSection({
+  selectedManagers,
+  reservationId,
+}: BottomSectionProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,47 +32,48 @@ export function BottomSection({ selectedManagers, reservationId }: BottomSection
       alert('최소 1명의 매니저를 선택해주세요.');
       return;
     }
-    
+
     setIsLoading(true);
 
     try {
-      let finalPayload;
-
       if (reservationId) {
-        finalPayload = {
-          selectedManagers,
-          reservationId,
-        };
-      } else {
-        const pendingReservationJSON = typeof window !== 'undefined' ? localStorage.getItem('pendingReservation') : null;
-        if (!pendingReservationJSON) {
-          throw new Error('예약 정보를 찾을 수 없습니다. 예약 과정을 다시 시작해 주세요.');
+        const managerId = parseInt(selectedManagers[0], 10);
+        if (isNaN(managerId)) {
+          throw new Error('유효하지 않은 매니저 ID입니다.');
         }
-        const reservationDetails = JSON.parse(pendingReservationJSON);
-        finalPayload = {
+        const updatedReservation = await updateReservationManager(
+          parseInt(reservationId, 10),
+          managerId,
+        );
+        router.push(`/reservation/${updatedReservation.reservationId}/confirmation`);
+      } else {
+        const pendingReservationJSON =
+          typeof window !== 'undefined'
+            ? localStorage.getItem('pendingReservation')
+            : null;
+        if (!pendingReservationJSON) {
+          throw new Error(
+            '예약 정보를 찾을 수 없습니다. 예약 과정을 다시 시작해 주세요.',
+          );
+        }
+        const reservationDetails = JSON.parse(
+          pendingReservationJSON,
+        ) as Omit<ReservationRequest, 'optionIds'> & { optionIds: number[] };
+
+        const finalPayload: ReservationRequest = {
           ...reservationDetails,
-          selectedManagers,
         };
-      }
 
-      const response = await fetch('/api/reservations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(finalPayload)
-      });
+        console.log('백엔드로 전송하는 예약 정보:', finalPayload);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || '예약 및 매칭 생성에 실패했습니다.');
+        const newReservation = await createReservation(finalPayload);
+
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('pendingReservation');
+        }
+
+        router.push(`/reservation/${newReservation.reservationId}/confirmation`);
       }
-      
-      const { reservationId: newReservationId } = await response.json();
-      
-      if (!reservationId && typeof window !== 'undefined') {
-        localStorage.removeItem('pendingReservation');
-      }
-      
-      router.push(`/reservation/${newReservationId}/confirmation`);
     } catch (error) {
       console.error('매니저 선택 및 예약 생성 제출 오류:', error);
       alert(error instanceof Error ? error.message : '오류가 발생했습니다.');

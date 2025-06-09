@@ -5,43 +5,51 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import AddAddressModal from '@/features/address/ui/AddAddressModal';
 import { EllipsisVerticalIcon, XMarkIcon } from '@heroicons/react/24/solid';
-
-// 타입 정의
-interface AddressDetail {
-  id: string;
-  addressName: string; // 주소 별칭
-  addr: string;
-  detail: string;
-  area: number;
-}
-
-// 목 데이터 예시
-const MOCK_ADDRESSES: AddressDetail[] = [
-  { id: 'addr1', addressName: '우리집', addr: '서울특별시 강남구 강남대로 364', detail: '1201호', area: 20 },
-  { id: 'addr2', addressName: '사무실', addr: '서울특별시 서초구 서초대로 77길 54', detail: 'W타워 10층', area: 30 },
-];
+import { fetchAddresses, createAddress, CustomerAddressResponse } from '@/shared/api/address';
 
 const AddressPageUI = () => {
   const router = useRouter();
   const [isAddModalOpen, setAddModalOpen] = useState(false);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [addresses, setAddresses] = useState(MOCK_ADDRESSES);
-  const [selectedAddress, setSelectedAddress] = useState<AddressDetail | null>(null);
+  const [addresses, setAddresses] = useState<CustomerAddressResponse[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<CustomerAddressResponse | null>(null);
 
-  const handleOpenEditModal = (address: AddressDetail) => { setSelectedAddress(address); setEditModalOpen(true); };
-  const handleOpenDeleteModal = (address: AddressDetail) => { setSelectedAddress(address); setDeleteModalOpen(true); };
+  useEffect(() => {
+    fetchAddresses().then(setAddresses).catch(() => {
+      alert('주소 목록을 불러오지 못했습니다.');
+    });
+  }, []);
+
+  const handleOpenEditModal = (address: CustomerAddressResponse) => { setSelectedAddress(address); setEditModalOpen(true); };
+  const handleOpenDeleteModal = (address: CustomerAddressResponse) => { setSelectedAddress(address); setDeleteModalOpen(true); };
   const handleCloseModals = () => { setSelectedAddress(null); setEditModalOpen(false); setDeleteModalOpen(false); };
 
-  const handleSaveAddress = (id: string, data: Omit<AddressDetail, 'id'>) => {
-    setAddresses(prev => prev.map(addr => addr.id === id ? { id, ...data } : addr));
+  const handleSaveAddress = (id: number, data: Omit<CustomerAddressResponse, 'addressId'>) => {
+    setAddresses(prev => prev.map(addr => addr.addressId === id ? { addressId: id, ...data } : addr));
     handleCloseModals();
   };
-  
+
   const handleDeleteAddress = () => {
     if (selectedAddress) {
-      setAddresses(prev => prev.filter(addr => addr.id !== selectedAddress.id));
+      setAddresses(prev => prev.filter(addr => addr.addressId !== selectedAddress.addressId));
       handleCloseModals();
+    }
+  };
+
+  const handleAddAddress = async (address: { main: string; detail: string; addressName: string; area: number }) => {
+    try {
+      await createAddress({
+        addressName: address.addressName,
+        addressAddr: address.main,
+        addressDetail: address.detail,
+        addressArea: address.area,
+      });
+      const updated = await fetchAddresses();
+      setAddresses(updated);
+      setAddModalOpen(false);
+    } catch (e) {
+      alert('주소 등록에 실패했습니다.');
     }
   };
 
@@ -49,9 +57,9 @@ const AddressPageUI = () => {
   function AddressInfoBlock({ 
     address, onEdit, onDelete 
   }: { 
-    address: AddressDetail,
-    onEdit: (address: AddressDetail) => void,
-    onDelete: (address: AddressDetail) => void
+    address: CustomerAddressResponse,
+    onEdit: (address: CustomerAddressResponse) => void,
+    onDelete: (address: CustomerAddressResponse) => void
   }) {
     const [menuOpen, setMenuOpen] = useState(false);
 
@@ -59,9 +67,9 @@ const AddressPageUI = () => {
       <div className="p-5 border rounded-lg shadow-sm bg-white">
         <div className="flex justify-between items-start">
           <div>
-            <h2 className="text-lg font-bold text-slate-800">{address.addressName} ({address.area}평)</h2>
-            <p className="text-sm text-slate-600 mt-1">{address.addr}</p>
-            <p className="text-sm text-slate-600">{address.detail}</p>
+            <h2 className="text-lg font-bold text-slate-800">{address.addressName} ({address.addressArea}평)</h2>
+            <p className="text-sm text-slate-600 mt-1">{address.addressAddr}</p>
+            <p className="text-sm text-slate-600">{address.addressDetail}</p>
           </div>
           <div className="relative">
             <button onClick={() => setMenuOpen(!menuOpen)} className="p-1">
@@ -88,14 +96,14 @@ const AddressPageUI = () => {
   }: {
     isOpen: boolean;
     onClose: () => void;
-    address: AddressDetail | null;
-    onSave: (id: string, data: Omit<AddressDetail, 'id'>) => void;
+    address: CustomerAddressResponse | null;
+    onSave: (id: number, data: Omit<CustomerAddressResponse, 'addressId'>) => void;
   }) {
-    const [formData, setFormData] = useState({ addressName: '', addr: '', detail: '', area: 0 });
+    const [formData, setFormData] = useState({ addressName: '', addressAddr: '', addressDetail: '', addressArea: 0 });
 
     useEffect(() => {
       if (address) {
-        setFormData({ addressName: address.addressName, addr: address.addr, detail: address.detail, area: address.area });
+        setFormData({ addressName: address.addressName, addressAddr: address.addressAddr, addressDetail: address.addressDetail, addressArea: address.addressArea });
       }
     }, [address]);
     
@@ -103,11 +111,11 @@ const AddressPageUI = () => {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const { name, value } = e.target;
-      setFormData(prev => ({ ...prev, [name]: name === 'area' ? parseInt(value, 10) || 0 : value }));
+      setFormData(prev => ({ ...prev, [name]: name === 'addressArea' ? parseInt(value, 10) || 0 : value }));
     };
 
     const handleSave = () => {
-      onSave(address.id, { ...formData });
+      onSave(address.addressId, { ...formData });
       onClose();
     };
 
@@ -125,15 +133,15 @@ const AddressPageUI = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">주소</label>
-              <input type="text" name="addr" value={formData.addr} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-md" />
+              <input type="text" name="addressAddr" value={formData.addressAddr} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-md" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">상세주소</label>
-              <input type="text" name="detail" value={formData.detail} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-md" />
+              <input type="text" name="addressDetail" value={formData.addressDetail} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-md" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">평수</label>
-              <input type="number" name="area" value={formData.area} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-md" />
+              <input type="number" name="addressArea" value={formData.addressArea} onChange={handleChange} className="w-full p-2 border border-gray-300 rounded-md" />
             </div>
           </div>
           <div className="mt-8 flex justify-end gap-3">
@@ -179,7 +187,7 @@ const AddressPageUI = () => {
           {addresses.length > 0 ? (
             addresses.map(address => (
               <AddressInfoBlock
-                key={address.id}
+                key={address.addressId}
                 address={address}
                 onEdit={handleOpenEditModal}
                 onDelete={handleOpenDeleteModal}
@@ -205,7 +213,11 @@ const AddressPageUI = () => {
       </footer>
 
       {/* 모달 렌더링 */}
-      <AddAddressModal isOpen={isAddModalOpen} onClose={() => setAddModalOpen(false)} />
+      <AddAddressModal
+        isOpen={isAddModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onAddAddress={handleAddAddress}
+      />
       <EditAddressModal isOpen={isEditModalOpen} onClose={handleCloseModals} address={selectedAddress} onSave={handleSaveAddress} />
       <DeleteConfirmModal isOpen={isDeleteModalOpen} onClose={handleCloseModals} onConfirm={handleDeleteAddress} />
     </div>

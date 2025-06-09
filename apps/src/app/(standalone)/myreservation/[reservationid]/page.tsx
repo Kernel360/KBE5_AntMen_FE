@@ -6,161 +6,118 @@
  * 1. 결제하면 결제 컴포넌트 불러오기 ✅
  * 2. 예약 취소 버튼 누르면 예약 취소 모달 띄우기 RejectReservationModal ✅
  * 3. 결제 페이지 이동 필요 ✅
- * 4. 예약 리스트 예약 상태 수정
- * 5. 매니저 리스트 추가 필요
+ * 4. 예약 리스트 예약 상태 수정 ✅
+ * 5. 매니저 리스트 추가 필요 
  * 6. 환불 기능 구현 ✅
  * 7. 모달 컴포넌트 분리 ✅
  **/
 
-'use client'
+import { Suspense } from 'react';
+import type { Reservation } from '@/entities/reservation/model/types';
+import { ReservationDetailPageClient } from './ReservationDetailPageClient';
+import { notFound } from 'next/navigation';
 
-import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import ReservationStatusSection from '@/entities/reservation/ui/ReservationStatusSection'
-import ServiceInfoSection from '@/entities/reservation/ui/ServiceInfoSection'
-import PaymentPreviewSection from '@/entities/reservation/ui/PaymentPreviewSection'
-import PaymentInfoSection from '@/entities/reservation/ui/PaymentInfoSection'
-import CleanerInfoSection from '@/entities/manager/ui/CleanerInfoSection'
-import { ReservationDetail } from '@/entities/reservation/types'
-import ReservationHeader from '@/entities/reservation/ui/ReservationHeader'
-import ActionButtonsSection from '@/features/reservation/ui/ActionButtonsSection'
-
-interface ReservationDetailPageProps {
+interface PageProps {
   params: {
-    id: string
-  }
+    reservationid: string;
+  };
 }
 
-// 타입 정의
-interface Worker {
-  id: string
-  name: string
-  rating: number
-  experience: string
-  age: number
-  gender: string
-  avatar: string
-  phone: string
-}
+// --- 데이터 페칭 함수 ---
+async function getReservationDetail(id: string): Promise<Reservation | null> {
+  try {
+    // API URL을 환경 변수로 관리하는 것이 좋습니다.
+    const res = await fetch(`http://localhost:3000/api/reservation/${id}`, {
+      cache: 'no-store', // 항상 최신 데이터를 가져옴
+    });
 
-// 임시 데이터
-const mockReservationDetail: ReservationDetail = {
-  id: '1',
-  reservationNumber: 'CL-20230510-1234',
-  serviceType: '정기 청소 (주 1회)',
-  status: 'scheduled',
-  paymentStatus: 'pending', // 'pending' | 'paid' | 'refunded'
-  dateTime: '2023년 5월 15일 · 오전 10:00',
-  duration: '3시간',
-  location: '서울시 강남구',
-  detailedAddress: '서울특별시 강남구 테헤란로 152',
-  worker: {
-    id: '1',
-    name: '김민준',
-    rating: 4.9,
-    experience: '경력 3년',
-    age: 32,
-    gender: '남성',
-    avatar: '민준',
-    phone: '010-1234-5678',
-  },
-  amount: 54000,
-  baseAmount: 60000,
-  discount: 6000,
-  paymentMethod: '신한카드 (1234-56XX-XXXX-7890)', // 결제 전에는 undefined일 수 있음
-  options: [],
-  createdAt: '2023-05-10',
-}
-
-export default function ReservationDetailPage({
-  params,
-}: ReservationDetailPageProps) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [reservation, setReservation] = useState<ReservationDetail>(
-    mockReservationDetail,
-  )
-
-  // 결제 성공 시 처리
-  useEffect(() => {
-    if (searchParams) {
-      const paymentSuccess = searchParams.get('payment')
-      if (paymentSuccess === 'success') {
-        setReservation((prev) => ({
-          ...prev,
-          paymentStatus: 'paid',
-          paymentMethod: '신한카드 (1234-56XX-XXXX-7890)',
-        }))
+    if (!res.ok) {
+      if (res.status === 404) {
+        return null; // 404의 경우 null을 반환하여 페이지에서 처리
       }
+      throw new Error(`Failed to fetch reservation: ${res.statusText}`);
     }
-  }, [searchParams])
 
-  const handleCancel = (reason: string) => {
-    console.log('Cancel reservation:', params.id, 'Reason:', reason)
+    const data = await res.json();
+    return data as Reservation;
 
-    // 취소 처리 및 상태 업데이트
-    setReservation((prev) => ({
-      ...prev,
-      status: 'cancelled',
-      paymentStatus: prev.paymentStatus === 'paid' ? 'refunded' : 'pending',
-    }))
-
-    // TODO: 실제 취소 API 호출
-    // API를 통해 취소 사유와 함께 취소 요청을 서버에 전송
+  } catch (error) {
+    console.error('Failed to fetch reservation detail:', error);
+    // 에러 발생 시에도 null 반환
+    return null;
   }
+}
 
-  const handlePayment = () => {
-    console.log('Navigate to payment page for reservation:', params.id)
-    // 결제 페이지로 이동
-    router.push(`/myreservation/${params.id}/payment`)
-  }
+// --- 스켈레톤 UI ---
+function PageSkeleton() {
+    return (
+        <div className="flex flex-col min-h-screen bg-gray-50 animate-pulse">
+            {/* Header Skeleton */}
+            <header className="bg-white px-5 py-4">
+                <div className="flex items-center gap-4">
+                    <div className="w-6 h-6 bg-gray-200 rounded"></div>
+                    <div className="w-32 h-8 bg-gray-200 rounded"></div>
+                </div>
+            </header>
 
-  const handleRefund = (reason: string) => {
-    console.log('Process refund for reservation:', params.id, 'Reason:', reason)
+            <main className="flex-grow pb-24">
+                <div className="space-y-2">
+                    {/* Reservation Status Skeleton */}
+                    <div className="bg-white px-5 py-6">
+                        <div className="h-6 w-24 bg-gray-200 rounded mb-6"></div>
+                        <div className="space-y-4">
+                            <div className="flex justify-between"><div className="w-20 h-5 bg-gray-200 rounded"></div><div className="w-28 h-5 bg-gray-200 rounded"></div></div>
+                            <div className="flex justify-between"><div className="w-16 h-5 bg-gray-200 rounded"></div><div className="w-24 h-5 bg-gray-200 rounded"></div></div>
+                        </div>
+                    </div>
+                    {/* Service Info Skeleton */}
+                    <div className="bg-white px-5 py-6">
+                         <div className="h-6 w-24 bg-gray-200 rounded mb-6"></div>
+                        <div className="space-y-4">
+                            <div className="flex justify-between"><div className="w-20 h-5 bg-gray-200 rounded"></div><div className="w-28 h-5 bg-gray-200 rounded"></div></div>
+                            <div className="flex justify-between"><div className="w-16 h-5 bg-gray-200 rounded"></div><div className="w-24 h-5 bg-gray-200 rounded"></div></div>
+                        </div>
+                    </div>
+                     {/* Cleaner Info Skeleton */}
+                    <div className="bg-white px-5 py-6">
+                         <div className="h-6 w-24 bg-gray-200 rounded mb-6"></div>
+                        <div className="flex items-start gap-4">
+                            <div className="w-15 h-15 bg-gray-200 rounded-full"></div>
+                            <div className="flex-1 space-y-2">
+                                <div className="h-6 w-20 bg-gray-200 rounded"></div>
+                                <div className="h-5 w-32 bg-gray-200 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                     {/* Payment Skeleton */}
+                    <div className="bg-white px-5 py-6">
+                        <div className="h-6 w-32 bg-gray-200 rounded mb-6"></div>
+                        <div className="space-y-4">
+                             <div className="flex justify-between"><div className="w-24 h-5 bg-gray-200 rounded"></div><div className="w-20 h-5 bg-gray-200 rounded"></div></div>
+                             <div className="flex justify-between pt-2 border-t"><div className="w-28 h-6 bg-gray-200 rounded"></div><div className="w-24 h-6 bg-gray-200 rounded"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
 
-    // 환불 처리 및 상태 업데이트
-    setReservation((prev) => ({
-      ...prev,
-      status: 'cancelled',
-      paymentStatus: 'refunded',
-    }))
+            {/* Action Button Skeleton */}
+            <div className="sticky bottom-0 bg-white p-5 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+                <div className="w-full h-12 bg-gray-200 rounded-xl"></div>
+            </div>
+        </div>
+    );
+}
 
-    // TODO: 실제 환불 API 호출
-    // API를 통해 환불 사유와 함께 환불 요청을 서버에 전송
+export default async function ReservationDetailPage({ params }: PageProps) {
+  const reservationDetail = await getReservationDetail(params.reservationid);
+
+  if (!reservationDetail) {
+    notFound();
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[375px] mx-auto min-h-screen bg-white flex flex-col">
-        <div className="sticky top-0 z-30 bg-white">
-          <ReservationHeader />
-        </div>
-
-        <div className="flex-1 overflow-y-auto pb-[140px]">
-          <div className="divide-y divide-gray-100">
-            <ReservationStatusSection reservation={reservation} />
-            <ServiceInfoSection reservation={reservation} />
-            <CleanerInfoSection worker={reservation.worker} />
-
-            {/* 결제 상태에 따라 다른 컴포넌트 표시 */}
-            {reservation.paymentStatus === 'pending' ? (
-              <PaymentPreviewSection reservation={reservation} />
-            ) : (
-              <PaymentInfoSection reservation={reservation} />
-            )}
-          </div>
-        </div>
-
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[375px] bg-white border-t border-gray-100">
-          <ActionButtonsSection
-            reservation={reservation}
-            onCancel={handleCancel}
-            onPayment={handlePayment}
-            onRefund={handleRefund}
-            reservationId={params.id}
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
+    <Suspense fallback={<PageSkeleton />}>
+      <ReservationDetailPageClient initialReservation={reservationDetail} />
+    </Suspense>
+  );
+} 

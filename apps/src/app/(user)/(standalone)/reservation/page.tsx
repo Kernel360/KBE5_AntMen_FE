@@ -1,26 +1,20 @@
 'use client'
 
-import React from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
+import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { getAllCategories, Category } from '@/shared/api/category';
 
 interface ServiceCardProps {
-  title: string
-  description: string[]
-  isNew?: boolean
-  className?: string
+  title: string;
+  description: string[];
+  isNew?: boolean;
+  className?: string;
+  categoryId: number;
 }
 
-const ServiceCard: React.FC<ServiceCardProps> = ({
-  title,
-  description,
-  isNew,
-  className,
-}) => (
-  <Link
-    href="/reservation/form"
-    className={`block bg-[#F8F8F8] rounded-xl p-4 ${className}`}
-  >
+const ServiceCard = ({ title, description, isNew, className, categoryId }: ServiceCardProps) => (
+  <Link href={`/reservation/select-address?categoryId=${categoryId}`} className={`block bg-[#F8F8F8] rounded-xl p-4 ${className}`}>
     <div className="flex items-center gap-1">
       <h3 className="text-[18px] font-bold text-[#333333]">{title}</h3>
       {isNew && (
@@ -44,16 +38,8 @@ interface ServiceIconProps {
   discount?: string
 }
 
-const ServiceIcon: React.FC<ServiceIconProps> = ({
-  name,
-  icon,
-  isNew,
-  discount,
-}) => (
-  <Link
-    href="/reservation/form"
-    className="flex flex-col items-center gap-2 w-[89px] h-20"
-  >
+const ServiceIcon = ({ name, icon, isNew, discount }: ServiceIconProps) => (
+  <Link href="/reservation/form" className="flex flex-col items-center gap-2 w-[89px] h-20">
     <div className="relative">
       <div className="w-14 h-14 bg-[#F5F5F5] rounded-full flex items-center justify-center">
         <Image src={icon} alt={name} width={32} height={32} />
@@ -76,6 +62,43 @@ const ServiceIcon: React.FC<ServiceIconProps> = ({
 )
 
 export default function ReservationPage() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const data = await getAllCategories();
+        setCategories(data);
+      } catch (err) {
+        setError('카테고리 목록을 불러오는 데 실패했습니다.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  if (loading) {
+    return (
+        <div className="flex justify-center items-center min-h-screen">
+            <div>로딩 중...</div>
+        </div>
+    );
+  }
+
+  if (error) {
+    return (
+        <div className="flex justify-center items-center min-h-screen">
+            <div>{error}</div>
+        </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white relative">
       {/* Navigation Header */}
@@ -88,43 +111,24 @@ export default function ReservationPage() {
             height={24}
           />
         </Link>
+        <h1 className="text-lg font-bold">예약하기</h1>
         <div className="w-6" /> {/* Spacer for alignment */}
       </div>
 
       {/* Content */}
       <div className="px-4 py-4 space-y-2.5">
-        {/* 가사 청소 카드 */}
-        <ServiceCard
-          title="가사"
-          description={['1회, 정기로 받는 가사 청소']}
-          isNew
-          className="h-[120px]"
-        />
-
-        {/* 사무실, 이사·입주 카드 그리드 */}
-        <div className="grid grid-cols-2 gap-2.5">
+        {categories.map((category, index) => (
           <ServiceCard
-            title="사무실"
-            description={['병원, 학원, 체육관', '청소도 가능']}
-            className="h-[160px]"
+            key={category.categoryId}
+            categoryId={category.categoryId}
+            title={category.categoryName}
+            description={[`시간당 ${category.categoryPrice.toLocaleString()}원 (기본 ${category.categoryTime}시간)`]}
+            className="h-auto"
           />
-          <ServiceCard
-            title="이사·입주"
-            description={['전문 인력 청소']}
-            className="h-[160px]"
-          />
-        </div>
-
-        {/* 에어컨 청소 카드 */}
-        <ServiceCard
-          title="에어컨"
-          description={['에어컨 전문 청소']}
-          isNew
-          className="h-[80px]"
-        />
+        ))}
 
         {/* Promotion Banner */}
-        <div className="bg-[#0A3A6D] rounded-xl h-20 flex justify-between overflow-hidden">
+        <div className="bg-[#0A3A6D] rounded-xl h-20 flex justify-between overflow-hidden mt-4">
           <div className="p-4 space-y-1">
             <p className="text-base font-bold text-white">
               사무실 청소, 정기 100% 할인!
@@ -141,10 +145,8 @@ export default function ReservationPage() {
         </div>
 
         {/* Recommended Services */}
-        <div className="space-y-4">
-          <h2 className="text-lg font-bold text-[#333333]">
-            이런 서비스 어때요?
-          </h2>
+        <div className="space-y-4 mt-6">
+          <h2 className="text-lg font-bold text-[#333333]">이런 서비스 어때요?</h2>
           <div className="grid grid-cols-4 gap-0">
             <ServiceIcon name="주방 청소" icon="/icons/kitchen.svg" isNew />
             <ServiceIcon name="화장실 청소" icon="/icons/bathroom.svg" />
