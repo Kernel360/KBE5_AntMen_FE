@@ -1,10 +1,10 @@
-import { Suspense } from "react";
-import { Login } from "@/features/auth/ui/Login";
+import { Suspense } from 'react'
+import { Login } from '@/features/auth/ui/Login'
 
 export default function LoginPage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
+      <div className="w-full max-w-mobile space-y-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900">로그인</h1>
         </div>
@@ -13,5 +13,5 @@ export default function LoginPage() {
         </Suspense>
       </div>
     </main>
-  );
-} 
+  )
+}
