@@ -20,7 +20,7 @@ import {
 import { getCategoryById, getCategoryOptionsByCategoryId, Category, CategoryOption } from '@/shared/api/category';
 
 // ReservationForm 컴포넌트: 실제 UI를 렌더링합니다.
-const ReservationForm = ({ initialCategory, initialOptions }: { initialCategory: Category; initialOptions: CategoryOption[] }) => {
+const ReservationForm = ({ initialCategory, initialOptions, addressId }: { initialCategory: Category; initialOptions: CategoryOption[]; addressId: number }) => {
   const {
     selectedDate,
     setSelectedDate,
@@ -52,7 +52,7 @@ const ReservationForm = ({ initialCategory, initialOptions }: { initialCategory:
     handleResetTime,
     visitTimeSlots,
     isSubmitting,
-  } = useReservationForm({ initialCategory, initialOptions });
+  } = useReservationForm({ initialCategory, initialOptions, addressId });
 
   return (
     <div className="bg-gray-50">
@@ -189,6 +189,8 @@ const ReservationForm = ({ initialCategory, initialOptions }: { initialCategory:
 const ReservationFormWrapper = () => {
   const searchParams = useSearchParams();
   const categoryId = searchParams.get('categoryId');
+  const addressId = searchParams.get('addressId');
+  const addressIdNum = Number(addressId);
 
   const [category, setCategory] = useState<Category | null>(null);
   const [options, setOptions] = useState<CategoryOption[]>([]);
@@ -196,12 +198,11 @@ const ReservationFormWrapper = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!categoryId) {
-      setError('카테고리 정보가 없습니다.');
+    if (!categoryId || !addressId || isNaN(addressIdNum) || addressIdNum <= 0) {
+      setError('카테고리 또는 주소 정보가 올바르지 않습니다.');
       setLoading(false);
       return;
     }
-
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -213,24 +214,17 @@ const ReservationFormWrapper = () => {
         setOptions(optionsData);
       } catch (err) {
         setError('예약 정보를 불러오는 데 실패했습니다.');
-        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
-  }, [categoryId]);
+  }, [categoryId, addressId, addressIdNum]);
 
-  if (loading) {
-    return <div>예약 정보 로딩 중...</div>;
-  }
+  if (loading) return <div>예약 정보 로딩 중...</div>;
+  if (error || !category) return <div>{error || '예약 정보를 찾을 수 없습니다.'}</div>;
 
-  if (error || !category) {
-    return <div>{error || '예약 정보를 찾을 수 없습니다.'}</div>;
-  }
-
-  return <ReservationForm initialCategory={category} initialOptions={options} />;
+  return <ReservationForm initialCategory={category} initialOptions={options} addressId={addressIdNum} />;
 };
 
 // 최종 export되는 페이지 컴포넌트

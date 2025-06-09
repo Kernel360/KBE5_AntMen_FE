@@ -7,7 +7,7 @@ import { Category, CategoryOption } from '@/shared/api/category';
 import { createReservation } from '@/shared/api/reservation';
 import { calculatePrice } from '@/shared/lib/utils';
 
-export const useReservationForm = ({ initialCategory, initialOptions }: { initialCategory: Category; initialOptions: CategoryOption[] }) => {
+export const useReservationForm = ({ initialCategory, initialOptions, addressId }: { initialCategory: Category; initialOptions: CategoryOption[]; addressId: number }) => {
   const router = useRouter();
 
   // State
@@ -87,9 +87,9 @@ export const useReservationForm = ({ initialCategory, initialOptions }: { initia
 
     // API 호출 대신, 사용자가 입력한 정보를 객체로 만듭니다.
     const reservationDetails = {
-      // customerId와 addressId는 로그인 정보와 주소 선택 로직이 구현된 후 채워져야 합니다.
+      // customerId는 로그인 정보가 구현된 후 채워져야 합니다.
       customerId: 1, // 임시 ID
-      addressId: 1, // 임시 ID
+      addressId: addressId, // 반드시 props로 받은 값 사용
       categoryId: initialCategory.categoryId,
       categoryName: initialCategory.categoryName, // 페이지 이동 시 필요할 수 있으므로 추가
       reservationDate: selectedDate.format('YYYY-MM-DD'),

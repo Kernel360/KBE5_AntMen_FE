@@ -1,0 +1,104 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { fetchAddresses, CustomerAddressResponse } from '@/shared/api/address';
+import Image from 'next/image';
+import Link from 'next/link';
+
+export default function SelectAddressPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const categoryId = searchParams.get('categoryId');
+
+  const [addresses, setAddresses] = useState<CustomerAddressResponse[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getAddresses = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchAddresses();
+        setAddresses(data);
+      } catch (err) {
+        setError('주소 목록을 불러오는 데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    getAddresses();
+  }, []);
+
+  const handleNext = () => {
+    if (!selectedAddressId) {
+      alert('주소를 선택해주세요.');
+      return;
+    }
+    router.push(`/reservation/form?categoryId=${categoryId}&addressId=${selectedAddressId}`);
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col bg-slate-50">
+      {/* 헤더 */}
+      <header className="flex items-center justify-between p-5 bg-white border-b">
+        <button onClick={() => router.back()} className="p-1">
+          <Image src="/icons/arrow-left.svg" alt="뒤로가기" width={24} height={24} />
+        </button>
+        <h1 className="flex-1 text-center text-xl font-bold">주소 선택</h1>
+        <div className="w-6" />
+      </header>
+      {/* 주소 목록 */}
+      <main className="flex-grow p-5">
+        <div className="space-y-4">
+          {loading && <div className="text-center py-20 text-slate-500">주소를 불러오는 중...</div>}
+          {error && <div className="text-center py-20 text-red-500">{error}</div>}
+          {!loading && !error && addresses.length > 0 && (
+            addresses.map(address => {
+              const isSelected = selectedAddressId === address.addressId;
+              return (
+                <button
+                  key={address.addressId}
+                  onClick={() => setSelectedAddressId(address.addressId)}
+                  className={`w-full text-left p-5 border rounded-lg shadow-sm bg-white flex justify-between items-start transition-all ${isSelected ? 'border-cyan-500 ring-2 ring-cyan-500 bg-cyan-50' : 'hover:bg-gray-50'}`}
+                >
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-800">{address.addressName} ({address.addressArea}평)</h2>
+                    <p className="text-sm text-slate-600 mt-1">{address.addressAddr}</p>
+                    <p className="text-sm text-slate-600">{address.addressDetail}</p>
+                  </div>
+                  {isSelected && (
+                    <span className="ml-4 px-3 py-1 bg-cyan-500 text-white rounded-lg text-sm font-medium">선택됨</span>
+                  )}
+                </button>
+              );
+            })
+          )}
+          {!loading && !error && addresses.length === 0 && (
+            <div className="text-center py-20 text-slate-500">
+              <p>등록된 주소 정보가 없습니다.</p>
+              <p>+ 새 주소를 추가해주세요.</p>
+            </div>
+          )}
+        </div>
+      </main>
+      {/* 하단 버튼 */}
+      <footer className="p-5 bg-white border-t flex flex-col gap-3">
+        <Link
+          href="/address?from=reservation"
+          className="w-full py-4 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300 transition-colors text-center"
+        >
+          + 새 주소 추가
+        </Link>
+        <button
+          onClick={handleNext}
+          disabled={!selectedAddressId || loading}
+          className="w-full py-4 bg-cyan-500 text-white rounded-lg font-bold text-lg hover:bg-cyan-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+        >
+          다음
+        </button>
+      </footer>
+    </div>
+  );
+} 

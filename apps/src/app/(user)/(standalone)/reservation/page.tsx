@@ -14,7 +14,7 @@ interface ServiceCardProps {
 }
 
 const ServiceCard = ({ title, description, isNew, className, categoryId }: ServiceCardProps) => (
-  <Link href={`/reservation/form?categoryId=${categoryId}`} className={`block bg-[#F8F8F8] rounded-xl p-4 ${className}`}>
+  <Link href={`/reservation/select-address?categoryId=${categoryId}`} className={`block bg-[#F8F8F8] rounded-xl p-4 ${className}`}>
     <div className="flex items-center gap-1">
       <h3 className="text-[18px] font-bold text-[#333333]">{title}</h3>
       {isNew && (
