@@ -18,6 +18,7 @@ interface BasicSignupFormProps {
   errors?: {
     [key: string]: string;
   };
+  isSocialSignup?: boolean;
 }
 
 export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
@@ -25,6 +26,7 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
   onChange,
   onImageChange,
   errors = {},
+  isSocialSignup = false,
 }) => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -68,7 +70,7 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
         )}
       </div>
 
-      {/* Username */}
+      {/* Username
       <div className="space-y-2">
         <label className="block text-base font-medium">아이디</label>
         <input
@@ -84,9 +86,28 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
         {errors.username && (
           <span className="text-red-500 text-sm">{errors.username}</span>
         )}
-      </div>
+      </div> */}
+      {!isSocialSignup && (
+        <>
+          {/* Username */}
+          <div className="space-y-2">
+            <label className="block text-base font-medium">아이디</label>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={onChange}
+              className={`w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none ${
+                errors.username ? 'border-2 border-red-500' : ''
+              }`}
+              placeholder="아이디를 입력해주세요"
+            />
+            {errors.username && (
+              <span className="text-red-500 text-sm">{errors.username}</span>
+            )}
+          </div>
 
-      {/* Password */}
+      {/* Password
       <div className="space-y-2">
         <label className="block text-base font-medium">비밀번호</label>
         <input
@@ -102,7 +123,26 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
         {errors.password && (
           <span className="text-red-500 text-sm">{errors.password}</span>
         )}
-      </div>
+      </div> */}
+      {/* Password */}
+      <div className="space-y-2">
+            <label className="block text-base font-medium">비밀번호</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={onChange}
+              className={`w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none ${
+                errors.password ? 'border-2 border-red-500' : ''
+              }`}
+              placeholder="비밀번호를 입력해주세요"
+            />
+            {errors.password && (
+              <span className="text-red-500 text-sm">{errors.password}</span>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Name */}
       <div className="space-y-2">
@@ -148,9 +188,10 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
           name="email"
           value={formData.email}
           onChange={onChange}
+          disabled={isSocialSignup}
           className={`w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none ${
             errors.email ? 'border-2 border-red-500' : ''
-          }`}
+          } ${isSocialSignup ? 'cursor-not-allowed bg-gray-200' : ''}`}
           placeholder="이메일을 입력해주세요"
         />
         {errors.email && (
