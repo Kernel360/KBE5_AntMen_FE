@@ -4,6 +4,7 @@ export const customFetch = async <T>(
 ): Promise<T> => {
   const response = await fetch(url, {
     ...options,
+    credentials: 'include', // 쿠키 기반 인증을 위해 반드시 필요합니다.
     headers: {
       'Content-Type': 'application/json',
       ...options?.headers,
