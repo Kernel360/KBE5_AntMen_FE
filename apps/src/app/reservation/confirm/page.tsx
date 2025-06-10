@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createReservation, ReservationRequest } from '@/shared/api';
+import { checkCustomerAuth } from '@/features/auth/lib/auth';
 
 interface ReservationInfo {
   customerId: number;
@@ -45,22 +46,44 @@ export default function ReservationConfirmPage() {
   const handleConfirm = async () => {
     if (!reservationInfo) return;
     
+    // 인증 체크
+    const authResult = checkCustomerAuth();
+    if (!authResult.isAuthenticated || authResult.message) {
+      alert(authResult.message);
+      if (!authResult.isAuthenticated) {
+        router.push('/login');
+      } else if (authResult.userRole === 'MANAGER') {
+        router.push('/manager');
+      } else {
+        router.push('/');
+      }
+      return;
+    }
+    
     setIsLoading(true);
     try {
+      // 필수 필드 검증
+      if (!reservationInfo.addressId) {
+        throw new Error('주소 정보가 필요합니다.');
+      }
+      if (!reservationInfo.categoryId) {
+        throw new Error('카테고리 정보가 필요합니다.');
+      }
+
       // ReservationRequest 타입에 맞게 데이터 변환
       const finalPayload: ReservationRequest = {
         customerId: reservationInfo.customerId,
         categoryId: reservationInfo.categoryId,
-        // TODO: 주소 기능 구현 시 주석 해제
-        // addressId: parseInt(reservationInfo.addressId),
+        addressId: parseInt(reservationInfo.addressId),
+        reservationCreatedAt: new Date().toISOString(),  // 현재 시간을 ISO 문자열로
         reservationDate: reservationInfo.reservationDate,
         reservationTime: reservationInfo.reservationTime,
-        reservationDuration: reservationInfo.reservationDuration,
+        reservationDuration: Number(reservationInfo.reservationDuration),
         reservationMemo: reservationInfo.reservationMemo || '',
-        reservationAmount: reservationInfo.reservationAmount,
-        additionalDuration: reservationInfo.additionalDuration,
-        optionIds: reservationInfo.optionIds,
-        managerIds: reservationInfo.selectedManagers.map(manager => parseInt(manager.id))
+        reservationAmount: Number(reservationInfo.reservationAmount),
+        additionalDuration: Number(reservationInfo.additionalDuration || 0),
+        optionIds: (reservationInfo.optionIds || []).map(Number),
+        managerIds: reservationInfo.selectedManagers.map(manager => Number(manager.id))
       };
 
       console.log('백엔드로 전송되는 데이터:', finalPayload);

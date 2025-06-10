@@ -6,11 +6,12 @@ export * from './address';
 export interface ReservationRequest {
   customerId: number;
   categoryId: number;
-  addressId?: number;
+  addressId: number;
+  reservationCreatedAt: string;  // "YYYY-MM-DD HH:mm:ss" 형식
   reservationDate: string;  // "YYYY-MM-DD" 형식
   reservationTime: string;  // "HH:mm:ss" 형식
   reservationDuration: number;
-  reservationMemo: string;
+  reservationMemo?: string;
   reservationAmount: number;
   additionalDuration: number;
   optionIds: number[];

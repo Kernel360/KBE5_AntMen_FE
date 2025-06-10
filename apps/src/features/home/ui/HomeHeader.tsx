@@ -3,13 +3,28 @@
 import { BellIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { checkCustomerAuth } from '@/features/auth/lib/auth';
 
 export function HomeHeader() {
   const router = useRouter();
   const { data: session } = useSession();
 
   const handleReservationClick = () => {
-    // 임시로 세션 체크를 제거하고 바로 예약 페이지로 이동
+    const authResult = checkCustomerAuth();
+    
+    if (!authResult.isAuthenticated || authResult.message) {
+      alert(authResult.message);
+      if (!authResult.isAuthenticated) {
+        router.push('/login');
+      } else if (authResult.userRole === 'MANAGER') {
+        router.push('/manager');
+      } else {
+        router.push('/');
+      }
+      return;
+    }
+
+    // 인증 통과 시 예약 페이지로 이동
     router.push('/reservation');
   };
 
