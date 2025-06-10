@@ -1574,7 +1574,7 @@
   resolved "https://registry.yarnpkg.com/@floating-ui/utils/-/utils-0.2.9.tgz#50dea3616bc8191fb8e112283b49eaff03e78429"
   integrity sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==
 
-"@headlessui/react@^2.2.4":
+"@headlessui/react@^2.0.3", "@headlessui/react@^2.2.4":
   version "2.2.4"
   resolved "https://registry.yarnpkg.com/@headlessui/react/-/react-2.2.4.tgz#9b0c48a5be1fe4577f03f3216290bb71d9883520"
   integrity sha512-lz+OGcAH1dK93rgSMzXmm1qKOJkBUqZf1L4M8TWLNplftQD3IkoEDdUFNfAn4ylsN6WOTVtWaLmvmaHOUk1dTA==
@@ -1585,7 +1585,7 @@
     "@tanstack/react-virtual" "^3.13.9"
     use-sync-external-store "^1.5.0"
 
-"@heroicons/react@^2.2.0":
+"@heroicons/react@^2.1.3":
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/@heroicons/react/-/react-2.2.0.tgz#0c05124af50434a800773abec8d3af6a297d904b"
   integrity sha512-LMcepvRaS9LYHJGsF0zzmgKCUim/X3N/DQKc4jepAXJ7l8QxJ1PmxJzqplF2Z3FE4PqBAIGyJAQ/w4B5dsqbtQ==
@@ -3246,22 +3246,12 @@
   resolved "https://registry.yarnpkg.com/@types/range-parser/-/range-parser-1.2.7.tgz#50ae4353eaaddc04044279812f52c8c65857dbcb"
   integrity sha512-hKormJbkJqzQGhziax5PItDUTMAM9uE2XXQmM37dyd4hVM+5aVl7oVxMVUiVQn2oCQFN/LKCZdvSM0pFRqbSmQ==
 
-"@types/react-dom@18.2.7":
-  version "18.2.7"
-  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-18.2.7.tgz#67222a08c0a6ae0a0da33c3532348277c70abb63"
-  integrity sha512-GRaAEriuT4zp9N4p1i8BDBYmEyfo+xQ3yHjJU4eiK5NDa1RmUZG+unZABUTK4/Ox/M+GaHwb6Ow8rUITrtjszA==
+"@types/react-dom@18.2.19", "@types/react-dom@18.2.7", "@types/react-dom@^18.2.0", "@types/react-dom@^19.0.0":
+  version "18.2.19"
+  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-18.2.19.tgz#b84b7c30c635a6c26c6a6dfbb599b2da9788be58"
+  integrity sha512-aZvQL6uUbIJpjZk4U8JZGbau9KDeAwMfmhyWorxgBkqDIEf6ROjRozcmPIicqsUwPUjbkDfHKgGee1Lq65APcA==
   dependencies:
     "@types/react" "*"
-
-"@types/react-dom@^18.2.0":
-  version "18.3.7"
-  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-18.3.7.tgz#b89ddf2cd83b4feafcc4e2ea41afdfb95a0d194f"
-  integrity sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ==
-
-"@types/react-dom@^19.0.0":
-  version "19.1.6"
-  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-19.1.6.tgz#4af629da0e9f9c0f506fc4d1caa610399c595d64"
-  integrity sha512-4hOiT/dwO8Ko0gV1m/TJZYk3y0KBnY9vzDh7W+DH17b2HFSOGgdj33dhihPeuy3l0q23+4e+hoXHV6hCC4dCXw==
 
 "@types/react-router-dom@^5.3.3":
   version "5.3.3"
@@ -3285,28 +3275,13 @@
   resolved "https://registry.yarnpkg.com/@types/react-transition-group/-/react-transition-group-4.4.12.tgz#b5d76568485b02a307238270bfe96cb51ee2a044"
   integrity sha512-8TV6R3h2j7a91c+1DXdJi3Syo69zzIZbz7Lg5tORM5LEJG7X/E6a1V3drRyBRZq7/utz7A+c4OgYLiLcYGHG6w==
 
-"@types/react@*", "@types/react@^19.0.0":
-  version "19.1.6"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-19.1.6.tgz#dee39f3e1e9a7d693f156a5840570b6d57f325ea"
-  integrity sha512-JeG0rEWak0N6Itr6QUx+X60uQmN+5t3j9r/OVDtWzFXKaj6kD1BwJzOksD0FF6iWxZlbE1kB0q9vtnU2ekqa1Q==
-  dependencies:
-    csstype "^3.0.2"
-
-"@types/react@18.2.14":
-  version "18.2.14"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.2.14.tgz#fa7a6fecf1ce35ca94e74874f70c56ce88f7a127"
-  integrity sha512-A0zjq+QN/O0Kpe30hA1GidzyFjatVvrpIvWLxD+xv67Vt91TWWgco9IvrJBkeyHm1trGaFS/FSGqPlhyeZRm0g==
+"@types/react@*", "@types/react@18.2.14", "@types/react@18.2.43", "@types/react@^18.2.0", "@types/react@^19.0.0":
+  version "18.2.43"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.2.43.tgz#c58e5abe241e6f71f60ce30e2a9aceb9d3a2a374"
+  integrity sha512-nvOV01ZdBdd/KW6FahSbcNplt2jCJfyWdTos61RYHV+FVv5L/g9AOX1bmbVcWcLFL8+KHQfh1zVIQrud6ihyQA==
   dependencies:
     "@types/prop-types" "*"
     "@types/scheduler" "*"
-    csstype "^3.0.2"
-
-"@types/react@^18.2.0":
-  version "18.3.23"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.3.23.tgz#86ae6f6b95a48c418fecdaccc8069e0fbb63696a"
-  integrity sha512-/LDXMQh55EzZQ0uVAZmKKhfENivEvWz6E+EYzh+/MCjMhNsotd+ZHhBGIjFDTi6+fz0OhQQQLbTgdQIxxCsC0w==
-  dependencies:
-    "@types/prop-types" "*"
     csstype "^3.0.2"
 
 "@types/resolve@1.17.1":
@@ -8067,6 +8042,11 @@ jsonpointer@^5.0.0:
     array.prototype.flat "^1.3.1"
     object.assign "^4.1.4"
     object.values "^1.1.6"
+
+jwt-decode@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/jwt-decode/-/jwt-decode-4.0.0.tgz#2270352425fd413785b2faf11f6e755c5151bd4b"
+  integrity sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==
 
 keyv@^4.5.3:
   version "4.5.4"

@@ -2,11 +2,10 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
-type UserRole = 'CUSTOMER' | 'MANAGER' | 'ADMIN';
+export type UserRole = 'CUSTOMER' | 'MANAGER' | 'ADMIN';
 
 interface User {
   userId: number | null;
-  userName: string | null;
   userRole: UserRole | null;
 }
 
@@ -26,7 +25,6 @@ const initialState: AuthState = {
   isLoggedIn: false,
   user: {
     userId: null,
-    userName: null,
     userRole: null,
   },
   token: null,

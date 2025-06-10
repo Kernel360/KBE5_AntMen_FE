@@ -4,23 +4,31 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from "js-cookie";
 import { useAuthStore } from '@/shared/stores/authStore';
+import { jwtDecode } from "jwt-decode";
+
+type UserRole = 'CUSTOMER' | 'MANAGER' | 'ADMIN';
 
 interface LoginFormData {
     userLoginId: string;
     userPassword: string;
 }
 
-interface User {
-    userId: number;
-    userName: string;
-    userRole: 'CUSTOMER' | 'MANAGER' | 'ADMIN';
-}
-
 interface LoginResponse {
     success: boolean;
     token?: string;
     message?: string;
-    user ?: User;
+}
+
+interface JwtPayload {
+    sub: string;        // userId (JWT 표준은 'sub'를 subject/id로 사용)
+    userRole: string;   // CUSTOMER | MANAGER | ADMIN
+    exp: number;        // 만료 시간
+    iat: number;        // 발급 시간
+}
+
+// 역할 값이 유효한지 검증하는 타입 가드
+function isValidUserRole(role: string): role is UserRole {
+    return ['CUSTOMER', 'MANAGER', 'ADMIN'].includes(role);
 }
 
 export function useLoginOrigin() {
@@ -68,18 +76,37 @@ export function useLoginOrigin() {
             const result: LoginResponse = await response.json();
             console.log('서버 응답:', result);
 
-            if (result.success && result.token && result.user) {
-                
-                // Zustand 스토어에 로그인 정보 저장
-                loginToStore(result.user, result.token);
+            if (result.success && result.token) {
+                // 1. JWT 토큰 디코딩
+                const decodedToken = jwtDecode<JwtPayload>(result.token);
+                console.log('✅ 토큰 디코딩 결과:', decodedToken);
 
-                // 쿠키에 토큰 저장 (7일 만료)
-                Cookies.set('auth-token', formatTokenForServer(result.token), {
-                    expires: 7,           // 7일 후 만료
-                    secure: false,         // HTTPS에서만 전송
-                    sameSite: 'strict',   // CSRF 공격 방지
-                    path: '/'            // 모든 경로에서 접근 가능
+                // 2. userRole 검증
+                if (!isValidUserRole(decodedToken.userRole)) {
+                    throw new Error('토큰에 포함된 사용자 역할이 유효하지 않습니다.');
+                }
+
+                // 3. JWT에서 추출한 정보로 Zustand 스토어에 저장할 사용자 객체 구성
+                const user = {
+                    userId: parseInt(decodedToken.sub),
+                    userRole: decodedToken.userRole  // 타입이 UserRole로 보장됨
+                };
+
+                // 4. Zustand 스토어에 로그인 정보 저장
+                loginToStore(user, result.token);
+                console.log('💾 authStore 저장 완료');
+                
+                // 5. 쿠키에 토큰 저장 (7일 만료)
+                const formattedToken = formatTokenForServer(result.token);
+                console.log('🍪 쿠키에 저장될 토큰:', formattedToken);
+                
+                Cookies.set('auth-token', formattedToken, {
+                    expires: 7,
+                    secure: false,
+                    sameSite: 'strict',
+                    path: '/'
                 });
+                console.log('🍪 쿠키 저장 완료');
 
                 Cookies.set('auth-time', new Date().toISOString(), {
                     expires: 7,
@@ -88,8 +115,10 @@ export function useLoginOrigin() {
                     path: '/'
                 });
 
-                console.log('✅ 로그인 성공, 메인 페이지로 이동');
-                router.push('/');
+                // 6. userRole에 따라 리다이렉트 경로 설정
+                const redirectPath = user.userRole === 'MANAGER' ? '/manager' : '/';
+                console.log(`🏠 ${user.userRole} 권한으로 ${redirectPath}로 이동`);
+                router.push(redirectPath);
 
                 return { success: true };
 
