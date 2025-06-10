@@ -30,15 +30,4 @@ export interface RecommendedTime {
   area: number;
 }
 
-export interface ReservationRequest {
-  customerId: number;
-  reservationCreatedAt: string;
-  reservationDate: string;
-  reservationTime: string;
-  categoryId: number;
-  reservationDuration: number;
-  reservationMemo: string;
-  reservationAmount: number;
-  additionalDuration: number;
-  optionIds: number[];
-} 
+export type { ReservationRequest } from '../api'; 

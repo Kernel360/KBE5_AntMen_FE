@@ -2,80 +2,70 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import {
-  createReservation,
-  updateReservationManager,
-  ReservationRequest,
-} from '@/shared/api';
-import { MANAGER_NAMES } from '@/widgets/manager/model/manager';
+import type { Manager } from '@/widgets/manager/model/manager';
 
 interface BottomSectionProps {
   selectedManagers: string[];
   reservationId?: string;
+  managers: Manager[];
 }
 
 export function BottomSection({
   selectedManagers,
   reservationId,
+  managers,
 }: BottomSectionProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const getSelectedManagerNames = () => {
     if (selectedManagers.length === 0) return '';
-    const names = selectedManagers.map(id => MANAGER_NAMES[id as keyof typeof MANAGER_NAMES] || '알 수 없는 매니저');
+    
+    const names = selectedManagers.map(id => {
+      const manager = managers.find(m => m.id === id);
+      return manager ? manager.name : '';
+    }).filter(Boolean);
+    
+    if (names.length === 0) return '';
     return `${names.join(', ')} 매니저가 선택되었습니다`;
   };
 
   const handleNext = async () => {
-    if (selectedManagers.length === 0) {
-      alert('최소 1명의 매니저를 선택해주세요.');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      if (reservationId) {
-        const managerId = parseInt(selectedManagers[0], 10);
-        if (isNaN(managerId)) {
-          throw new Error('유효하지 않은 매니저 ID입니다.');
-        }
-        const updatedReservation = await updateReservationManager(
-          parseInt(reservationId, 10),
-          managerId,
+      const pendingReservationJSON = localStorage.getItem('pendingReservation');
+      if (!pendingReservationJSON) {
+        throw new Error(
+          '예약 정보를 찾을 수 없습니다. 예약 과정을 다시 시작해 주세요.',
         );
-        router.push(`/reservation/${updatedReservation.reservationId}/confirmation`);
-      } else {
-        const pendingReservationJSON =
-          typeof window !== 'undefined'
-            ? localStorage.getItem('pendingReservation')
-            : null;
-        if (!pendingReservationJSON) {
-          throw new Error(
-            '예약 정보를 찾을 수 없습니다. 예약 과정을 다시 시작해 주세요.',
-          );
-        }
-        const reservationDetails = JSON.parse(
-          pendingReservationJSON,
-        ) as Omit<ReservationRequest, 'optionIds'> & { optionIds: number[] };
-
-        const finalPayload: ReservationRequest = {
-          ...reservationDetails,
-        };
-
-        console.log('백엔드로 전송하는 예약 정보:', finalPayload);
-
-        const newReservation = await createReservation(finalPayload);
-
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('pendingReservation');
-        }
-
-        router.push(`/reservation/${newReservation.reservationId}/confirmation`);
       }
+
+      // 선택된 매니저 정보를 예약 정보와 함께 저장
+      const reservationInfo = JSON.parse(pendingReservationJSON);
+      const updatedReservationInfo = {
+        ...reservationInfo,
+        selectedManagers: selectedManagers.length > 0 
+          ? selectedManagers.map(id => {
+              const manager = managers.find(m => m.id === id);
+              return manager ? {
+                id: manager.id,
+                name: manager.name,
+                gender: manager.gender,
+                age: manager.age,
+                rating: manager.rating,
+                description: manager.description
+              } : null;
+            }).filter(Boolean)
+          : []
+      };
+      
+      localStorage.setItem('pendingReservation', JSON.stringify(updatedReservationInfo));
+
+      // 예약 확인 페이지로 이동
+      router.push('/reservation/confirm');
     } catch (error) {
-      console.error('매니저 선택 및 예약 생성 제출 오류:', error);
+      console.error('예약 정보 처리 오류:', error);
       alert(error instanceof Error ? error.message : '오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
@@ -97,13 +87,11 @@ export function BottomSection({
           <div className="py-4">
             <button
               onClick={handleNext}
-              disabled={selectedManagers.length === 0 || isLoading}
+              disabled={isLoading}
               className="w-full h-14 rounded-2xl font-semibold text-white text-lg bg-primary disabled:bg-slate-200 disabled:text-slate-400 transition-colors"
             >
-              {isLoading ? '처리 중...' : '다음'}
-              {selectedManagers.length > 0 && !isLoading && (
-                <span className="ml-1">›</span>
-              )}
+              {isLoading ? '처리 중...' : selectedManagers.length === 0 ? '자동매칭 이용하기' : '다음'}
+              {!isLoading && <span className="ml-1">›</span>}
             </button>
           </div>
         </div>

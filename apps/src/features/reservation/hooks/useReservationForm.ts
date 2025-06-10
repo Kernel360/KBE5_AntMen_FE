@@ -18,12 +18,33 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [isVisitTimeModalOpen, setIsVisitTimeModalOpen] = useState(false);
   const [selectedHours, setSelectedHours] = useState(initialCategory.categoryTime);
-  const [selectedVisitTime, setSelectedVisitTime] = useState<Dayjs | string | null>(null);
+  const [selectedVisitTime, setSelectedVisitTime] = useState<string | null>(null);
   const [selectedCategoryOptions, setSelectedCategoryOptions] = useState<number[]>([]);
   const [memo, setMemo] = useState('');
   const [recommendedTime, setRecommendedTime] = useState({ minutes: 240, area: 50 });
   const [showTimeWarning, setShowTimeWarning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // localStorage 값으로 폼 상태 복원
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pendingReservation');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data) {
+            if (data.reservationDate) setSelectedDate(dayjs(data.reservationDate));
+            if (data.reservationTime) setSelectedVisitTime(data.reservationTime);
+            if (data.reservationDuration) setSelectedHours(data.reservationDuration);
+            if (Array.isArray(data.optionIds)) setSelectedCategoryOptions(data.optionIds);
+            if (data.reservationMemo) setMemo(data.reservationMemo);
+          }
+        } catch (e) {
+          // 파싱 실패 시 무시
+        }
+      }
+    }
+  }, []);
 
   // Computed Values
   const totalOptionsPrice = selectedCategoryOptions.reduce((total, optionId) => {
@@ -73,17 +94,16 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
 
     let formattedTime: string | null = null;
 
-  if (typeof selectedVisitTime === 'string') {
-    const visitTime = dayjs(`2000-01-01 ${selectedVisitTime}`, 'YYYY-MM-DD HH:mm');
-    if (!visitTime.isValid()) {
-      setWarningMessage('방문 시간이 올바르지 않습니다.');
-      setShowWarning(true);
-      setTimeout(() => setShowWarning(false), 3000);
-      return;
+    if (typeof selectedVisitTime === 'string') {
+      const visitTime = dayjs(`2000-01-01 ${selectedVisitTime}`, 'YYYY-MM-DD HH:mm');
+      if (!visitTime.isValid()) {
+        setWarningMessage('방문 시간이 올바르지 않습니다.');
+        setShowWarning(true);
+        setTimeout(() => setShowWarning(false), 3000);
+        return;
+      }
+      formattedTime = visitTime.format('HH:mm');
     }
-    formattedTime = visitTime.format('HH:mm');
-  }
-
 
     // API 호출 대신, 사용자가 입력한 정보를 객체로 만듭니다.
     const reservationDetails = {
@@ -91,29 +111,27 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
       customerId: 1, // 임시 ID
       addressId: addressId, // 반드시 props로 받은 값 사용
       categoryId: initialCategory.categoryId,
-      categoryName: initialCategory.categoryName, // 페이지 이동 시 필요할 수 있으므로 추가
+      categoryName: initialCategory.categoryName,
       reservationDate: selectedDate.format('YYYY-MM-DD'),
       reservationTime: formattedTime,
       reservationDuration: selectedHours,
       reservationMemo: memo,
-      reservationAmount: totalPrice, // 계산된 총액
+      reservationAmount: totalPrice,
       additionalDuration: selectedHours - initialCategory.categoryTime,
       optionIds: selectedCategoryOptions,
     };
 
     try {
-      // 브라우저의 localStorage에 예약 정보를 임시 저장합니다.
-      // /matching 페이지에서 이 데이터를 읽어 사용하게 됩니다.
+      // 예약 정보를 localStorage에 저장
       if (typeof window !== 'undefined') {
         localStorage.setItem('pendingReservation', JSON.stringify(reservationDetails));
       }
-      
-      // /matching 경로로 이동합니다.
+
+      // 매칭 페이지로 이동 (서버 컴포넌트에서 자동으로 매니저 리스트를 가져옵니다)
       router.push('/matching');
-      
     } catch (error) {
-      console.error('Failed to save reservation details to localStorage:', error);
-      setWarningMessage('다음 단계로 진행하는 중 오류가 발생했습니다.');
+      console.error('매니저 조회 중 오류 발생:', error);
+      setWarningMessage('매니저 조회 중 오류가 발생했습니다.');
       setShowWarning(true);
       setTimeout(() => setShowWarning(false), 3000);
     }

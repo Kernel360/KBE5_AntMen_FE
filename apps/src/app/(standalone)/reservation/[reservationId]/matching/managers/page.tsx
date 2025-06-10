@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { MatchingHeader, ManagerList, BottomSection, ManagerListLoading } from '@/widgets/manager';
 import { useManagerSelection } from '@/features/manager-selection';
+import { MANAGER_LIST, type Manager } from '@/widgets/manager/model/manager';
 
 export default function ManagerListPage() {
   const params = useParams();
@@ -22,6 +23,7 @@ export default function ManagerListPage() {
   
   const { selectedManagers, handleManagerSelect } = useManagerSelection({ strategy: 'slide-on-max' });
   const [isLoading, setIsLoading] = useState(true);
+  const [managers, setManagers] = useState<Manager[]>([]);
 
   useEffect(() => {
     // `reservationId`가 없거나 'undefined' 문자열인 경우, 초기 매칭 페이지로 리디렉션
@@ -39,6 +41,7 @@ export default function ManagerListPage() {
         
         // 현재는 상수 데이터 사용
         await new Promise(resolve => setTimeout(resolve, 500));
+        setManagers(MANAGER_LIST);
         setIsLoading(false);
       } catch (error) {
         console.error('매니저 목록 로딩 실패:', error);
@@ -57,6 +60,7 @@ export default function ManagerListPage() {
     <div className="min-h-screen bg-[#f8fafc] max-w-[420px] mx-auto">
       <MatchingHeader selectedCount={selectedManagers.length} />
       <ManagerList 
+        managers={managers}
         selectedManagers={selectedManagers}
         onManagerSelect={handleManagerSelect}
       />
@@ -64,6 +68,7 @@ export default function ManagerListPage() {
         <BottomSection 
           selectedManagers={selectedManagers} 
           reservationId={reservationId}
+          managers={managers}
         />
       </div>
     </div>
