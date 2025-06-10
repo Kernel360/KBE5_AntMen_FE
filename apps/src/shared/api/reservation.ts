@@ -1,20 +1,6 @@
 import { customFetch } from './base';
 import { Category, CategoryOption } from './category';
-
-// Swagger의 ReservationRequestDto를 기반으로 타입을 정의합니다.
-// LocalTime 타입은 string으로 처리하거나, 필요 시 별도 유틸로 파싱합니다.
-export interface ReservationRequest {
-  customerId: number;
-  categoryId: number;
-  addressId: number;
-  reservationDate: string; // "YYYY-MM-DD"
-  reservationTime: string; // "HH:mm"
-  reservationDuration: number;
-  reservationMemo: string;
-  reservationAmount: number;
-  additionalDuration: number;
-  optionIds: number[];
-}
+import type { ReservationRequest } from '.';
 
 // Swagger의 ReservationResponseDto를 기반으로 타입을 정의합니다.
 export interface ReservationResponse {
@@ -45,7 +31,7 @@ export interface ReservationResponse {
 export const createReservation = async (
   reservationData: ReservationRequest,
 ): Promise<ReservationResponse> => {
-  return customFetch<ReservationResponse>('/reservation', {
+  return customFetch<ReservationResponse>('http://localhost:9091/api/v1/customer/reservations', {
     method: 'POST',
     body: JSON.stringify(reservationData),
   });
@@ -59,24 +45,34 @@ export const createReservation = async (
 export const getReservationById = async (
   reservationId: number,
 ): Promise<ReservationResponse> => {
-  return customFetch<ReservationResponse>(`/reservation/${reservationId}`);
+  return customFetch<ReservationResponse>(`http://localhost:9091/api/v1/customer/reservations/${reservationId}`);
 };
 
 /**
- * 예약에 매니저를 배정(매칭)하는 API 함수
- * @param reservationId - 매니저를 배정할 예약의 ID
- * @param managerId - 배정할 매니저의 ID
- * @returns ReservationResponse - 업데이트된 예약 정보
+ * 내 예약 목록 조회 API 함수
  */
-export const updateReservationManager = async (
-  reservationId: number,
-  managerId: number,
-): Promise<ReservationResponse> => {
-  return customFetch<ReservationResponse>(`/reservation/${reservationId}/match`, {
-    method: 'PATCH',
-    body: JSON.stringify({ managerId }),
-  });
+export const getMyReservations = async (): Promise<ReservationResponse[]> => {
+  return customFetch<ReservationResponse[]>('http://localhost:9091/api/v1/customer/reservations');
 };
+
+
+
+// TODO: 필요한 코드인가?
+// /**
+//  * 예약에 매니저를 배정(매칭)하는 API 함수
+//  * @param reservationId - 매니저를 배정할 예약의 ID
+//  * @param managerId - 배정할 매니저의 ID
+//  * @returns ReservationResponse - 업데이트된 예약 정보
+//  */
+// export const updateReservationManager = async (
+//   reservationId: number,
+//   managerId: number,
+// ): Promise<ReservationResponse> => {
+//   return customFetch<ReservationResponse>(`/reservation/${reservationId}/match`, {
+//     method: 'PATCH',
+//     body: JSON.stringify({ managerId }),
+//   });
+// };
 
 /**
  * 예약 상태를 변경하는 API 함수
@@ -104,7 +100,7 @@ export const cancelReservation = async (
   reservationId: number,
   reason?: string,
 ): Promise<ReservationResponse> => {
-  return customFetch<ReservationResponse>(`/reservation/${reservationId}/cancel`, {
+  return customFetch<ReservationResponse>(`http://localhost:9091/api/v1/customer/reservations/${reservationId}/cancel`, {
     method: 'POST',
     body: JSON.stringify({ reason }),
   });

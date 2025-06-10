@@ -69,7 +69,7 @@ const AddressManagementPageUI = () => {
            </div>
         </div>
       </div>
-      <AddAddressModal isOpen={isSearchModalOpen} onClose={closeSearchModal} />
+      <AddAddressModal isOpen={isSearchModalOpen} onClose={closeSearchModal} onAddAddress={(address) => { alert('주소가 추가되었습니다.'); }} />
     </>
   );
 };

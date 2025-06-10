@@ -1,0 +1,123 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import {
+  MatchingHeader,
+  ManagerList,
+  BottomSection,
+} from '@/widgets/manager'
+import { useManagerSelection } from '@/features/manager-selection'
+import type { Manager } from '@/widgets/manager/model/manager'
+
+export default function MatchingPageClient() {
+  const [managers, setManagers] = useState<Manager[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { selectedManagers, handleManagerSelect } = useManagerSelection();
+
+  useEffect(() => {
+    async function fetchManagers() {
+      try {
+        // localStorage에서 예약 정보 가져오기
+        const savedData = localStorage.getItem('pendingReservation');
+        if (!savedData) {
+          console.log('저장된 예약 정보가 없습니다.');
+          setIsLoading(false);
+          return;
+        }
+
+        const reservationInfo = JSON.parse(savedData);
+        console.log('클라이언트에서 읽은 예약 정보:', reservationInfo);
+
+        // 매니저 목록 가져오기
+        const response = await fetch('http://localhost:9091/api/v1/matchings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            reservationDate: reservationInfo.reservationDate,
+            reservationTime: reservationInfo.reservationTime,
+            reservationDuration: reservationInfo.reservationDuration,
+            location: {
+              district: reservationInfo.addressId
+            }
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`매니저 조회 실패: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('서버에서 받은 매니저 데이터:', data);
+        
+        // 데이터 구조 변환
+        const formattedManagers: Manager[] = Array.isArray(data) ? data.map(manager => ({
+          id: manager.managerId?.toString() || '',
+          name: manager.managerName || '',
+          gender: manager.managerGender || '미지정',
+          age: manager.managerAge || 0,
+          rating: manager.rating || 0,
+          description: manager.description || '성실하고 친절한 서비스를 제공합니다.',
+          profileImage: manager.managerName ? manager.managerName[0] : '매',
+          reviewCount: manager.reviewCount || 0,
+          introduction: manager.introduction || '안녕하세요! 성실하고 친절한 매니저입니다.',
+          characteristics: [
+            { id: '1', label: '친절해요', type: 'kind' as const },
+            { id: '2', label: '시간 엄수', type: 'punctual' as const },
+            { id: '3', label: '꼼꼼해요', type: 'thorough' as const }
+          ],
+          reviews: []
+        })) : [];
+
+        console.log('변환된 매니저 데이터:', formattedManagers);
+        
+        // 매니저 데이터를 localStorage에 저장
+        const updatedReservationInfo = {
+          ...reservationInfo,
+          managers: data // 원본 데이터 저장
+        };
+        localStorage.setItem('pendingReservation', JSON.stringify(updatedReservationInfo));
+        
+        setManagers(formattedManagers);
+      } catch (error) {
+        console.error('매니저 목록 로딩 실패:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchManagers();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex justify-center">
+        <div className="w-full max-w-[375px] min-h-screen flex flex-col bg-slate-50">
+          <MatchingHeader selectedCount={0} />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-slate-500">매니저 목록을 불러오는 중...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex justify-center">
+      <div className="w-full max-w-[375px] min-h-screen flex flex-col bg-slate-50">
+        <MatchingHeader selectedCount={selectedManagers.length} />
+        <ManagerList
+          managers={managers}
+          selectedManagers={selectedManagers}
+          onManagerSelect={handleManagerSelect}
+        />
+        <BottomSection 
+          selectedManagers={selectedManagers} 
+          managers={managers}
+        />
+      </div>
+    </div>
+  )
+} 

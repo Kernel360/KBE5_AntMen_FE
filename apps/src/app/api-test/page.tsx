@@ -39,6 +39,7 @@ const ApiTestPage = () => {
     reservationAmount: 50000,
     additionalDuration: 1,
     optionIds: [1, 2],
+    managerIds: [], // 초기에는 빈 배열로 설정
   };
 
   return (

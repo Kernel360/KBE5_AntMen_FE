@@ -13,7 +13,7 @@ export interface Category {
  * @returns Category[]
  */
 export const getAllCategories = async (): Promise<Category[]> => {
-  return customFetch<Category[]>('/category');
+  return customFetch<Category[]>('http://localhost:9090/api/v1/common/categories');
 };
 
 // swagger에 정의된 CategoryOptionResponseDto를 기반으로 타입을 정의합니다.
@@ -30,7 +30,7 @@ export interface CategoryOption {
  * @returns Category
  */
 export const getCategoryById = async (categoryId: string): Promise<Category> => {
-  return customFetch<Category>(`/category/${categoryId}`);
+  return customFetch<Category>(`http://localhost:9090/api/v1/common/categories/${categoryId}`);
 };
 
 /**
@@ -41,5 +41,5 @@ export const getCategoryById = async (categoryId: string): Promise<Category> => 
 export const getCategoryOptionsByCategoryId = async (
   categoryId: string,
 ): Promise<CategoryOption[]> => {
-  return customFetch<CategoryOption[]>(`/category-option/category/${categoryId}`);
+  return customFetch<CategoryOption[]>(`http://localhost:9090/api/v1/common/categories/${categoryId}/options`);
 }; 

@@ -108,12 +108,14 @@ export default function SelectAddressPage() {
         </main>
         {/* 하단 버튼 */}
         <footer className="p-5 bg-white border-t flex flex-col gap-3">
-          <button
-            onClick={() => setAddModalOpen(true)}
-            className="w-full py-4 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300 transition-colors text-center"
-          >
-            + 새 주소 추가
-          </button>
+          {addresses.length > 0 && (
+            <button
+              onClick={() => setAddModalOpen(true)}
+              className="w-full py-4 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300 transition-colors text-center"
+            >
+              + 새 주소 추가
+            </button>
+          )}
           <button
             onClick={handleNext}
             disabled={!selectedAddressId || loading}

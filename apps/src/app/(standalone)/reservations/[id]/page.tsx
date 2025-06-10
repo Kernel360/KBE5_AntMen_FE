@@ -10,23 +10,28 @@ const MOCK_RESERVATION: Reservation = {
   id: '1',
   reservationNumber: 'CL-20230510-1234',
   serviceType: '정기 청소 (주 1회)',
-  location: '서울특별시 강남구 테헤란로 152',
   status: 'scheduled',
+  paymentStatus: 'paid',
   dateTime: '2023년 5월 15일 · 오전 10:00',
   duration: '3시간',
+  location: '서울특별시 강남구 테헤란로 152',
+  detailedAddress: '서울특별시 강남구 테헤란로 152, 45층',
   worker: {
     id: '1',
     name: '김민준',
     rating: 4.9,
     experience: '경력 3년',
+    age: 32,
+    gender: '남성',
+    avatar: '민준',
+    phone: '010-1234-5678',
   },
   amount: 54000,
-  payment: {
-    baseFee: 60000,
-    discount: 6000,
-    total: 54000,
-    method: '신한카드 (1234-56XX-XXXX-7890)',
-  },
+  baseAmount: 60000,
+  discount: 6000,
+  paymentMethod: '신한카드 (1234-56XX-XXXX-7890)',
+  options: [],
+  createdAt: '2023-05-10T10:00:00Z',
 };
 
 export default function ReservationDetailPage({ params }: { params: { id: string } }) {
@@ -133,17 +138,17 @@ export default function ReservationDetailPage({ params }: { params: { id: string
                 {new Intl.NumberFormat('ko-KR', {
                   style: 'currency',
                   currency: 'KRW',
-                }).format(reservation.payment?.baseFee || 0)}
+                }).format(reservation.baseAmount || 0)}
               </span>
             </div>
-            {reservation.payment?.discount && (
+            {reservation.discount && (
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-[#666666]">정기 할인</span>
                 <span className="text-sm font-medium text-[#FF6B35]">
                   -{new Intl.NumberFormat('ko-KR', {
                     style: 'currency',
                     currency: 'KRW',
-                  }).format(reservation.payment.discount)}
+                  }).format(reservation.discount)}
                 </span>
               </div>
             )}
@@ -153,12 +158,12 @@ export default function ReservationDetailPage({ params }: { params: { id: string
                 {new Intl.NumberFormat('ko-KR', {
                   style: 'currency',
                   currency: 'KRW',
-                }).format(reservation.payment?.total || reservation.amount)}
+                }).format(reservation.amount || 0)}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-[#666666]">결제 수단</span>
-              <span className="text-sm font-medium">{reservation.payment?.method}</span>
+              <span className="text-sm font-medium">{reservation.paymentMethod}</span>
             </div>
           </div>
         </section>

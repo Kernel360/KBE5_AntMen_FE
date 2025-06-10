@@ -164,5 +164,5 @@ export default function ReservationPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

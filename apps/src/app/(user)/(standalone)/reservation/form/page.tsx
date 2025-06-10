@@ -203,6 +203,40 @@ const ReservationFormWrapper = () => {
       setLoading(false);
       return;
     }
+
+    // localStorage에 pendingReservation 값이 있으면 복원
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('pendingReservation');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          if (data.categoryId && (!categoryId || String(data.categoryId) === String(categoryId))) {
+            // 카테고리 정보와 옵션을 fetch해서 복원
+            Promise.all([
+              getCategoryById(data.categoryId),
+              getCategoryOptionsByCategoryId(data.categoryId)
+            ]).then(([categoryData, optionsData]) => {
+              setCategory(categoryData);
+              setOptions(optionsData);
+              setLoading(false);
+            }).catch((err) => {
+              setError('예약 정보를 불러오는 데 실패했습니다.');
+              setLoading(false);
+            });
+            return;
+          }
+        } catch (e) {
+          // JSON 파싱 실패 시 무시하고 새로 입력
+        }
+      }
+    }
+
+    if (!categoryId) {
+      setError('카테고리 정보가 없습니다.');
+      setLoading(false);
+      return;
+    }
+
     const fetchData = async () => {
       try {
         setLoading(true);
