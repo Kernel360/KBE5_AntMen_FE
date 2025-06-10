@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {
   updateReservationStatus,
@@ -7,52 +7,61 @@ import {
   saveOptionsForReservation,
   createReservation,
   getReservationById,
-  updateReservationManager,
   type ReservationRequest,
-} from '@/shared/api';
+} from '@/shared/api'
 
 const ApiTestPage = () => {
-  const testReservationId = 1; // 테스트할 예약 ID
-  const testOptionId = 1; // 테스트할 옵션 ID
-  const testManagerId = 1; // 테스트할 매니저 ID
+  const testReservationId = 1 // 테스트할 예약 ID
+  const testOptionId = 1 // 테스트할 옵션 ID
+  const testManagerId = 1 // 테스트할 매니저 ID
 
-  const handleTest = async (apiCall: () => Promise<any>, description: string) => {
-    console.log(`--- [TEST START] ${description} ---`);
+  const handleTest = async (
+    apiCall: () => Promise<any>,
+    description: string,
+  ) => {
+    console.log(`--- [TEST START] ${description} ---`)
     try {
-      const result = await apiCall();
-      console.log('[SUCCESS]', result);
+      const result = await apiCall()
+      console.log('[SUCCESS]', result)
     } catch (error) {
-      console.error('[ERROR]', error);
+      console.error('[ERROR]', error)
     } finally {
-      console.log(`--- [TEST END] ${description} ---`);
+      console.log(`--- [TEST END] ${description} ---`)
     }
-  };
+  }
 
   const mockReservationData: ReservationRequest = {
     customerId: 1,
     addressId: 1, // 중요: DB에 존재하는 주소 ID여야 합니다.
     categoryId: 1,
+    reservationCreatedAt: '2025-07-01 12:00:00',
     reservationDate: '2025-07-15',
-    reservationTime: '14:30',
+    reservationTime: '14:30:00',
     reservationDuration: 3,
     reservationMemo: '테스트 예약입니다.',
     reservationAmount: 50000,
     additionalDuration: 1,
     optionIds: [1, 2],
     managerIds: [], // 초기에는 빈 배열로 설정
-  };
+  }
 
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">API Test Page - Reservation</h1>
       <p className="mb-4">
-        F12를 눌러 개발자 콘솔을 열고 각 버튼을 클릭하여 API 호출 결과를 확인하세요.
+        F12를 눌러 개발자 콘솔을 열고 각 버튼을 클릭하여 API 호출 결과를
+        확인하세요.
       </p>
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold pt-4 border-t mt-4">예약 생성/조회/매칭</h2>
+        <h2 className="text-xl font-semibold pt-4 border-t mt-4">
+          예약 생성/조회/매칭
+        </h2>
         <button
           onClick={() =>
-            handleTest(() => createReservation(mockReservationData), 'POST /reservation')
+            handleTest(
+              () => createReservation(mockReservationData),
+              'POST /reservation',
+            )
           }
           className="w-full p-4 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-colors"
         >
@@ -69,19 +78,10 @@ const ApiTestPage = () => {
         >
           1. 특정 예약 조회
         </button>
-        <button
-          onClick={() =>
-            handleTest(
-              () => updateReservationManager(testReservationId, testManagerId),
-              'PATCH /reservation/{id}/match',
-            )
-          }
-          className="w-full p-4 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-        >
-          2. 매니저 매칭
-        </button>
 
-        <h2 className="text-xl font-semibold pt-4 border-t mt-4">예약 상태/취소</h2>
+        <h2 className="text-xl font-semibold pt-4 border-t mt-4">
+          예약 상태/취소
+        </h2>
         <button
           onClick={() =>
             handleTest(
@@ -130,7 +130,7 @@ const ApiTestPage = () => {
         </button>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ApiTestPage; 
+export default ApiTestPage
