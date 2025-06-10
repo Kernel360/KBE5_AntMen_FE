@@ -13,7 +13,7 @@ import { MyReservationClient } from './MyReservationClient';
 async function getReservations(): Promise<Reservation[]> {
   try {
     // API URL을 환경 변수로 관리하는 것이 좋습니다.
-    const res = await fetch(`http://localhost:3000/api/reservations`, {
+    const res = await fetch(`http://localhost:9091/api/v1/customer/reservations`, {
       cache: 'no-store',
     });
 
