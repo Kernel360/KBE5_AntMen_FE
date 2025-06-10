@@ -1,12 +1,12 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import Image from 'next/image';
-import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
-import { Paperclip, MessageCircle, Eye } from 'lucide-react';
-import type { BoardDetailProps } from '@/entities/board/model/types';
-import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
+import { useState } from 'react'
+import Image from 'next/image'
+import { format } from 'date-fns'
+import { ko } from 'date-fns/locale'
+import { Paperclip, MessageCircle, Eye } from 'lucide-react'
+import type { BoardDetailProps } from '@/entities/board/model/types'
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 
 export const BoardDetail = ({
   board,
@@ -18,34 +18,31 @@ export const BoardDetail = ({
   onEditComment,
   onMarkAsAnswer,
 }: BoardDetailProps) => {
-  const [commentContent, setCommentContent] = useState('');
-  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
-  const [editContent, setEditContent] = useState('');
+  const [commentContent, setCommentContent] = useState('')
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null)
+  const [editContent, setEditContent] = useState('')
 
   const handleAddComment = async () => {
-    if (!commentContent.trim()) return;
-    await onAddComment(commentContent);
-    setCommentContent('');
-  };
+    if (!commentContent.trim()) return
+    await onAddComment(commentContent)
+    setCommentContent('')
+  }
 
   const handleEditComment = async (commentId: number) => {
-    if (!editContent.trim()) return;
-    await onEditComment(commentId, editContent);
-    setEditingCommentId(null);
-    setEditContent('');
-  };
+    if (!editContent.trim()) return
+    await onEditComment(commentId, editContent)
+    setEditingCommentId(null)
+    setEditContent('')
+  }
 
   const startEditing = (commentId: number, content: string) => {
-    setEditingCommentId(commentId);
-    setEditContent(content);
-  };
+    setEditingCommentId(commentId)
+    setEditContent(content)
+  }
 
   return (
-    <div className="w-full max-w-[370px] mx-auto bg-gray-50 min-h-screen">
-      <CommonHeader 
-        title={board.category} 
-        showBackButton
-      />
+    <div className="w-full max-w-mobile mx-auto bg-gray-50 min-h-screen">
+      <CommonHeader title={board.category} showBackButton />
       {/* 게시글 영역 */}
       <div className="bg-white px-5">
         {/* 제목 */}
@@ -91,32 +88,42 @@ export const BoardDetail = ({
       <div className="mt-3 bg-gray-50">
         <div className="px-5 py-4 bg-white border-t border-gray-100">
           <h2 className="text-[15px] font-medium text-gray-900">
-            댓글 <span className="text-primary">{board.comments?.length ?? 0}</span>
+            댓글{' '}
+            <span className="text-primary">{board.comments?.length ?? 0}</span>
           </h2>
         </div>
-        
+
         {/* 댓글 목록 */}
         <div className="space-y-5 px-5 py-4">
           {board.comments?.map((comment, index) => {
-            const isAuthorComment = comment.author.id === board.author.id;
+            const isAuthorComment = comment.author.id === board.author.id
             return (
-              <div key={`${comment.id}-${index}`} className={`flex ${isAuthorComment ? 'flex-row' : 'flex-row-reverse'}`}>
+              <div
+                key={`${comment.id}-${index}`}
+                className={`flex ${isAuthorComment ? 'flex-row' : 'flex-row-reverse'}`}
+              >
                 {/* 프로필 이미지 */}
                 <div className="w-[34px] h-[34px] rounded-full bg-gray-300 flex-shrink-0" />
-                
+
                 {/* 댓글 내용 */}
-                <div className={`flex flex-col max-w-[75%] ${isAuthorComment ? 'ml-3' : 'mr-3'}`}>
+                <div
+                  className={`flex flex-col max-w-[75%] ${isAuthorComment ? 'ml-3' : 'mr-3'}`}
+                >
                   {/* 작성자 이름 */}
-                  <span className={`text-[13px] font-medium text-gray-900 mb-1.5 ${isAuthorComment ? 'text-left' : 'text-right'}`}>
+                  <span
+                    className={`text-[13px] font-medium text-gray-900 mb-1.5 ${isAuthorComment ? 'text-left' : 'text-right'}`}
+                  >
                     {comment.author.name}
                   </span>
-                  
+
                   {/* 댓글 말풍선 */}
-                  <div className={`relative p-3.5 rounded-2xl ${
-                    isAuthorComment 
-                      ? 'bg-primary/10 text-gray-900' 
-                      : 'bg-primary text-white'
-                  }`}>
+                  <div
+                    className={`relative p-3.5 rounded-2xl ${
+                      isAuthorComment
+                        ? 'bg-primary/10 text-gray-900'
+                        : 'bg-primary text-white'
+                    }`}
+                  >
                     {editingCommentId === comment.id ? (
                       <textarea
                         value={editContent}
@@ -125,14 +132,20 @@ export const BoardDetail = ({
                         rows={3}
                       />
                     ) : (
-                      <p className="text-[15px] whitespace-pre-wrap break-words leading-[1.7]">{comment.content}</p>
+                      <p className="text-[15px] whitespace-pre-wrap break-words leading-[1.7]">
+                        {comment.content}
+                      </p>
                     )}
                   </div>
-                  
+
                   {/* 메타 정보 */}
-                  <div className={`flex items-center gap-2 mt-2 text-[13px] ${isAuthorComment ? 'justify-start' : 'justify-end'}`}>
+                  <div
+                    className={`flex items-center gap-2 mt-2 text-[13px] ${isAuthorComment ? 'justify-start' : 'justify-end'}`}
+                  >
                     <span className="text-gray-500">
-                      {format(new Date(comment.createdAt), 'HH:mm', { locale: ko })}
+                      {format(new Date(comment.createdAt), 'HH:mm', {
+                        locale: ko,
+                      })}
                     </span>
                     {comment.isAnswer && (
                       <>
@@ -163,7 +176,9 @@ export const BoardDetail = ({
                       <>
                         <span className="text-gray-300">|</span>
                         <button
-                          onClick={() => startEditing(comment.id, comment.content)}
+                          onClick={() =>
+                            startEditing(comment.id, comment.content)
+                          }
                           className="text-gray-500 hover:text-gray-700"
                         >
                           수정
@@ -174,28 +189,29 @@ export const BoardDetail = ({
                         >
                           삭제
                         </button>
-                        {!board.category.includes('공지사항') && !comment.isAnswer && (
-                          <>
-                            <span className="text-gray-300">|</span>
-                            <button
-                              onClick={() => onMarkAsAnswer(comment.id)}
-                              className="text-primary hover:text-primary/80"
-                            >
-                              채택
-                            </button>
-                          </>
-                        )}
+                        {!board.category.includes('공지사항') &&
+                          !comment.isAnswer && (
+                            <>
+                              <span className="text-gray-300">|</span>
+                              <button
+                                onClick={() => onMarkAsAnswer(comment.id)}
+                                className="text-primary hover:text-primary/80"
+                              >
+                                채택
+                              </button>
+                            </>
+                          )}
                       </>
                     )}
                   </div>
                 </div>
               </div>
-            );
+            )
           })}
         </div>
-        
+
         {/* 댓글 입력 */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-3 max-w-[370px] mx-auto">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-3 max-w-mobile mx-auto">
           <div className="flex gap-2">
             <textarea
               value={commentContent}
@@ -216,5 +232,5 @@ export const BoardDetail = ({
         <div className="h-[80px]" />
       </div>
     </div>
-  );
-}; 
+  )
+}
