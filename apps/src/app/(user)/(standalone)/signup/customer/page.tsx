@@ -1,8 +1,10 @@
  'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { BasicSignupForm, type BasicSignupFormData } from '@/features/auth/signup/ui/BasicSignupForm';
+import { useSocialProfileStore } from '@/shared/stores/socialProfileStore';
+
 
 interface ValidationErrors {
   [key: string]: string;
@@ -12,6 +14,8 @@ const CustomerSignUpPage = () => {
   const router = useRouter();
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { socialProfile, isSocialSignup, clearSocialProfile } = useSocialProfileStore();
 
   const [basicData, setBasicData] = useState<BasicSignupFormData>({
     username: '',
@@ -23,6 +27,16 @@ const CustomerSignUpPage = () => {
     birthDate: '',
     profileImage: null,
   });
+
+  useEffect(() => {
+    if (isSocialSignup && socialProfile) {
+      setBasicData(prev => ({
+        ...prev,
+        email: socialProfile.email,
+        username: socialProfile.id
+      }));
+    }
+  }, [isSocialSignup, socialProfile]);
 
   const handleBasicChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -58,8 +72,8 @@ const CustomerSignUpPage = () => {
     const newErrors: ValidationErrors = {};
 
     // Basic data validation
-    if (!basicData.username) newErrors.username = '아이디를 입력해주세요';
-    if (!basicData.password) newErrors.password = '비밀번호를 입력해주세요';
+    if (!basicData.username && !isSocialSignup) newErrors.username = '아이디를 입력해주세요';
+    if (!basicData.password && !isSocialSignup) newErrors.password = '비밀번호를 입력해주세요';
     if (!basicData.name) newErrors.name = '이름을 입력해주세요';
     if (!basicData.phone) newErrors.phone = '전화번호를 입력해주세요';
     if (!basicData.email) newErrors.email = '이메일을 입력해주세요';
@@ -71,7 +85,8 @@ const CustomerSignUpPage = () => {
   };
 
   const handleBack = () => {
-    router.push('/signup/select');
+    clearSocialProfile(); // 뒤로가기 시 스토어 초기화
+    router.push('/signup');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,19 +105,25 @@ const CustomerSignUpPage = () => {
       
       // Basic user information
       formData.append('userLoginId', basicData.username);
-      formData.append('userPassword', basicData.password);
+      if (!isSocialSignup) {
+        formData.append('userPassword', basicData.password);
+      }
       formData.append('userName', basicData.name);
       formData.append('userTel', basicData.phone);
       formData.append('userEmail', basicData.email);
       formData.append('userGender', basicData.gender); // M or W
       formData.append('userBirth', basicData.birthDate);
+            
+      if (isSocialSignup && socialProfile) {
+        formData.append('userType', socialProfile.provider);
+      }
       
       // Profile image (optional for customer)
       if (basicData.profileImage) {
         formData.append('userProfile', basicData.profileImage);
       }
 
-      const response = await fetch('http://localhost:9081/customers/signup', {
+      const response = await fetch('http://localhost:9091/customers/signup', {
         method: 'POST',
         body: formData,
       });
@@ -113,6 +134,9 @@ const CustomerSignUpPage = () => {
 
       const data = await response.json();
       console.log('회원가입 성공:', data);
+
+      // 가입 성공 후 스토어 클리어
+      clearSocialProfile();
       
       // Show success message from response
       alert(data.message); // "회원가입이 완료되었습니다."
@@ -143,6 +167,7 @@ const CustomerSignUpPage = () => {
             onChange={handleBasicChange}
             onImageChange={handleProfileImageChange}
             errors={errors}
+            isSocialSignup={isSocialSignup}
           />
 
           {/* Submit Button */}

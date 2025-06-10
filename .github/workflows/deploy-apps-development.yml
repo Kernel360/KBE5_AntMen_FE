@@ -2,9 +2,10 @@ name: 'CI/CD: Build & Deploy to EC2'
 
 on:
   push:
-    branches: [develop]
-    paths:
-      - 'apps/**'
+    branches: [fix/#48-build-error]
+    # paths:
+    #   - 'apps/**'
+    #   - 'admin/**'
 
 permissions:
   id-token: write

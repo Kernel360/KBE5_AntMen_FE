@@ -1,5 +1,10 @@
+'use client';
+
 import { MenuItem } from '@/shared/ui/MenuItem'
 import { ProfileSection } from '@/shared/ui/ProfileSection'
+import { useAuthStore } from '@/shared/stores/authStore'
+import { useRouter } from 'next/navigation'
+import Cookies from 'js-cookie'
 
 interface MorePageUIProps {
   user: {
@@ -10,6 +15,23 @@ interface MorePageUIProps {
 }
 
 export const MorePageUI = ({ user }: MorePageUIProps) => {
+  const { logout } = useAuthStore()
+  const router = useRouter()
+
+  const handleLogout = () => {
+    if (window.confirm('로그아웃 하시겠습니까?')) {
+      // Zustand 스토어 초기화
+      logout()
+      
+      // 쿠키 삭제
+      Cookies.remove('auth-token')
+      Cookies.remove('auth-time')
+
+      // 로그인 페이지로 리다이렉트
+      router.push('/login')
+    }
+  }
+
   const menuItems = [
     { icon: '/icons/point.svg', label: 'Ant Point', href: '/point' },
     {
@@ -31,7 +53,7 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
     { icon: '/icons/heart.svg', label: '찜한 도우미', href: '/favorites' },
     { icon: '/icons/slash.svg', label: '리뷰 관리', href: '/reviews' },
     { icon: '/icons/clock.svg', label: '이용 내역', href: '/history' },
-    { icon: '/icons/settings.svg', label: '설정', href: '/settings' },
+    { icon: '/icons/settings.svg', label: '로그아웃', onClick: handleLogout },
   ]
 
   return (
@@ -46,7 +68,7 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
       </div>
       <div className="flex flex-col">
         {menuItems.map((item, index) => (
-          <div key={item.href} className="py-4">
+          <div key={item.href || index} className="py-4">
             <MenuItem {...item} />
           </div>
         ))}

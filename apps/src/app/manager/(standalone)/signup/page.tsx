@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { BasicSignupForm, type BasicSignupFormData } from '@/features/auth/signup/ui/BasicSignupForm';
 import { ManagerAdditionalInfo, type ManagerAdditionalData } from '@/features/auth/signup/ui/ManagerAdditionalInfo';
 import { FileUploadSection } from '@/features/auth/signup/ui/FileUploadSection';
+import { useSocialProfileStore } from '@/shared/stores/socialProfileStore';
+
+
 
 interface ValidationErrors {
   [key: string]: string;
@@ -14,6 +17,10 @@ const ManagerSignUpPage = () => {
   const router = useRouter();
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+
+  const { socialProfile, isSocialSignup, clearSocialProfile } = useSocialProfileStore();
+
 
   const [basicData, setBasicData] = useState<BasicSignupFormData>({
     username: '',
@@ -36,6 +43,16 @@ const ManagerSignUpPage = () => {
   });
 
   const [identityFiles, setIdentityFiles] = useState<File[]>([]);
+
+  useEffect(() => {
+    if (isSocialSignup && socialProfile) {
+      setBasicData(prev => ({
+        ...prev,
+        email: socialProfile.email,
+        username: socialProfile.id, // 아이디도 이메일로 초기 설정
+      }));
+    }
+  }, [isSocialSignup, socialProfile]);
 
   const handleBasicChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -96,8 +113,8 @@ const ManagerSignUpPage = () => {
     const newErrors: ValidationErrors = {};
 
     // Basic data validation
-    if (!basicData.username) newErrors.username = '아이디를 입력해주세요';
-    if (!basicData.password) newErrors.password = '비밀번호를 입력해주세요';
+    if (!basicData.username && !isSocialSignup) newErrors.username = '아이디를 입력해주세요';
+    if (!basicData.password && !isSocialSignup) newErrors.password = '비밀번호를 입력해주세요';
     if (!basicData.name) newErrors.name = '이름을 입력해주세요';
     if (!basicData.phone) newErrors.phone = '전화번호를 입력해주세요';
     if (!basicData.email) newErrors.email = '이메일을 입력해주세요';
@@ -117,7 +134,8 @@ const ManagerSignUpPage = () => {
   };
 
   const handleBack = () => {
-    router.back();
+    clearSocialProfile(); // 뒤로가기 시 스토어 초기화
+    router.push('/signup');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -136,13 +154,20 @@ const ManagerSignUpPage = () => {
       
       // Basic user information
       formData.append('userLoginId', basicData.username);
-      formData.append('userPassword', basicData.password);
+      if (!isSocialSignup) {
+        formData.append('userPassword', basicData.password);
+      }
       formData.append('userName', basicData.name);
       formData.append('userTel', basicData.phone);
       formData.append('userEmail', basicData.email);
       formData.append('userGender', basicData.gender.toUpperCase()); // 'male' -> 'MALE'
       formData.append('userBirth', basicData.birthDate);
       
+
+      if (isSocialSignup && socialProfile) {
+        formData.append('userType', socialProfile.provider);
+      }
+
       // Profile image
       if (basicData.profileImage) {
         formData.append('userProfile', basicData.profileImage);
@@ -158,7 +183,7 @@ const ManagerSignUpPage = () => {
         formData.append('managerFileUrls', file);
       });
 
-      const response = await fetch('http://localhost:9082/managers/signup', {
+      const response = await fetch('http://localhost:9092/managers/signup', {
         method: 'POST',
         body: formData,
       });
@@ -169,7 +194,10 @@ const ManagerSignUpPage = () => {
 
       const data = await response.json();
       console.log('회원가입 성공:', data);
-      
+            
+      // 가입 성공 후 스토어 클리어
+      clearSocialProfile();
+
       // Redirect to pending page instead of login page
       router.push('/signup/manager/pending');
     } catch (error) {
@@ -196,6 +224,7 @@ const ManagerSignUpPage = () => {
             onChange={handleBasicChange}
             onImageChange={handleProfileImageChange}
             errors={errors}
+            isSocialSignup={isSocialSignup}
           />
 
           {/* Manager Additional Information */}
