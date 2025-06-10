@@ -6,6 +6,8 @@ import {
   StarIcon,
   EllipsisHorizontalIcon,
   ClipboardDocumentListIcon,
+  UserGroupIcon,
+  HandRaisedIcon,
 } from '@heroicons/react/24/outline'
 import { useRouter, usePathname } from 'next/navigation'
 
@@ -48,32 +50,32 @@ export function BottomNavigation() {
       <NavItem
         icon={<HomeIcon className="h-full w-full" />}
         label="홈"
-        isActive={pathname === '/'}
-        href="/"
+        isActive={pathname === '/manager'}
+        href="/manager"
       />
       <NavItem
         icon={<ClipboardDocumentListIcon className="h-full w-full" />}
         label="게시판"
-        isActive={pathname === '/boards'}
-        href="/boards"
+        isActive={pathname === '/manager/boards'}
+        href="/manager/boards"
       />
       <NavItem
         icon={<CalendarIcon className="h-full w-full" />}
-        label="내 예약"
-        isActive={pathname === '/myreservation'}
-        href="/myreservation"
+        label="내 업무"
+        isActive={pathname === '/manager/myWorks'}
+        href="/manager/myWorks"
       />
       <NavItem
-        icon={<StarIcon className="h-full w-full" />}
-        label="이벤트"
-        isActive={pathname === '/events'}
-        href="/events"
+        icon={<HandRaisedIcon className="h-full w-full" />}
+        label="매칭 요청"
+        isActive={pathname === '/manager/matchingLists'}
+        href="/manager/matchingList"
       />
       <NavItem
         icon={<EllipsisHorizontalIcon className="h-full w-full" />}
         label="더보기"
-        isActive={pathname === '/more'}
-        href="/more"
+        isActive={pathname === '/manager/more'}
+        href="/manager/more"
       />
     </div>
   )
