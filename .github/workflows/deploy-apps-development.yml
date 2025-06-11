@@ -128,6 +128,11 @@ jobs:
           script: |
             cd ~/apps/client
 
+            # .env 파일을 현재 쉘에 적용
+            set -a
+            source .env
+            set +a
+
             echo "ECR_REGISTRY 값: $ECR_REGISTRY"
 
             echo "정리 전 디스크 사용량:"
@@ -141,7 +146,7 @@ jobs:
             echo "정리 후 디스크 사용량:"
             df -h /
 
-            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REGISTRY
 
             echo "Pulling image: ${{ matrix.image }}"
             docker pull $ECR_REGISTRY/${{ matrix.image }}:latest || { echo "이미지 pull 실패"; exit 1; }
