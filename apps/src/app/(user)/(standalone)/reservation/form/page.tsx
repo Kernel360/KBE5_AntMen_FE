@@ -33,7 +33,6 @@ const ReservationForm = ({ initialCategory, initialOptions, addressId }: { initi
     isVisitTimeModalOpen,
     setIsVisitTimeModalOpen,
     selectedHours,
-    setSelectedHours,
     selectedVisitTime,
     setSelectedVisitTime,
     selectedCategoryOptions,
@@ -110,10 +109,13 @@ const ReservationForm = ({ initialCategory, initialOptions, addressId }: { initi
           />
 
           <AdditionalOptions
-            categoryOptions={initialOptions}
+            selectedCategory={initialCategory.categoryId}
             selectedCategoryOptions={selectedCategoryOptions}
-            onOptionChange={setSelectedCategoryOptions}
-            onDurationChange={setSelectedHours}
+            onCategoryOptionsChange={setSelectedCategoryOptions}
+            categoryOptions={initialOptions}
+            isLoading={isOptionsLoading}
+            error={optionsError}
+            onRetry={() => {}}
           />
 
           {/* Memo Section */}
@@ -239,23 +241,19 @@ const ReservationFormWrapper = () => {
       try {
         setLoading(true);
         const [categoryData, optionsData] = await Promise.all([
-          getCategoryById(Number(categoryId)),
-          getCategoryOptionsByCategoryId(Number(categoryId))
+          getCategoryById(categoryId),
+          getCategoryOptionsByCategoryId(categoryId)
         ]);
         setCategory(categoryData);
         setOptions(optionsData);
-      } catch (error) {
-        console.error('데이터를 불러오는데 실패했습니다:', error);
-        setError('데이터를 불러오는데 실패했습니다.');
+      } catch (err) {
+        setError('예약 정보를 불러오는 데 실패했습니다.');
       } finally {
         setLoading(false);
       }
     };
-
-    if (categoryId) {
-      fetchData();
-    }
-  }, [categoryId]);
+    fetchData();
+  }, [categoryId, addressId, addressIdNum]);
 
   if (loading) return <div>예약 정보 로딩 중...</div>;
   if (error || !category) return <div>{error || '예약 정보를 찾을 수 없습니다.'}</div>;
