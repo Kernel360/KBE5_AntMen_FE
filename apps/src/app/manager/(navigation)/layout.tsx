@@ -1,4 +1,4 @@
-import { BottomNavigation } from "@/shared/ui/BottomAppBar/BottomNavigation";
+import { BottomNavigation } from "@/shared/ui/BottomAppBar/BottomManagerNavigation";
 
 export default function NavigationLayout({
   children,

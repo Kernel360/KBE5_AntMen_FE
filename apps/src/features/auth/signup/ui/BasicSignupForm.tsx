@@ -1,24 +1,24 @@
-import React from 'react';
+import React from 'react'
 
 export interface BasicSignupFormData {
-  username: string;
-  password: string;
-  name: string;
-  phone: string;
-  email: string;
-  gender: string;
-  birthDate: string;
-  profileImage: File | null;
+  username: string
+  password: string
+  name: string
+  phone: string
+  email: string
+  gender: string
+  birthDate: string
+  profileImage: File | null
 }
 
 interface BasicSignupFormProps {
-  formData: BasicSignupFormData;
-  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-  onImageChange: (file: File | null) => void;
+  formData: BasicSignupFormData
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void
+  onImageChange: (file: File | null) => void
   errors?: {
-    [key: string]: string;
-  };
-  isSocialSignup?: boolean;
+    [key: string]: string
+  }
+  isSocialSignup?: boolean
 }
 
 export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
@@ -30,21 +30,23 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
 }) => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      onImageChange(e.target.files[0]);
+      onImageChange(e.target.files[0])
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
       {/* Profile Image Upload */}
       <div className="flex flex-col items-center space-y-2">
-        <div className={`w-24 h-24 bg-[#F9F9F9] rounded-full flex items-center justify-center overflow-hidden ${
-          errors.profileImage ? 'border-2 border-red-500' : ''
-        }`}>
+        <div
+          className={`w-24 h-24 bg-[#F9F9F9] rounded-full flex items-center justify-center overflow-hidden ${
+            errors.profileImage ? 'border-2 border-red-500' : ''
+          }`}
+        >
           {formData.profileImage ? (
-            <img 
-              src={URL.createObjectURL(formData.profileImage)} 
-              alt="Profile preview" 
+            <img
+              src={URL.createObjectURL(formData.profileImage)}
+              alt="Profile preview"
               className="w-full h-full object-cover"
             />
           ) : (
@@ -59,7 +61,7 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
           onChange={handleImageChange}
           className="hidden"
         />
-        <label 
+        <label
           htmlFor="profileImage"
           className="text-[#0fbcd6] text-sm cursor-pointer"
         >
@@ -107,7 +109,7 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
             )}
           </div>
 
-      {/* Password
+          {/* Password
       <div className="space-y-2">
         <label className="block text-base font-medium">비밀번호</label>
         <input
@@ -124,8 +126,8 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
           <span className="text-red-500 text-sm">{errors.password}</span>
         )}
       </div> */}
-      {/* Password */}
-      <div className="space-y-2">
+          {/* Password */}
+          <div className="space-y-2">
             <label className="block text-base font-medium">비밀번호</label>
             <input
               type="password"
@@ -252,5 +254,5 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
         )}
       </div>
     </div>
-  );
-}; 
+  )
+}
