@@ -18,4 +18,5 @@ COPY . .
 # 빌드
 RUN yarn build
 
+WORKDIR /app/admin
 CMD ["yarn", "start"]

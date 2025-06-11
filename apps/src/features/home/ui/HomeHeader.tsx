@@ -56,11 +56,11 @@ export function HomeHeader({
             {buttonIcon}
             <span className="font-semibold">{buttonText}</span>
           </button>
-          <div className="w-1/2 flex flex-col">
-            <button className="w-full h-25 bg-white rounded-xl flex items-center justify-center gap-2 mb-6">
+          <div className="w-1/2 flex flex-col h-25">
+            <button className="w-full h-full bg-white rounded-xl flex items-center justify-center gap-2 mb-6">
               <span className="font-semibold">예약하기</span>
             </button>
-            <button className="w-full h-25 bg-white rounded-xl flex items-center justify-center gap-2 mb-6">
+            <button className="w-full h-full bg-white rounded-xl flex items-center justify-center gap-2 mb-6">
               <span className="font-semibold">예약하기</span>
             </button>
           </div>
