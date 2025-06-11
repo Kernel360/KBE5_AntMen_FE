@@ -115,6 +115,7 @@ const ManagerSignUpPage = () => {
     // Basic data validation
     if (!basicData.username && !isSocialSignup) newErrors.username = '아이디를 입력해주세요';
     if (!basicData.password && !isSocialSignup) newErrors.password = '비밀번호를 입력해주세요';
+    else if (!isSocialSignup && basicData.password.length < 6) newErrors.password = '비밀번호는 6자리 이상이어야 합니다';
     if (!basicData.name) newErrors.name = '이름을 입력해주세요';
     if (!basicData.phone) newErrors.phone = '전화번호를 입력해주세요';
     if (!basicData.email) newErrors.email = '이메일을 입력해주세요';

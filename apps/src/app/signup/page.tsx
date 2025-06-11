@@ -9,7 +9,7 @@ export default function SignupPage() {
 
   const handleSelectType = (type: 'manager' | 'customer') => {
     if (type === 'manager') {
-      router.push('/manager/signup');
+      router.push('/signup/manager');
     } else {
       router.push(`/signup/${type}`);
     }
