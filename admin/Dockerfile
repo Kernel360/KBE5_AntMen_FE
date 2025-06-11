@@ -17,3 +17,5 @@ COPY . .
 
 # 빌드
 RUN yarn build
+
+CMD ["yarn", "start"]

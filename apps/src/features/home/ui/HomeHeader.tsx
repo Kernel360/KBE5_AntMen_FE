@@ -48,13 +48,23 @@ export function HomeHeader({
         </div>
       )}
       {buttonText && (
-        <button
-          onClick={onButtonClick}
-          className="w-full h-14 bg-white rounded-xl flex items-center justify-center gap-2 mb-6"
-        >
-          {buttonIcon}
-          <span className="font-semibold">{buttonText}</span>
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={onButtonClick}
+            className="w-1/2 h-50 bg-white rounded-xl flex items-center justify-center gap-2 mb-6"
+          >
+            {buttonIcon}
+            <span className="font-semibold">{buttonText}</span>
+          </button>
+          <div className="w-1/2 flex flex-col">
+            <button className="w-full h-25 bg-white rounded-xl flex items-center justify-center gap-2 mb-6">
+              <span className="font-semibold">예약하기</span>
+            </button>
+            <button className="w-full h-25 bg-white rounded-xl flex items-center justify-center gap-2 mb-6">
+              <span className="font-semibold">예약하기</span>
+            </button>
+          </div>
+        </div>
       )}
     </div>
   )
