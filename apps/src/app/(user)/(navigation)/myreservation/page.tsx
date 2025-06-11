@@ -13,25 +13,6 @@ import type { Reservation } from '@/entities/reservation/model/types';
 import MyReservationClientWithAuth from './MyReservationClient';
 import { CustomerAuthGuard } from '@/components/auth/CustomerAuthGuard';
 
-async function getReservations(): Promise<Reservation[]> {
-  try {
-    // API URL을 환경 변수로 관리하는 것이 좋습니다.
-    const res = await fetch(`http://localhost:9091/api/v1/customer/reservations`, {
-      cache: 'no-store',
-    });
-
-    if (!res.ok) {
-      throw new Error('Failed to fetch reservations');
-    }
-
-    const data = await res.json();
-    return data;
-  } catch (error) {
-    console.error('Error fetching reservations:', error);
-    return [];
-  }
-}
-
 function PageSkeleton() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -60,13 +41,11 @@ function PageSkeleton() {
   );
 }
 
-export default async function MyReservationPage() {
-  const initialReservations = await getReservations();
-
+export default function MyReservationPage() {
   return (
     <main className="flex min-h-screen flex-col bg-white">
       <Suspense fallback={<PageSkeleton />}>
-        <MyReservationClientWithAuth initialReservations={initialReservations} />
+        <MyReservationClientWithAuth />
       </Suspense>
     </main>
   );

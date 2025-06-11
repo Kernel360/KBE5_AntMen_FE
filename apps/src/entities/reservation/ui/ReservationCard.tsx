@@ -30,7 +30,9 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
     currency: 'KRW',
   }).format(amount)
 
-  const personName = userType === 'manager' ? customer?.name : worker.name;
+  const personName = userType === 'manager'
+    ? customer?.name || '미정'
+    : worker?.name || '미정';
   const personLabel = userType === 'manager' ? '고객' : '담당자';
 
   const getStatusText = (status: ReservationStatus | string) => {
