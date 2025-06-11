@@ -1,4 +1,3 @@
-import { useSession } from 'next-auth/react';
 import { CommentForm } from './CommentForm';
 import { formatDate } from '@/shared/utils/date';
 
@@ -62,11 +61,9 @@ export const Comments = ({ comments, onSubmitComment, isSubmitting }: CommentsPr
       </div>
 
       {/* 댓글 작성 폼 */}
-      {session && (
         <div className="p-4 border-t">
           <CommentForm onSubmit={onSubmitComment} isSubmitting={isSubmitting} />
         </div>
-      )}
     </div>
   );
 }; 
