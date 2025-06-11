@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ReservationCard } from '@/entities/reservation/ui/ReservationCard';
 import type { Reservation, ReservationTab } from '@/entities/reservation/model/types';
+import { CustomerAuthGuard } from '@/components/auth/CustomerAuthGuard';
 
 interface MyReservationClientProps {
   initialReservations: Reservation[];
@@ -115,4 +116,12 @@ export const MyReservationClient: FC<MyReservationClientProps> = ({ initialReser
       </div>
     </>
   );
-}; 
+};
+
+export const MyReservationClientWithAuth: FC<MyReservationClientProps> = (props) => (
+  <CustomerAuthGuard>
+    <MyReservationClient {...props} />
+  </CustomerAuthGuard>
+);
+
+export default MyReservationClientWithAuth; 

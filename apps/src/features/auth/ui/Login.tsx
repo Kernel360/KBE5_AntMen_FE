@@ -22,7 +22,7 @@ export function Login() {
   const code = searchParams?.get('code');
 
   // 🎯 LoginOrigin Hook 사용
-  const { login } = useLoginOrigin();
+  const { login, loginError } = useLoginOrigin();
 
   const {
     register,
@@ -109,6 +109,10 @@ export function Login() {
           로그인
         </button>
       </form>
+
+      {loginError && (
+        <div className="text-red-500 text-center text-sm mt-2">{loginError}</div>
+      )}
 
       <div className="space-y-4">
         <button

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface CustomerAuthGuardProps {
@@ -9,20 +9,23 @@ interface CustomerAuthGuardProps {
 
 export const CustomerAuthGuard = ({ children }: CustomerAuthGuardProps) => {
   const router = useRouter();
+  const alerted = useRef(false);
 
   useEffect(() => {
     // localStorage에서 사용자 정보 확인
     const userInfo = localStorage.getItem('userInfo');
     
-    if (!userInfo) {
+    if (!userInfo && !alerted.current) {
+      alerted.current = true;
       alert('로그인이 필요한 서비스입니다.');
       router.push('/login');
       return;
     }
 
-    const user = JSON.parse(userInfo);
+    const user = userInfo ? JSON.parse(userInfo) : null;
     
-    if (user.role !== 'CUSTOMER') {
+    if (user && user.role !== 'CUSTOMER' && !alerted.current) {
+      alerted.current = true;
       alert('잘못된 접근입니다.');
       if (user.role === 'MANAGER') {
         router.push('/manager');
