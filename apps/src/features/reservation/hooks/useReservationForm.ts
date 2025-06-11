@@ -4,9 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dayjs, { Dayjs } from 'dayjs';
 import { Category, CategoryOption } from '@/shared/api/category';
-import { reservationApi } from '@/shared/api/reservation';
 import { calculatePrice } from '@/shared/lib/utils';
-import { checkCustomerAuth } from '@/features/auth/lib/auth';
 
 export const useReservationForm = ({ initialCategory, initialOptions, addressId }: { initialCategory: Category; initialOptions: CategoryOption[]; addressId: number }) => {
   const router = useRouter();
