@@ -7,13 +7,21 @@ import Cookies from "js-cookie";
 import { useSocialProfileStore } from "@/shared/stores/socialProfileStore";
 import { useAuthStore } from "@/shared/stores/authStore";
 import { jwtDecode } from "jwt-decode";
+import { authApi } from '@/shared/api/auth';
+import { ApiError } from '@/shared/api/base';
 
 interface JwtPayload {
     sub: string;        // userId
-    userRole: 'CUSTOMER' | 'MANAGER' | 'ADMIN';
+    userRole: string;
     exp: number;        // 만료 시간
     iat: number;        // 발급 시간
 }
+
+type UserRole = 'CUSTOMER' | 'MANAGER' | 'ADMIN';
+
+const isValidUserRole = (role: string): role is UserRole => {
+    return ['CUSTOMER', 'MANAGER', 'ADMIN'].includes(role);
+};
 
 interface AuthResponse {
     success: boolean;
@@ -63,88 +71,65 @@ export function LoginGateway() {
         try {
             console.log('📡 서버 요청 시작');
 
-            const response = await fetch('http://localhost:9090/api/v1/auth/google/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    code: authCode,
-                    timestamp: new Date().toISOString()
-                })
+            const result = await authApi.googleLogin({
+                code: authCode,
+                timestamp: new Date().toISOString()
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const result: AuthResponse = await response.json();
             console.log('✅ 서버 응답:', result);
             
-            if (result.success && result.token) {
-                console.log('✅ 구글 로그인 성공, 토큰:', result.token);
-    
-                // 1. JWT 토큰 디코딩
-                const decodedToken = jwtDecode<JwtPayload>(result.token);
-                console.log('🔑 토큰 디코딩 결과:', decodedToken);
+            // JWT 토큰 디코딩
+            const decodedToken = jwtDecode<JwtPayload>(result.accessToken);
+            console.log('✅ 토큰 디코딩 결과:', decodedToken);
 
-                // 2. JWT에서 추출한 정보로 Zustand 스토어에 저장할 사용자 객체 구성
-                const user = {
-                    userId: parseInt(decodedToken.sub),
-                    userRole: decodedToken.userRole
-                };
-
-                // 3. Zustand 스토어에 로그인 정보 저장
-                loginToStore(user, result.token);
-
-                // 4. 쿠키에 토큰 저장 (7일 만료)
-                Cookies.set('auth-token', formatTokenForServer(result.token), {
-                    expires: 7,           // 7일 후 만료
-                    secure: false,         // HTTPS에서만 전송
-                    sameSite: 'strict',   // CSRF 공격 방지
-                    path: '/'            // 모든 경로에서 접근 가능
-                });
-
-                Cookies.set('auth-time', new Date().toISOString(), {
-                    expires: 7,
-                    secure: false,
-                    sameSite: 'strict',
-                    path: '/'
-                });
-
-                // 5. userRole에 따라 리다이렉트 경로 설정
-                const redirectPath = user.userRole === 'MANAGER' ? '/manager' : '/';
-                console.log(`🏠 ${user.userRole} 권한으로 ${redirectPath}로 이동`);
-                router.push(redirectPath);
-
-            } else if (!result.success && result.user_email) {
-                console.log('✨ 신규 소셜 사용자, 회원가입 페이지로 이동');
-                setSocialProfile({
-                    id: result.user_id as string,
-                    email: result.user_email,
-                    provider: result.user_type as string,
-                });
-                router.push('/signup');
-            } else {
-                console.log('❌ 알 수 없는 응답, 로그인 페이지로 이동');
-                setError(result.message || '로그인에 실패했습니다. 다시 시도해주세요.');
-                setTimeout(() => router.push('/login'), 3000);
+            // userRole 검증
+            if (!isValidUserRole(decodedToken.userRole)) {
+                throw new Error('토큰에 포함된 사용자 역할이 유효하지 않습니다.');
             }
 
+            // JWT에서 추출한 정보로 Zustand 스토어에 저장할 사용자 객체 구성
+            const user = {
+                userId: parseInt(decodedToken.sub),
+                userRole: decodedToken.userRole
+            };
 
-        } catch (err) {
-            console.error('❌ 구글 로그인 처리 중 오류:', err);
-            setError(err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.');
+            // Zustand 스토어에 로그인 정보 저장
+            loginToStore(user, result.accessToken);
+            console.log('💾 authStore 저장 완료');
+            
+            // 쿠키에 토큰 저장 (7일 만료)
+            Cookies.set('auth-token', result.accessToken, {
+                expires: 7,
+                secure: false,
+                sameSite: 'strict',
+                path: '/'
+            });
+            console.log('🍪 쿠키 저장 완료');
 
-            setTimeout(() => {
-                console.log('⏰ 3초 후 로그인으로 재이동');
-                router.push('/login');
-            }, 3000);
+            Cookies.set('auth-time', new Date().toISOString(), {
+                expires: 7,
+                secure: false,
+                sameSite: 'strict',
+                path: '/'
+            });
 
+            // userRole에 따라 리다이렉트 경로 설정
+            const redirectPath = user.userRole === 'MANAGER' ? '/manager' : '/';
+            console.log(`🏠 ${user.userRole} 권한으로 ${redirectPath}로 이동`);
+            router.push(redirectPath);
+
+        } catch (error) {
+            console.error('❌ 로그인 요청 중 오류:', error);
+            if (error instanceof ApiError) {
+                setError(error.message);
+            } else if (error instanceof Error) {
+                setError(error.message);
+            } else {
+                setError('로그인 중 오류가 발생했습니다.');
+            }
         } finally {
             setIsLoading(false);
-            // 주의: 여기서 isProcessing을 false로 하지 말 것!
-            // 한 번 처리된 코드는 다시 처리하지 않도록 함
+            isProcessing.current = false;
         }
     };
 

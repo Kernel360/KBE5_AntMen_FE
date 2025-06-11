@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Cookies from "js-cookie";
 import { useAuthStore } from '@/shared/stores/authStore';
 import { jwtDecode } from "jwt-decode";
+import { authApi } from '@/shared/api/auth';
+import { ApiError } from '@/shared/api/base';
 
 type UserRole = 'CUSTOMER' | 'MANAGER' | 'ADMIN';
 
@@ -46,101 +48,62 @@ export function useLoginOrigin() {
         try {
             setIsLoading(true);
 
-            const response = await fetch('http://localhost:9090/api/v1/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userLoginId: data.userLoginId,
-                    userPassword: data.userPassword
-                })
+            const result = await authApi.login({
+                userLoginId: data.userLoginId,
+                userPassword: data.userPassword
             });
 
-            if (!response.ok) {
-                // HTTP 상태별 에러 처리
-                switch (response.status) {
-                    case 401:
-                        throw new Error('아이디 또는 비밀번호가 올바르지 않습니다.');
-                    case 403:
-                        throw new Error('계정이 비활성화되었습니다.');
-                    case 404:
-                        throw new Error('존재하지 않는 계정입니다.');
-                    case 500:
-                        throw new Error('서버 오류가 발생했습니다.');
-                    default:
-                        throw new Error('로그인에 실패했습니다.');
-                }
-            }
-
-            const result: LoginResponse = await response.json();
             console.log('서버 응답:', result);
+            
+            // JWT 토큰 디코딩
+            const decodedToken = jwtDecode<JwtPayload>(result.accessToken);
+            console.log('✅ 토큰 디코딩 결과:', decodedToken);
 
-            if (result.success && result.token) {
-                // 1. JWT 토큰 디코딩
-                const decodedToken = jwtDecode<JwtPayload>(result.token);
-                console.log('✅ 토큰 디코딩 결과:', decodedToken);
-
-                // 2. userRole 검증
-                if (!isValidUserRole(decodedToken.userRole)) {
-                    throw new Error('토큰에 포함된 사용자 역할이 유효하지 않습니다.');
-                }
-
-                // 3. JWT에서 추출한 정보로 Zustand 스토어에 저장할 사용자 객체 구성
-                const user = {
-                    userId: parseInt(decodedToken.sub),
-                    userRole: decodedToken.userRole  // 타입이 UserRole로 보장됨
-                };
-
-                // 4. Zustand 스토어에 로그인 정보 저장
-                loginToStore(user, result.token);
-                console.log('💾 authStore 저장 완료');
-                
-                // 5. 쿠키에 토큰 저장 (7일 만료)
-                const formattedToken = formatTokenForServer(result.token);
-                console.log('🍪 쿠키에 저장될 토큰:', formattedToken);
-                
-                Cookies.set('auth-token', formattedToken, {
-                    expires: 7,
-                    secure: false,
-                    sameSite: 'strict',
-                    path: '/'
-                });
-                console.log('🍪 쿠키 저장 완료');
-
-                Cookies.set('auth-time', new Date().toISOString(), {
-                    expires: 7,
-                    secure: false,
-                    sameSite: 'strict',
-                    path: '/'
-                });
-
-                // 6. userRole에 따라 리다이렉트 경로 설정
-                const redirectPath = user.userRole === 'MANAGER' ? '/manager' : '/';
-                console.log(`🏠 ${user.userRole} 권한으로 ${redirectPath}로 이동`);
-                router.push(redirectPath);
-
-                return { success: true };
-
-            } else {
-                // 서버에서 success: false 응답
-                const errorMessage = result.message || '로그인에 실패했습니다.';
-                setLoginError(errorMessage);
-
-                return { success: false, error: errorMessage };
+            // userRole 검증
+            if (!isValidUserRole(decodedToken.userRole)) {
+                throw new Error('토큰에 포함된 사용자 역할이 유효하지 않습니다.');
             }
+
+            // JWT에서 추출한 정보로 Zustand 스토어에 저장할 사용자 객체 구성
+            const user = {
+                userId: parseInt(decodedToken.sub),
+                userRole: decodedToken.userRole
+            };
+
+            // Zustand 스토어에 로그인 정보 저장
+            loginToStore(user, result.accessToken);
+            console.log('💾 authStore 저장 완료');
+            
+            // 쿠키에 토큰 저장 (7일 만료)
+            Cookies.set('auth-token', result.accessToken, {
+                expires: 7,
+                secure: false,
+                sameSite: 'strict',
+                path: '/'
+            });
+            console.log('🍪 쿠키 저장 완료');
+
+            Cookies.set('auth-time', new Date().toISOString(), {
+                expires: 7,
+                secure: false,
+                sameSite: 'strict',
+                path: '/'
+            });
+
+            // userRole에 따라 리다이렉트 경로 설정
+            const redirectPath = user.userRole === 'MANAGER' ? '/manager' : '/';
+            console.log(`🏠 ${user.userRole} 권한으로 ${redirectPath}로 이동`);
+            router.push(redirectPath);
 
         } catch (error) {
-            console.error('❌ 로그인 요청 중 오류:', error);
-
-            const errorMessage = error instanceof Error
-                ? error.message
-                : '로그인 중 오류가 발생했습니다.';
-
-            setLoginError(errorMessage);
-
-            return { success: false, error: errorMessage };
-
+            console.error('Login error:', error);
+            if (error instanceof ApiError) {
+                setLoginError(error.message);
+            } else if (error instanceof Error) {
+                setLoginError(error.message);
+            } else {
+                setLoginError('로그인에 실패했습니다.');
+            }
         } finally {
             setIsLoading(false);
         }

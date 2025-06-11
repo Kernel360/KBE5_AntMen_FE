@@ -1,18 +1,46 @@
+import { API_CONFIG } from './config';
+
+type ServerType = 'REMOTE' | 'LOCAL';
+
+interface FetchOptions extends RequestInit {
+  serverType?: ServerType;
+}
+
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    public message: string,
+    public data?: any
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 export const customFetch = async <T>(
-  url: string,
-  options?: RequestInit,
+  endpoint: string,
+  options: FetchOptions = {}
 ): Promise<T> => {
+  const { serverType = 'REMOTE', ...fetchOptions } = options;
+  const baseUrl = API_CONFIG[serverType].BASE_URL;
+  const url = `${baseUrl}${endpoint}`;
+
   const response = await fetch(url, {
-    ...options,
-    credentials: 'include', // 쿠키 기반 인증을 위해 반드시 필요합니다.
+    ...fetchOptions,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...options?.headers,
+      ...fetchOptions.headers,
     },
   });
 
   if (!response.ok) {
-    throw new Error(`An error occurred: ${response.statusText}`);
+    const errorData = await response.json().catch(() => null);
+    throw new ApiError(
+      response.status,
+      errorData?.message || response.statusText,
+      errorData
+    );
   }
 
   // No Content 응답 처리
