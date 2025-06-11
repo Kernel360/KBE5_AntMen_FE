@@ -3,9 +3,22 @@
 import { BellIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { checkCustomerAuth } from '@/features/auth/lib/auth';
+import { checkCustomerAuth, checkUserAuth } from '@/features/auth/lib/auth';
+import { ReactNode } from 'react';
 
-export function HomeHeader() {
+interface HomeHeaderProps {
+  title?: string;
+  subtitle?: string;
+  buttonLabel?: string;
+  IconComponent?: ReactNode;
+}
+
+export function HomeHeader({
+  title = '집청소로 달라지는 일상',
+  subtitle = '바쁜 일상에서 손쉽게 맡겨보세요',
+  buttonLabel = '예약하기',
+  IconComponent = <BellIcon className="w-6 h-6 text-white" />,
+}: HomeHeaderProps) {
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -29,7 +42,15 @@ export function HomeHeader() {
   };
 
   const handleNotificationClick = () => {
+    const authResult = checkUserAuth();
+    
+    if (!authResult.isAuthenticated) {
+      alert(authResult.message);
+      router.push('/login');
+      return;
+    }
     router.push('/notifications');
+    return;
   };
 
   return (
@@ -47,27 +68,15 @@ export function HomeHeader() {
         </button>
       </div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1 text-white">집청소로 달라지는 일상</h1>
-        <p className="text-base text-white">바쁜 일상에서 손쉽게 맡겨보세요</p>
+        <h1 className="text-2xl font-bold mb-1 text-white">{title}</h1>
+        <p className="text-base text-white">{subtitle}</p>
       </div>
       <button
         onClick={handleReservationClick}
         className="w-full h-14 bg-white rounded-xl flex items-center justify-center gap-2 mb-6"
       >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="currentColor"
-          className="stroke-2"
-        >
-          <path d="M2.5 4.16667H17.5V17.3333H2.5V4.16667Z" />
-          <path d="M2.5 8.33333H17.5" />
-          <path d="M6.66675 2.5V5.83333" />
-          <path d="M13.3333 2.5V5.83333" />
-        </svg>
-        <span className="font-semibold">예약하기</span>
+        {IconComponent}
+        <span className="font-semibold">{buttonLabel}</span>
       </button>
     </div>
   );

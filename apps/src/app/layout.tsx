@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { Providers } from './providers'
-import { TestToolModal } from '@/widgets/test/TestToolModal'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -27,7 +26,6 @@ export default function RootLayout({
             {children}
           </main>
         </Providers>
-        <TestToolModal />
         <Script
           src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
           strategy="lazyOnload"
