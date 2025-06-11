@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createReservation, ReservationRequest } from '@/shared/api';
 import { checkCustomerAuth } from '@/features/auth/lib/auth';
+import { jwtDecode } from 'jwt-decode';
+import Cookies from 'js-cookie';
 
 interface ReservationInfo {
   customerId: number;
@@ -59,7 +61,26 @@ export default function ReservationConfirmPage() {
       }
       return;
     }
-    
+
+    // 토큰에서 userId(sub) 추출
+    const token = Cookies.get('auth-token');
+    let userId = null;
+    if (token) {
+      try {
+        const cleanToken = token.replace(/^Bearer\s*/i, '');
+        const decoded: any = jwtDecode(cleanToken);
+        userId = decoded.sub;
+      } catch (e) {
+        alert('로그인 정보가 올바르지 않습니다. 다시 로그인 해주세요.');
+        router.push('/login');
+        return;
+      }
+    }
+    if (!userId) {
+      alert('로그인 정보가 없습니다.');
+      router.push('/login');
+      return;
+    }
     setIsLoading(true);
     try {
       // 필수 필드 검증
@@ -72,7 +93,7 @@ export default function ReservationConfirmPage() {
 
       // ReservationRequest 타입에 맞게 데이터 변환
       const finalPayload: ReservationRequest = {
-        customerId: reservationInfo.customerId,
+        customerId: Number(userId), // 항상 로그인 유저 id로 세팅
         categoryId: reservationInfo.categoryId,
         addressId: parseInt(reservationInfo.addressId),
         reservationCreatedAt: new Date().toISOString(),  // 현재 시간을 ISO 문자열로
