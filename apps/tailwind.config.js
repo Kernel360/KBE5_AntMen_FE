@@ -43,7 +43,7 @@ module.exports = {
         },
         gray: {
           50: '#F9FAFB',
-          100: '#F3F4F6',
+          100: '#F8F9FD',
           200: '#E5E7EB',
           300: '#D1D5DB',
           400: '#9CA3AF',
@@ -71,7 +71,7 @@ module.exports = {
     },
     container: {
       center: true,
-      padding: '10px',
+      padding: '20px',
       screens: {
         DEFAULT: '100%',
         mobile: '390px',

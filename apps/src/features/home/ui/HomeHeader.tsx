@@ -1,41 +1,39 @@
-"use client";
+'use client'
 
-import { BellIcon } from '@heroicons/react/24/outline';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { checkCustomerAuth } from '@/features/auth/lib/auth';
+import { BellIcon } from '@heroicons/react/24/outline'
+import { useRouter } from 'next/navigation'
+import { checkCustomerAuth } from '@/features/auth/lib/auth'
 
 export function HomeHeader() {
-  const router = useRouter();
-  const { data: session } = useSession();
+  const router = useRouter()
 
   const handleReservationClick = () => {
-    const authResult = checkCustomerAuth();
-    
+    const authResult = checkCustomerAuth()
+
     if (!authResult.isAuthenticated || authResult.message) {
-      alert(authResult.message);
+      alert(authResult.message)
       if (!authResult.isAuthenticated) {
-        router.push('/login');
+        router.push('/login')
       } else if (authResult.userRole === 'MANAGER') {
-        router.push('/manager');
+        router.push('/manager')
       } else {
-        router.push('/');
+        router.push('/')
       }
-      return;
+      return
     }
 
     // 인증 통과 시 예약 페이지로 이동
-    router.push('/reservation');
-  };
+    router.push('/reservation')
+  }
 
   const handleNotificationClick = () => {
-    router.push('/notifications');
-  };
+    router.push('/notifications')
+  }
 
   return (
     <div className="bg-[#0fbcd6] p-4 pb-6">
       <div className="flex justify-end mb-6">
-        <button 
+        <button
           className="relative"
           onClick={handleNotificationClick}
           aria-label="알림 보기"
@@ -47,7 +45,9 @@ export function HomeHeader() {
         </button>
       </div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1 text-white">집청소로 달라지는 일상</h1>
+        <h1 className="text-2xl font-bold mb-1 text-white">
+          집청소로 달라지는 일상
+        </h1>
         <p className="text-base text-white">바쁜 일상에서 손쉽게 맡겨보세요</p>
       </div>
       <button
@@ -70,5 +70,5 @@ export function HomeHeader() {
         <span className="font-semibold">예약하기</span>
       </button>
     </div>
-  );
-} 
+  )
+}

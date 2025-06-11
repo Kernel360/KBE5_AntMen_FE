@@ -22,7 +22,6 @@ interface CommentsProps {
 }
 
 export const Comments = ({ comments, onSubmitComment, isSubmitting }: CommentsProps) => {
-  const { data: session } = useSession();
 
   return (
     <div className="flex flex-col">
@@ -31,11 +30,9 @@ export const Comments = ({ comments, onSubmitComment, isSubmitting }: CommentsPr
           <h2 className="font-medium text-gray-900 flex items-center">
             댓글 <span className="text-primary font-bold ml-1">{comments.length}</span>
           </h2>
-          {!session && (
             <p className="text-sm text-gray-500">
               로그인 후 댓글을 작성할 수 있습니다
             </p>
-          )}
         </div>
       </div>
       
