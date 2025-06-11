@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dayjs, { Dayjs } from 'dayjs';
 import { Category, CategoryOption } from '@/shared/api/category';
-import { createReservation } from '@/shared/api/reservation';
+import { reservationApi } from '@/shared/api/reservation';
 import { calculatePrice } from '@/shared/lib/utils';
+import { checkCustomerAuth } from '@/features/auth/lib/auth';
 
 export const useReservationForm = ({ initialCategory, initialOptions, addressId }: { initialCategory: Category; initialOptions: CategoryOption[]; addressId: number }) => {
   const router = useRouter();
@@ -24,6 +25,8 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
   const [recommendedTime, setRecommendedTime] = useState({ minutes: 240, area: 50 });
   const [showTimeWarning, setShowTimeWarning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // localStorage 값으로 폼 상태 복원
   useEffect(() => {
@@ -48,13 +51,13 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
 
   // Computed Values
   const totalOptionsPrice = selectedCategoryOptions.reduce((total, optionId) => {
-    const option = initialOptions.find((opt) => opt.coId === optionId);
-    return total + (option?.coPrice || 0);
+    const option = initialOptions.find((opt) => opt.optionId === optionId);
+    return total + (option?.optionPrice || 0);
   }, 0);
 
   const totalOptionsTime = selectedCategoryOptions.reduce((total, optionId) => {
-    const option = initialOptions.find((opt) => opt.coId === optionId);
-    return total + (option?.coTime || 0);
+    const option = initialOptions.find((opt) => opt.optionId === optionId);
+    return total + (option?.optionTime || 0);
   }, 0);
 
   const baseServicePrice = calculatePrice(selectedHours, initialCategory.categoryPrice, initialCategory.categoryPrice, initialCategory.categoryTime);
@@ -156,6 +159,7 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
     isVisitTimeModalOpen,
     setIsVisitTimeModalOpen,
     selectedHours,
+    setSelectedHours,
     selectedVisitTime,
     setSelectedVisitTime,
     selectedCategoryOptions,
@@ -179,5 +183,7 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
     handleResetTime: () => setSelectedHours(initialCategory.categoryTime),
     visitTimeSlots,
     isSubmitting,
+    isLoading,
+    error,
   };
 }; 
