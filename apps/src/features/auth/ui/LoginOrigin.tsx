@@ -58,19 +58,18 @@ export function useLoginOrigin() {
             });
 
             if (!response.ok) {
-                // HTTP 상태별 에러 처리
-                switch (response.status) {
-                    case 401:
-                        throw new Error('아이디 또는 비밀번호가 올바르지 않습니다.');
-                    case 403:
-                        throw new Error('계정이 비활성화되었습니다.');
-                    case 404:
-                        throw new Error('존재하지 않는 계정입니다.');
-                    case 500:
-                        throw new Error('서버 오류가 발생했습니다.');
-                    default:
-                        throw new Error('로그인에 실패했습니다.');
+                // 서버에서 내려주는 에러 메시지 추출 시도
+                let errorMessage = '로그인에 실패했습니다.';
+                try {
+                    const errorBody = await response.json();
+                    if (errorBody && errorBody.message) {
+                        errorMessage = errorBody.message;
+                    }
+                } catch (e) {
+                    // JSON 파싱 실패 시 기본 메시지 사용
                 }
+                setLoginError(errorMessage);
+                return { success: false, error: errorMessage };
             }
 
             const result: LoginResponse = await response.json();

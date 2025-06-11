@@ -1,3 +1,5 @@
+'use client';
+
 // 내 예약 페이지 (예약리스트)
 
 /**
@@ -8,7 +10,8 @@
 
 import { Suspense } from 'react';
 import type { Reservation } from '@/entities/reservation/model/types';
-import { MyReservationClient } from './MyReservationClient';
+import MyReservationClientWithAuth from './MyReservationClient';
+import { CustomerAuthGuard } from '@/components/auth/CustomerAuthGuard';
 
 async function getReservations(): Promise<Reservation[]> {
   try {
@@ -63,7 +66,7 @@ export default async function MyReservationPage() {
   return (
     <main className="flex min-h-screen flex-col bg-white">
       <Suspense fallback={<PageSkeleton />}>
-        <MyReservationClient initialReservations={initialReservations} />
+        <MyReservationClientWithAuth initialReservations={initialReservations} />
       </Suspense>
     </main>
   );
