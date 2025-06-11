@@ -2,8 +2,9 @@
 
 import { BellIcon } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/navigation'
-import React from 'react'
+import React, { useState } from 'react'
 import { BubbleBackground } from './BubbleBackground'
+import LoginRequiredModal from '@/shared/ui/modal/LoginRequiredModal'
 
 interface HomeHeaderProps {
   title?: string
@@ -21,13 +22,18 @@ export function HomeHeader({
   buttonIcon,
 }: HomeHeaderProps) {
   const router = useRouter()
+  const [loginModalOpen, setLoginModalOpen] = useState(false)
 
   const handleNotificationClick = () => {
     router.push('/notifications')
   }
 
+  const handleRequireLogin = () => {
+    setLoginModalOpen(true)
+  }
+
   return (
-    <div className="relative bg-primary p-4 pb-6 overflow-hidden">
+    <section className="relative bg-primary p-4 pb-6 overflow-hidden">
       <BubbleBackground />
       <div className="relative z-10">
         <div className="flex justify-end mb-6">
@@ -45,7 +51,11 @@ export function HomeHeader({
         {(title || subtitle) && (
           <div className="mb-6">
             {title && (
-              <h1 className="text-2xl font-bold mb-1 text-gray-900">{title}</h1>
+              <h1 className="text-2xl font-bold mb-1 text-gray-900">
+                앤트워커로 매주
+                <br />
+                10시간을 절약해요
+              </h1>
             )}
             {subtitle && <p className="text-base text-gray-900">{subtitle}</p>}
           </div>
@@ -53,18 +63,18 @@ export function HomeHeader({
         {buttonText && (
           <div className="flex gap-2 h-[190px] mb-6">
             <div className="w-1/2 flex flex-col h-full gap-2">
-              <button className="w-full h-full bg-white rounded-xl flex items-center justify-center">
+              <button className="w-full h-full bg-white rounded-xl relative flex items-center justify-center">
                 <span className="font-semibold">에어컨 청소</span>
-              </button>
-              <button className="w-full h-full bg-white rounded-xl flex items-center relative justify-center">
-                <span className="font-semibold">가사 청소</span>
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] z-10 text-white font-bold">
                   N
                 </span>
               </button>
+              <button className="w-full h-full bg-white rounded-xl flex items-center relative justify-center">
+                <span className="font-semibold">가사 청소</span>
+              </button>
             </div>
             <button
-              onClick={onButtonClick}
+              onClick={handleRequireLogin}
               className="w-1/2 h-full bg-white rounded-xl flex items-center justify-center gap-2 mb-6"
             >
               {buttonIcon}
@@ -73,6 +83,10 @@ export function HomeHeader({
           </div>
         )}
       </div>
-    </div>
+      <LoginRequiredModal
+        isOpen={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+      />
+    </section>
   )
 }

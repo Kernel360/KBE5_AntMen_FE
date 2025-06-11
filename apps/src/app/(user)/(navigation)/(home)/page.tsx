@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       <HomeHeader
-        title="앤트워커로 달라지는 일상"
+        title="앤트워커로 매주 10시간을 절약해요"
         subtitle="바쁜 일상에서 손쉽게 맡겨보세요"
         buttonText="예약하기"
         onButtonClick={() => router.push('/reservation')}

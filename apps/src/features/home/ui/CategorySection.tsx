@@ -1,9 +1,14 @@
-import { HomeIcon, CreditCardIcon, BuildingOfficeIcon, TruckIcon } from '@heroicons/react/24/outline';
+import {
+  HomeIcon,
+  CreditCardIcon,
+  BuildingOfficeIcon,
+  TruckIcon,
+} from '@heroicons/react/24/outline'
 
 interface CategoryItemProps {
-  icon: React.ReactNode;
-  label: string;
-  isNew?: boolean;
+  icon: React.ReactNode
+  label: string
+  isNew?: boolean
 }
 
 function CategoryItem({ icon, label, isNew }: CategoryItemProps) {
@@ -21,12 +26,12 @@ function CategoryItem({ icon, label, isNew }: CategoryItemProps) {
       </div>
       <span className="text-xs text-center text-[#333333]">{label}</span>
     </div>
-  );
+  )
 }
 
 export function CategorySection() {
   return (
-    <div className="bg-white rounded-t-2xl -mt-6 py-3">
+    <section className="bg-white rounded-t-3xl relative z-10 -mt-6 py-4">
       <div className="px-4 flex justify-between">
         <CategoryItem
           icon={<HomeIcon className="w-7 h-7 text-red-500" />}
@@ -46,6 +51,6 @@ export function CategorySection() {
           label="입주 청소"
         />
       </div>
-    </div>
-  );
-} 
+    </section>
+  )
+}
