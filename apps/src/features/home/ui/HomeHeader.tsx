@@ -3,6 +3,7 @@
 import { BellIcon } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/navigation'
 import React from 'react'
+import { BubbleBackground } from './BubbleBackground'
 
 interface HomeHeaderProps {
   title?: string
@@ -26,46 +27,52 @@ export function HomeHeader({
   }
 
   return (
-    <div className="bg-[#0fbcd6] p-4 pb-6">
-      <div className="flex justify-end mb-6">
-        <button
-          className="relative"
-          onClick={handleNotificationClick}
-          aria-label="알림 보기"
-        >
-          <BellIcon className="w-6 h-6 text-white" />
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
-            1
-          </span>
-        </button>
-      </div>
-      {(title || subtitle) && (
-        <div className="mb-6">
-          {title && (
-            <h1 className="text-2xl font-bold mb-1 text-white">{title}</h1>
-          )}
-          {subtitle && <p className="text-base text-white">{subtitle}</p>}
-        </div>
-      )}
-      {buttonText && (
-        <div className="flex gap-2">
+    <div className="relative bg-primary p-4 pb-6 overflow-hidden">
+      <BubbleBackground />
+      <div className="relative z-10">
+        <div className="flex justify-end mb-6">
           <button
-            onClick={onButtonClick}
-            className="w-1/2 h-50 bg-white rounded-xl flex items-center justify-center gap-2 mb-6"
+            className="relative"
+            onClick={handleNotificationClick}
+            aria-label="알림 보기"
           >
-            {buttonIcon}
-            <span className="font-semibold">{buttonText}</span>
+            <BellIcon className="w-6 h-6 text-white" />
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
+              1
+            </span>
           </button>
-          <div className="w-1/2 flex flex-col h-25">
-            <button className="w-full h-full bg-white rounded-xl flex items-center justify-center gap-2 mb-6">
-              <span className="font-semibold">예약하기</span>
-            </button>
-            <button className="w-full h-full bg-white rounded-xl flex items-center justify-center gap-2 mb-6">
-              <span className="font-semibold">예약하기</span>
+        </div>
+        {(title || subtitle) && (
+          <div className="mb-6">
+            {title && (
+              <h1 className="text-2xl font-bold mb-1 text-gray-900">{title}</h1>
+            )}
+            {subtitle && <p className="text-base text-gray-900">{subtitle}</p>}
+          </div>
+        )}
+        {buttonText && (
+          <div className="flex gap-2 h-[190px] mb-6">
+            <div className="w-1/2 flex flex-col h-full gap-2">
+              <button className="w-full h-full bg-white rounded-xl flex items-center justify-center">
+                <span className="font-semibold">에어컨 청소</span>
+              </button>
+              <button className="w-full h-full bg-white rounded-xl flex items-center relative justify-center">
+                <span className="font-semibold">가사 청소</span>
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] z-10 text-white font-bold">
+                  N
+                </span>
+              </button>
+            </div>
+            <button
+              onClick={onButtonClick}
+              className="w-1/2 h-full bg-white rounded-xl flex items-center justify-center gap-2 mb-6"
+            >
+              {buttonIcon}
+              <span className="font-semibold">{buttonText}</span>
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

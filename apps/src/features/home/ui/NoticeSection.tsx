@@ -1,10 +1,10 @@
 interface NoticeItemProps {
-  type: string;
-  title: string;
+  type: string
+  title: string
   tag?: {
-    text: string;
-    color: string;
-  };
+    text: string
+    color: string
+  }
 }
 
 function NoticeItem({ type, title, tag }: NoticeItemProps) {
@@ -22,12 +22,12 @@ function NoticeItem({ type, title, tag }: NoticeItemProps) {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 export function NoticeSection() {
   return (
-    <div className="px-4 mt-6 space-y-3">
+    <div className="px-4 mt-6 space-y-2">
       <NoticeItem
         type="공지"
         title="여름 필수 '에어컨 청소' 신규 출시"
@@ -38,10 +38,7 @@ export function NoticeSection() {
         title="100원으로 20,000P 신청하기"
         tag={{ text: 'HOT', color: 'bg-red-500' }}
       />
-      <NoticeItem
-        type="공지"
-        title="가사청소 당일/하루전 '입벽 예약' 안내"
-      />
+      <NoticeItem type="공지" title="가사청소 당일/하루전 '입벽 예약' 안내" />
     </div>
-  );
-} 
+  )
+}

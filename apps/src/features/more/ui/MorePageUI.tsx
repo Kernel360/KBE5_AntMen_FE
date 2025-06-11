@@ -66,13 +66,13 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
         더보기
       </h3>
 
-      <section className="mx-5 bg-[#2d91ff] rounded-xl flex flex-col items-center justify-between py-4 mb-4 gap-4">
+      <section className="mx-5 bg-[#9CDAFB] rounded-xl flex flex-col items-center justify-between py-4 mb-4 gap-4">
         <ProfileSection
           name={user.name}
           membershipType={user.membershipType}
           email={user.email}
         />
-        <span className="w-full h-[1px] bg-[#519BF7]" />
+        <span className="w-full h-[1px] bg-[#E1F3FE]" />
         <div className="flex flex-col gap-4 w-full px-5">
           <figure className="flex items-center gap-1">
             <img
@@ -80,10 +80,10 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
               alt="Point"
               className="w-[18px] h-[18px]"
             />
-            <figcaption className="text-sm text-white">AntPoint</figcaption>
+            <figcaption className="text-sm text-gray-900">AntPoint</figcaption>
           </figure>
           <div className="flex items-center justify-between w-full">
-            <span className="text-xl font-semibold text-white">3,750원</span>
+            <span className="text-xl font-semibold text-black">3,750원</span>
             <ul className="flex gap-2">
               <li className="bg-white rounded-full px-4 py-1 text-sm font-medium text-gray-900 hover:cursor-pointer">
                 충전

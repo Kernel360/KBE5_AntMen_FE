@@ -23,9 +23,13 @@ export const ProfileSection = ({
             height={48}
           />
         </figure>
-        <div className="flex flex-col text-white gap-1">
-          <span className="text-lg leading-none font-medium">{name}</span>
-          <span className="text-sm leading-none font-normal">{email}</span>
+        <div className="flex flex-col  gap-1">
+          <span className="text-lg leading-none font-medium text-black">
+            {name}
+          </span>
+          <span className="text-sm leading-none font-normal text-[#121212]">
+            {email}
+          </span>
         </div>
       </div>
       <span className="text-[#999999] text-base">{membershipType}</span>
