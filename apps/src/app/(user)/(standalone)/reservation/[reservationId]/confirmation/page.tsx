@@ -11,7 +11,7 @@ const Page = () => {
         <Link href="/" className="px-6 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium transition">
           홈으로 돌아가기
         </Link>
-        <Link href="/reservations" className="px-6 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary-dark transition">
+        <Link href="/myreservation" className="px-6 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary-dark transition">
           예약 현황 보기
         </Link>
       </div>
