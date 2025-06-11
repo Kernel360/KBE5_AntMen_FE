@@ -2,132 +2,136 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { addressApi, CustomerAddressResponse, CustomerAddressRequest } from '@/shared/api/address';
+import { fetchAddresses, createAddress, CustomerAddressResponse } from '@/shared/api/address';
 import Image from 'next/image';
 import AddAddressModal from '@/features/address/ui/AddAddressModal';
 
 export default function SelectAddressPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const categoryId = searchParams.get('categoryId');
+
   const [addresses, setAddresses] = useState<CustomerAddressResponse[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddModalOpen, setAddModalOpen] = useState(false);
-  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
 
-  const loadAddresses = async () => {
+  const getAddresses = async () => {
     try {
       setLoading(true);
-      const addresses = await addressApi.getAll();
-      setAddresses(addresses);
-    } catch (error) {
-      console.error('주소 목록을 불러오는데 실패했습니다:', error);
-      setError('주소 목록을 불러오는데 실패했습니다.');
+      const data = await fetchAddresses();
+      setAddresses(data);
+    } catch (err) {
+      setError('주소 목록을 불러오는 데 실패했습니다.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadAddresses();
+    getAddresses();
   }, []);
 
-  const handleSelectAddress = (addressId: number) => {
-    const categoryId = searchParams.get('categoryId');
-    if (!categoryId) {
-      setError('카테고리 정보가 없습니다.');
+  const handleNext = () => {
+    if (!selectedAddressId) {
+      alert('주소를 선택해주세요.');
       return;
     }
-    router.push(`/reservation/form?categoryId=${categoryId}&addressId=${addressId}`);
+    router.push(`/reservation/form?categoryId=${categoryId}&addressId=${selectedAddressId}`);
   };
 
-  const handleAddAddress = async (addressData: { main: string; detail: string; addressName: string; area: number }) => {
+  const handleAddAddress = async (address: { main: string; detail: string; addressName: string; area: number }) => {
     try {
-      setLoading(true);
-      const newAddress: CustomerAddressRequest = {
-        addressName: addressData.addressName,
-        addressDetail: addressData.detail,
-        latitude: 0, // TODO: 실제 위도 정보 추가
-        longitude: 0, // TODO: 실제 경도 정보 추가
-        isDefault: false
-      };
-      await addressApi.create(newAddress);
-      await loadAddresses(); // 주소 목록 새로고침
+      await createAddress({
+        addressName: address.addressName,
+        addressAddr: address.main,
+        addressDetail: address.detail,
+        addressArea: address.area,
+      });
+      await getAddresses(); // 주소 목록 새로고침
       setAddModalOpen(false);
-    } catch (error) {
-      console.error('주소 추가에 실패했습니다:', error);
-      setError('주소 추가에 실패했습니다.');
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      alert('주소 등록에 실패했습니다.');
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex justify-center">
-      <div className="w-full max-w-[375px] min-h-screen flex flex-col bg-slate-50">
-        <header className="sticky top-0 z-10 bg-white border-b border-slate-200">
-          <div className="px-4 h-14 flex items-center justify-between">
-            <h1 className="text-lg font-semibold">주소 선택</h1>
-          </div>
-        </header>
-
-        <div className="flex-1 p-4">
-          {error && (
-            <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg">
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            {addresses.map((address) => (
-              <div
-                key={address.addressId}
-                className={`p-4 bg-white rounded-xl cursor-pointer ${
-                  selectedAddressId === address.addressId ? 'ring-2 ring-cyan-500' : ''
-                }`}
-                onClick={() => setSelectedAddressId(address.addressId)}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-1">
-                    <h3 className="font-medium">{address.addressName}</h3>
-                    <p className="mt-1 text-sm text-slate-600">{address.addressDetail}</p>
-                  </div>
-                  {address.isDefault && (
-                    <span className="px-2 py-1 bg-cyan-50 text-cyan-600 text-xs font-medium rounded">
-                      기본
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={() => setAddModalOpen(true)}
-            className="mt-4 w-full py-4 bg-white border-2 border-cyan-500 text-cyan-500 rounded-lg font-bold text-lg hover:bg-cyan-50 transition-colors"
-          >
-            + 새 주소 추가
+    <>
+      <div className="flex min-h-screen flex-col bg-slate-50">
+        {/* 헤더 */}
+        <header className="flex items-center justify-between p-5 bg-white border-b">
+          <button onClick={() => router.back()} className="p-1">
+            <Image src="/icons/arrow-left.svg" alt="뒤로가기" width={24} height={24} />
           </button>
-        </div>
-
-        <div className="sticky bottom-0 bg-white border-t border-slate-200">
-          <div className="px-4 py-4">
-            <button
-              onClick={() => selectedAddressId && handleSelectAddress(selectedAddressId)}
-              disabled={!selectedAddressId || loading}
-              className="w-full py-4 bg-cyan-500 text-white rounded-lg font-bold text-lg hover:bg-cyan-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? '처리 중...' : '다음'}
-            </button>
+          <h1 className="flex-1 text-center text-xl font-bold">주소 선택</h1>
+          <div className="w-6" />
+        </header>
+        {/* 주소 목록 */}
+        <main className="flex-grow p-5">
+          <div className="space-y-4">
+            {loading && <div className="text-center py-20 text-slate-500">주소를 불러오는 중...</div>}
+            {error && <div className="text-center py-20 text-red-500">{error}</div>}
+            {!loading && !error && addresses.length > 0 && (
+              addresses.map(address => {
+                const isSelected = selectedAddressId === address.addressId;
+                return (
+                  <button
+                    key={address.addressId}
+                    onClick={() => setSelectedAddressId(address.addressId)}
+                    className={`w-full text-left p-5 border rounded-lg shadow-sm bg-white flex justify-between items-center transition-all ${isSelected ? 'border-cyan-500 ring-2 ring-cyan-500 bg-cyan-50' : 'hover:bg-gray-50'}`}
+                  >
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-800">{address.addressName} ({address.addressArea}평)</h2>
+                      <p className="text-sm text-slate-600 mt-1">{address.addressAddr}</p>
+                      <p className="text-sm text-slate-600">{address.addressDetail}</p>
+                    </div>
+                    {isSelected && (
+                      <span className="ml-4 px-3 py-1 bg-cyan-500 text-white rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0">선택됨</span>
+                    )}
+                  </button>
+                );
+              })
+            )}
+            {!loading && !error && addresses.length === 0 && (
+              <div className="text-center py-20 text-slate-500">
+                <p>등록된 주소 정보가 없습니다.</p>
+                <button 
+                  onClick={() => setAddModalOpen(true)}
+                  className="mt-4 inline-block px-6 py-2 bg-cyan-500 text-white rounded-lg font-semibold"
+                >
+                  + 새 주소 추가하기
+                </button>
+              </div>
+            )}
           </div>
-        </div>
-
-        <AddAddressModal
-          isOpen={isAddModalOpen}
-          onClose={() => setAddModalOpen(false)}
-          onAddAddress={handleAddAddress}
-        />
+        </main>
+        {/* 하단 버튼 */}
+        <footer className="p-5 bg-white border-t flex flex-col gap-3">
+          {addresses.length > 0 && (
+            <button
+              onClick={() => setAddModalOpen(true)}
+              className="w-full py-4 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300 transition-colors text-center"
+            >
+              + 새 주소 추가
+            </button>
+          )}
+          <button
+            onClick={handleNext}
+            disabled={!selectedAddressId || loading}
+            className="w-full py-4 bg-cyan-500 text-white rounded-lg font-bold text-lg hover:bg-cyan-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          >
+            다음
+          </button>
+        </footer>
       </div>
-    </div>
+      {/* 모달 렌더링 */}
+      <AddAddressModal
+        isOpen={isAddModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onAddAddress={handleAddAddress}
+      />
+      
+    </>
   );
 } 

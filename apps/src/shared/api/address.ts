@@ -1,80 +1,38 @@
-import { customFetch } from './base';
-import { API_CONFIG } from './config';
-
 export interface CustomerAddressRequest {
   addressName: string;
+  addressAddr: string;
   addressDetail: string;
-  latitude: number;
-  longitude: number;
-  isDefault: boolean;
+  addressArea: number;
 }
 
 export interface CustomerAddressResponse {
   addressId: number;
-  customerId: number;
   addressName: string;
+  addressAddr: string;
   addressDetail: string;
-  latitude: number;
-  longitude: number;
-  isDefault: boolean;
-  createdAt: string;
-  updatedAt: string;
+  addressArea: number;
 }
 
-export const addressApi = {
-  getAll: async (): Promise<CustomerAddressResponse[]> => {
-    return customFetch<CustomerAddressResponse[]>(
-      API_CONFIG.LOCAL.ENDPOINTS.ADDRESS,
-      {
-        serverType: 'LOCAL',
-      }
-    );
-  },
+// 주소 목록 조회
+export const fetchAddresses = async (): Promise<CustomerAddressResponse[]> => {
+  const res = await fetch('http://localhost:9091/customers/address', {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('주소 목록 조회 실패');
+  return res.json();
+};
 
-  create: async (
-    data: CustomerAddressRequest
-  ): Promise<CustomerAddressResponse> => {
-    return customFetch<CustomerAddressResponse>(
-      API_CONFIG.LOCAL.ENDPOINTS.ADDRESS,
-      {
-        method: 'POST',
-        body: JSON.stringify(data),
-        serverType: 'LOCAL',
-      }
-    );
-  },
-
-  update: async (
-    addressId: number,
-    data: CustomerAddressRequest
-  ): Promise<CustomerAddressResponse> => {
-    return customFetch<CustomerAddressResponse>(
-      `${API_CONFIG.LOCAL.ENDPOINTS.ADDRESS}/${addressId}`,
-      {
-        method: 'PUT',
-        body: JSON.stringify(data),
-        serverType: 'LOCAL',
-      }
-    );
-  },
-
-  delete: async (addressId: number): Promise<void> => {
-    return customFetch<void>(
-      `${API_CONFIG.LOCAL.ENDPOINTS.ADDRESS}/${addressId}`,
-      {
-        method: 'DELETE',
-        serverType: 'LOCAL',
-      }
-    );
-  },
-
-  setDefault: async (addressId: number): Promise<CustomerAddressResponse> => {
-    return customFetch<CustomerAddressResponse>(
-      `${API_CONFIG.LOCAL.ENDPOINTS.ADDRESS}/${addressId}/default`,
-      {
-        method: 'POST',
-        serverType: 'LOCAL',
-      }
-    );
-  },
+// 주소 등록
+export const createAddress = async (
+  data: CustomerAddressRequest
+): Promise<CustomerAddressResponse> => {
+  const res = await fetch('http://localhost:9091/customers/address', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('주소 등록 실패');
+  return res.json();
 }; 
