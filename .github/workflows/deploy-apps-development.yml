@@ -2,9 +2,9 @@ name: 'CI/CD: Build & Deploy to EC2'
 
 on:
   push:
-    branches: [develop]
-    paths:
-      - 'apps/**'
+    branches: [feature/#60-ui]
+    # paths:
+    #   - 'apps/**'
 
 permissions:
   id-token: write

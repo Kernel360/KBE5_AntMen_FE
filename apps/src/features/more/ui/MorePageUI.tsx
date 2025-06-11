@@ -44,7 +44,7 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
       href: '/favorites',
     },
     { icon: '/icons/linear-check.svg', label: '이용내역', href: '/history' },
-    { icon: '/icons/slash.svg', label: '리뷰관리', href: '/reviews' },
+    { icon: '/icons/linear-review.svg', label: '리뷰관리', href: '/reviews' },
     {
       icon: '/icons/linear-setting.svg',
       label: '로그아웃',

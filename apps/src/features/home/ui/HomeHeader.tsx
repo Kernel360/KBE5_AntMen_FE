@@ -2,29 +2,24 @@
 
 import { BellIcon } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/navigation'
-import { checkCustomerAuth } from '@/features/auth/lib/auth'
+import React from 'react'
 
-export function HomeHeader() {
+interface HomeHeaderProps {
+  title?: string
+  subtitle?: string
+  buttonText?: string
+  onButtonClick?: () => void
+  buttonIcon?: React.ReactNode
+}
+
+export function HomeHeader({
+  title = '제목입니다.',
+  subtitle = '소제목입니다.',
+  buttonText = '버튼입니다.',
+  onButtonClick,
+  buttonIcon,
+}: HomeHeaderProps) {
   const router = useRouter()
-
-  const handleReservationClick = () => {
-    const authResult = checkCustomerAuth()
-
-    if (!authResult.isAuthenticated || authResult.message) {
-      alert(authResult.message)
-      if (!authResult.isAuthenticated) {
-        router.push('/login')
-      } else if (authResult.userRole === 'MANAGER') {
-        router.push('/manager')
-      } else {
-        router.push('/')
-      }
-      return
-    }
-
-    // 인증 통과 시 예약 페이지로 이동
-    router.push('/reservation')
-  }
 
   const handleNotificationClick = () => {
     router.push('/notifications')
@@ -44,31 +39,23 @@ export function HomeHeader() {
           </span>
         </button>
       </div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1 text-white">
-          집청소로 달라지는 일상
-        </h1>
-        <p className="text-base text-white">바쁜 일상에서 손쉽게 맡겨보세요</p>
-      </div>
-      <button
-        onClick={handleReservationClick}
-        className="w-full h-14 bg-white rounded-xl flex items-center justify-center gap-2 mb-6"
-      >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          fill="none"
-          stroke="currentColor"
-          className="stroke-2"
+      {(title || subtitle) && (
+        <div className="mb-6">
+          {title && (
+            <h1 className="text-2xl font-bold mb-1 text-white">{title}</h1>
+          )}
+          {subtitle && <p className="text-base text-white">{subtitle}</p>}
+        </div>
+      )}
+      {buttonText && (
+        <button
+          onClick={onButtonClick}
+          className="w-full h-14 bg-white rounded-xl flex items-center justify-center gap-2 mb-6"
         >
-          <path d="M2.5 4.16667H17.5V17.3333H2.5V4.16667Z" />
-          <path d="M2.5 8.33333H17.5" />
-          <path d="M6.66675 2.5V5.83333" />
-          <path d="M13.3333 2.5V5.83333" />
-        </svg>
-        <span className="font-semibold">예약하기</span>
-      </button>
+          {buttonIcon}
+          <span className="font-semibold">{buttonText}</span>
+        </button>
+      )}
     </div>
   )
 }
