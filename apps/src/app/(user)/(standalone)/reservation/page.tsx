@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getAllCategories, Category } from '@/shared/api/category';
+import { CustomerAuthGuard } from '@/components/auth/CustomerAuthGuard';
 
 interface ServiceCardProps {
   title: string;
@@ -61,7 +62,15 @@ const ServiceIcon = ({ name, icon, isNew, discount }: ServiceIconProps) => (
   </Link>
 )
 
-export default function ReservationPage() {
+export default function ReservationPageWrapper() {
+  return (
+    <CustomerAuthGuard>
+      <ReservationPage />
+    </CustomerAuthGuard>
+  );
+}
+
+function ReservationPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
