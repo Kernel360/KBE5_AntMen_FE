@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { XCircle } from 'lucide-react';
-import Cookies from 'js-cookie';
+import { useState } from 'react'
+import { XCircle } from 'lucide-react'
+import Cookies from 'js-cookie'
 
 interface User {
-  userId: number;
-  userName: string;
-  userRole: 'CUSTOMER' | 'MANAGER';
+  userId: number
+  userName: string
+  userRole: 'CUSTOMER' | 'MANAGER'
 }
 
 // 역할별 색상 설정
@@ -33,80 +33,82 @@ const ROLE_COLORS = {
     text: 'text-gray-800',
     border: 'border-gray-200',
   },
-};
+}
 
 export function TestToolModal() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [userRole, setUserRole] = useState<'CUSTOMER' | 'MANAGER' | null>(null);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
+  const [isOpen, setIsOpen] = useState(false)
+  const [userRole, setUserRole] = useState<'CUSTOMER' | 'MANAGER' | null>(null)
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null)
+  const [users, setUsers] = useState<User[]>([])
 
   // 사용자 목록 가져오기
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:9090/api/v1/test/user');
-      if (!response.ok) return;
-      const data = await response.json();
-      setUsers(data || []);
+      const response = await fetch('/api/v1/test/user')
+      if (!response.ok) return
+      const data = await response.json()
+      setUsers(data || [])
     } catch (err) {
-      console.error('사용자 목록 조회 실패:', err);
-      setUsers([]);
+      console.error('사용자 목록 조회 실패:', err)
+      setUsers([])
     }
-  };
+  }
 
   // 역할 변경 시 처리
   const handleRoleChange = async (newRole: 'CUSTOMER' | 'MANAGER' | null) => {
-    setUserRole(newRole);
-    setUsers([]);
-    
+    setUserRole(newRole)
+    setUsers([])
+
     if (!newRole) {
-      setSelectedUserId(null);
-      Cookies.remove('auth-token');
-      Cookies.remove('auth-time');
-      return;
+      setSelectedUserId(null)
+      Cookies.remove('auth-token')
+      Cookies.remove('auth-time')
+      return
     }
 
-    await fetchUsers();
-  };
+    await fetchUsers()
+  }
 
   // 사용자 변경 시 처리
   const handleUserChange = async (userId: number) => {
     try {
-      const response = await fetch('http://localhost:9090/api/v1/test/auth/token', {
+      const response = await fetch('/api/v1/test/auth/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ userId }),
-      });
+      })
 
-      if (!response.ok) return;
-      
-      const { token } = await response.json();
-      setSelectedUserId(userId);
-      
+      if (!response.ok) return
+
+      const { token } = await response.json()
+      setSelectedUserId(userId)
+
       Cookies.set('auth-token', `Bearer ${token}`, {
         expires: 1, // 테스트용이므로 1일만 유지
         secure: false,
         sameSite: 'strict',
-        path: '/'
-      });
-      
+        path: '/',
+      })
+
       Cookies.set('auth-time', new Date().toISOString(), {
         expires: 1,
         secure: false,
         sameSite: 'strict',
-        path: '/'
-      });
+        path: '/',
+      })
     } catch (err) {
-      console.error('테스트 토큰 발급 실패:', err);
+      console.error('테스트 토큰 발급 실패:', err)
     }
-  };
+  }
 
   // 현재 선택된 역할의 사용자만 필터링
-  const filteredUsers = userRole ? users.filter(user => user.userRole === userRole) : [];
+  const filteredUsers = userRole
+    ? users.filter((user) => user.userRole === userRole)
+    : []
 
-  const roleColors = userRole ? ROLE_COLORS[userRole] : ROLE_COLORS.none;
+  const roleColors = userRole ? ROLE_COLORS[userRole] : ROLE_COLORS.none
 
   return (
     <>
@@ -129,7 +131,11 @@ export function TestToolModal() {
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className={`text-lg font-semibold ${roleColors.text}`}>
                 🔧 테스트 도구
-                {userRole === null && <span className="text-sm font-normal text-gray-500 ml-2">(로그아웃 상태)</span>}
+                {userRole === null && (
+                  <span className="text-sm font-normal text-gray-500 ml-2">
+                    (로그아웃 상태)
+                  </span>
+                )}
               </h3>
               <button
                 onClick={() => setIsOpen(false)}
@@ -143,7 +149,9 @@ export function TestToolModal() {
             <div className="p-4">
               {/* 역할 선택 */}
               <div className="mb-4">
-                <p className="text-sm mb-2 font-medium text-gray-700">역할 선택</p>
+                <p className="text-sm mb-2 font-medium text-gray-700">
+                  역할 선택
+                </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleRoleChange('CUSTOMER')}
@@ -172,7 +180,9 @@ export function TestToolModal() {
               {userRole && (
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <p className="text-sm font-medium text-gray-700">사용자 선택</p>
+                    <p className="text-sm font-medium text-gray-700">
+                      사용자 선택
+                    </p>
                     <button
                       onClick={() => handleRoleChange(null)}
                       className="text-sm text-gray-500 hover:text-gray-700"
@@ -202,5 +212,5 @@ export function TestToolModal() {
         </div>
       )}
     </>
-  );
-} 
+  )
+}

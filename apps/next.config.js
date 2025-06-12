@@ -1,28 +1,33 @@
+const API_HOST = process.env.API_HOST || 'localhost'
+const COMMON_API_PORT = process.env.COMMON_API_PORT || '19090'
+const CUSTOMER_API_PORT = process.env.CUSTOMER_API_PORT || '19091'
+const MANAGER_API_PORT = process.env.MANAGER_API_PORT || '19092'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': require('path').resolve(__dirname, './src'),
-    };
-    return config;
+    }
+    return config
   },
   async rewrites() {
     return [
       {
         source: '/api/v1/:path*',
-        destination: 'http://localhost:9090/api/v1/:path*',
+        destination: `http://${API_HOST}:${COMMON_API_PORT}/api/v1/:path*`,
       },
       {
         source: '/customers/:path*',
-        destination: 'http://localhost:9091/customers/:path*',
+        destination: `http://${API_HOST}:${CUSTOMER_API_PORT}/customers/:path*`,
       },
       {
         source: '/managers/:path*',
-        destination: 'http://localhost:9092/managers/:path*',
+        destination: `http://${API_HOST}:${MANAGER_API_PORT}/managers/:path*`,
       },
-    ];
+    ]
   },
-};
+}
 
-module.exports = nextConfig; 
+module.exports = nextConfig
