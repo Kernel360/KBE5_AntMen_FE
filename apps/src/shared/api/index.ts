@@ -2,7 +2,7 @@ export * from './category';
 export * from './reservation';
 export * from './reservationOption';
 export * from './address';
-export * from './alert';
+// export * from './alert'; // alert.ts는 서버/클라이언트 분리로 인해 삭제됨
 
 export interface ReservationRequest {
   customerId: number;
