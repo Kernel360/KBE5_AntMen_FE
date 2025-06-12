@@ -26,8 +26,8 @@ interface PageProps {
 // --- 데이터 페칭 함수 ---
 async function getReservationDetail(id: string): Promise<Reservation | null> {
   try {
-    // API URL을 환경 변수로 관리하는 것이 좋습니다.
-    const res = await fetch(`http://localhost:3000/api/reservation/${id}`, {
+    // 실제 백엔드 API 주소로 변경
+    const res = await fetch(`http://localhost:9091/api/v1/customer/reservations/${id}`, {
       cache: 'no-store', // 항상 최신 데이터를 가져옴
     });
 
