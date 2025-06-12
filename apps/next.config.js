@@ -1,12 +1,12 @@
-// /** @type {import('next').NextConfig} */
-// const nextConfig = {
-//   webpack: (config) => {
-//     config.resolve.alias = {
-//       ...config.resolve.alias,
-//       '@': require('path').resolve(__dirname, './src'),
-//     }
-//     return config
-//   },
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': require('path').resolve(__dirname, './src'),
+    }
+    return config
+  },
 //   async rewrites() {
 //     return [
 //       {
@@ -23,6 +23,6 @@
 //       },
 //     ]
 //   },
-// }
+}
 
-// module.exports = nextConfig
+module.exports = nextConfig
