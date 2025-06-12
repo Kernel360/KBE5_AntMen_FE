@@ -15,7 +15,7 @@ import { Suspense } from 'react'
 import type { Reservation } from '@/entities/reservation/model/types'
 import { ManagerReservationsClient } from './ManagerReservationsClient'
 import { cookies } from 'next/headers'
-import { PageSkeleton } from './loading'
+import { PageSkeleton } from '@/app/manager/reservations/loading'
 
 async function getReservations(): Promise<Reservation[]> {
   try {
