@@ -1,46 +1,17 @@
-import { API_CONFIG } from './config';
-
-type ServerType = 'REMOTE' | 'LOCAL';
-
-interface FetchOptions extends RequestInit {
-  serverType?: ServerType;
-}
-
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    public message: string,
-    public data?: any
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
-
 export const customFetch = async <T>(
-  endpoint: string,
-  options: FetchOptions = {}
+  url: string,
+  options?: RequestInit,
 ): Promise<T> => {
-  const { serverType = 'REMOTE', ...fetchOptions } = options;
-  const baseUrl = API_CONFIG[serverType].BASE_URL;
-  const url = `${baseUrl}${endpoint}`;
-
   const response = await fetch(url, {
-    ...fetchOptions,
-    credentials: 'include',
+    ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...fetchOptions.headers,
+      ...options?.headers,
     },
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    throw new ApiError(
-      response.status,
-      errorData?.message || response.statusText,
-      errorData
-    );
+    throw new Error(`An error occurred: ${response.statusText}`);
   }
 
   // No Content 응답 처리
