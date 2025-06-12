@@ -22,14 +22,29 @@ export default function ManagerDetailPage() {
     // 매니저 상세 데이터 로딩 시뮬레이션
     const loadManagerDetail = async () => {
       try {
-        // 실제 API 호출 시:
-        // const response = await fetch(`/api/managers/${managerId}`);
-        // const data = await response.json();
-        
-        // 현재는 상수 데이터에서 찾기
-        await new Promise(resolve => setTimeout(resolve, 600));
-        const foundManager = MANAGER_LIST.find(m => m.id === managerId);
-        setManager(foundManager || null);
+        // 실제 API 호출
+        const response = await fetch(`http://localhost:9091/api/v1/customer/reservations/manager/${managerId}`);
+        const data = await response.json();
+
+        // 콘솔에 찍는 코드: API에서 받아온 원본 데이터
+        console.log('API 응답 데이터:', data); // 콘솔에 찍는 코드
+
+        // 목업 characteristics 추가
+        const mockCharacteristics = [
+          { id: '1', label: '친절해요', type: 'kind' },
+          { id: '2', label: '시간 엄수', type: 'punctual' },
+          { id: '3', label: '꼼꼼해요', type: 'thorough' }
+        ];
+
+        const managerWithMock = {
+          ...data,
+          characteristics: mockCharacteristics,
+        };
+
+        // 콘솔에 찍는 코드: setManager에 들어가는 최종 값
+        console.log('setManager에 들어가는 값:', managerWithMock); // 콘솔에 찍는 코드
+
+        setManager(managerWithMock);
         setIsLoading(false);
       } catch (error) {
         console.error('매니저 정보 로딩 실패:', error);
@@ -56,7 +71,7 @@ export default function ManagerDetailPage() {
             onClick={() => router.back()}
             className="text-primary hover:underline"
           >
-            돌아가기
+            매니저 목록으로 이동
           </button>
         </div>
       </div>
@@ -114,7 +129,8 @@ export default function ManagerDetailPage() {
         {/* 프로필 섹션 */}
         <section className="px-5 py-8 text-center border-b border-gray-100">
           <div className="w-24 h-24 mx-auto mb-6 bg-slate-200 rounded-full flex items-center justify-center">
-            <span className="text-3xl font-bold text-slate-600">{manager.profileImage}</span>
+            {/* <span className="text-3xl font-bold text-slate-600">{manager.profileImage}</span> */}
+            <img src={manager.profileImage} alt="프로필 이미지" />
           </div>
           
           <h1 className="text-2xl font-bold text-slate-900 mb-2">{manager.name} 매니저</h1>
@@ -162,7 +178,7 @@ export default function ManagerDetailPage() {
           </div>
           
           <div className="space-y-4">
-            {manager.reviews.map((review) => (
+            {manager.reviews?.map((review) => (
               <div key={review.id} className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-slate-800">{review.userName}</span>
