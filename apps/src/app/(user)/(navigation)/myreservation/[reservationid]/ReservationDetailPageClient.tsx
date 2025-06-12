@@ -52,8 +52,6 @@ const ReservationStatusSection = ({ reservation }: { reservation: Reservation })
             return { text: '취소', bgColor: 'bg-gray-50', textColor: 'text-gray-600' };
           case 'in-progress':
             return { text: '진행중', bgColor: 'bg-blue-50', textColor: 'text-blue-600' };
-          case 'completed-pending-review':
-            return { text: '후기 작성 대기', bgColor: 'bg-blue-50', textColor: 'text-blue-600' };
           default:
             return { text: '확인 중', bgColor: 'bg-yellow-50', textColor: 'text-yellow-600' };
         }
@@ -125,34 +123,47 @@ const ServiceInfoSection = ({ reservation }: { reservation: Reservation }) => {
 };
 
 // 매칭 매니저 정보 섹션
-const CleanerInfoSection = ({ worker }: { worker: Worker }) => {
+const CleanerInfoSection = ({ worker }: { worker?: Worker }) => {
+  if (!worker) {
     return (
-        <div className="bg-white px-5 py-6">
-          <h2 className="text-lg font-bold text-black mb-6">매칭 매니저</h2>
-          <div className="flex items-start gap-4">
-            <div className="w-15 h-15 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-base font-black text-white">{worker.avatar}</span>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-lg font-black text-black">{worker.name}</h3>
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-medium text-black">{worker.rating}</span>
-                  <Star className="w-4 h-4 text-orange-500 fill-orange-500" />
-                </div>
-              </div>
-              <p className="text-sm text-gray-600">
-                {worker.experience}
-              </p>
+      <div className="bg-white px-5 py-6">
+        <h2 className="text-lg font-bold text-black mb-6">매칭 매니저</h2>
+        <div className="flex items-center justify-center text-gray-400 h-20">
+          매칭된 매니저가 없습니다.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white px-5 py-6">
+      <h2 className="text-lg font-bold text-black mb-6">매칭 매니저</h2>
+      <div className="flex items-start gap-4">
+        <div className="w-15 h-15 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+          <span className="text-base font-black text-white">
+            {worker.avatar ? worker.avatar : (worker.name?.[0] || '👤')}
+          </span>
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-lg font-black text-black">{worker.name}</h3>
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-medium text-black">{worker.rating}</span>
+              <Star className="w-4 h-4 text-orange-500 fill-orange-500" />
             </div>
           </div>
+          <p className="text-sm text-gray-600">
+            {worker.experience}
+          </p>
         </div>
-      );
+      </div>
+    </div>
+  );
 };
 
 // 결제 예정 금액 섹션 (결제 전)
 const PaymentPreviewSection = ({ reservation }: { reservation: Reservation }) => {
-    const formatCurrency = (amount: number) => `₩${amount.toLocaleString()}`;
+    const formatCurrency = (amount?: number) => `₩${(amount ?? 0).toLocaleString()}`;
     return (
         <div className="bg-white px-5 py-6">
           <h2 className="text-lg font-bold text-black mb-6">결제 예정 금액</h2>
@@ -178,7 +189,7 @@ const PaymentPreviewSection = ({ reservation }: { reservation: Reservation }) =>
 
 // 결제 정보 섹션 (결제 후)
 const PaymentInfoSection = ({ reservation }: { reservation: Reservation }) => {
-    const formatCurrency = (amount: number) => `₩${amount.toLocaleString()}`;
+    const formatCurrency = (amount?: number) => `₩${(amount ?? 0).toLocaleString()}`;
     return (
         <div className="bg-white px-5 py-6">
           <h2 className="text-lg font-bold text-black mb-6">결제 정보</h2>
