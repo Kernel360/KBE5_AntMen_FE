@@ -1,4 +1,4 @@
-import type { Reservation } from '@/entities/reservation/model/types';
+import type { Reservation } from '@/entities/reservation/model/types'
 
 // 임시 데이터 (원래 reservations/route.ts 에 있던 데이터)
 export const MOCK_RESERVATIONS: Reservation[] = [
@@ -6,7 +6,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     id: '1',
     reservationNumber: 'CL-20240315-001',
     serviceType: '사무실 청소',
-    status: 'scheduled',
+    status: 'WAITING',
     paymentStatus: 'paid',
     dateTime: '2024년 3월 15일 · 오전 10:00',
     duration: '2시간',
@@ -31,15 +31,15 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     customer: {
       id: 'customer-1',
       name: '김고객',
-      phone: '010-9876-5432'
-    }
+      phone: '010-9876-5432',
+    },
   },
   {
     id: '2',
     reservationNumber: 'CL-20240322-002',
     serviceType: '대청소',
     location: '서울시 강남구',
-    status: 'scheduled',
+    status: 'WAITING',
     paymentStatus: 'pending',
     dateTime: '2024년 3월 22일 · 오전 10:00',
     duration: '3시간',
@@ -62,15 +62,15 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     customer: {
       id: 'customer-2',
       name: '이손님',
-      phone: '010-1111-2222'
-    }
+      phone: '010-1111-2222',
+    },
   },
   {
     id: '3',
     reservationNumber: 'CL-20240228-003',
     serviceType: '대청소',
     location: '서울시 서초구',
-    status: 'completed',
+    status: 'DONE',
     paymentStatus: 'paid',
     dateTime: '2024년 2월 28일 · 오전 9:00',
     duration: '4시간',
@@ -94,15 +94,15 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     customer: {
       id: 'customer-3',
       name: '박수요',
-      phone: '010-3333-4444'
-    }
+      phone: '010-3333-4444',
+    },
   },
   {
     id: '4',
     reservationNumber: 'CL-20240220-004',
     serviceType: '부분 청소',
     location: '서울시 마포구',
-    status: 'cancelled',
+    status: 'CANCEL',
     paymentStatus: 'refunded',
     dateTime: '2024년 2월 20일 · 오후 2:00',
     duration: '1시간',
@@ -126,7 +126,7 @@ export const MOCK_RESERVATIONS: Reservation[] = [
     customer: {
       id: 'customer-4',
       name: '최사용',
-      phone: '010-5555-6666'
-    }
+      phone: '010-5555-6666',
+    },
   },
-]; 
+]

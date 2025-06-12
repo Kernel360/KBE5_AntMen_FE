@@ -1,4 +1,4 @@
-FROM node:18-alpine AS builder
+FROM node:20.11-alpine AS builder
 WORKDIR /app
 
 COPY package.json yarn.lock ./
@@ -10,7 +10,7 @@ COPY apps/ ./apps/
 RUN yarn workspace apps build
 
 # 2. 런타임 단계
-FROM node:18-alpine AS runner
+FROM node:20.11-alpine AS runner
 WORKDIR /app
 
 COPY package.json yarn.lock ./

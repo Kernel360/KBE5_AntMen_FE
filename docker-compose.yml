@@ -16,7 +16,7 @@ services:
 
   admin-app:
     build:
-      context: ./admin
+      context: .
       dockerfile: admin/Dockerfile
     image: $ECR_REGISTRY/admin-app:latest
     container_name: admin
