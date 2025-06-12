@@ -2,7 +2,7 @@ name: 'CI/CD: Build & Deploy to EC2'
 
 on:
   push:
-    branches: [feature/#60-ui]
+    branches: [develop]
     # paths:
     #   - 'apps/**'
     #   - 'admin/**'
