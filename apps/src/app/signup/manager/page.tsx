@@ -184,7 +184,7 @@ const ManagerSignUpPage = () => {
         formData.append('managerFileUrls', file);
       });
 
-      const response = await fetch('http://localhost:9092/managers/signup', {
+      const response = await fetch('https://api.antmen.site:9092/managers/signup', {
         method: 'POST',
         body: formData,
       });
