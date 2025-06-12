@@ -23,7 +23,7 @@ export default function ManagerDetailPage() {
     const loadManagerDetail = async () => {
       try {
         // 실제 API 호출
-        const response = await fetch(`http://localhost:9091/api/v1/customer/reservations/manager/${managerId}`);
+        const response = await fetch(`https://api.antmen.site:9091/api/v1/customer/reservations/manager/${managerId}`);
         const data = await response.json();
 
         // 콘솔에 찍는 코드: API에서 받아온 원본 데이터
