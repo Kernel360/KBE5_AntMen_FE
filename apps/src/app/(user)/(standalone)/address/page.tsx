@@ -12,11 +12,11 @@ import {
 } from '@/shared/api/address'
 
 interface AddressForm {
-  addressName: string;
-  main: string;
-  detail: string;
-  latitude: number;
-  longitude: number;
+  addressName: string
+  main: string
+  detail: string
+  latitude: number
+  longitude: number
 }
 
 const AddressPageUI = () => {
@@ -30,6 +30,7 @@ const AddressPageUI = () => {
     latitude: 0,
     longitude: 0,
   })
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   useEffect(() => {
     loadAddresses()
@@ -44,27 +45,35 @@ const AddressPageUI = () => {
     }
   }
 
-  const handleAddAddress = async () => {
+  const handleAddAddress = async (address: {
+    main: string
+    detail: string
+    addressName: string
+    area: number
+  }) => {
+    console.log('[DEBUG] handleAddAddress 함수 진입', address)
+    if (!address.addressName || !address.main) {
+      setErrorMsg('주소 이름과 주소를 모두 입력해주세요.')
+      return
+    }
     try {
       const addressData: CustomerAddressRequest = {
-        addressName: newAddress.addressName,
-        addressDetail: `${newAddress.main} ${newAddress.detail}`,
-        latitude: newAddress.latitude,
-        longitude: newAddress.longitude,
+        addressName: address.addressName,
+        addressDetail: `${address.main} ${address.detail}`,
+        addressAddr: address.main,
+        addressArea: address.area ?? 0,
+        latitude: 0,
+        longitude: 0,
         isDefault: addresses.length === 0, // 첫 주소인 경우 기본 주소로 설정
       }
-
+      console.log('[주소 등록] addressAddr:', addressData.addressAddr)
+      console.log('[주소 등록] addressData 전체:', addressData)
       const newAddressResponse = await addressApi.create(addressData)
       setAddresses((prev) => [...prev, newAddressResponse])
       setAddModalOpen(false)
-      setNewAddress({
-        addressName: '',
-        main: '',
-        detail: '',
-        latitude: 0,
-        longitude: 0,
-      })
+      setErrorMsg(null)
     } catch (error) {
+      setErrorMsg('주소 등록에 실패했습니다.')
       console.error('주소 등록에 실패했습니다:', error)
     }
   }
@@ -72,7 +81,9 @@ const AddressPageUI = () => {
   const handleDeleteAddress = async (addressId: number) => {
     try {
       await addressApi.delete(addressId)
-      setAddresses((prev) => prev.filter((addr) => addr.addressId !== addressId))
+      setAddresses((prev) =>
+        prev.filter((addr) => addr.addressId !== addressId),
+      )
     } catch (error) {
       console.error('주소 삭제에 실패했습니다:', error)
     }
@@ -85,8 +96,8 @@ const AddressPageUI = () => {
         prev.map((addr) =>
           addr.addressId === addressId
             ? updatedAddress
-            : { ...addr, isDefault: false }
-        )
+            : { ...addr, isDefault: false },
+        ),
       )
     } catch (error) {
       console.error('기본 주소 설정에 실패했습니다:', error)
@@ -96,7 +107,7 @@ const AddressPageUI = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">내 주소 관리</h1>
-      
+
       <div className="space-y-4">
         {addresses.map((address) => (
           <div
@@ -138,75 +149,11 @@ const AddressPageUI = () => {
       </button>
 
       {addModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">새 주소 추가</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  주소 이름
-                </label>
-                <input
-                  type="text"
-                  value={newAddress.addressName}
-                  onChange={(e) =>
-                    setNewAddress((prev) => ({
-                      ...prev,
-                      addressName: e.target.value,
-                    }))
-                  }
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  주소
-                </label>
-                <input
-                  type="text"
-                  value={newAddress.main}
-                  onChange={(e) =>
-                    setNewAddress((prev) => ({
-                      ...prev,
-                      main: e.target.value,
-                    }))
-                  }
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  상세 주소
-                </label>
-                <input
-                  type="text"
-                  value={newAddress.detail}
-                  onChange={(e) =>
-                    setNewAddress((prev) => ({
-                      ...prev,
-                      detail: e.target.value,
-                    }))
-                  }
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end space-x-3">
-              <button
-                onClick={() => setAddModalOpen(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleAddAddress}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                추가
-              </button>
-            </div>
-          </div>
-        </div>
+        <AddAddressModal
+          isOpen={addModalOpen}
+          onClose={() => setAddModalOpen(false)}
+          onAddAddress={handleAddAddress}
+        />
       )}
     </div>
   )

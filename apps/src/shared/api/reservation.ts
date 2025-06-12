@@ -1,4 +1,5 @@
 import { customFetch } from './base'
+import { API_ENDPOINTS } from './config'
 import { Category, CategoryOption } from './category'
 import type { ReservationRequest } from '.'
 
@@ -31,7 +32,7 @@ export interface ReservationResponse {
 export const createReservation = async (
   reservationData: ReservationRequest,
 ): Promise<ReservationResponse> => {
-  return customFetch<ReservationResponse>('/api/v1/customer/reservations', {
+  return customFetch<ReservationResponse>(API_ENDPOINTS.RESERVATION, {
     method: 'POST',
     body: JSON.stringify(reservationData),
   })
@@ -46,7 +47,7 @@ export const getReservationById = async (
   reservationId: number,
 ): Promise<ReservationResponse> => {
   return customFetch<ReservationResponse>(
-    `/api/v1/customer/reservations/${reservationId}`,
+    `${API_ENDPOINTS.RESERVATION}/${reservationId}`,
   )
 }
 
@@ -54,7 +55,7 @@ export const getReservationById = async (
  * 내 예약 목록 조회 API 함수
  */
 export const getMyReservations = async (): Promise<ReservationResponse[]> => {
-  return customFetch<ReservationResponse[]>('/api/v1/customer/reservations')
+  return customFetch<ReservationResponse[]>(API_ENDPOINTS.RESERVATION)
 }
 
 // TODO: 필요한 코드인가?
@@ -104,7 +105,7 @@ export const cancelReservation = async (
   reason?: string,
 ): Promise<ReservationResponse> => {
   return customFetch<ReservationResponse>(
-    `/api/v1/customer/reservations/${reservationId}/cancel`,
+    `${API_ENDPOINTS.RESERVATION}/${reservationId}/cancel`,
     {
       method: 'POST',
       body: JSON.stringify({ reason }),

@@ -1,7 +1,9 @@
-const API_HOST = process.env.API_HOST || 'localhost'
-const COMMON_API_PORT = process.env.COMMON_API_PORT || '19090'
-const CUSTOMER_API_PORT = process.env.CUSTOMER_API_PORT || '19091'
-const MANAGER_API_PORT = process.env.MANAGER_API_PORT || '19092'
+require('dotenv').config()
+
+const API_HOST = process.env.API_HOST
+const COMMON_API_PORT = process.env.COMMON_API_PORT
+const CUSTOMER_API_PORT = process.env.CUSTOMER_API_PORT
+const MANAGER_API_PORT = process.env.MANAGER_API_PORT
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
