@@ -46,7 +46,7 @@ export function useLoginOrigin() {
     try {
       setIsLoading(true)
 
-      const response = await fetch('/api/v1/auth/login', {
+      const response = await fetch('https://api.antmen.site:9090/api/v1/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

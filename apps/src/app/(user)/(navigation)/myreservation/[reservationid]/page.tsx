@@ -27,7 +27,7 @@ interface PageProps {
 async function getReservationDetail(id: string): Promise<Reservation | null> {
   try {
     // 실제 백엔드 API 주소로 변경
-    const res = await fetch(`/api/v1/customer/reservations/${id}`, {
+    const res = await fetch(`https://api.antmen.site:9091/api/v1/customer/reservations/${id}`, {
       cache: 'no-store', // 항상 최신 데이터를 가져옴
     })
 

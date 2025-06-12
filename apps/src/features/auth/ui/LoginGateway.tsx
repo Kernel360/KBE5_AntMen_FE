@@ -60,7 +60,7 @@ export function LoginGateway() {
     try {
       console.log('📡 서버 요청 시작')
 
-      const response = await fetch('/api/v1/auth/google/login', {
+      const response = await fetch('https://api.antmen.site:9090/api/v1/auth/google/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

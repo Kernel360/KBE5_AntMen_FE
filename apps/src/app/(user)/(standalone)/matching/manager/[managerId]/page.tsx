@@ -27,7 +27,7 @@ export default function ManagerDetailPage() {
       try {
         // 실제 API 호출
         const response = await fetch(
-          `/api/v1/customer/reservations/manager/${managerId}`,
+          `https://api.antmen.site:9091/api/v1/customer/reservations/manager/${managerId}`,
         )
         const data = await response.json()
 

@@ -25,7 +25,7 @@ export default function MatchingPageClient() {
         console.log('클라이언트에서 읽은 예약 정보:', reservationInfo)
 
         // 매니저 목록 가져오기
-        const response = await fetch('/api/v1/matchings', {
+        const response = await fetch('https://api.antmen.site:9091/api/v1/matchings', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

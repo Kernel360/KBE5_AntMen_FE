@@ -31,7 +31,7 @@ export interface ReservationResponse {
 export const createReservation = async (
   reservationData: ReservationRequest,
 ): Promise<ReservationResponse> => {
-  return customFetch<ReservationResponse>('/api/v1/customer/reservations', {
+  return customFetch<ReservationResponse>('https://api.antmen.site:9091/api/v1/customer/reservations', {
     method: 'POST',
     body: JSON.stringify(reservationData),
   })
@@ -46,7 +46,7 @@ export const getReservationById = async (
   reservationId: number,
 ): Promise<ReservationResponse> => {
   return customFetch<ReservationResponse>(
-    `/api/v1/customer/reservations/${reservationId}`,
+    `https://api.antmen.site:9091/api/v1/customer/reservations/${reservationId}`,
   )
 }
 
@@ -54,7 +54,7 @@ export const getReservationById = async (
  * 내 예약 목록 조회 API 함수
  */
 export const getMyReservations = async (): Promise<ReservationResponse[]> => {
-  return customFetch<ReservationResponse[]>('/api/v1/customer/reservations')
+  return customFetch<ReservationResponse[]>('https://api.antmen.site:9091/api/v1/customer/reservations')
 }
 
 // TODO: 필요한 코드인가?
@@ -104,7 +104,7 @@ export const cancelReservation = async (
   reason?: string,
 ): Promise<ReservationResponse> => {
   return customFetch<ReservationResponse>(
-    `/api/v1/customer/reservations/${reservationId}/cancel`,
+    `https://api.antmen.site:9091/api/v1/customer/reservations/${reservationId}/cancel`,
     {
       method: 'POST',
       body: JSON.stringify({ reason }),
