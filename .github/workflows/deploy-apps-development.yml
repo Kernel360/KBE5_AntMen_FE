@@ -100,9 +100,9 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            sudo rm -rf ~/apps/client
-            mkdir -p ~/apps/client
-            sudo chown -R $USER:$USER ~/apps/client
+            sudo rm -rf /home/ubuntu/apps/client
+            mkdir -p /home/ubuntu/apps/client
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/apps/client
 
       - name: Create .env file
         run: |

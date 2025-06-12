@@ -1,16 +1,16 @@
 export interface CustomerAddressRequest {
-  addressName: string;
-  addressAddr: string;
-  addressDetail: string;
-  addressArea: number;
+  addressName: string
+  addressAddr: string
+  addressDetail: string
+  addressArea: number
 }
 
 export interface CustomerAddressResponse {
-  addressId: number;
-  addressName: string;
-  addressAddr: string;
-  addressDetail: string;
-  addressArea: number;
+  addressId: number
+  addressName: string
+  addressAddr: string
+  addressDetail: string
+  addressArea: number
 }
 
 // 주소 목록 조회
@@ -34,14 +34,14 @@ export const fetchAddresses = async (): Promise<CustomerAddressResponse[]> => {
 
 // 주소 등록
 export const createAddress = async (
-  data: CustomerAddressRequest
+  data: CustomerAddressRequest,
 ): Promise<CustomerAddressResponse> => {
-  const res = await fetch('https://api.antmen.site:9091/customers/address', {
+  const res = await fetch('/customers/address', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error('주소 등록 실패');
-  return res.json();
-}; 
+  })
+  if (!res.ok) throw new Error('주소 등록 실패')
+  return res.json()
+}

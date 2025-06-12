@@ -1,95 +1,99 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import {
-  MatchingHeader,
-  ManagerList,
-  BottomSection,
-} from '@/widgets/manager'
+import { MatchingHeader, ManagerList, BottomSection } from '@/widgets/manager'
 import { useManagerSelection } from '@/features/manager-selection'
 import type { Manager } from '@/widgets/manager/model/manager'
 
 export default function MatchingPageClient() {
-  const [managers, setManagers] = useState<Manager[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { selectedManagers, handleManagerSelect } = useManagerSelection();
+  const [managers, setManagers] = useState<Manager[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const { selectedManagers, handleManagerSelect } = useManagerSelection()
 
   useEffect(() => {
     async function fetchManagers() {
       try {
         // localStorage에서 예약 정보 가져오기
-        const savedData = localStorage.getItem('pendingReservation');
+        const savedData = localStorage.getItem('pendingReservation')
         if (!savedData) {
-          console.log('저장된 예약 정보가 없습니다.');
-          setIsLoading(false);
-          return;
+          console.log('저장된 예약 정보가 없습니다.')
+          setIsLoading(false)
+          return
         }
 
-        const reservationInfo = JSON.parse(savedData);
-        console.log('클라이언트에서 읽은 예약 정보:', reservationInfo);
+        const reservationInfo = JSON.parse(savedData)
+        console.log('클라이언트에서 읽은 예약 정보:', reservationInfo)
 
         // 매니저 목록 가져오기
-        const response = await fetch('https://api.antmen.site:9091/api/v1/matchings', {
+        const response = await fetch('/api/v1/matchings', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            Accept: 'application/json',
           },
           body: JSON.stringify({
             reservationDate: reservationInfo.reservationDate,
             reservationTime: reservationInfo.reservationTime,
             reservationDuration: reservationInfo.reservationDuration,
             location: {
-              district: reservationInfo.addressId
-            }
-          })
-        });
+              district: reservationInfo.addressId,
+            },
+          }),
+        })
 
         if (!response.ok) {
-          throw new Error(`매니저 조회 실패: ${response.status}`);
+          throw new Error(`매니저 조회 실패: ${response.status}`)
         }
 
-        const data = await response.json();
-        console.log('서버에서 받은 매니저 데이터:', data);
-        
-        // 데이터 구조 변환
-        const formattedManagers: Manager[] = Array.isArray(data) ? data.map(manager => ({
-          id: manager.managerId?.toString() || '',
-          name: manager.managerName || '',
-          gender: manager.managerGender || '미지정',
-          age: manager.managerAge || 0,
-          rating: manager.rating || 0,
-          description: manager.description || '성실하고 친절한 서비스를 제공합니다.',
-          profileImage: manager.managerName ? manager.managerName[0] : '매',
-          reviewCount: manager.reviewCount || 0,
-          introduction: manager.introduction || '안녕하세요! 성실하고 친절한 매니저입니다.',
-          characteristics: [
-            { id: '1', label: '친절해요', type: 'kind' as const },
-            { id: '2', label: '시간 엄수', type: 'punctual' as const },
-            { id: '3', label: '꼼꼼해요', type: 'thorough' as const }
-          ],
-          reviews: []
-        })) : [];
+        const data = await response.json()
+        console.log('서버에서 받은 매니저 데이터:', data)
 
-        console.log('변환된 매니저 데이터:', formattedManagers);
-        
+        // 데이터 구조 변환
+        const formattedManagers: Manager[] = Array.isArray(data)
+          ? data.map((manager) => ({
+              id: manager.managerId?.toString() || '',
+              name: manager.managerName || '',
+              gender: manager.managerGender || '미지정',
+              age: manager.managerAge || 0,
+              rating: manager.rating || 0,
+              description:
+                manager.description || '성실하고 친절한 서비스를 제공합니다.',
+              profileImage: manager.managerName ? manager.managerName[0] : '매',
+              reviewCount: manager.reviewCount || 0,
+              introduction:
+                manager.introduction ||
+                '안녕하세요! 성실하고 친절한 매니저입니다.',
+              characteristics: [
+                { id: '1', label: '친절해요', type: 'kind' as const },
+                { id: '2', label: '시간 엄수', type: 'punctual' as const },
+                { id: '3', label: '꼼꼼해요', type: 'thorough' as const },
+              ],
+              reviews: [],
+            }))
+          : []
+
+        console.log('변환된 매니저 데이터:', formattedManagers)
+
         // 매니저 데이터를 localStorage에 저장
         const updatedReservationInfo = {
           ...reservationInfo,
-          managers: data // 원본 데이터 저장
-        };
-        localStorage.setItem('pendingReservation', JSON.stringify(updatedReservationInfo));
-        
-        setManagers(formattedManagers);
+          managers: data, // 원본 데이터 저장
+        }
+        localStorage.setItem(
+          'pendingReservation',
+          JSON.stringify(updatedReservationInfo),
+        )
+
+        setManagers(formattedManagers)
       } catch (error) {
-        console.error('매니저 목록 로딩 실패:', error);
+        console.error('매니저 목록 로딩 실패:', error)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
 
-    fetchManagers();
-  }, []);
+    fetchManagers()
+  }, [])
 
   if (isLoading) {
     return (
@@ -101,7 +105,7 @@ export default function MatchingPageClient() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -113,11 +117,11 @@ export default function MatchingPageClient() {
           selectedManagers={selectedManagers}
           onManagerSelect={handleManagerSelect}
         />
-        <BottomSection 
-          selectedManagers={selectedManagers} 
+        <BottomSection
+          selectedManagers={selectedManagers}
           managers={managers}
         />
       </div>
     </div>
   )
-} 
+}
