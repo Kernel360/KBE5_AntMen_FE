@@ -69,7 +69,7 @@ export function BottomNavigation() {
         icon={<HandRaisedIcon className="h-full w-full" />}
         label="매칭 요청"
         isActive={pathname === '/manager/matchingLists'}
-        href="/manager/matchingList"
+        href="/manager/matching"
       />
       <NavItem
         icon={<EllipsisHorizontalIcon className="h-full w-full" />}
