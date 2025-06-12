@@ -15,7 +15,7 @@ export interface CustomerAddressResponse {
 
 // 주소 목록 조회
 export const fetchAddresses = async (): Promise<CustomerAddressResponse[]> => {
-  const res = await fetch('http://localhost:9091/customers/address', {
+  const res = await fetch('https://api.antmen.site:9091/customers/address', {
     method: 'GET',
     credentials: 'include',
   });
@@ -27,7 +27,7 @@ export const fetchAddresses = async (): Promise<CustomerAddressResponse[]> => {
 export const createAddress = async (
   data: CustomerAddressRequest
 ): Promise<CustomerAddressResponse> => {
-  const res = await fetch('http://localhost:9091/customers/address', {
+  const res = await fetch('https://api.antmen.site:9091/customers/address', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',

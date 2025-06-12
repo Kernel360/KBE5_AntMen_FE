@@ -31,7 +31,7 @@ export interface ReservationResponse {
 export const createReservation = async (
   reservationData: ReservationRequest,
 ): Promise<ReservationResponse> => {
-  return customFetch<ReservationResponse>('http://localhost:9091/api/v1/customer/reservations', {
+  return customFetch<ReservationResponse>('https://api.antmen.site:9091/api/v1/customer/reservations', {
     method: 'POST',
     body: JSON.stringify(reservationData),
   });
@@ -45,14 +45,14 @@ export const createReservation = async (
 export const getReservationById = async (
   reservationId: number,
 ): Promise<ReservationResponse> => {
-  return customFetch<ReservationResponse>(`http://localhost:9091/api/v1/customer/reservations/${reservationId}`);
+  return customFetch<ReservationResponse>(`https://api.antmen.site:9091/api/v1/customer/reservations/${reservationId}`);
 };
 
 /**
  * 내 예약 목록 조회 API 함수
  */
 export const getMyReservations = async (): Promise<ReservationResponse[]> => {
-  return customFetch<ReservationResponse[]>('http://localhost:9091/api/v1/customer/reservations');
+  return customFetch<ReservationResponse[]>('https://api.antmen.site:9091/api/v1/customer/reservations');
 };
 
 
@@ -100,7 +100,7 @@ export const cancelReservation = async (
   reservationId: number,
   reason?: string,
 ): Promise<ReservationResponse> => {
-  return customFetch<ReservationResponse>(`http://localhost:9091/api/v1/customer/reservations/${reservationId}/cancel`, {
+  return customFetch<ReservationResponse>(`https://api.antmen.site:9091/api/v1/customer/reservations/${reservationId}/cancel`, {
     method: 'POST',
     body: JSON.stringify({ reason }),
   });
