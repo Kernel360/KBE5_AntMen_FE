@@ -6,6 +6,7 @@ import React, { useState } from 'react'
 import { BubbleBackground } from './BubbleBackground'
 import LoginRequiredModal from '@/shared/ui/modal/LoginRequiredModal'
 import Cookies from 'js-cookie'
+import { checkCustomerAuth, checkManagerAuth, checkUserAuth } from '@/features/auth/lib/auth'
 
 interface HomeHeaderProps {
   title?: string
@@ -13,6 +14,7 @@ interface HomeHeaderProps {
   buttonText?: string
   onButtonClick?: () => void
   buttonIcon?: React.ReactNode
+  requireAuth?: 'CUSTOMER' | 'MANAGER'
 }
 
 export function HomeHeader({
@@ -21,21 +23,33 @@ export function HomeHeader({
   buttonText = '버튼입니다.',
   onButtonClick,
   buttonIcon,
+  requireAuth
 }: HomeHeaderProps) {
   const router = useRouter()
   const [loginModalOpen, setLoginModalOpen] = useState(false)
 
   const handleNotificationClick = () => {
-    router.push('/notifications')
+    const authResult = checkUserAuth();
+    
+    if (!authResult.isAuthenticated) {
+      alert(authResult.message);
+      router.push('/login');
+      return;
+    }
+    router.push('/notifications');
+    return;
   }
 
   const handleRequireLogin = () => {
-    const token = Cookies.get('auth-token')
-    if (!token) {
-      setLoginModalOpen(true)
-    } else if (onButtonClick) {
-      onButtonClick()
+    const authResult = checkUserAuth();
+    if (!authResult.isAuthenticated) {
+      setLoginModalOpen(true);
+      return;
     }
+    if (onButtonClick) {
+      onButtonClick();
+    }
+
   }
 
   return (

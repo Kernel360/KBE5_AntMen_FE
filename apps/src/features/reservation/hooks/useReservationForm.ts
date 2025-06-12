@@ -49,13 +49,13 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
 
   // Computed Values
   const totalOptionsPrice = selectedCategoryOptions.reduce((total, optionId) => {
-    const option = initialOptions.find((opt) => opt.optionId === optionId);
-    return total + (option?.optionPrice || 0);
+    const option = initialOptions.find((opt) => opt.coId === optionId);
+    return total + (option?.coPrice || 0);
   }, 0);
 
   const totalOptionsTime = selectedCategoryOptions.reduce((total, optionId) => {
-    const option = initialOptions.find((opt) => opt.optionId === optionId);
-    return total + (option?.optionTime || 0);
+    const option = initialOptions.find((opt) => opt.coId === optionId);
+    return total + (option?.coTime || 0);
   }, 0);
 
   const baseServicePrice = calculatePrice(selectedHours, initialCategory.categoryPrice, initialCategory.categoryPrice, initialCategory.categoryTime);
