@@ -1,11 +1,11 @@
-import { customFetch } from './base';
+import { customFetch } from './base'
 
 // swagger에 정의된 CategoryResponseDto를 기반으로 타입을 정의합니다.
 export interface Category {
-  categoryId: number;
-  categoryName: string;
-  categoryPrice: number;
-  categoryTime: number;
+  categoryId: number
+  categoryName: string
+  categoryPrice: number
+  categoryTime: number
 }
 
 /**
@@ -13,15 +13,15 @@ export interface Category {
  * @returns Category[]
  */
 export const getAllCategories = async (): Promise<Category[]> => {
-  return customFetch<Category[]>('http://localhost:9090/api/v1/common/categories');
-};
+  return customFetch<Category[]>('/api/v1/common/categories')
+}
 
 // swagger에 정의된 CategoryOptionResponseDto를 기반으로 타입을 정의합니다.
 export interface CategoryOption {
-  coId: number;
-  coName: string;
-  coPrice: number;
-  coTime: number;
+  coId: number
+  coName: string
+  coPrice: number
+  coTime: number
 }
 
 /**
@@ -29,9 +29,11 @@ export interface CategoryOption {
  * @param categoryId - 조회할 카테고리의 ID
  * @returns Category
  */
-export const getCategoryById = async (categoryId: string): Promise<Category> => {
-  return customFetch<Category>(`http://localhost:9090/api/v1/common/categories/${categoryId}`);
-};
+export const getCategoryById = async (
+  categoryId: string,
+): Promise<Category> => {
+  return customFetch<Category>(`/api/v1/common/categories/${categoryId}`)
+}
 
 /**
  * 특정 카테고리에 속한 옵션 목록을 조회하는 API 함수
@@ -41,5 +43,7 @@ export const getCategoryById = async (categoryId: string): Promise<Category> => 
 export const getCategoryOptionsByCategoryId = async (
   categoryId: string,
 ): Promise<CategoryOption[]> => {
-  return customFetch<CategoryOption[]>(`http://localhost:9090/api/v1/common/categories/${categoryId}/options`);
-}; 
+  return customFetch<CategoryOption[]>(
+    `/api/v1/common/categories/${categoryId}/options`,
+  )
+}

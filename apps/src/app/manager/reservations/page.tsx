@@ -1,33 +1,33 @@
 /**
  * 매니저 예약 내역 페이지
  * 업무 내역 페이지
- * 
+ *
  * 평소(scheduled): "Check-in" 버튼 표시
  * 작업 시작 후(in-progress): "Check-out" 버튼 표시
  * 작업 완료 후(completed-pending-review): 보라색 "후기 작성" 버튼
  * 후기 작성 완료(completed): 회색 비활성화 "완료됨" 버튼
- * 
+ *
  * TODO
  * 1. 예약 상세보기 페이지 추가
  * 2. 피그마 매칭 요청 검토 페이지 사용 여부 결정
  */
-import { Suspense } from 'react';
-import type { Reservation } from '@/entities/reservation/model/types';
-import { ManagerReservationsClient } from './ManagerReservationsClient';
+import { Suspense } from 'react'
+import type { Reservation } from '@/entities/reservation/model/types'
+import { ManagerReservationsClient } from './ManagerReservationsClient'
 
 async function getReservations(): Promise<Reservation[]> {
   try {
-    const res = await fetch('http://localhost:3000/api/reservations', {
+    const res = await fetch('/api/reservations', {
       cache: 'no-store',
-    });
+    })
 
     if (!res.ok) {
-      throw new Error('Failed to fetch reservations');
+      throw new Error('Failed to fetch reservations')
     }
-    return res.json();
+    return res.json()
   } catch (error) {
-    console.error('Error fetching reservations:', error);
-    return [];
+    console.error('Error fetching reservations:', error)
+    return []
   }
 }
 
@@ -53,15 +53,15 @@ function PageSkeleton() {
         <div className="h-48 w-full rounded-xl bg-gray-200" />
       </div>
     </div>
-  );
+  )
 }
 
 export default async function ManagerReservationsPage() {
-  const initialReservations = await getReservations();
+  const initialReservations = await getReservations()
 
   return (
     <Suspense fallback={<PageSkeleton />}>
       <ManagerReservationsClient initialReservations={initialReservations} />
     </Suspense>
-  );
-} 
+  )
+}

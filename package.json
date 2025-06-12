@@ -23,6 +23,7 @@
         "setup-https": "mkcert -install && mkcert localhost 127.0.0.1"
     },
     "devDependencies": {
+        "@types/axios": "^0.14.4",
         "@types/js-cookie": "^3.0.6",
         "@types/react": "18.2.14",
         "@types/react-dom": "18.2.7",
@@ -32,6 +33,7 @@
     },
     "dependencies": {
         "@headlessui/react": "^2.2.4",
+        "axios": "^1.9.0",
         "js-cookie": "^3.0.5",
         "lucide-react": "^0.512.0",
         "react": "18.2.0",
