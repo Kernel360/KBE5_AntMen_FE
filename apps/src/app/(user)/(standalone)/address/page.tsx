@@ -12,11 +12,11 @@ import {
 } from '@/shared/api/address'
 
 interface AddressForm {
-  addressName: string;
-  main: string;
-  detail: string;
-  latitude: number;
-  longitude: number;
+  addressName: string
+  main: string
+  detail: string
+  latitude: number
+  longitude: number
 }
 
 const AddressPageUI = () => {
@@ -49,6 +49,8 @@ const AddressPageUI = () => {
       const addressData: CustomerAddressRequest = {
         addressName: newAddress.addressName,
         addressDetail: `${newAddress.main} ${newAddress.detail}`,
+        addressAddr: newAddress.main,
+        addressArea: 0,
         latitude: newAddress.latitude,
         longitude: newAddress.longitude,
         isDefault: addresses.length === 0, // 첫 주소인 경우 기본 주소로 설정
@@ -72,7 +74,9 @@ const AddressPageUI = () => {
   const handleDeleteAddress = async (addressId: number) => {
     try {
       await addressApi.delete(addressId)
-      setAddresses((prev) => prev.filter((addr) => addr.addressId !== addressId))
+      setAddresses((prev) =>
+        prev.filter((addr) => addr.addressId !== addressId),
+      )
     } catch (error) {
       console.error('주소 삭제에 실패했습니다:', error)
     }
@@ -85,8 +89,8 @@ const AddressPageUI = () => {
         prev.map((addr) =>
           addr.addressId === addressId
             ? updatedAddress
-            : { ...addr, isDefault: false }
-        )
+            : { ...addr, isDefault: false },
+        ),
       )
     } catch (error) {
       console.error('기본 주소 설정에 실패했습니다:', error)
@@ -96,7 +100,7 @@ const AddressPageUI = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">내 주소 관리</h1>
-      
+
       <div className="space-y-4">
         {addresses.map((address) => (
           <div

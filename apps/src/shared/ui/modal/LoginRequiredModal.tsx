@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import PrimaryButton from '@/shared/ui/components/PrimaryButton'
 
 interface LoginRequiredModalProps {
   isOpen: boolean
