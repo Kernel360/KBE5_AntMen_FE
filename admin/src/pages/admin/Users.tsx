@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import {
     Table,
     TableBody,
@@ -47,6 +48,7 @@ interface User {
     joinDate: string;
     lastLogin: string;
     avatar?: string;
+    type: 'consumer' | 'manager';
 }
 
 const sampleUsers: User[] = [
@@ -58,6 +60,7 @@ const sampleUsers: User[] = [
         status: 'active',
         joinDate: '2024-01-15',
         lastLogin: '2025-06-06 14:30',
+        type: 'consumer'
     },
     {
         id: 2,
@@ -67,6 +70,7 @@ const sampleUsers: User[] = [
         status: 'active',
         joinDate: '2024-02-20',
         lastLogin: '2025-06-06 09:15',
+        type: 'manager'
     },
     {
         id: 3,
@@ -76,6 +80,7 @@ const sampleUsers: User[] = [
         status: 'suspended',
         joinDate: '2024-03-10',
         lastLogin: '2025-06-05 16:45',
+        type: 'consumer'
     },
     {
         id: 4,
@@ -85,6 +90,7 @@ const sampleUsers: User[] = [
         status: 'active',
         joinDate: '2023-12-01',
         lastLogin: '2025-06-06 11:20',
+        type: 'manager'
     },
     {
         id: 5,
@@ -94,6 +100,7 @@ const sampleUsers: User[] = [
         status: 'inactive',
         joinDate: '2024-04-05',
         lastLogin: '2025-05-28 19:30',
+        type: 'consumer'
     },
 ];
 
@@ -128,14 +135,16 @@ export const Users: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [roleFilter, setRoleFilter] = useState<string>('all');
+    const [activeTab, setActiveTab] = useState<'consumer' | 'manager'>('consumer');
 
     const filteredUsers = users.filter(user => {
         const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.email.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
         const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+        const matchesType = user.type === activeTab;
 
-        return matchesSearch && matchesStatus && matchesRole;
+        return matchesSearch && matchesStatus && matchesRole && matchesType;
     });
 
     const handleStatusChange = (userId: number, newStatus: 'active' | 'inactive' | 'suspended') => {
@@ -185,6 +194,28 @@ export const Users: React.FC = () => {
                 </Dialog>
             </div>
 
+            {/* User Type Tabs */}
+            <Tabs defaultValue="consumer" value={activeTab} onValueChange={(value) => setActiveTab(value as 'consumer' | 'manager')}>
+                <TabsList className="grid w-full grid-cols-2 bg-white p-1 rounded-lg">
+                    <TabsTrigger 
+                        value="consumer"
+                        className={`data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm ${
+                            activeTab === 'consumer' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600'
+                        }`}
+                    >
+                        수요자
+                    </TabsTrigger>
+                    <TabsTrigger 
+                        value="manager"
+                        className={`data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm ${
+                            activeTab === 'manager' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600'
+                        }`}
+                    >
+                        매니저
+                    </TabsTrigger>
+                </TabsList>
+            </Tabs>
+
             {/* Filters */}
             <Card>
                 <CardHeader>
@@ -232,8 +263,10 @@ export const Users: React.FC = () => {
             {/* Users Table */}
             <Card>
                 <CardHeader>
-                    <CardTitle>사용자 목록 ({filteredUsers.length}명)</CardTitle>
-                    <CardDescription>등록된 사용자들의 정보와 상태를 확인할 수 있습니다</CardDescription>
+                    <CardTitle>
+                        {activeTab === 'consumer' ? '수요자' : '매니저'} 목록 ({filteredUsers.length}명)
+                    </CardTitle>
+                    <CardDescription>등록된 {activeTab === 'consumer' ? '수요자' : '매니저'}들의 정보와 상태를 확인할 수 있습니다</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
