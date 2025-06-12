@@ -2,11 +2,15 @@ export const customFetch = async <T>(
   url: string,
   options?: RequestInit,
 ): Promise<T> => {
+  const defaultHeaders = {
+    'Content-Type': 'application/json',
+  };
+
   const response = await fetch(url, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
+      ...defaultHeaders,
+      ...(options?.headers || {}),
     },
   });
 
