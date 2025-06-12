@@ -28,10 +28,10 @@ export default function Error({
         </p>
         <div className="flex gap-4 justify-center">
           <button
-            onClick={() => router.push('/reservation')}
+            onClick={() => router.back()}
             className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
           >
-            예약 페이지로 이동
+            이전 페이지로 이동
           </button>
           <button
             onClick={() => reset()}
