@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import Link from 'next/link'
+import PrimaryButton from '@/shared/ui/components/PrimaryButton'
 
 interface LoginRequiredModalProps {
   isOpen: boolean
@@ -66,7 +68,7 @@ const LoginRequiredModal = ({ isOpen, onClose }: LoginRequiredModalProps) => {
           </button>
         </header>
         {/* 내용 */}
-        <main className="px-6 pt-6 pb-8 space-y-4">
+        <main className="px-6 pt-6 pb-4 space-y-4">
           <div className="flex flex-col mb-12 mt-8">
             <p className="text-base text-[#333333] leading-[160%] text-center font-semibold">
               로그인 후 이용 가능합니다
@@ -76,12 +78,12 @@ const LoginRequiredModal = ({ isOpen, onClose }: LoginRequiredModalProps) => {
             </p>
           </div>
 
-          <button
-            onClick={onClose}
-            className="w-full h-12 bg-primary rounded-lg flex items-center justify-center mt-4"
+          <Link
+            href="/login"
+            className="w-full h-12 bg-primary rounded-lg flex items-center justify-center font-bold text-base text-gray-900 mt-4  transition-colors"
           >
-            <span className="text-base font-black text-gray-900">로그인</span>
-          </button>
+            로그인
+          </Link>
         </main>
       </div>
     </div>

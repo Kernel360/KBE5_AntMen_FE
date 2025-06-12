@@ -21,7 +21,7 @@ export default function RootLayout({
     <html lang="ko">
       <body className={inter.className}>
         <main
-          className={`w-full max-w-mobile mx-auto min-h-screen bg-gray-50 relative overflow-x-hidden`}
+          className={`w-full max-w-mobile mx-auto min-h-screen bg-white relative overflow-x-hidden`}
         >
           {children}
         </main>

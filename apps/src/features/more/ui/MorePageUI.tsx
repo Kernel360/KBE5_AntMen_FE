@@ -66,13 +66,13 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
         더보기
       </h3>
 
-      <section className="mx-5 bg-[#9CDAFB] rounded-xl flex flex-col items-center justify-between py-4 mb-4 gap-4">
-        <ProfileSection
-          name={user.name}
-          membershipType={user.membershipType}
-          email={user.email}
-        />
-        <span className="w-full h-[1px] bg-[#E1F3FE]" />
+      <ProfileSection
+        name={user.name}
+        membershipType={user.membershipType}
+        email={user.email}
+      />
+      <section className="mx-5 mt-4 bg-[#9CDAFB] rounded-xl flex flex-col items-center justify-between py-4 mb-4 gap-4">
+        {/* <span className="w-full h-[1px] bg-[#E1F3FE]" /> */}
         <div className="flex flex-col gap-4 w-full px-5">
           <figure className="flex items-center gap-1">
             <img

@@ -71,6 +71,10 @@ module.exports = {
           '0%': { opacity: '1', transform: 'translateY(0)' },
           '100%': { opacity: '0', transform: 'translateY(80%)' },
         },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-4px)' },
+        },
       },
       animation: {
         'slide-up': 'slide-up 0.3s ease-out',
@@ -79,6 +83,7 @@ module.exports = {
         'slide-up-out':
           'slide-up-out 0.38s cubic-bezier(0.6, 0.05, 0.8, 0.3) forwards',
         'fade-out': 'fade-out 0.18s cubic-bezier(0.4, 0, 1, 1) forwards',
+        float: 'float 2.5s ease-in-out infinite',
       },
       maxWidth: {
         mobile: '390px', // 모바일 기준
