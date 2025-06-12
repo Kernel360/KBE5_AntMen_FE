@@ -2,6 +2,7 @@ export * from './category';
 export * from './reservation';
 export * from './reservationOption';
 export * from './address';
+export * from './alert';
 
 export interface ReservationRequest {
   customerId: number;

@@ -53,8 +53,6 @@ export const checkUserAuth = (): AuthCheckResult => {
         };
     }
 
-    // TODO: 실제 구현에서는 토큰을 디코딩하여 역할을 확인
-    // 현재는 테스트 도구의 역할을 사용
     const userRole = getUserRoleFromToken(token);
     
     return {
@@ -99,16 +97,12 @@ export const checkManagerAuth = (): AuthCheckResult => {
     return result;
 };
 
-// 테스트용 토큰에서 역할 추출 (실제 구현에서는 JWT 디코딩 사용)
+// 실제 JWT 토큰에서 역할 추출 (테스트 문자열 체크 삭제)
 const getUserRoleFromToken = (token: string): UserRole => {
     // Bearer 접두사 제거
     const cleanToken = token.replace(/^Bearer\s+/i, '');
 
-    // 1. 테스트 환경: 토큰 문자열에 role이 포함된 경우
-    if (cleanToken.toLowerCase().includes('customer')) return 'CUSTOMER';
-    if (cleanToken.toLowerCase().includes('manager')) return 'MANAGER';
-
-    // 2. JWT 형식일 경우 payload에서 userRole 추출
+    // JWT 형식일 경우 payload에서 userRole 추출
     try {
         const parts = cleanToken.split('.');
         if (parts.length === 3) {

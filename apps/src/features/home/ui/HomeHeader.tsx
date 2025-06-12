@@ -2,27 +2,55 @@
 
 import { BellIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
-import React from 'react';
+import { useSession } from 'next-auth/react';
+import { checkCustomerAuth, checkUserAuth } from '@/features/auth/lib/auth';
+import { ReactNode } from 'react';
 
 interface HomeHeaderProps {
   title?: string;
   subtitle?: string;
-  buttonText?: string;
-  onButtonClick?: () => void;
-  buttonIcon?: React.ReactNode;
+  buttonLabel?: string;
+  IconComponent?: ReactNode;
 }
 
 export function HomeHeader({
-  title = '제목입니다.',
-  subtitle = '소제목입니다.',
-  buttonText = '버튼입니다.',
-  onButtonClick,
-  buttonIcon,
+  title = '집청소로 달라지는 일상',
+  subtitle = '바쁜 일상에서 손쉽게 맡겨보세요',
+  buttonLabel = '예약하기',
+  IconComponent = <BellIcon className="w-6 h-6 text-white" />,
 }: HomeHeaderProps) {
   const router = useRouter();
+  const { data: session } = useSession();
+
+  const handleReservationClick = () => {
+    const authResult = checkCustomerAuth();
+    
+    if (!authResult.isAuthenticated || authResult.message) {
+      alert(authResult.message);
+      if (!authResult.isAuthenticated) {
+        router.push('/login');
+      } else if (authResult.userRole === 'MANAGER') {
+        router.push('/manager');
+      } else {
+        router.push('/');
+      }
+      return;
+    }
+
+    // 인증 통과 시 예약 페이지로 이동
+    router.push('/reservation');
+  };
 
   const handleNotificationClick = () => {
+    const authResult = checkUserAuth();
+    
+    if (!authResult.isAuthenticated) {
+      alert(authResult.message);
+      router.push('/login');
+      return;
+    }
     router.push('/notifications');
+    return;
   };
 
   return (
@@ -39,21 +67,17 @@ export function HomeHeader({
           </span>
         </button>
       </div>
-      {(title || subtitle) && (
-        <div className="mb-6">
-          {title && <h1 className="text-2xl font-bold mb-1 text-white">{title}</h1>}
-          {subtitle && <p className="text-base text-white">{subtitle}</p>}
-        </div>
-      )}
-      {buttonText && (
-        <button
-          onClick={onButtonClick}
-          className="w-full h-14 bg-white rounded-xl flex items-center justify-center gap-2 mb-6"
-        >
-          {buttonIcon}
-          <span className="font-semibold">{buttonText}</span>
-        </button>
-      )}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-1 text-white">{title}</h1>
+        <p className="text-base text-white">{subtitle}</p>
+      </div>
+      <button
+        onClick={handleReservationClick}
+        className="w-full h-14 bg-white rounded-xl flex items-center justify-center gap-2 mb-6"
+      >
+        {IconComponent}
+        <span className="font-semibold">{buttonLabel}</span>
+      </button>
     </div>
   );
 } 

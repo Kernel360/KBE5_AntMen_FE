@@ -10,7 +10,7 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
   const router = useRouter();
 
   // State
-  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
