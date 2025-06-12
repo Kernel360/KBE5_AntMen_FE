@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import { BubbleBackground } from './BubbleBackground'
 import LoginRequiredModal from '@/shared/ui/modal/LoginRequiredModal'
+import Cookies from 'js-cookie'
 
 interface HomeHeaderProps {
   title?: string
@@ -29,7 +30,12 @@ export function HomeHeader({
   }
 
   const handleRequireLogin = () => {
-    setLoginModalOpen(true)
+    const token = Cookies.get('auth-token')
+    if (!token) {
+      setLoginModalOpen(true)
+    } else if (onButtonClick) {
+      onButtonClick()
+    }
   }
 
   return (
