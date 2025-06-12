@@ -8,6 +8,7 @@ export async function fetchAlerts(): Promise<Notification[]> {
       headers: {
         Authorization: token ?? '',
       },
+      cache: 'no-store',
     })
     if (!res.ok) {
       throw new Error('알림 정보를 불러오지 못했습니다.')
