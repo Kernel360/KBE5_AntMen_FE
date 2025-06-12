@@ -23,7 +23,7 @@ export function HomeHeader({
   buttonText = '버튼입니다.',
   onButtonClick,
   buttonIcon,
-  requireAuth
+  requireAuth = 'CUSTOMER'
 }: HomeHeaderProps) {
   const router = useRouter()
   const [loginModalOpen, setLoginModalOpen] = useState(false)
@@ -42,10 +42,28 @@ export function HomeHeader({
 
   const handleRequireLogin = () => {
     const authResult = checkUserAuth();
+
+    // 로그인 필요
     if (!authResult.isAuthenticated) {
       setLoginModalOpen(true);
       return;
     }
+
+    // 잘못된 접근
+    if (requireAuth != authResult.userRole) {
+      authResult.message = '잘못된 접근입니다.'
+      if (authResult.userRole == 'CUSTOMER') {
+        alert(authResult.message);
+        router.push('/');
+        return;
+      } else if (authResult.userRole == 'MANAGER') {
+        alert(authResult.message);
+        router.push('/manager');
+        return;
+      }
+    }
+
+    // 정상 접근
     if (onButtonClick) {
       onButtonClick();
     }
