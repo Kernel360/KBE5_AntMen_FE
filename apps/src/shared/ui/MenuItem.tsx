@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import React from 'react'
 
 interface MenuItemProps {
   icon: string
@@ -7,7 +8,12 @@ interface MenuItemProps {
   onClick?: () => void
 }
 
-export const MenuItem = ({ icon, label, href = '#', onClick }: MenuItemProps) => {
+export const MenuItem = ({
+  icon,
+  label,
+  href = '#',
+  onClick,
+}: MenuItemProps) => {
   if (onClick) {
     return (
       <button
