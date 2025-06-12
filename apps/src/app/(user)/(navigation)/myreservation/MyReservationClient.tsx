@@ -34,7 +34,7 @@ export const MyReservationClient: FC = () => {
         ...(rawToken && { Authorization: `Bearer ${rawToken}` }),
       }
 
-      const res = await fetch(`/api/v1/customer/reservations`, {
+      const res = await fetch(`https://api.antmen.site:9091/api/v1/customer/reservations`, {
         cache: 'no-store',
         method: 'GET',
         headers,
