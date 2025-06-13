@@ -15,7 +15,7 @@ const tabs: { id: MatchingFilterTab; label: string }[] = [
 // // 환경에 따라 baseUrl 분기
 // const baseUrl =
 //   process.env.NODE_ENV === 'production'
-//     ? 'https://antmen.site'
+//     ? 'https://api.antmen.site'
 //     : 'http://localhost:9092';
 
 const ManagerMatchingPage = () => {
@@ -28,7 +28,7 @@ const ManagerMatchingPage = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`https://antmen.site:9092/api/v1/manager/matching/list`, {
+        const res = await fetch(`https://api.antmen.site:9092/api/v1/manager/matching/list`, {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
