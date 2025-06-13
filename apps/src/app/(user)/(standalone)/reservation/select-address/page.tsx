@@ -9,7 +9,7 @@ import AddAddressModal from '@/features/address/ui/AddAddressModal';
 export default function SelectAddressPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const categoryId = searchParams.get('categoryId');
+  const categoryId = searchParams?.get('categoryId');
 
   const [addresses, setAddresses] = useState<CustomerAddressResponse[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);

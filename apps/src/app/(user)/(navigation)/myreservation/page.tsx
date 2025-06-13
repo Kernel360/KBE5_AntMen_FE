@@ -9,9 +9,7 @@
  */
 
 import { Suspense } from 'react';
-import type { Reservation } from '@/entities/reservation/model/types';
 import MyReservationClientWithAuth from './MyReservationClient';
-import { CustomerAuthGuard } from '@/components/auth/CustomerAuthGuard';
 
 function PageSkeleton() {
   return (
