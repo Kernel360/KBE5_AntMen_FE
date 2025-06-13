@@ -12,10 +12,6 @@
     "dev:customer": "cp .env.customer .env.local && yarn dev",
     "dev:manager": "cp .env.manager .env.local && yarn dev"
   },
-  "resolutions": {
-    "@types/react": "18.2.43",
-    "@types/react-dom": "18.2.19"
-  },
   "dependencies": {
     "@auth/core": "^0.34.2",
     "@emotion/react": "^11.14.0",
