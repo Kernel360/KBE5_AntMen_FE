@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import { BubbleBackground } from './BubbleBackground'
 import LoginRequiredModal from '@/shared/ui/modal/LoginRequiredModal'
-import Cookies from 'js-cookie'
-import { checkCustomerAuth, checkManagerAuth, checkUserAuth } from '@/features/auth/lib/auth'
+import { checkUserAuth } from '@/features/auth/lib/auth'
 
 interface HomeHeaderProps {
   title?: string
@@ -23,51 +22,50 @@ export function HomeHeader({
   buttonText = '버튼입니다.',
   onButtonClick,
   buttonIcon,
-  requireAuth = 'CUSTOMER'
+  requireAuth = 'CUSTOMER',
 }: HomeHeaderProps) {
   const router = useRouter()
   const [loginModalOpen, setLoginModalOpen] = useState(false)
 
   const handleNotificationClick = () => {
-    const authResult = checkUserAuth();
-    
+    const authResult = checkUserAuth()
+
     if (!authResult.isAuthenticated) {
-      alert(authResult.message);
-      router.push('/login');
-      return;
+      alert(authResult.message)
+      router.push('/login')
+      return
     }
-    router.push('/notifications');
-    return;
+    router.push('/notifications')
+    return
   }
 
   const handleRequireLogin = () => {
-    const authResult = checkUserAuth();
+    const authResult = checkUserAuth()
 
     // 로그인 필요
     if (!authResult.isAuthenticated) {
-      setLoginModalOpen(true);
-      return;
+      setLoginModalOpen(true)
+      return
     }
 
     // 잘못된 접근
     if (requireAuth != authResult.userRole) {
       authResult.message = '잘못된 접근입니다.'
       if (authResult.userRole == 'CUSTOMER') {
-        alert(authResult.message);
-        router.push('/');
-        return;
+        alert(authResult.message)
+        router.push('/')
+        return
       } else if (authResult.userRole == 'MANAGER') {
-        alert(authResult.message);
-        router.push('/manager');
-        return;
+        alert(authResult.message)
+        router.push('/manager')
+        return
       }
     }
 
     // 정상 접근
     if (onButtonClick) {
-      onButtonClick();
+      onButtonClick()
     }
-
   }
 
   return (
