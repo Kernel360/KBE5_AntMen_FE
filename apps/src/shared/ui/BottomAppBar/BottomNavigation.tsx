@@ -81,7 +81,7 @@ export function BottomNavigation() {
   ]
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 mx-auto flex h-[72px] max-w-mobile items-center justify-between gap-4 border-t bg-white px-2 pt-3 pb-1.5">
+    <div className="fixed bottom-0 left-0 right-0 mx-auto flex h-[72px] max-w-mobile items-center justify-between gap-4 border-t bg-white px-2 py-2">
       {navItems.map((item) => (
         <NavItem
           key={item.href}
