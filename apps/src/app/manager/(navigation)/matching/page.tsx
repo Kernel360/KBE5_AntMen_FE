@@ -1,111 +1,77 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { MatchingRequest, MatchingFilterTab } from '@/entities/matching';
 import { MatchingRequestCard } from '@/features/matching';
 
-// 목업 데이터 - 실제로는 API에서 가져올 데이터
-const mockMatchingRequests: MatchingRequest[] = [
-  {
-    id: '1',
-    categoryName: '대청소',
-    reservationDate: '2024-03-15',
-    reservationTime: '10:00',
-    reservationDuration: 2,
-    additionalDuration: 1,
-    reservationAmount: 60000,
-    location: {
-      district: '서울시 강남구'
-    },
-    type: 'oneTime',
-    status: 'pending',
-    // 상세페이지용 추가 정보
-    reservationId: 'R240315001',
-    reservationMemo: '반려동물이 있어서 알레르기 유발 요소가 없는 세제 사용 부탁드립니다.',
-    optionNames: ['냉장고 청소', '화장실 청소'],
-    priority: 1
-  },
-  {
-    id: '2',
-    categoryName: '사무실 청소',
-    reservationDate: '2024-03-20',
-    reservationTime: '18:00',
-    reservationDuration: 2,
-    additionalDuration: 0,
-    reservationAmount: 45000,
-    location: {
-      district: '서울시 송파구'
-    },
-    type: 'regular',
-    status: 'pending',
-    // 상세페이지용 추가 정보
-    reservationId: 'R240314002',
-    reservationMemo: '매주 수요일마다 정기적으로 청소 부탁드립니다.',
-    priority: 2
-  },
-  {
-    id: '3',
-    categoryName: '부분 청소',
-    reservationDate: '2024-03-18',
-    reservationTime: '14:00',
-    reservationDuration: 3,
-    additionalDuration: 1,
-    reservationAmount: 80000,
-    location: {
-      district: '서울시 마포구'
-    },
-    type: 'oneTime',
-    status: 'pending',
-    // 상세페이지용 추가 정보
-    reservationId: 'R240318003',
-    reservationMemo: '이사 온지 얼마 안 되어서 먼지가 많이 쌓여있습니다.',
-    optionNames: ['냉장고 청소', '베란다 청소'],
-    priority: 1
-  }
-];
-
 const tabs: { id: MatchingFilterTab; label: string }[] = [
   { id: 'all', label: '전체' },
   { id: 'oneTime', label: '일회성' },
-  { id: 'regular', label: '정기' }
+  { id: 'regular', label: '정기' },
 ];
+
+// // 환경에 따라 baseUrl 분기
+// const baseUrl =
+//   process.env.NODE_ENV === 'production'
+//     ? 'https://antmen.site'
+//     : 'http://localhost:9092';
 
 const ManagerMatchingPage = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<MatchingFilterTab>('all');
-  const [requests, setRequests] = useState<MatchingRequest[]>(mockMatchingRequests);
+  const [requests, setRequests] = useState<MatchingRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`https://antmen.site:9092/api/v1/manager/matching/list`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!res.ok) throw new Error('매칭 요청 목록을 불러오지 못했습니다');
+        const data = await res.json();
+        setRequests(data);
+      } catch (e) {
+        setRequests([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const filteredRequests = requests.filter(request => {
     if (activeTab === 'all') return true;
     return request.type === activeTab;
   });
 
-  const handleAccept = (requestId: string) => {
-    // 실제로는 API 호출
+  // 실제 수락/거절 API 연동은 아래 함수에 추가
+  const handleAccept = async (reservationId: string) => {
+    // await fetch(`${baseUrl}/api/v1/manager/matching/accept`, { method: 'POST', ... });
     setRequests(prev => 
       prev.map(request => 
-        request.id === requestId 
-          ? { ...request, status: 'accepted' as const }
+        request.reservationId === reservationId 
+          ? { ...request, reservationStatus: 'accepted' }
           : request
       )
     );
-    // TODO: 성공 토스트 메시지 표시
-    console.log(`매칭 요청 ${requestId} 수락됨`);
   };
 
-  const handleReject = (requestId: string) => {
-    // 실제로는 API 호출
+  const handleReject = async (reservationId: string) => {
+    // await fetch(`${baseUrl}/api/v1/manager/matching/reject`, { method: 'POST', ... });
     setRequests(prev => 
       prev.map(request => 
-        request.id === requestId 
-          ? { ...request, status: 'rejected' as const }
+        request.reservationId === reservationId 
+          ? { ...request, reservationStatus: 'rejected' }
           : request
       )
     );
-    // TODO: 성공 토스트 메시지 표시
-    console.log(`매칭 요청 ${requestId} 거절됨`);
   };
 
   const handleBack = () => {
@@ -152,13 +118,15 @@ const ManagerMatchingPage = () => {
           aria-labelledby={`tab-${activeTab}`}
           id={`panel-${activeTab}`}
         >
-          {filteredRequests.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-8 text-gray-400">불러오는 중...</div>
+          ) : filteredRequests.length > 0 ? (
             filteredRequests.map((request) => (
               <MatchingRequestCard
-                key={request.id}
+                key={request.reservationId}
                 request={request}
-                onAccept={handleAccept}
-                onReject={handleReject}
+                onAccept={() => request.reservationId && handleAccept(request.reservationId)}
+                onReject={() => request.reservationId && handleReject(request.reservationId)}
               />
             ))
           ) : (
