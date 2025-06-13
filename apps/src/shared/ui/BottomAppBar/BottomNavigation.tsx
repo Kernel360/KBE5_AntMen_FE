@@ -12,26 +12,27 @@ import Image from 'next/image'
 
 interface NavItemProps {
   icon: string
+  activeIcon?: string
   label: string
   isActive?: boolean
   href: string
 }
 
-function NavItem({ icon, label, isActive, href }: NavItemProps) {
+function NavItem({ icon, activeIcon, label, isActive, href }: NavItemProps) {
   const router = useRouter()
 
   return (
     <button
       onClick={() => router.push(href)}
-      className="flex flex-1 flex-col items-center gap-1.5"
+      className="flex flex-1 flex-col items-center gap-[2px]"
     >
       <div className="relative flex items-center justify-center w-9 h-9 overflow-hidden">
         <Image
-          src={icon}
+          src={isActive && activeIcon ? activeIcon : icon}
           alt={label}
-          width={100}
-          height={100}
-          className={`w-8 h-8 transition-transform duration-300 ${isActive ? '-translate-x-9' : 'translate-x-0'}`}
+          width={28}
+          height={28}
+          className="w-7 h-7"
         />
       </div>
       <span
@@ -49,26 +50,31 @@ export function BottomNavigation() {
   const navItems = [
     {
       icon: '/icons/footer-home.svg',
+      activeIcon: '/icons/footer-home-active.svg',
       label: '홈',
       href: '/',
     },
     {
       icon: '/icons/footer-chat.svg',
+      activeIcon: '/icons/footer-chat-active.svg',
       label: '게시판',
       href: '/boards',
     },
     {
       icon: '/icons/footer-check.svg',
+      activeIcon: '/icons/footer-check-active.svg',
       label: '내 예약',
       href: '/myreservation',
     },
     {
       icon: '/icons/footer-star.svg',
+      activeIcon: '/icons/footer-star-active.svg',
       label: '이벤트',
       href: '/events',
     },
     {
       icon: '/icons/footer-dot.svg',
+      activeIcon: '/icons/footer-dot-active.svg',
       label: '더보기',
       href: '/more',
     },
@@ -80,6 +86,7 @@ export function BottomNavigation() {
         <NavItem
           key={item.href}
           icon={item.icon}
+          activeIcon={item.activeIcon}
           label={item.label}
           isActive={pathname === item.href}
           href={item.href}
