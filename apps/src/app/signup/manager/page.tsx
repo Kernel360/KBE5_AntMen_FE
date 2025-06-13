@@ -199,7 +199,7 @@ const ManagerSignUpPage = () => {
         formData.append('managerFileUrls', file)
       })
 
-      const response = await fetch('/managers/signup', {
+      const response = await fetch('https://api.antmen.site/managers/signup', {
         method: 'POST',
         body: formData,
       })
