@@ -107,6 +107,11 @@ jobs:
       - name: Create .env file
         run: |
           echo "ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}" > .env
+          echo "API_URL=${{ secrets.API_URL }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+          echo "GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}" >> .env
+          # 필요에 따라 아래에 추가 환경변수 계속 추가
 
       - name: Copy docker-compose.yml and .env
         uses: appleboy/scp-action@v0.1.4

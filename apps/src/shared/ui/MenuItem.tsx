@@ -18,9 +18,9 @@ export const MenuItem = ({
     return (
       <button
         onClick={onClick}
-        className="flex justify-between items-center w-full px-4 py-4"
+        className="flex justify-between items-center w-full"
       >
-        <li>
+        <li className="flex justify-between items-center w-full hover:bg-gray-100 px-4 py-4">
           <div className="flex items-center gap-4">
             <img
               src={icon}
@@ -51,11 +51,8 @@ export const MenuItem = ({
   }
 
   return (
-    <Link
-      href={href}
-      className="flex justify-between items-center w-full px-4 py-4"
-    >
-      <li>
+    <Link href={href} className="flex justify-between items-center w-full">
+      <li className="flex justify-between items-center w-full hover:bg-gray-100 px-4 py-4">
         <div className="flex items-center gap-4">
           <img
             src={icon}
