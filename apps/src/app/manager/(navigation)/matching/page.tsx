@@ -51,27 +51,72 @@ const ManagerMatchingPage = () => {
     return request.type === activeTab;
   });
 
-  // 실제 수락/거절 API 연동은 아래 함수에 추가
-  const handleAccept = async (reservationId: string) => {
-    // await fetch(`${baseUrl}/api/v1/manager/matching/accept`, { method: 'POST', ... });
-    setRequests(prev => 
-      prev.map(request => 
-        request.reservationId === reservationId 
-          ? { ...request, reservationStatus: 'accepted' }
-          : request
-      )
-    );
+  // 실제 수락/거절 API 연동
+  const handleAccept = async (matchingId: number) => {
+    try {
+      await fetch(`https://api.antmen.site:9092/api/v1/manager/matching/${matchingId}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          matchingManagerIsAccept: true,
+          matchingRefuseReason: '',
+        }),
+      });
+      setRequests(prev =>
+        prev.map(request =>
+          request.matchings?.some(m => m.matchingId === matchingId)
+            ? {
+                ...request,
+                reservationStatus: 'accepted',
+                matchings: request.matchings.map(m =>
+                  m.matchingId === matchingId
+                    ? { ...m, isAccepted: true, isRequested: false }
+                    : m
+                ),
+              }
+            : request
+        )
+      );
+    } catch (e) {
+      alert('수락에 실패했습니다.');
+    }
   };
 
-  const handleReject = async (reservationId: string) => {
-    // await fetch(`${baseUrl}/api/v1/manager/matching/reject`, { method: 'POST', ... });
-    setRequests(prev => 
-      prev.map(request => 
-        request.reservationId === reservationId 
-          ? { ...request, reservationStatus: 'rejected' }
-          : request
-      )
-    );
+  const handleReject = async (matchingId: number) => {
+    const refuseReason = prompt('거절 사유를 입력하세요') || '';
+    try {
+      await fetch(`https://api.antmen.site:9092/api/v1/manager/matching/${matchingId}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          matchingManagerIsAccept: false,
+          matchingRefuseReason: refuseReason,
+        }),
+      });
+      setRequests(prev =>
+        prev.map(request =>
+          request.matchings?.some(m => m.matchingId === matchingId)
+            ? {
+                ...request,
+                reservationStatus: 'rejected',
+                matchings: request.matchings.map(m =>
+                  m.matchingId === matchingId
+                    ? { ...m, isAccepted: false, isRequested: false, refuseReason }
+                    : m
+                ),
+              }
+            : request
+        )
+      );
+    } catch (e) {
+      alert('거절에 실패했습니다.');
+    }
   };
 
   const handleBack = () => {
@@ -125,8 +170,14 @@ const ManagerMatchingPage = () => {
               <MatchingRequestCard
                 key={request.reservationId}
                 request={request}
-                onAccept={() => request.reservationId && handleAccept(request.reservationId)}
-                onReject={() => request.reservationId && handleReject(request.reservationId)}
+                onAccept={() => {
+                  const matchingId = request.matchings?.[0]?.matchingId;
+                  if (matchingId) handleAccept(matchingId);
+                }}
+                onReject={() => {
+                  const matchingId = request.matchings?.[0]?.matchingId;
+                  if (matchingId) handleReject(matchingId);
+                }}
               />
             ))
           ) : (
