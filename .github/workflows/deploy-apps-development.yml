@@ -140,6 +140,11 @@ jobs:
             set +a
 
             echo "ECR_REGISTRY 값: $ECR_REGISTRY"
+            echo "GOOGLE_CLIENT_ID 값: $GOOGLE_CLIENT_ID"
+            echo "GOOGLE_REDIRECT_URI 값: $GOOGLE_REDIRECT_URI"
+            echo "GOOGLE_RESPONSE_TYPE 값: $GOOGLE_RESPONSE_TYPE"
+            echo "GOOGLE_SCOPE 값: $GOOGLE_SCOPE"
+            echo "GOOGLE_AUTH_URL 값: $GOOGLE_AUTH_URL"
 
             echo "정리 전 디스크 사용량:"
             df -h /

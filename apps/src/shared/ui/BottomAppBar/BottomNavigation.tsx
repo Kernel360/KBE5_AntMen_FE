@@ -29,10 +29,9 @@ function NavItem({ icon, label, isActive, href }: NavItemProps) {
         <Image
           src={icon}
           alt={label}
-          width={72}
-          height={36}
-          className={`transition-transform duration-300 ${isActive ? '-translate-x-9' : 'translate-x-0'}`}
-          style={{ width: 72, height: 36 }}
+          width={100}
+          height={100}
+          className={`w-8 h-8 transition-transform duration-300 ${isActive ? '-translate-x-9' : 'translate-x-0'}`}
         />
       </div>
       <span
