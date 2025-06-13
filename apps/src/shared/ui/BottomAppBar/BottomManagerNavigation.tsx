@@ -62,13 +62,13 @@ export function BottomNavigation() {
       <NavItem
         icon={<CalendarIcon className="h-full w-full" />}
         label="내 업무"
-        isActive={pathname === '/manager/work'}
-        href="/manager/work"
+        isActive={pathname === '/manager/reservations'}
+        href="/manager/reservations"
       />
       <NavItem
         icon={<HandRaisedIcon className="h-full w-full" />}
         label="매칭 요청"
-        isActive={pathname === '/manager/matchingLists'}
+        isActive={pathname === '/manager/matching'}
         href="/manager/matching"
       />
       <NavItem

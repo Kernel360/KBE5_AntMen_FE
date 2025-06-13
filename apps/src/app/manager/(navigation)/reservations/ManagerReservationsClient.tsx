@@ -253,12 +253,6 @@ export const ManagerReservationsClient = ({
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-2xl bg-white">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-              <Image
-                src="/icons/calendar-check.svg"
-                alt="업무 없음"
-                width={32}
-                height={32}
-              />
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-gray-800">
