@@ -1,6 +1,6 @@
 'use client'
 
-import { BellIcon } from '@heroicons/react/24/outline'
+import { BellIcon, UserCircleIcon } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import { BubbleBackground } from './BubbleBackground'
@@ -73,16 +73,25 @@ export function HomeHeader({
       <BubbleBackground />
       <div className="relative z-10">
         <div className="flex justify-end mb-6">
-          <button
-            className="relative"
-            onClick={handleNotificationClick}
-            aria-label="알림 보기"
-          >
-            <BellIcon className="w-6 h-6 text-white" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
-              1
-            </span>
-          </button>
+          <div className="flex gap-4">
+            <button
+              className="relative"
+              onClick={() => router.push('/login')}
+              aria-label="로그인"
+            >
+              <UserCircleIcon className="w-6 h-6 text-white" />
+            </button>
+            <button
+              className="relative"
+              onClick={handleNotificationClick}
+              aria-label="알림 보기"
+            >
+              <BellIcon className="w-6 h-6 text-white" />
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
+                1
+              </span>
+            </button>
+          </div>
         </div>
         {(title || subtitle) && (
           <div className="mb-6">

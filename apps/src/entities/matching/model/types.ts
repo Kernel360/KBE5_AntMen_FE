@@ -32,6 +32,31 @@ export interface MatchingRequest {
   optionNames?: string[];
   priority?: number;
   createdAt?: string;
+  customer: MatchingManager;
+  manager: MatchingManager;
+  address: string;
+  selectedOptions: string[];
+  matchings: Matching[];
+}
+
+export interface MatchingManager {
+  managerId: number;
+  managerName: string;
+  managerGender: string;
+  managerAge: number;
+  managerComment: string;
+  managerRating: number;
+  managerImage: string;
+}
+
+export interface Matching {
+  matchingId: number;
+  priority: number;
+  isRequested: boolean;
+  isAccepted: boolean;
+  isFinal: boolean;
+  refuseReason: string;
+  manager: MatchingManager;
 }
 
 export type MatchingFilterTab = 'all' | 'oneTime' | 'regular'; 
