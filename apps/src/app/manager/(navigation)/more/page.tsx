@@ -5,10 +5,10 @@ import { MorePageUI } from '@/features/more/ui/MorePageUI'
 
 export default function MorePage() {
   const user = {
-    name: '홍길동',
-    points: 1000,
-    membershipType: 'Gold',
-    email: 'test@test.com',
+    userName: '홍길동',
+    userPoint: 1000,
+    userType: 'Gold',
+    userEmail: 'test@test.com',
   }
   return <MorePageUI user={user} />
 }
