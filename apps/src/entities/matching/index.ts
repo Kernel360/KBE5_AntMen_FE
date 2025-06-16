@@ -1,6 +1,10 @@
-export type { 
-  MatchingRequest, 
-  MatchingRequestType, 
-  MatchingRequestStatus, 
-  MatchingFilterTab 
-} from './model/types'; 
+export type {
+  MatchingRequest,
+  MatchingRequestType,
+  MatchingRequestStatus,
+  MatchingFilterTab,
+  UserGender,
+  ReservationHistoryDto,
+  UserSummaryDto,
+  MatchingDto,
+} from './model/types'

@@ -34,11 +34,14 @@ export const MyReservationClient: FC = () => {
         ...(rawToken && { Authorization: `Bearer ${rawToken}` }),
       }
 
-      const res = await fetch(`https://api.antmen.site:9091/api/v1/customer/reservations`, {
-        cache: 'no-store',
-        method: 'GET',
-        headers,
-      })
+      const res = await fetch(
+        `https://api.antmen.site:9091/api/v1/customer/reservations`,
+        {
+          cache: 'no-store',
+          method: 'GET',
+          headers,
+        },
+      )
 
       if (!res.ok) throw new Error('Failed to fetch reservations')
 
@@ -61,10 +64,10 @@ export const MyReservationClient: FC = () => {
   }
 
   const filteredReservations = reservations.filter((r) => {
-    const status = r.status?.toUpperCase()
+    const status = r.reservationStatus?.toUpperCase()
     return activeTab === 'upcoming'
-      ? ['SCHEDULED', 'IN-PROGRESS'].includes(status)
-      : ['COMPLETED', 'CANCELLED', 'ERROR'].includes(status)
+      ? ['SCHEDULED', 'WAITING', 'MATCHING', 'PAY'].includes(status)
+      : ['DONE', 'CANCEL', 'ERROR'].includes(status)
   })
 
   return (
@@ -121,10 +124,12 @@ export const MyReservationClient: FC = () => {
           <div className="space-y-4 p-5">
             {filteredReservations.map((reservation) => (
               <ReservationCard
-                key={reservation.id}
+                key={reservation.reservationId}
                 reservation={reservation}
                 userType="customer"
-                onViewDetails={() => handleViewDetails(reservation.id)}
+                onViewDetails={() =>
+                  handleViewDetails(String(reservation.reservationId))
+                }
               />
             ))}
           </div>
@@ -159,38 +164,25 @@ export const MyReservationClient: FC = () => {
 
 function normalizeReservations(raw: any[]): Reservation[] {
   return raw.map((r) => ({
-    id: String(r.reservationId),
-    reservationNumber: String(r.reservationId),
-    serviceType: r.categoryName,
-    status: (r.reservationStatus ?? '').toUpperCase(),
-    paymentStatus: 'paid',
-    dateTime: `${r.reservationDate} ${r.reservationTime?.slice(0, 5)}`,
-    duration: `${r.reservationDuration}시간`,
-    location: '방문 주소 미입력',
-    detailedAddress: '',
-    worker: {
-      id: String(r.managerId || ''),
-      name: r.managerName || '미정',
-      rating: 0,
-      experience: '',
-      age: 0,
-      gender: '',
-      avatar: '',
-      phone: '',
-    },
-    customer: {
-      id: String(r.customerId),
-      name: '고객명',
-    },
-    amount: r.reservationAmount,
-    baseAmount: r.reservationAmount,
-    discount: 0,
-    paymentMethod: '',
-    options: (r.optionNames || []).map((name: string) => ({ name, price: 0 })),
-    createdAt: r.reservationCreatedAt,
-    checkinTime: '',
-    checkoutTime: '',
-    review: undefined,
+    reservationId: r.reservationId,
+    customerId: r.customerId,
+    reservationCreatedAt: r.reservationCreatedAt,
+    reservationDate: r.reservationDate,
+    reservationTime: r.reservationTime,
+    categoryId: r.categoryId,
+    categoryName: r.categoryName,
+    recommendDuration: r.recommendDuration,
+    reservationDuration: r.reservationDuration,
+    managerId: r.managerId,
+    managerName: r.managerName,
+    matchedAt: r.matchedAt,
+    reservationStatus: r.reservationStatus,
+    reservationCancelReason: r.reservationCancelReason,
+    reservationMemo: r.reservationMemo,
+    reservationAmount: r.reservationAmount,
+    optionIds: r.optionIds,
+    optionNames: r.optionNames,
+    address: r.address,
   }))
 }
 

@@ -21,7 +21,7 @@ const LoginRequiredModal = ({ isOpen, onClose }: LoginRequiredModalProps) => {
       const timeout = setTimeout(() => setShow(false), 380)
       return () => clearTimeout(timeout)
     }
-  }, [isOpen])
+  }, [isOpen, show])
 
   if (!show) return null
 

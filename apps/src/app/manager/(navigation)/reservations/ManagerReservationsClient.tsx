@@ -11,7 +11,10 @@ import {
   ReservationStatus,
   ReservationStatusMap,
 } from '@/entities/reservation/model/types'
-import { changeReservationStatus, getMyReservations } from '@/entities/reservation/api/reservationApi'
+import {
+  changeReservationStatus,
+  getMyReservations,
+} from '@/entities/reservation/api/reservationApi'
 
 interface ManagerReservationsClientProps {
   initialReservations: Reservation[]
@@ -23,8 +26,9 @@ export const ManagerReservationsClient = ({
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<ReservationTab>('upcoming')
-  const [reservations, setReservations] =
-    useState<Reservation[]>(initialReservations.map(mapReservationApiToClient))
+  const [reservations, setReservations] = useState<Reservation[]>(
+    initialReservations.map(mapReservationApiToClient),
+  )
   const [reviewModal, setReviewModal] = useState<{
     isOpen: boolean
     reservationId: string
@@ -39,25 +43,26 @@ export const ManagerReservationsClient = ({
   // 클라이언트에서 예약 데이터 fetch
   const fetchReservations = async () => {
     try {
-      const rawToken = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('auth-token='))
-        ?.split('=')[1] || '';
-      const decodedToken = decodeURIComponent(rawToken);
-      const token = decodedToken.replace(/^Bearer\s+/, '');
-      const authHeader = `Bearer ${token}`;
-      const data = await getMyReservations(authHeader);
-      setReservations(data.map(mapReservationApiToClient));
+      const rawToken =
+        document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('auth-token='))
+          ?.split('=')[1] || ''
+      const decodedToken = decodeURIComponent(rawToken)
+      const token = decodedToken.replace(/^Bearer\s+/, '')
+      const authHeader = `Bearer ${token}`
+      const data = await getMyReservations(authHeader)
+      setReservations(data.map(mapReservationApiToClient))
     } catch (e) {
-      setError('예약 데이터를 불러오지 못했습니다.');
+      setError('예약 데이터를 불러오지 못했습니다.')
     }
-  };
+  }
 
   // 최초 마운트 및 탭 전환 시마다 fetch
   useEffect(() => {
-    fetchReservations();
+    fetchReservations()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
+  }, [activeTab])
 
   // URL 파라미터에서 취소된 예약 ID 확인
   useEffect(() => {
@@ -66,7 +71,7 @@ export const ManagerReservationsClient = ({
       setReservations((prev) =>
         prev.map((reservation) =>
           reservation.reservationId.toString() === cancelledId
-            ? { ...reservation, reservationStatus: 'C' }
+            ? { ...reservation, reservationStatus: 'CANCEL' }
             : reservation,
         ),
       )
@@ -82,17 +87,18 @@ export const ManagerReservationsClient = ({
   ) => {
     try {
       // 쿠키에서 토큰 가져오기
-      const rawToken = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('auth-token='))
-        ?.split('=')[1] || '';
-      const decodedToken = decodeURIComponent(rawToken);
-      const token = decodedToken.replace(/^Bearer\s+/, '');
-      const authHeader = `Bearer ${token}`;
+      const rawToken =
+        document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('auth-token='))
+          ?.split('=')[1] || ''
+      const decodedToken = decodeURIComponent(rawToken)
+      const token = decodedToken.replace(/^Bearer\s+/, '')
+      const authHeader = `Bearer ${token}`
       await changeReservationStatus(
         parseInt(id),
         newStatus.reservationStatus as ReservationStatus,
-        authHeader
+        authHeader,
       )
       // 로컬 상태 업데이트
       setReservations((prev) =>
@@ -111,17 +117,19 @@ export const ManagerReservationsClient = ({
   const handleCheckIn = async (id: string) => {
     console.log('Check-in for reservation:', id)
     await updateReservationStatus(id, {
-      reservationStatus: 'M',
+      reservationStatus: 'MATCHING',
     })
   }
 
   const handleCheckOut = async (id: string) => {
     console.log('Check-out for reservation:', id)
-    const reservation = reservations.find((r) => r.reservationId.toString() === id)
+    const reservation = reservations.find(
+      (r) => r.reservationId.toString() === id,
+    )
     if (!reservation) return
 
     await updateReservationStatus(id, {
-      reservationStatus: 'D',
+      reservationStatus: 'DONE',
     })
 
     setReviewModal({
@@ -132,7 +140,9 @@ export const ManagerReservationsClient = ({
   }
 
   const handleWriteReview = (id: string) => {
-    const reservation = reservations.find((r) => r.reservationId.toString() === id)
+    const reservation = reservations.find(
+      (r) => r.reservationId.toString() === id,
+    )
     if (!reservation) return
 
     setReviewModal({
@@ -150,7 +160,7 @@ export const ManagerReservationsClient = ({
     }
 
     await updateReservationStatus(reviewModal.reservationId, {
-      reservationStatus: 'D',
+      reservationStatus: 'DONE',
     })
 
     // 모달 닫기
@@ -189,10 +199,11 @@ export const ManagerReservationsClient = ({
 
   const filteredReservations = reservations.filter((reservation) =>
     activeTab === 'upcoming'
-      ? reservation.reservationStatus === 'W' || reservation.reservationStatus === 'M'
-      : reservation.reservationStatus === 'D' ||
-        reservation.reservationStatus === 'C' ||
-        reservation.reservationStatus === 'E',
+      ? reservation.reservationStatus === 'WAITING' ||
+        reservation.reservationStatus === 'MATCHING'
+      : reservation.reservationStatus === 'DONE' ||
+        reservation.reservationStatus === 'CANCEL' ||
+        reservation.reservationStatus === 'ERROR',
   )
 
   if (error) {
@@ -258,7 +269,9 @@ export const ManagerReservationsClient = ({
         {/* Error 안내문구 */}
         <section className="flex flex-1 flex-col items-center justify-center bg-gray-50 p-5">
           <div className="flex flex-col items-center">
-            <h2 className="text-xl font-semibold text-red-600 mb-2">오류가 발생했습니다</h2>
+            <h2 className="text-xl font-semibold text-red-600 mb-2">
+              오류가 발생했습니다
+            </h2>
             <p className="text-gray-600">{error}</p>
             <button
               onClick={() => window.location.reload()}
@@ -391,9 +404,12 @@ export const ManagerReservationsClient = ({
 function mapReservationApiToClient(apiData: Reservation): Reservation {
   return {
     ...apiData,
-    reservationStatus: ReservationStatusMap[apiData.reservationStatus] || apiData.reservationStatus,
-    reservationTime: typeof apiData.reservationTime === 'string'
-      ? apiData.reservationTime
-      : `${String(apiData.reservationTime.hour).padStart(2, '0')}:${String(apiData.reservationTime.minute).padStart(2, '0')}:${String(apiData.reservationTime.second ?? 0).padStart(2, '0')}`,
+    reservationStatus:
+      ReservationStatusMap[apiData.reservationStatus] ||
+      apiData.reservationStatus,
+    reservationTime:
+      typeof apiData.reservationTime === 'string'
+        ? apiData.reservationTime
+        : `${String(apiData.reservationTime.hour).padStart(2, '0')}:${String(apiData.reservationTime.minute).padStart(2, '0')}:${String(apiData.reservationTime.second ?? 0).padStart(2, '0')}`,
   }
 }
