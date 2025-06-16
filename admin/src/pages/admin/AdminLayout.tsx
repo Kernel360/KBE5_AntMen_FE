@@ -13,9 +13,7 @@ import {
     LogOut
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar';
 import { Separator } from '../../components/ui/separator';
-import { deleteCookie, ADMIN_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE } from '../../lib/cookie';
 
 interface MenuItem {
     id: string;

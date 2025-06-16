@@ -1,10 +1,9 @@
 import { cookies } from 'next/headers'
-import { jwtDecode } from 'jwt-decode'
 import { MorePageUI } from '@/features/more/ui/MorePageUI'
 
 async function getUserData(token: string) {
 
-  const res = await fetch(`http://localhost:9091/customers/confirm`, {
+  const res = await fetch(`https://api.antmen.site:9091/customers/confirm`, {
     next: {
       revalidate: 3600
     },

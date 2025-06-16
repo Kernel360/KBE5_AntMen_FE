@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { userService } from '../../api/userService'
-import { User } from '../../api/types'
 import {
   Card,
   CardContent,
@@ -12,10 +11,8 @@ import {
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Badge } from '../../components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '../../components/ui/avatar'
 import {
   Tabs,
-  TabsContent,
   TabsList,
   TabsTrigger,
 } from '../../components/ui/tabs'
@@ -45,12 +42,8 @@ import {
 import {
   Search,
   UserPlus,
-  MoreHorizontal,
-  Edit,
-  Trash2,
   Shield,
   ShieldOff,
-  Filter,
 } from 'lucide-react'
 
 const getRoleBadge = (role: string) => {
