@@ -9,6 +9,8 @@ import type {
   Reservation,
   ReservationTab,
 } from '@/entities/reservation/model/types'
+import { ReservationStatus } from '@/entities/reservation/model/types'
+import { changeReservationStatus } from '@/entities/reservation/api/reservationApi'
 
 interface ManagerReservationsClientProps {
   initialReservations: Reservation[]
@@ -31,6 +33,7 @@ export const ManagerReservationsClient = ({
     reservationId: '',
     customerName: '',
   })
+  const [error, setError] = useState<string | null>(null)
 
   // URL 파라미터에서 취소된 예약 ID 확인
   useEffect(() => {
@@ -38,8 +41,8 @@ export const ManagerReservationsClient = ({
     if (cancelledId) {
       setReservations((prev) =>
         prev.map((reservation) =>
-          reservation.id === cancelledId
-            ? { ...reservation, status: 'CANCEL' as const }
+          reservation.reservationId.toString() === cancelledId
+            ? { ...reservation, reservationStatus: 'C' }
             : reservation,
         ),
       )
@@ -54,69 +57,67 @@ export const ManagerReservationsClient = ({
     newStatus: Partial<Reservation>,
   ) => {
     try {
-      const response = await fetch(`/api/reservation/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newStatus),
-      })
+      // 쿠키에서 토큰 가져오기
+      const token = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('auth-token='))
+        ?.split('=')[1]
 
-      if (!response.ok) {
-        throw new Error('Failed to update reservation status')
+      if (!token) {
+        throw new Error('인증 토큰이 없습니다')
       }
 
-      const updatedReservation: Reservation = await response.json()
+      await changeReservationStatus(
+        parseInt(id),
+        newStatus.reservationStatus as ReservationStatus,
+        token
+      )
 
       // 로컬 상태 업데이트
       setReservations((prev) =>
         prev.map((reservation) =>
-          reservation.id === id ? updatedReservation : reservation,
+          reservation.reservationId.toString() === id
+            ? { ...reservation, ...newStatus }
+            : reservation,
         ),
       )
-      return updatedReservation
     } catch (error) {
       console.error('Error updating reservation:', error)
-      alert('상태 변경에 실패했습니다. 다시 시도해주세요.')
-      return null
+      setError('상태 변경에 실패했습니다. 다시 시도해주세요.')
     }
   }
 
   const handleCheckIn = async (id: string) => {
     console.log('Check-in for reservation:', id)
     await updateReservationStatus(id, {
-      status: 'MATCHING',
-      checkinTime: new Date().toISOString(),
+      reservationStatus: 'M',
     })
   }
 
   const handleCheckOut = async (id: string) => {
     console.log('Check-out for reservation:', id)
-    const reservation = reservations.find((r) => r.id === id)
+    const reservation = reservations.find((r) => r.reservationId.toString() === id)
     if (!reservation) return
 
-    const updated = await updateReservationStatus(id, {
-      status: 'DONE',
-      checkoutTime: new Date().toISOString(),
+    await updateReservationStatus(id, {
+      reservationStatus: 'D',
     })
 
-    if (updated) {
-      setReviewModal({
-        isOpen: true,
-        reservationId: id,
-        customerName: updated.customer?.name || '고객님',
-      })
-    }
+    setReviewModal({
+      isOpen: true,
+      reservationId: id,
+      customerName: '고객님',
+    })
   }
 
   const handleWriteReview = (id: string) => {
-    const reservation = reservations.find((r) => r.id === id)
+    const reservation = reservations.find((r) => r.reservationId.toString() === id)
     if (!reservation) return
 
     setReviewModal({
       isOpen: true,
       reservationId: id,
-      customerName: reservation.customer?.name || '고객님',
+      customerName: '고객님',
     })
   }
 
@@ -128,8 +129,7 @@ export const ManagerReservationsClient = ({
     }
 
     await updateReservationStatus(reviewModal.reservationId, {
-      status: 'DONE',
-      review: reviewData,
+      reservationStatus: 'D',
     })
 
     // 모달 닫기
@@ -168,11 +168,88 @@ export const ManagerReservationsClient = ({
 
   const filteredReservations = reservations.filter((reservation) =>
     activeTab === 'upcoming'
-      ? reservation.status === 'WAITING' || reservation.status === 'MATCHING'
-      : reservation.status === 'DONE' ||
-        reservation.status === 'CANCEL' ||
-        reservation.status === 'ERROR',
+      ? reservation.reservationStatus === 'W' || reservation.reservationStatus === 'M'
+      : reservation.reservationStatus === 'D' ||
+        reservation.reservationStatus === 'C' ||
+        reservation.reservationStatus === 'E',
   )
+
+  if (error) {
+    return (
+      <main className="flex min-h-screen flex-col bg-white">
+        {/* Header */}
+        <header className="flex items-center justify-between p-5">
+          <button
+            onClick={() => router.back()}
+            className="flex h-6 w-6 items-center justify-center"
+          >
+            <Image
+              src="/icons/arrow-left.svg"
+              alt="뒤로가기"
+              width={24}
+              height={24}
+            />
+          </button>
+          <h1 className="flex-1 text-center text-2xl font-bold">업무 내역</h1>
+          <div className="h-6 w-6" /> {/* Spacer for alignment */}
+        </header>
+
+        {/* Tab Section */}
+        <div className="flex flex-col gap-4 px-5">
+          <div className="flex gap-10">
+            <button
+              onClick={() => setActiveTab('upcoming')}
+              className="flex flex-col items-center gap-2"
+            >
+              <span
+                className={`text-base ${
+                  activeTab === 'upcoming'
+                    ? 'font-extrabold text-[#4DD0E1]'
+                    : 'font-medium text-[#B0BEC5]'
+                }`}
+              >
+                예정된 업무
+              </span>
+              {activeTab === 'upcoming' && (
+                <div className="h-0.5 w-full bg-[#4DD0E1]" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('past')}
+              className="flex flex-col items-center gap-2"
+            >
+              <span
+                className={`text-base ${
+                  activeTab === 'past'
+                    ? 'font-extrabold text-[#4DD0E1]'
+                    : 'font-medium text-[#B0BEC5]'
+                }`}
+              >
+                지난 업무
+              </span>
+              {activeTab === 'past' && (
+                <div className="h-0.5 w-full bg-[#4DD0E1]" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Error 안내문구 */}
+        <section className="flex flex-1 flex-col items-center justify-center bg-gray-50 p-5">
+          <div className="flex flex-col items-center">
+            <h2 className="text-xl font-semibold text-red-600 mb-2">오류가 발생했습니다</h2>
+            <p className="text-gray-600">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700"
+            >
+              다시 시도
+            </button>
+          </div>
+        </section>
+      </main>
+    )
+  }
 
   return (
     <main className="flex min-h-screen flex-col bg-white">
@@ -233,13 +310,13 @@ export const ManagerReservationsClient = ({
         </div>
       </div>
 
-      {/* Reservation List */}
+      {/* Reservation List or 안내문구 */}
       <section className="flex flex-1 flex-col overflow-y-auto bg-gray-50 p-5">
         {filteredReservations.length > 0 ? (
           <div className="space-y-4">
             {filteredReservations.map((reservation) => (
               <ReservationCard
-                key={reservation.id}
+                key={reservation.reservationId}
                 reservation={reservation}
                 userType="manager"
                 onCheckIn={handleCheckIn}
@@ -252,8 +329,7 @@ export const ManagerReservationsClient = ({
           </div>
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-2xl bg-white">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-            </div>
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100" />
             <div className="text-center">
               <p className="text-lg font-bold text-gray-800">
                 {activeTab === 'upcoming'
@@ -279,12 +355,14 @@ export const ManagerReservationsClient = ({
       </section>
 
       {/* Review Modal */}
-      <ReviewModal
-        isOpen={reviewModal.isOpen}
-        onClose={handleReviewModalClose}
-        onSubmit={handleReviewSubmit}
-        customerName={reviewModal.customerName}
-      />
+      {reviewModal.isOpen && (
+        <ReviewModal
+          isOpen={reviewModal.isOpen}
+          onClose={handleReviewModalClose}
+          onSubmit={handleReviewSubmit}
+          customerName={reviewModal.customerName}
+        />
+      )}
     </main>
   )
 }

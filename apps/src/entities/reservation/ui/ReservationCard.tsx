@@ -24,68 +24,54 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
   onCancel,
 }) => {
   const {
-    id,
-    serviceType,
-    location,
-    detailedAddress,
-    status,
-    dateTime,
-    amount,
-    worker,
-    duration,
-    options,
-    paymentMethod,
-    reservationNumber,
-    createdAt,
-    customer,
-    baseAmount,
-    discount,
-    checkinTime,
-    checkoutTime,
-    review,
-    // 추가 필드가 있다면 여기에 추가
+    reservationId,
+    categoryName,
+    reservationStatus,
+    reservationDate,
+    reservationTime,
+    reservationDuration,
+    reservationAmount,
+    optionNames,
+    reservationMemo,
   } = reservation;
-
-  const statusValue = (status ?? '').toUpperCase();
 
   const formattedAmount = new Intl.NumberFormat('ko-KR', {
     style: 'currency',
     currency: 'KRW',
-  }).format(amount);
+  }).format(reservationAmount);
 
-  const personName = userType === 'manager'
-    ? customer?.name || '고객'
-    : worker?.name || '미정';
-  const personLabel = userType === 'manager' ? '고객' : '담당자';
-
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: ReservationStatus) => {
     switch (status) {
-      case 'SCHEDULED':
-        return '예정됨';
-      case 'IN-PROGRESS':
-        return '진행 중';
-      case 'COMPLETED':
+      case 'W':
+        return '대기중';
+      case 'M':
+        return '매칭중';
+      case 'P':
+        return '결제대기';
+      case 'D':
         return '완료';
-      case 'CANCELLED':
+      case 'C':
         return '취소됨';
-      case 'ERROR':
+      case 'E':
         return '에러';
       default:
         return '알 수 없음';
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: ReservationStatus) => {
     switch (status) {
-      case 'SCHEDULED':
+      case 'W':
         return 'bg-[#E8F8FC] text-[#4DD0E1]';
-      case 'IN-PROGRESS':
+      case 'M':
         return 'bg-[#FFF3E0] text-[#FFB74D]';
-      case 'COMPLETED':
+      case 'P':
+        return 'bg-[#E8F5E9] text-[#66BB6A]';
+      case 'D':
         return 'bg-[#F5F5F5] text-[#B0BEC5]';
-      case 'CANCELLED':
+      case 'C':
         return 'bg-[#FFEBEE] text-[#E57373]';
-      case 'ERROR':
+      case 'E':
         return 'bg-[#FFEBEE] text-[#E57373]';
       default:
         return 'bg-[#E8F8FC] text-[#4DD0E1]';
@@ -94,42 +80,42 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
 
   const renderManagerButtons = () => {
     if (userType !== 'manager') return null;
-    switch (statusValue) {
-      case 'SCHEDULED':
+    switch (reservationStatus) {
+      case 'W':
         return (
           <>
             <button
-              onClick={() => onCheckIn?.(id)}
+              onClick={() => onCheckIn?.(reservationId.toString())}
               className="flex-1 rounded-[22px] bg-[#4DD0E1] py-3 text-sm font-medium text-white hover:bg-[#26C6DA] transition-colors"
             >
               Check-in
             </button>
             <button
-              onClick={() => onViewDetails?.(id)}
+              onClick={() => onViewDetails?.(reservationId.toString())}
               className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
             >
               상세보기
             </button>
           </>
         );
-      case 'IN-PROGRESS':
+      case 'M':
         return (
           <>
             <button
-              onClick={() => onCheckOut?.(id)}
+              onClick={() => onCheckOut?.(reservationId.toString())}
               className="flex-1 rounded-[22px] bg-[#FFB74D] py-3 text-sm font-medium text-white hover:bg-[#FFA726] transition-colors"
             >
               Check-out
             </button>
             <button
-              onClick={() => onViewDetails?.(id)}
+              onClick={() => onViewDetails?.(reservationId.toString())}
               className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
             >
               상세보기
             </button>
           </>
         );
-      case 'COMPLETED':
+      case 'D':
         return (
           <>
             <button
@@ -139,7 +125,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
               완료됨
             </button>
             <button
-              onClick={() => onViewDetails?.(id)}
+              onClick={() => onViewDetails?.(reservationId.toString())}
               className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
             >
               상세보기
@@ -149,7 +135,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
       default:
         return (
           <button
-            onClick={() => onViewDetails?.(id)}
+            onClick={() => onViewDetails?.(reservationId.toString())}
             className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
           >
             상세보기
@@ -162,7 +148,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
     if (userType !== 'customer') return null;
     return (
       <button
-        onClick={() => onViewDetails?.(id)}
+        onClick={() => onViewDetails?.(reservationId.toString())}
         className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
       >
         상세보기
@@ -175,64 +161,51 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
       {/* 서비스명 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-black">{serviceType}</span>
+          <span className="text-lg font-bold text-black">{categoryName}</span>
         </div>
-        <div className={`rounded-xl px-3 py-1.5 ${getStatusColor(statusValue)}`}>
-          <span className="text-xs font-medium">{getStatusText(statusValue)}</span>
+        <div className={`rounded-xl px-3 py-1.5 ${getStatusColor(reservationStatus as ReservationStatus)}`}>
+          <span className="text-xs font-medium">{getStatusText(reservationStatus as ReservationStatus)}</span>
         </div>
       </div>
-      {/* 방문 주소 */}
-      <div className="flex items-center gap-2">
-        <Image
-          src="/icons/map-pin.svg"
-          alt="위치"
-          width={16}
-          height={16}
-          className="text-[#666666]"
-        />
-        <span className="text-sm text-[#666666]">{location} {detailedAddress}</span>
-      </div>
-      {/* 날짜, 담당자, 금액, 기간, 결제수단 */}
+
+      {/* 날짜, 시간, 금액, 기간 */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-[#666666]">날짜 및 시간</span>
-          <span className="text-sm font-medium text-black">{dateTime}</span>
+          <span className="text-sm font-medium text-black">
+            {new Date(reservationDate).toLocaleDateString()} {reservationTime}
+          </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-[#666666]">{personLabel}</span>
-          <span className="text-sm font-medium text-black">{personName}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-[#666666]">{userType === 'manager' ? '수입 금액' : '결제 금액'}</span>
+          <span className="text-sm font-medium text-[#666666]">금액</span>
           <span className="text-sm font-extrabold text-black">{formattedAmount}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-[#666666]">이용 시간</span>
-          <span className="text-sm font-medium text-black">{duration}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-[#666666]">결제수단</span>
-          <span className="text-sm font-medium text-black">{paymentMethod || '-'}</span>
+          <span className="text-sm font-medium text-black">{reservationDuration}분</span>
         </div>
       </div>
+
       {/* 옵션 */}
-      {options && options.length > 0 && (
+      {optionNames && optionNames.length > 0 && (
         <div className="flex flex-col gap-1">
           <span className="text-sm font-medium text-[#666666]">옵션</span>
           <ul className="list-disc pl-5">
-            {options.map((opt, idx) => (
-              <li key={idx} className="text-sm text-black">{opt.name}</li>
+            {optionNames.map((opt, idx) => (
+              <li key={idx} className="text-sm text-black">{opt}</li>
             ))}
           </ul>
         </div>
       )}
-      {/* 리뷰 */}
-      {review && (
+
+      {/* 메모 */}
+      {reservationMemo && (
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-[#666666]">리뷰</span>
-          <span className="text-sm text-black">{review.content}</span>
+          <span className="text-sm font-medium text-[#666666]">메모</span>
+          <span className="text-sm text-black">{reservationMemo}</span>
         </div>
       )}
+
       {/* 버튼 */}
       <div className="flex gap-3">
         {userType === 'manager' ? renderManagerButtons() : renderCustomerButtons()}
