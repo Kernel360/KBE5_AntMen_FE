@@ -1,61 +1,162 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
+import { getReservationDetail } from '@/entities/reservation/api/reservationApi';
+import type { ReservationHistory} from '@/entities/reservation/model/types';
+import { getAuthToken } from '@/features/auth/lib/auth';
+import clsx from 'clsx';
+
+// 예약 상태 뱃지 컴포넌트
+function StatusBadge({ status }: { status: string }) {
+  const colorMap: Record<string, string> = {
+    W: 'bg-yellow-100 text-yellow-700',
+    M: 'bg-blue-100 text-blue-700',
+    D: 'bg-green-100 text-green-700',
+    C: 'bg-gray-200 text-gray-500',
+    E: 'bg-red-100 text-red-600',
+    P: 'bg-purple-100 text-purple-700',
+  };
+  const labelMap: Record<string, string> = {
+    W: '대기중',
+    M: '매칭중',
+    D: '완료',
+    C: '취소',
+    E: '오류',
+    P: '결제완료',
+  };
+  return (
+    <span className={clsx('px-3 py-1 rounded-full text-xs font-semibold', colorMap[status] || 'bg-gray-100 text-gray-500')}>
+      {labelMap[status] || status}
+    </span>
+  );
+}
 
 export default function ManagerReservationDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const reservationId = (params?.id as string) || 'unknown';
+  const reservationId = params?.id as string;
+  const [reservation, setReservation] = useState<ReservationHistory | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchReservation = async () => {
+      if (!reservationId || reservationId === 'unknown') return;
+      setLoading(true);
+      setError(null);
+      try {
+        const token = getAuthToken();
+        if (!token) {
+          setError('인증 정보가 없습니다. 다시 로그인 해주세요.');
+          setLoading(false);
+          return;
+        }
+        const data = await getReservationDetail(Number(reservationId), token);
+        setReservation(data);
+      } catch (e: any) {
+        setError(e?.message || '예약 정보를 불러오지 못했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReservation();
+  }, [reservationId]);
 
   return (
-    <main className="flex min-h-screen flex-col bg-white">
+    <main className="flex min-h-screen flex-col bg-gray-50">
       {/* Header */}
-      <header className="flex items-center justify-between p-5">
+      <header className="flex items-center justify-between p-5 bg-white border-b">
         <button 
           onClick={() => router.back()} 
           className="flex h-6 w-6 items-center justify-center"
         >
           <Image src="/icons/arrow-left.svg" alt="뒤로가기" width={24} height={24} />
         </button>
-        <h1 className="flex-1 text-center text-2xl font-bold">업무 상세</h1>
-        <div className="h-6 w-6" /> {/* Spacer for alignment */}
+        <h1 className="flex-1 text-center text-2xl font-bold">예약 확인</h1>
+        <div className="h-6 w-6" />
       </header>
-
-      {/* Content */}
-      <div className="flex flex-1 flex-col gap-6 p-5">
-        <div className="flex flex-col items-center justify-center gap-4 py-20">
-          <div className="text-6xl">🚧</div>
-          <h2 className="text-xl font-bold text-gray-800">상세 페이지 준비 중</h2>
-          <p className="text-center text-gray-600">
-            예약 ID: <span className="font-mono font-semibold">{reservationId}</span>
-          </p>
-          <p className="text-center text-sm text-gray-500">
-            이 페이지는 곧 완성될 예정입니다.
-          </p>
-          
-          {/* 테스트용 버튼들 */}
-          <div className="mt-8 flex flex-col gap-3 w-full max-w-sm">
-            <button
-              onClick={() => router.push('/manager/reservations')}
-              className="w-full rounded-xl bg-[#4DD0E1] py-3 text-white font-medium hover:bg-[#26C6DA] transition-colors"
-            >
-              업무 내역으로 돌아가기
-            </button>
-            
-            <button
-              onClick={() => {
-                alert(`예약 ${reservationId}가 취소되었습니다.`);
-                // cancelled 파라미터와 함께 업무 내역 페이지로 이동
-                router.push(`/manager/reservations?cancelled=${reservationId}`);
-              }}
-              className="w-full rounded-xl border border-red-300 bg-red-50 py-3 text-red-600 font-medium hover:bg-red-100 transition-colors"
-            >
-              테스트: 예약 취소하기
-            </button>
+      <div className="flex flex-1 flex-col gap-6 p-5 max-w-xl mx-auto w-full">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="text-4xl">⏳</div>
+            <div className="mt-4 text-lg text-gray-600">예약 정보를 불러오는 중...</div>
           </div>
-        </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="text-4xl">❌</div>
+            <div className="mt-4 text-lg text-red-600">{error}</div>
+          </div>
+        ) : reservation ? (
+          <>
+            {/* 서비스 정보 카드 */}
+            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-4">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="bg-primary/20 rounded-full p-3">
+                  <Image src="/icons/customer.svg" alt="서비스" width={32} height={32}/>
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-gray-900">{reservation.categoryName}</div>
+                  <div className="text-gray-500 text-base">일반 가정집 청소 서비스</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-gray-700 text-base">
+                <Image src="/icons/linear-check.svg" alt="날짜" width={20} height={20} />
+                <span>{reservation.reservationDate}</span>
+                <span className="mx-1">·</span>
+                <span>총 {reservation.totalDuration}시간</span>
+              </div>
+            </section>
+
+            {/* 주소 정보 카드 */}
+            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Image src="/icons/map-pin.svg" alt="주소" width={20} height={20} />
+                <span className="text-lg font-bold">주소 정보</span>
+              </div>
+              <div className="text-gray-800 text-base font-medium">{reservation.address}</div>
+            </section>
+
+            {/* 옵션 카드 */}
+            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Image src="/icons/linear-bell.svg" alt="옵션" width={20} height={20}/>
+                <span className="text-lg font-bold">옵션 내용</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {reservation.selectedOptions && reservation.selectedOptions.length > 0 ? (
+                  reservation.selectedOptions.map((opt) => (
+                    <span key={opt} className="bg-gray-100 rounded-lg px-4 py-1 text-base font-medium text-gray-700">{opt}</span>
+                  ))
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
+              </div>
+            </section>
+
+            {/* 특이사항 카드 */}
+            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Image src="/icons/linear-share.svg" alt="특이사항" width={20} height={20} />
+                <span className="text-lg font-bold">특이사항</span>
+              </div>
+              <div className="text-gray-700 text-base">{reservation.reservationMemo ? reservation.reservationMemo : '수요자가 작성하지 않았습니다.'}</div>
+            </section>
+
+            {/* 결제 정보 카드 */}
+            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Image src="/icons/linear-card.svg" alt="결제" width={20} height={20} />
+                <span className="text-lg font-bold">결제 정보</span>
+              </div>
+              <div className="flex justify-between text-base">
+                <span className="text-gray-500">결제 금액</span>
+                <span className="font-bold text-primary">{reservation.totalAmount.toLocaleString()}원</span>
+              </div>
+            </section>
+          </>
+        ) : null}
       </div>
     </main>
   );

@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export interface BasicSignupFormData {
   username: string;
@@ -42,10 +43,12 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
           errors.profileImage ? 'border-2 border-red-500' : ''
         }`}>
           {formData.profileImage ? (
-            <img 
-              src={URL.createObjectURL(formData.profileImage)} 
-              alt="Profile preview" 
+            <Image
+              src={URL.createObjectURL(formData.profileImage)}
+              alt="Profile preview"
               className="w-full h-full object-cover"
+              width={96}
+              height={96}
             />
           ) : (
             <span className="text-gray-400 text-4xl">+</span>

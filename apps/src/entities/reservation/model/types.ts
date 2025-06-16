@@ -1,6 +1,9 @@
 export interface UserSummary {
   userId: number;
   name: string;
+  gender: string; // "남성" | "여성"
+  age: number;
+  profileImage: string;
   // 필요한 경우 추가 필드
 }
 
@@ -21,6 +24,7 @@ export interface ReservationHistory {
   reservationDate: string;
   totalDuration: number;
   totalAmount: number;
+  reservationMemo: string;
   customer: UserSummary;
   manager: UserSummary;
   address: string;
