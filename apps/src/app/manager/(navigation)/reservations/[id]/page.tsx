@@ -6,32 +6,6 @@ import Image from 'next/image';
 import { getReservationDetail } from '@/entities/reservation/api/reservationApi';
 import type { ReservationHistory} from '@/entities/reservation/model/types';
 import { getAuthToken } from '@/features/auth/lib/auth';
-import clsx from 'clsx';
-
-// 예약 상태 뱃지 컴포넌트
-function StatusBadge({ status }: { status: string }) {
-  const colorMap: Record<string, string> = {
-    W: 'bg-yellow-100 text-yellow-700',
-    M: 'bg-blue-100 text-blue-700',
-    D: 'bg-green-100 text-green-700',
-    C: 'bg-gray-200 text-gray-500',
-    E: 'bg-red-100 text-red-600',
-    P: 'bg-purple-100 text-purple-700',
-  };
-  const labelMap: Record<string, string> = {
-    W: '대기중',
-    M: '매칭중',
-    D: '완료',
-    C: '취소',
-    E: '오류',
-    P: '결제완료',
-  };
-  return (
-    <span className={clsx('px-3 py-1 rounded-full text-xs font-semibold', colorMap[status] || 'bg-gray-100 text-gray-500')}>
-      {labelMap[status] || status}
-    </span>
-  );
-}
 
 export default function ManagerReservationDetailPage() {
   const router = useRouter();
