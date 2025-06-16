@@ -36,7 +36,6 @@ import {
     AlertTriangle,
     Search,
     FileText,
-    Calendar,
     TrendingUp
 } from 'lucide-react';
 

@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react';
-import Image from 'next/image';
 import type { Reservation, ReservationStatus } from '../model/types';
 
 interface ReservationCardProps {
@@ -173,7 +172,10 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-[#666666]">날짜 및 시간</span>
           <span className="text-sm font-medium text-black">
-            {new Date(reservationDate).toLocaleDateString()} {reservationTime}
+            {new Date(reservationDate).toLocaleDateString()}{' '}
+            {typeof reservationTime === 'string'
+              ? reservationTime
+              : `${reservationTime.hour}:${reservationTime.minute.toString().padStart(2, '0')}`}
           </span>
         </div>
         <div className="flex items-center justify-between">
