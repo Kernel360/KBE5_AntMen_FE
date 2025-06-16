@@ -26,7 +26,7 @@ export default function BoardsPage() {
 
   // URL 파라미터에서 이전 탭 정보를 확인하고 적용
   useEffect(() => {
-    const tabCode = searchParams.get('t');
+    const tabCode = searchParams?.get('t');
     if (tabCode) {
       const tabMap: Record<string, '공지사항' | '서비스 문의'> = {
         'n': '공지사항',

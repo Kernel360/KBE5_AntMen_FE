@@ -13,9 +13,9 @@
  **/
 
 import { Suspense } from 'react'
-import type { Reservation } from '@/entities/reservation/model/types'
-import { ReservationDetailPageClient } from './ReservationDetailPageClient'
 import { notFound } from 'next/navigation'
+import { ReservationDetailPageClient } from './ReservationDetailPageClient'
+import type { Reservation, ReservationStatus, PaymentStatus } from '@/entities/reservation/model/types'
 
 interface PageProps {
   params: {
@@ -26,8 +26,7 @@ interface PageProps {
 // --- 데이터 페칭 함수 ---
 async function getReservationDetail(id: string): Promise<Reservation | null> {
   try {
-    // 실제 백엔드 API 주소로 변경
-    const res = await fetch(`https://api.antmen.site:9091/api/v1/customer/reservations/${id}`, {
+    const res = await fetch(`https://api.antmen.site:9091/api/v1/customer/reservations/${id}/history`, {
       cache: 'no-store', // 항상 최신 데이터를 가져옴
     })
 
@@ -39,7 +38,44 @@ async function getReservationDetail(id: string): Promise<Reservation | null> {
     }
 
     const data = await res.json()
-    return data as Reservation
+    
+    // API 응답을 기존 Reservation 타입으로 변환
+    const reservation: Reservation = {
+      id: data.reservationId.toString(),
+      reservationNumber: data.reservationId.toString(),
+      serviceType: data.categoryName,
+      status: data.reservationStatus as ReservationStatus,
+      paymentStatus: 'paid' as PaymentStatus, // API 응답에 따라 적절히 매핑 필요
+      dateTime: data.reservationDate,
+      duration: `${data.totalDuration}시간`,
+      location: data.address,
+      detailedAddress: data.address,
+      worker: {
+        id: data.manager.userId.toString(),
+        name: data.manager.name,
+        rating: 0, // API 응답에 없으므로 기본값 설정
+        experience: '', // API 응답에 없으므로 기본값 설정
+        age: data.manager.age,
+        gender: data.manager.gender,
+        avatar: data.manager.profileImage,
+        phone: '', // API 응답에 없으므로 기본값 설정
+      },
+      customer: {
+        id: data.customer.userId.toString(),
+        name: data.customer.name,
+      },
+      amount: data.totalAmount,
+      baseAmount: data.totalAmount, // API 응답에 없으므로 totalAmount로 설정
+      discount: 0, // API 응답에 없으므로 기본값 설정
+      paymentMethod: '카드', // API 응답에 없으므로 기본값 설정
+      options: data.selectedOptions.map((option: string) => ({
+        name: option,
+        price: 0, // API 응답에 없으므로 기본값 설정
+      })),
+      createdAt: data.reservationDate, // API 응답에 없으므로 reservationDate로 설정
+    }
+
+    return reservation
   } catch (error) {
     console.error('Failed to fetch reservation detail:', error)
     // 에러 발생 시에도 null 반환

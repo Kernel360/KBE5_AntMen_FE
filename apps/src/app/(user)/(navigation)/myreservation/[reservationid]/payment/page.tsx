@@ -17,7 +17,6 @@ type PaymentMethod = 'card' | 'kakao' | 'bank';
 // 결제 정보 타입
 interface PaymentInfo {
   reservationId: string;
-  // serviceType: string;
   dateTime: string;
   baseAmount: number;
   discount: number;

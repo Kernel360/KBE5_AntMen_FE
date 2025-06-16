@@ -10,8 +10,9 @@ import {
   ChevronLeftIcon,
   EllipsisHorizontalIcon,
 } from '@heroicons/react/24/outline'
-import { MANAGER_LIST, type Manager } from '@/widgets/manager/model/manager'
+import { type Manager } from '@/widgets/manager/model/manager'
 import { ManagerDetailLoading } from '@/widgets/manager'
+import Image from 'next/image'
 
 export default function ManagerDetailPage() {
   const params = useParams()
@@ -137,7 +138,13 @@ export default function ManagerDetailPage() {
         <section className="px-5 py-8 text-center border-b border-gray-100">
           <div className="w-24 h-24 mx-auto mb-6 bg-slate-200 rounded-full flex items-center justify-center">
             {/* <span className="text-3xl font-bold text-slate-600">{manager.profileImage}</span> */}
-            <img src={manager.profileImage} alt="프로필 이미지" />
+            <Image
+              width={96}
+              height={96}
+              src={manager.profileImage}
+              alt="프로필 이미지"
+              className="w-full h-full object-cover"
+            />
           </div>
 
           <h1 className="text-2xl font-bold text-slate-900 mb-2">

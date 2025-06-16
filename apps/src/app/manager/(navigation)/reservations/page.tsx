@@ -16,33 +16,21 @@ import type { Reservation } from '@/entities/reservation/model/types'
 import { ManagerReservationsClient } from './ManagerReservationsClient'
 import { cookies } from 'next/headers'
 import { PageSkeleton } from '@/app/manager/(navigation)/reservations/loading'
-
-async function getReservations(): Promise<Reservation[]> {
-  try {
-    const cookieStore = cookies()
-    const token = cookieStore.get('auth-token')?.value
-
-    const res = await fetch('https://api.antmen.site:9091/api/v1/manager/reservations', {
-      headers: {
-        Authorization: token ?? '',
-      },
-      cache: 'no-store',
-    })
-
-    if (!res.ok) {
-      throw new Error('Failed to fetch reservations')
-    }
-    return res.json()
-  } catch (error) {
-    console.error('Error fetching reservations:', error)
-    return []
-  }
-}
+import { getMyReservations } from '@/entities/reservation/api/reservationApi'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ManagerReservationsPage() {
-  const initialReservations = await getReservations()
+  const cookieStore = cookies()
+  const token = cookieStore.get('auth-token')?.value ?? ''
+  
+  let initialReservations: Reservation[] = []
+  try {
+    initialReservations = await getMyReservations(token)
+  } catch (error) {
+    console.error('Error fetching reservations:', error)
+    // 에러 발생 시 빈 배열을 반환하여 UI가 깨지지 않도록 함
+  }
 
   return (
     <Suspense fallback={<PageSkeleton />}>

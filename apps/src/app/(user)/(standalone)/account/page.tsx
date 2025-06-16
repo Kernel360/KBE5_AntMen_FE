@@ -5,6 +5,7 @@ import { ArrowLeft } from '@/shared/icons/ArrowLeft'
 import { EditProfileModal } from '@/shared/ui/modal/EditProfileModal'
 import Link from 'next/link'
 import { useState } from 'react'
+import Image from 'next/image'
 
 export default function AccountPage() {
   const [eventNotification, setEventNotification] = useState(false)
@@ -55,7 +56,9 @@ export default function AccountPage() {
             <div className="w-24 h-24 bg-[#F9F9F9] rounded-full flex items-center justify-center overflow-hidden">
               {profileImage ? (
                 <>
-                  <img
+                  <Image
+                    width={96}
+                    height={96}
                     src={URL.createObjectURL(profileImage)}
                     alt="Profile preview"
                     className="w-full h-full object-cover"

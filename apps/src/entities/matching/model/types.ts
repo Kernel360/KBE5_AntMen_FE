@@ -39,6 +39,33 @@ export interface MatchingRequest {
   matchings: Matching[];
 }
 
+export interface ReservationResponse {
+  reservationId: number;
+  customerId: number;
+  reservationCreatedAt: string; // ISO string
+  reservationDate: string; // ISO string (yyyy-MM-dd)
+  reservationTime: string; // ISO string (HH:mm:ss)
+  categoryId: number;
+  categoryName: string;
+  recommendDuration: number;
+  reservationDuration: number;
+  managerId: number;
+  managerName: string;
+  matchedAt: string; // ISO string
+  reservationStatus: string;
+  reservationCancelReason: string;
+  reservationMemo: string;
+  reservationAmount: number;
+  optionIds: number[];
+  optionNames: string[];
+}
+
+export interface MatchingRequestResponse {
+  // 기존 MatchingRequest 필드들 (필요시 추가)
+  reservation: ReservationResponse;
+  // 기타 필요한 필드 추가 가능
+}
+
 export interface MatchingManager {
   managerId: number;
   managerName: string;
