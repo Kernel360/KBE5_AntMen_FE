@@ -8,9 +8,10 @@ import Cookies from 'js-cookie'
 
 interface MorePageUIProps {
   user: {
-    name: string
-    membershipType: string
-    email: string
+    userName: string
+    userEmail: string
+    userType: string
+    userPoint: number
   }
 }
 
@@ -67,9 +68,9 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
       </h3>
 
       <ProfileSection
-        name={user.name}
-        membershipType={user.membershipType}
-        email={user.email}
+        name={user.userName}
+        membershipType={user.userType}
+        email={user.userEmail}
       />
       <section className="mx-5 mt-4 bg-[#9CDAFB] rounded-xl flex flex-col items-center justify-between py-4 mb-4 gap-4">
         {/* <span className="w-full h-[1px] bg-[#E1F3FE]" /> */}
@@ -83,7 +84,7 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
             <figcaption className="text-sm text-gray-900">AntPoint</figcaption>
           </figure>
           <div className="flex items-center justify-between w-full">
-            <span className="text-xl font-semibold text-black">3,750원</span>
+            <span className="text-xl font-semibold text-black">{user.userPoint}원</span>
             <ul className="flex gap-2">
               <li className="bg-white rounded-full px-4 py-1 text-sm font-medium text-gray-900 hover:cursor-pointer">
                 충전

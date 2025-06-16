@@ -188,8 +188,8 @@ const ReservationForm = ({ initialCategory, initialOptions, addressId }: { initi
 // Wrapper 컴포넌트: URL 파라미터를 읽고 데이터를 fetch합니다.
 const ReservationFormWrapper = () => {
   const searchParams = useSearchParams();
-  const categoryId = searchParams.get('categoryId');
-  const addressId = searchParams.get('addressId');
+  const categoryId = searchParams?.get('categoryId');
+  const addressId = searchParams?.get('addressId');
   const addressIdNum = Number(addressId);
 
   const [category, setCategory] = useState<Category | null>(null);

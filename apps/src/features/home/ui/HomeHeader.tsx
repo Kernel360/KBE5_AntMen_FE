@@ -1,11 +1,12 @@
 'use client'
 
-import { BellIcon } from '@heroicons/react/24/outline'
+import { BellIcon, UserCircleIcon } from '@heroicons/react/24/outline'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import { BubbleBackground } from './BubbleBackground'
 import LoginRequiredModal from '@/shared/ui/modal/LoginRequiredModal'
 import { checkUserAuth } from '@/features/auth/lib/auth'
+import Link from 'next/link'
 
 interface HomeHeaderProps {
   title?: string
@@ -50,7 +51,7 @@ export function HomeHeader({
 
     // 잘못된 접근
     if (requireAuth != authResult.userRole) {
-      authResult.message = '잘못된 접근입니다.'
+      authResult.message = '해당 접근 권한이 없습니다.'
       if (authResult.userRole == 'CUSTOMER') {
         alert(authResult.message)
         router.push('/')
@@ -73,16 +74,25 @@ export function HomeHeader({
       <BubbleBackground />
       <div className="relative z-10">
         <div className="flex justify-end mb-6">
-          <button
-            className="relative"
-            onClick={handleNotificationClick}
-            aria-label="알림 보기"
-          >
-            <BellIcon className="w-6 h-6 text-white" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
-              1
-            </span>
-          </button>
+          <div className="flex gap-4">
+            <button
+              className="relative"
+              onClick={() => router.push('/login')}
+              aria-label="로그인"
+            >
+              <UserCircleIcon className="w-6 h-6 text-white" />
+            </button>
+            <button
+              className="relative"
+              onClick={handleNotificationClick}
+              aria-label="알림 보기"
+            >
+              <BellIcon className="w-6 h-6 text-white" />
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
+                1
+              </span>
+            </button>
+          </div>
         </div>
         {(title || subtitle) && (
           <div className="mb-6">
@@ -100,13 +110,15 @@ export function HomeHeader({
           <div className="flex gap-2 h-[190px] mb-6">
             <div className="w-1/2 flex flex-col h-full gap-2">
               <button className="w-full h-full bg-white rounded-xl relative flex items-center justify-center">
-                <span className="font-semibold">에어컨 청소</span>
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] z-10 text-white font-bold">
-                  N
-                </span>
+              <Link href="/reservation/select-address?categoryId=3">
+              <span className="font-semibold">에어컨 청소</span>
+              </Link>
               </button>
               <button className="w-full h-full bg-white rounded-xl flex items-center relative justify-center">
                 <span className="font-semibold">가사 청소</span>
+                <Link href="/reservation/select-address?categoryId=1">
+                 
+                </Link>
               </button>
             </div>
             <button
