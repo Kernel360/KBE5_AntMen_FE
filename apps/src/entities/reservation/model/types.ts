@@ -1,51 +1,53 @@
 export interface UserSummary {
-  userId: number;
-  name: string;
+  userId: number
+  name: string
   // 필요한 경우 추가 필드
 }
 
 export interface Matching {
-  matchingId: number;
-  priority: number;
-  isRequested: boolean;
-  isAccepted: boolean;
-  isFinal: boolean;
-  refuseReason: string | null;
-  manager: UserSummary;
+  matchingId: number
+  priority: number
+  isRequested: boolean
+  isAccepted: boolean
+  isFinal: boolean
+  refuseReason: string | null
+  manager: UserSummary
 }
 
 export interface ReservationHistory {
-  reservationId: number;
-  categoryName: string;
-  reservationStatus: ReservationStatus;
-  reservationDate: string;
-  totalDuration: number;
-  totalAmount: number;
-  customer: UserSummary;
-  manager: UserSummary;
-  address: string;
-  selectedOptions: string[];
-  matchings: Matching[];
+  reservationId: number
+  categoryName: string
+  reservationStatus: ReservationStatus
+  reservationDate: string
+  totalDuration: number
+  totalAmount: number
+  customer: UserSummary
+  manager: UserSummary
+  address: string
+  selectedOptions: string[]
+  matchings: Matching[]
 }
 
 // FE에서 사용하는 예약 상태 코드 타입 (API 매핑은 ReservationStatusMap 참고)
-export type ReservationStatus = 
-  | 'W'  // WAITING
-  | 'M'  // MATCHING
-  | 'P'  // PAY
-  | 'D'  // DONE
-  | 'C'  // CANCEL
-  | 'E'; // ERROR
+export type ReservationStatus =
+  | 'WAITING'
+  | 'MATCHING'
+  | 'PAY'
+  | 'DONE'
+  | 'CANCEL'
+  | 'ERROR'
+  | 'SCHEDULED'
 
 // FE 예약 상태 코드 → 한글 라벨 매핑
 export const ReservationStatusLabel: Record<ReservationStatus, string> = {
-  'W': '대기중',
-  'M': '매칭중',
-  'P': '결제대기',
-  'D': '완료',
-  'C': '취소',
-  'E': '오류'
-};
+  WAITING: '대기중',
+  MATCHING: '매칭중',
+  PAY: '결제대기',
+  DONE: '완료',
+  CANCEL: '취소',
+  ERROR: '오류',
+  SCHEDULED: '신청중',
+}
 
 export type PaymentStatus = 'pending' | 'paid' | 'refunded'
 
@@ -66,36 +68,47 @@ export interface Customer {
   phone?: string
 }
 
-export interface Reservation {
-  reservationId: number;
-  customerId: number;
-  reservationCreatedAt: string;
-  reservationDate: string;
-  reservationTime: string | { hour: number; minute: number; second: number; nano: number };
-  categoryId: number;
-  categoryName: string;
-  recommendDuration: number;
-  reservationDuration: number;
-  managerId: number;
-  managerName: string;
-  matchedAt: string;
-  reservationStatus: string;
-  reservationCancelReason: string | null;
-  reservationMemo: string | null;
-  reservationAmount: number;
-  optionIds: number[];
-  optionNames: string[];
+export interface CustomerAddress {
+  addressId: number
+  addressName: string
+  addressAddr: string
+  addressDetail?: string
+  addressArea: number
 }
 
-export type ReservationTab = 'upcoming' | 'past'
+export interface Reservation {
+  reservationId: number
+  customerId: number
+  reservationCreatedAt: string
+  reservationDate: string
+  reservationTime:
+    | string
+    | { hour: number; minute: number; second: number; nano: number }
+  categoryId: number
+  categoryName: string
+  recommendDuration: number
+  reservationDuration: number
+  managerId: number
+  managerName: string
+  matchedAt: string
+  reservationStatus: ReservationStatus
+  reservationCancelReason: string | null
+  reservationMemo: string | null
+  reservationAmount: number
+  optionIds: number[]
+  optionNames: string[]
+  address: CustomerAddress
+}
+
+export type ReservationTab = 'pending' | 'upcoming' | 'past'
 
 // API 상태값 → FE ReservationStatus 매핑 테이블 (모든 화면에서 import해서 사용)
 export const ReservationStatusMap: Record<string, ReservationStatus> = {
-  SCHEDULED: 'W',
-  MATCHING: 'M',
-  PAY: 'P',
-  DONE: 'D',
-  CANCEL: 'C',
-  ERROR: 'E',
+  SCHEDULED: 'WAITING',
+  MATCHING: 'MATCHING',
+  PAY: 'PAY',
+  DONE: 'DONE',
+  CANCEL: 'CANCEL',
+  ERROR: 'ERROR',
   // 필요시 추가
-};
+}

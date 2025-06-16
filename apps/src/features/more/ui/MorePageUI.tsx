@@ -5,6 +5,7 @@ import { ProfileSection } from '@/shared/ui/ProfileSection'
 import { useAuthStore } from '@/shared/stores/authStore'
 import { useRouter } from 'next/navigation'
 import Cookies from 'js-cookie'
+import Image from 'next/image'
 
 interface MorePageUIProps {
   user: {
@@ -76,15 +77,19 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
         {/* <span className="w-full h-[1px] bg-[#E1F3FE]" /> */}
         <div className="flex flex-col gap-4 w-full px-5">
           <figure className="flex items-center gap-1">
-            <img
+            <Image
               src="/icons/fill_point.svg"
               alt="Point"
               className="w-[18px] h-[18px]"
+              width={18}
+              height={18}
             />
             <figcaption className="text-sm text-gray-900">AntPoint</figcaption>
           </figure>
           <div className="flex items-center justify-between w-full">
-            <span className="text-xl font-semibold text-black">{user.userPoint}원</span>
+            <span className="text-xl font-semibold text-black">
+              {user.userPoint}원
+            </span>
             <ul className="flex gap-2">
               <li className="bg-white rounded-full px-4 py-1 text-sm font-medium text-gray-900 hover:cursor-pointer">
                 충전
@@ -104,7 +109,13 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
               key={menu.label}
               className="flex flex-1 flex-col items-center gap-1"
             >
-              <img src={menu.icon} alt={menu.label} className="w-6 h-6 mb-1" />
+              <Image
+                src={menu.icon}
+                alt={menu.label}
+                className="w-6 h-6 mb-1"
+                width={24}
+                height={24}
+              />
               <span className="text-xs text-gray-900 font-medium">
                 {menu.label}
               </span>

@@ -43,8 +43,8 @@ const ReservationStatusSection = ({
   reservation: Reservation
 }) => {
   const getStatusInfo = (
-    status: Reservation['status'],
-    paymentStatus: Reservation['paymentStatus'],
+    status: Reservation['reservationStatus'],
+    paymentStatus?: string,
   ) => {
     if (paymentStatus === 'refunded') {
       return {
@@ -104,10 +104,7 @@ const ReservationStatusSection = ({
     }
   }
 
-  const statusInfo = getStatusInfo(
-    reservation.status,
-    reservation.paymentStatus,
-  )
+  const statusInfo = getStatusInfo(reservation.reservationStatus)
 
   return (
     <div className="bg-white px-5 py-6">
@@ -125,33 +122,17 @@ const ReservationStatusSection = ({
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-600">예약 번호</span>
           <span className="text-sm font-medium text-black">
-            {reservation.reservationNumber}
+            {reservation.reservationId}
           </span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-600">예약 신청일</span>
           <span className="text-sm font-medium text-black">
-            {new Date(reservation.createdAt).toLocaleDateString('ko-KR')}
+            {new Date(reservation.reservationCreatedAt).toLocaleDateString(
+              'ko-KR',
+            )}
           </span>
         </div>
-        {reservation.paymentStatus === 'refunded' && (
-          <>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-600">취소일</span>
-              <span className="text-sm font-medium text-black">
-                {new Date().toLocaleDateString('ko-KR')}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-600">
-                환불 금액
-              </span>
-              <span className="text-sm font-medium text-red-600">
-                ₩{reservation.amount.toLocaleString()}
-              </span>
-            </div>
-          </>
-        )}
       </div>
     </div>
   )
@@ -166,7 +147,7 @@ const ServiceInfoSection = ({ reservation }: { reservation: Reservation }) => {
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-600">서비스 유형</span>
           <span className="text-sm font-medium text-black">
-            {reservation.serviceType}
+            {reservation.categoryName}
           </span>
         </div>
         <div className="flex items-center justify-between">
@@ -174,19 +155,23 @@ const ServiceInfoSection = ({ reservation }: { reservation: Reservation }) => {
             날짜 및 시간
           </span>
           <span className="text-sm font-medium text-black">
-            {reservation.dateTime}
+            {reservation.reservationDate}{' '}
+            {typeof reservation.reservationTime === 'string'
+              ? reservation.reservationTime
+              : ''}
           </span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-600">소요 시간</span>
           <span className="text-sm font-medium text-black">
-            {reservation.duration}
+            {reservation.reservationDuration}
           </span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-600">주소</span>
           <span className="text-sm font-medium text-black text-right max-w-[200px]">
-            {reservation.detailedAddress}
+            {reservation.address?.addressAddr}{' '}
+            {reservation.address?.addressDetail}
           </span>
         </div>
       </div>
@@ -239,32 +224,18 @@ const PaymentPreviewSection = ({
 }: {
   reservation: Reservation
 }) => {
+  // Reservation 타입에 결제 관련 상세 금액 정보가 없으므로 reservationAmount만 표시
   const formatCurrency = (amount?: number) =>
     `₩${(amount ?? 0).toLocaleString()}`
   return (
     <div className="bg-white px-5 py-6">
       <h2 className="text-lg font-bold text-black mb-6">결제 예정 금액</h2>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-600">
-            기본 요금 ({reservation.duration})
-          </span>
-          <span className="text-sm font-medium text-black">
-            {formatCurrency(reservation.baseAmount)}
-          </span>
-        </div>
-        {reservation.discount > 0 && (
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-600">정기 할인</span>
-            <span className="text-sm font-medium text-orange-500">
-              -{formatCurrency(reservation.discount)}
-            </span>
-          </div>
-        )}
+        {/* 상세 금액 정보가 없으므로 총 결제 금액만 표시 */}
         <div className="flex items-center justify-between py-2 border-t border-gray-100">
           <span className="text-base font-black text-black">총 결제 금액</span>
           <span className="text-base font-bold text-[#4abed9]">
-            {formatCurrency(reservation.amount)}
+            {formatCurrency(reservation.reservationAmount)}
           </span>
         </div>
       </div>
@@ -274,24 +245,20 @@ const PaymentPreviewSection = ({
 
 // 결제 정보 섹션 (결제 후)
 const PaymentInfoSection = ({ reservation }: { reservation: Reservation }) => {
+  // Reservation 타입에 결제 수단 정보가 없으므로 결제 금액만 표시
   const formatCurrency = (amount?: number) =>
     `₩${(amount ?? 0).toLocaleString()}`
   return (
     <div className="bg-white px-5 py-6">
       <h2 className="text-lg font-bold text-black mb-6">결제 정보</h2>
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-600">결제 수단</span>
-          <span className="text-sm font-medium text-black">
-            {reservation.paymentMethod}
-          </span>
-        </div>
+        {/* 결제 수단 정보 없음 */}
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-600">
             총 결제 금액
           </span>
           <span className="text-sm font-bold text-black">
-            {formatCurrency(reservation.amount)}
+            {formatCurrency(reservation.reservationAmount)}
           </span>
         </div>
       </div>
@@ -340,7 +307,7 @@ const ActionButtonsSection = ({
   return (
     <div className="sticky bottom-0 bg-white p-5 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
       {/* 버튼 로직 */}
-      {reservation.paymentStatus === 'pending' && (
+      {reservation.reservationStatus === 'WAITING' && (
         <button
           onClick={onPayment}
           className="w-full bg-[#4abed9] text-white rounded-xl py-4 font-bold text-base"
@@ -348,34 +315,25 @@ const ActionButtonsSection = ({
           결제하기
         </button>
       )}
-      {reservation.paymentStatus === 'paid' &&
-        reservation.status === 'WAITING' && (
-          <div className="flex gap-3">
-            <button
-              onClick={() => setIsActionModalOpen(true)}
-              className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-4 font-bold text-base"
-            >
-              예약 취소/변경
-            </button>
-            <button
-              onClick={handleContactWorker}
-              className="flex-1 bg-[#4abed9] text-white rounded-xl py-4 font-bold text-base"
-            >
-              담당자와 통화
-            </button>
-          </div>
-        )}
-      {reservation.status === 'DONE' && (
+      {reservation.reservationStatus === 'WAITING' && (
+        <div className="flex gap-3">
+          <button
+            onClick={() => setIsActionModalOpen(true)}
+            className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-4 font-bold text-base"
+          >
+            예약 취소/변경
+          </button>
+          <button
+            onClick={handleContactWorker}
+            className="flex-1 bg-[#4abed9] text-white rounded-xl py-4 font-bold text-base"
+          >
+            담당자와 통화
+          </button>
+        </div>
+      )}
+      {reservation.reservationStatus === 'DONE' && (
         <button className="w-full bg-gray-200 text-gray-500 rounded-xl py-4 font-bold text-base cursor-not-allowed">
           완료된 예약입니다
-        </button>
-      )}
-      {reservation.paymentStatus === 'refunded' && (
-        <button
-          onClick={() => setIsRefundModalOpen(true)}
-          className="w-full bg-gray-200 text-gray-800 rounded-xl py-4 font-bold text-base"
-        >
-          환불하기
         </button>
       )}
 
@@ -414,14 +372,14 @@ export const ReservationDetailPageClient = ({
     const status = searchParams?.get('status')
     if (status === 'success' && reservation) {
       setReservation((prev) =>
-        prev ? { ...prev, paymentStatus: 'paid', status: 'WAITING' } : null,
+        prev ? { ...prev, reservationStatus: 'WAITING' } : null,
       )
       alert('결제가 성공적으로 완료되었습니다.')
       // 성공 후에는 URL에서 쿼리 파라미터 제거
-      router.replace(`/myreservation/${reservation.id}`)
+      router.replace(`/myreservation/${reservation.reservationId}`)
     } else if (status === 'fail') {
       alert('결제에 실패했습니다. 다시 시도해주세요.')
-      router.replace(`/myreservation/${reservation!.id}`)
+      router.replace(`/myreservation/${reservation!.reservationId}`)
     }
   }, [searchParams, reservation, router])
 
@@ -439,18 +397,20 @@ export const ReservationDetailPageClient = ({
   const handleCancel = (reason: string) => {
     console.log('Cancellation reason:', reason)
     // TODO: 실제 취소 API 호출
-    setReservation((prev) => (prev ? { ...prev, status: 'CANCEL' } : null))
+    setReservation((prev) =>
+      prev ? { ...prev, reservationStatus: 'CANCEL' } : null,
+    )
     alert('예약이 취소되었습니다.')
   }
 
   const handlePayment = () => {
-    router.push(`/myreservation/${reservation.id}/payment`)
+    router.push(`/myreservation/${reservation.reservationId}/payment`)
   }
 
   const handleRefund = (reason: string) => {
     console.log('Refund reason:', reason)
     setReservation((prev) =>
-      prev ? { ...prev, paymentStatus: 'refunded' } : null,
+      prev ? { ...prev, reservationStatus: 'CANCEL' } : null,
     )
     alert('환불 요청이 처리되었습니다.')
   }
@@ -463,8 +423,8 @@ export const ReservationDetailPageClient = ({
         <div className="space-y-2">
           <ReservationStatusSection reservation={reservation} />
           <ServiceInfoSection reservation={reservation} />
-          <CleanerInfoSection worker={reservation.worker} />
-          {reservation.paymentStatus === 'pending' ? (
+          {/* <CleanerInfoSection worker={reservation.worker} /> */}
+          {reservation.reservationStatus === 'WAITING' ? (
             <PaymentPreviewSection reservation={reservation} />
           ) : (
             <PaymentInfoSection reservation={reservation} />
