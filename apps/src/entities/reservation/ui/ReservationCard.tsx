@@ -47,13 +47,13 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
       case 'M':
         return '매칭중';
       case 'P':
-        return '결제대기';
+        return '결제완료';
       case 'D':
         return '완료';
       case 'C':
         return '취소됨';
       case 'E':
-        return '에러';
+        return '오류';
       default:
         return '알 수 없음';
     }
@@ -116,22 +116,41 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
           </>
         );
       case 'D':
-        return (
-          <>
-            <button
-              disabled
-              className="flex-1 rounded-[22px] bg-[#B0BEC5] py-3 text-sm font-medium text-white cursor-not-allowed"
-            >
-              완료됨
-            </button>
-            <button
-              onClick={() => onViewDetails?.(reservationId.toString())}
-              className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
-            >
-              상세보기
-            </button>
-          </>
-        );
+        if (!(reservation as any).review) {
+          return (
+            <>
+              <button
+                onClick={() => onWriteReview?.(reservationId.toString())}
+                className="flex-1 rounded-[22px] bg-[#4DD0E1] py-3 text-sm font-medium text-white hover:bg-[#26C6DA] transition-colors"
+              >
+                후기 작성
+              </button>
+              <button
+                onClick={() => onViewDetails?.(reservationId.toString())}
+                className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
+              >
+                상세보기
+              </button>
+            </>
+          );
+        } else {
+          return (
+            <>
+              <button
+                disabled
+                className="flex-1 rounded-[22px] bg-[#B0BEC5] py-3 text-sm font-medium text-white cursor-not-allowed"
+              >
+                완료됨
+              </button>
+              <button
+                onClick={() => onViewDetails?.(reservationId.toString())}
+                className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
+              >
+                상세보기
+              </button>
+            </>
+          );
+        }
       default:
         return (
           <button
@@ -173,7 +192,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-[#666666]">날짜 및 시간</span>
           <span className="text-sm font-medium text-black">
-            {new Date(reservationDate).toLocaleDateString()} {reservationTime}
+            {new Date(reservationDate).toLocaleDateString()} {typeof reservationTime === 'string' ? reservationTime : `${String(reservationTime.hour).padStart(2, '0')}:${String(reservationTime.minute).padStart(2, '0')}:${String(reservationTime.second ?? 0).padStart(2, '0')}`}
           </span>
         </div>
         <div className="flex items-center justify-between">
@@ -182,7 +201,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-[#666666]">이용 시간</span>
-          <span className="text-sm font-medium text-black">{reservationDuration}분</span>
+          <span className="text-sm font-medium text-black">{reservationDuration}시간</span>
         </div>
       </div>
 

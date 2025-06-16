@@ -41,7 +41,7 @@ export type ReservationStatus =
 export const ReservationStatusLabel: Record<ReservationStatus, string> = {
   'W': '대기중',
   'M': '매칭중',
-  'P': '결제대기',
+  'P': '결제 완료',
   'D': '완료',
   'C': '취소',
   'E': '오류'
@@ -89,13 +89,12 @@ export interface Reservation {
 
 export type ReservationTab = 'upcoming' | 'past'
 
-// API 상태값 → FE ReservationStatus 매핑 테이블 (모든 화면에서 import해서 사용)
+// API에서 내려오는 UI 상태값 → FE ReservationStatus 매핑 테이블 (실제 응답에 등장하는 값만 남김)
 export const ReservationStatusMap: Record<string, ReservationStatus> = {
-  SCHEDULED: 'W',
-  MATCHING: 'M',
-  PAY: 'P',
-  DONE: 'D',
-  CANCEL: 'C',
-  ERROR: 'E',
+  SCHEDULED: 'W',      // 예정된 업무
+  IN_PROGRESS: 'M',    // 진행중(매칭)
+  COMPLETED: 'D',      // 완료(후기 작성 대기/완료)
+  CANCELLED: 'C',      // 취소
+  ERROR: 'E',          // 에러
   // 필요시 추가
 };

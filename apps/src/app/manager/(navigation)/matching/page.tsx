@@ -28,10 +28,10 @@ const ManagerMatchingPage = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`https://api.antmen.site:9092/api/v1/manager/matching/list`, {
+        const res = await fetch(`http://localhost:9092/api/v1/manager/matching/list`, {
           credentials: 'include',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
         });
         if (!res.ok) throw new Error('매칭 요청 목록을 불러오지 못했습니다');

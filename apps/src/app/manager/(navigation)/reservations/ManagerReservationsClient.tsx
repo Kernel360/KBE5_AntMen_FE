@@ -89,6 +89,7 @@ export const ManagerReservationsClient = ({
       const decodedToken = decodeURIComponent(rawToken);
       const token = decodedToken.replace(/^Bearer\s+/, '');
       const authHeader = `Bearer ${token}`;
+      // FE 상태코드('M', 'W', 'D' 등)를 그대로 전달
       await changeReservationStatus(
         parseInt(id),
         newStatus.reservationStatus as ReservationStatus,
