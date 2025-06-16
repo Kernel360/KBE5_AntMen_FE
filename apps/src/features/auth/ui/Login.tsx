@@ -53,11 +53,6 @@ export function Login() {
         `response_type=${process.env.NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE}&` +
         `scope=${encodeURIComponent(process.env.NEXT_PUBLIC_GOOGLE_SCOPE as string)}`
 
-      console.log(process.env.NEXT_PUBLIC_GOOGLE_AUTH_URL)
-      console.log(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID)
-      console.log(process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI)
-      console.log(process.env.NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE)
-      console.log(process.env.NEXT_PUBLIC_GOOGLE_SCOPE)
       // 구글 인가코드 받기 위해 구글 로그인 페이지로 이동
       window.location.href = googleOAuthUrl
     } catch (error) {

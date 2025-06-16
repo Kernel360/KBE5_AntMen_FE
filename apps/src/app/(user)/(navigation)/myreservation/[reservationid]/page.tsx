@@ -16,6 +16,7 @@ import { Suspense } from 'react'
 import type { Reservation } from '@/entities/reservation/model/types'
 import { ReservationDetailPageClient } from './ReservationDetailPageClient'
 import { notFound } from 'next/navigation'
+import { customFetch } from '@/shared/api/base'
 
 interface PageProps {
   params: {
@@ -26,20 +27,16 @@ interface PageProps {
 // --- 데이터 페칭 함수 ---
 async function getReservationDetail(id: string): Promise<Reservation | null> {
   try {
+    console.log('ReservationDetailPage: params.reservationid =', id) // 실제 전달 값 확인
     // 실제 백엔드 API 주소로 변경
-    const res = await fetch(`https://api.antmen.site:9091/api/v1/customer/reservations/${id}`, {
-      cache: 'no-store', // 항상 최신 데이터를 가져옴
-    })
+    const res = await customFetch(
+      `https://api.antmen.site:9091/api/v1/customer/reservations/${id}`,
+      {
+        cache: 'no-store', // 항상 최신 데이터를 가져옴
+      },
+    )
 
-    if (!res.ok) {
-      if (res.status === 404) {
-        return null // 404의 경우 null을 반환하여 페이지에서 처리
-      }
-      throw new Error(`Failed to fetch reservation: ${res.statusText}`)
-    }
-
-    const data = await res.json()
-    return data as Reservation
+    return res as Reservation
   } catch (error) {
     console.error('Failed to fetch reservation detail:', error)
     // 에러 발생 시에도 null 반환
