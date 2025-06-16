@@ -28,6 +28,7 @@ export interface ReservationHistory {
   matchings: Matching[];
 }
 
+// FE에서 사용하는 예약 상태 코드 타입 (API 매핑은 ReservationStatusMap 참고)
 export type ReservationStatus = 
   | 'W'  // WAITING
   | 'M'  // MATCHING
@@ -36,6 +37,7 @@ export type ReservationStatus =
   | 'C'  // CANCEL
   | 'E'; // ERROR
 
+// FE 예약 상태 코드 → 한글 라벨 매핑
 export const ReservationStatusLabel: Record<ReservationStatus, string> = {
   'W': '대기중',
   'M': '매칭중',
@@ -69,7 +71,7 @@ export interface Reservation {
   customerId: number;
   reservationCreatedAt: string;
   reservationDate: string;
-  reservationTime: string;
+  reservationTime: string | { hour: number; minute: number; second: number; nano: number };
   categoryId: number;
   categoryName: string;
   recommendDuration: number;
@@ -86,3 +88,14 @@ export interface Reservation {
 }
 
 export type ReservationTab = 'upcoming' | 'past'
+
+// API 상태값 → FE ReservationStatus 매핑 테이블 (모든 화면에서 import해서 사용)
+export const ReservationStatusMap: Record<string, ReservationStatus> = {
+  SCHEDULED: 'W',
+  MATCHING: 'M',
+  PAY: 'P',
+  DONE: 'D',
+  CANCEL: 'C',
+  ERROR: 'E',
+  // 필요시 추가
+};

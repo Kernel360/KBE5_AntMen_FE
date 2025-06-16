@@ -1,6 +1,7 @@
 import { Reservation, ReservationHistory, ReservationStatus } from '../model/types';
+import { customFetch } from '@/shared/api/base';
 
-const BASE_URL = 'http://localhost:9092/api/v1/manager/reservations';
+const BASE_URL = 'http://localhost:9092/v1/manager/reservations';
 
 class ApiError extends Error {
   constructor(
@@ -15,23 +16,14 @@ class ApiError extends Error {
 
 export async function getMyReservations(token: string): Promise<Reservation[]> {
   try {
-    const response = await fetch(BASE_URL, {
+    const data = await customFetch<Reservation[]>(BASE_URL, {
       headers: {
         Authorization: token,
       },
       cache: 'no-store',
     });
-
-    if (!response.ok) {
-      throw new ApiError(
-        '예약 목록을 불러오는데 실패했습니다',
-        response.status,
-        response.statusText
-      );
-    }
-
-    return response.json();
-  } catch (error) {
+    return data;
+  } catch (error: any) {
     if (error instanceof ApiError) {
       throw error;
     }
@@ -45,22 +37,13 @@ export async function getMyReservations(token: string): Promise<Reservation[]> {
 
 export async function getReservationById(id: number, token: string): Promise<Reservation> {
   try {
-    const response = await fetch(`${BASE_URL}/${id}`, {
+    const data = await customFetch<Reservation>(`${BASE_URL}/${id}`, {
       headers: {
         Authorization: token,
       },
     });
-
-    if (!response.ok) {
-      throw new ApiError(
-        '예약 정보를 불러오는데 실패했습니다',
-        response.status,
-        response.statusText
-      );
-    }
-
-    return response.json();
-  } catch (error) {
+    return data;
+  } catch (error: any) {
     if (error instanceof ApiError) {
       throw error;
     }
@@ -74,22 +57,13 @@ export async function getReservationById(id: number, token: string): Promise<Res
 
 export async function getReservationHistory(id: number, token: string): Promise<ReservationHistory> {
   try {
-    const response = await fetch(`${BASE_URL}/${id}/history`, {
+    const data = await customFetch<ReservationHistory>(`${BASE_URL}/${id}/history`, {
       headers: {
         Authorization: token,
       },
     });
-
-    if (!response.ok) {
-      throw new ApiError(
-        '예약 상세 정보를 불러오는데 실패했습니다',
-        response.status,
-        response.statusText
-      );
-    }
-
-    return response.json();
-  } catch (error) {
+    return data;
+  } catch (error: any) {
     if (error instanceof ApiError) {
       throw error;
     }
@@ -107,7 +81,7 @@ export async function changeReservationStatus(
   token: string
 ): Promise<void> {
   try {
-    const response = await fetch(`${BASE_URL}/${id}/status`, {
+    await customFetch<void>(`${BASE_URL}/${id}/status`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -115,15 +89,7 @@ export async function changeReservationStatus(
       },
       body: JSON.stringify({ status }),
     });
-
-    if (!response.ok) {
-      throw new ApiError(
-        '예약 상태 변경에 실패했습니다',
-        response.status,
-        response.statusText
-      );
-    }
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof ApiError) {
       throw error;
     }

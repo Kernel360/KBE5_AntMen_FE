@@ -5,12 +5,13 @@ import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ReservationCard } from '@/entities/reservation/ui/ReservationCard'
 import { ReviewModal } from '@/shared/ui/modal/ReviewModal'
-import type {
+import {
   Reservation,
   ReservationTab,
+  ReservationStatus,
+  ReservationStatusMap,
 } from '@/entities/reservation/model/types'
-import { ReservationStatus } from '@/entities/reservation/model/types'
-import { changeReservationStatus } from '@/entities/reservation/api/reservationApi'
+import { changeReservationStatus, getMyReservations } from '@/entities/reservation/api/reservationApi'
 
 interface ManagerReservationsClientProps {
   initialReservations: Reservation[]
@@ -23,7 +24,7 @@ export const ManagerReservationsClient = ({
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState<ReservationTab>('upcoming')
   const [reservations, setReservations] =
-    useState<Reservation[]>(initialReservations)
+    useState<Reservation[]>(initialReservations.map(mapReservationApiToClient))
   const [reviewModal, setReviewModal] = useState<{
     isOpen: boolean
     reservationId: string
@@ -34,6 +35,29 @@ export const ManagerReservationsClient = ({
     customerName: '',
   })
   const [error, setError] = useState<string | null>(null)
+
+  // 클라이언트에서 예약 데이터 fetch
+  const fetchReservations = async () => {
+    try {
+      const rawToken = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('auth-token='))
+        ?.split('=')[1] || '';
+      const decodedToken = decodeURIComponent(rawToken);
+      const token = decodedToken.replace(/^Bearer\s+/, '');
+      const authHeader = `Bearer ${token}`;
+      const data = await getMyReservations(authHeader);
+      setReservations(data.map(mapReservationApiToClient));
+    } catch (e) {
+      setError('예약 데이터를 불러오지 못했습니다.');
+    }
+  };
+
+  // 최초 마운트 및 탭 전환 시마다 fetch
+  useEffect(() => {
+    fetchReservations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   // URL 파라미터에서 취소된 예약 ID 확인
   useEffect(() => {
@@ -58,21 +82,18 @@ export const ManagerReservationsClient = ({
   ) => {
     try {
       // 쿠키에서 토큰 가져오기
-      const token = document.cookie
+      const rawToken = document.cookie
         .split('; ')
         .find((row) => row.startsWith('auth-token='))
-        ?.split('=')[1]
-
-      if (!token) {
-        throw new Error('인증 토큰이 없습니다')
-      }
-
+        ?.split('=')[1] || '';
+      const decodedToken = decodeURIComponent(rawToken);
+      const token = decodedToken.replace(/^Bearer\s+/, '');
+      const authHeader = `Bearer ${token}`;
       await changeReservationStatus(
         parseInt(id),
         newStatus.reservationStatus as ReservationStatus,
-        token
+        authHeader
       )
-
       // 로컬 상태 업데이트
       setReservations((prev) =>
         prev.map((reservation) =>
@@ -338,7 +359,7 @@ export const ManagerReservationsClient = ({
               </p>
               <p className="mt-2 text-sm text-gray-500">
                 {activeTab === 'upcoming'
-                  ? '새로운 업무를 찾거나 매칭을 요청해보세요.'
+                  ? '새로운 업무를 찾거나 매칭 요청을 확인해보세요.'
                   : '완료된 업무 내역이 여기에 표시됩니다.'}
               </p>
             </div>
@@ -365,4 +386,14 @@ export const ManagerReservationsClient = ({
       )}
     </main>
   )
+}
+
+function mapReservationApiToClient(apiData: Reservation): Reservation {
+  return {
+    ...apiData,
+    reservationStatus: ReservationStatusMap[apiData.reservationStatus] || apiData.reservationStatus,
+    reservationTime: typeof apiData.reservationTime === 'string'
+      ? apiData.reservationTime
+      : `${String(apiData.reservationTime.hour).padStart(2, '0')}:${String(apiData.reservationTime.minute).padStart(2, '0')}:${String(apiData.reservationTime.second ?? 0).padStart(2, '0')}`,
+  }
 }
