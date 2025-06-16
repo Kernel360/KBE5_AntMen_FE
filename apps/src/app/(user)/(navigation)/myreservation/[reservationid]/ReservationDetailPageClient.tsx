@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ChevronLeft, Star, CreditCard } from 'lucide-react'
+import { ChevronLeft, Star } from 'lucide-react'
 import {
   CancellationModal,
   RefundModal,
@@ -411,7 +411,7 @@ export const ReservationDetailPageClient = ({
   // 결제 성공/실패 시 URL 쿼리 파라미터를 확인하여 상태 업데이트
   const searchParams = useSearchParams()
   useEffect(() => {
-    const status = searchParams.get('status')
+    const status = searchParams?.get('status')
     if (status === 'success' && reservation) {
       setReservation((prev) =>
         prev ? { ...prev, paymentStatus: 'paid', status: 'WAITING' } : null,
