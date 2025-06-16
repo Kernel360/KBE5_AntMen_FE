@@ -1,14 +1,41 @@
-'use client'
-
-import React from 'react'
+import { cookies } from 'next/headers'
+import { jwtDecode } from 'jwt-decode'
 import { MorePageUI } from '@/features/more/ui/MorePageUI'
 
-export default function MorePage() {
-  const user = {
-    name: '홍길동',
-    points: 1000,
-    membershipType: 'Gold',
-    email: 'test@test.com',
+async function getUserData(token: string) {
+
+  const res = await fetch(`http://localhost:9091/customers/confirm`, {
+    next: {
+      revalidate: 3600
+    },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token
+    }
+  })
+
+  if (!res.ok) {
+    throw new Error('Failed to fetch user data')
   }
-  return <MorePageUI user={user} />
+
+  return res.json()
+}
+
+export default async function MorePage() {
+  const token = cookies().get('auth-token')?.value
+
+  if (!token) {
+    return <div>로그인 후 이용해주세요.</div>
+  }
+
+  const userData = await getUserData(token)
+
+  // const user = {
+  //   name: '홍길동',
+  //   points: 1000,
+  //   membershipType: 'Gold',
+  //   email: 'test@test.com',
+  // }
+
+  return <MorePageUI user={userData} />
 }

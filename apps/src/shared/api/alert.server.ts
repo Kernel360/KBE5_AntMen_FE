@@ -5,10 +5,11 @@ export async function fetchAlerts(): Promise<Notification[]> {
   try {
     const cookieStore = cookies()
     const token = cookieStore.get('auth-token')?.value
+    const decodedToken = token ? decodeURIComponent(token) : null;
 
     const res = await fetch('https://api.antmen.site:9090/api/v1/common/alerts', {
       headers: {
-        Authorization: token ?? '',
+        Authorization: decodedToken ?? '',
       },
       next: { revalidate: 10 },
       cache: 'no-store',

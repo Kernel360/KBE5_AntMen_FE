@@ -182,14 +182,14 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
         </div>
       </div>
       {/* 방문 주소 */}
-      <div className="flex items-center gap-2">
-        <Image
-          src="/icons/map-pin.svg"
-          alt="위치"
-          width={16}
-          height={16}
-          className="text-[#666666]"
-        />
+          <div className="flex items-center gap-2">
+            <Image
+              src="/icons/map-pin.svg"
+              alt="위치"
+              width={16}
+              height={16}
+              className="text-[#666666]"
+            />
         <span className="text-sm text-[#666666]">{location} {detailedAddress}</span>
       </div>
       {/* 날짜, 담당자, 금액, 기간, 결제수단 */}
