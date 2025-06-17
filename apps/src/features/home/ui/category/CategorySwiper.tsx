@@ -67,7 +67,6 @@ export function CategorySwiper() {
                   alt={cat.alt}
                   width={120}
                   height={120}
-                  s
                   className="object-contain"
                   style={{ color: 'transparent' }}
                 />
