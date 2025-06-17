@@ -24,15 +24,15 @@ function NavItem({ icon, activeIcon, label, isActive, href }: NavItemProps) {
   return (
     <button
       onClick={() => router.push(href)}
-      className="flex flex-1 flex-col items-center gap-[2px]"
+      className="flex flex-1 flex-col items-center"
     >
       <div className="relative flex items-center justify-center w-9 h-9 overflow-hidden">
         <Image
           src={isActive && activeIcon ? activeIcon : icon}
           alt={label}
-          width={28}
-          height={28}
-          className="w-7 h-7"
+          width={24}
+          height={24}
+          className="w-6 h-6"
         />
       </div>
       <span
@@ -81,7 +81,7 @@ export function BottomNavigation() {
   ]
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 mx-auto flex h-[72px] max-w-mobile items-center justify-between gap-4 border-t bg-white px-2 py-2">
+    <div className="fixed bottom-0 left-0 right-0 mx-auto flex h-[64px] max-w-mobile items-center justify-between gap-4 border-t bg-white px-2 py-2">
       {navItems.map((item) => (
         <NavItem
           key={item.href}

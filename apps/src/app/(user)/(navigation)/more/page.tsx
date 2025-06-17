@@ -2,15 +2,14 @@ import { cookies } from 'next/headers'
 import { MorePageUI } from '@/features/more/ui/MorePageUI'
 
 async function getUserData(token: string) {
-
   const res = await fetch(`https://api.antmen.site:9091/customers/confirm`, {
     next: {
-      revalidate: 3600
+      revalidate: 3600,
     },
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': token
-    }
+      Authorization: token,
+    },
   })
 
   if (!res.ok) {
@@ -28,13 +27,6 @@ export default async function MorePage() {
   }
 
   const userData = await getUserData(token)
-
-  // const user = {
-  //   name: '홍길동',
-  //   points: 1000,
-  //   membershipType: 'Gold',
-  //   email: 'test@test.com',
-  // }
 
   return <MorePageUI user={userData} />
 }

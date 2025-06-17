@@ -1,7 +1,7 @@
 import { customFetch } from '@/shared/api/base'
 import { ReservationHistoryDto } from '../model/types'
 
-const BASE_URL = 'http://localhost:19092/v1/manager'
+const BASE_URL = 'https://api.antmen.site:9092/v1/manager'
 
 export const getMatchingRequests = async (): Promise<
   ReservationHistoryDto[]
