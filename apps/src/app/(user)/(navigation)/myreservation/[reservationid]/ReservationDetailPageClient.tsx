@@ -228,7 +228,10 @@ export const ReservationDetailPageClient = ({
         matchingIsFinal: false,
         matchingRefuseReason: reason,
       })
-      alert('매칭이 거절되었습니다.')
+      setReservation((prev) =>
+        prev ? { ...prev, reservationStatus: 'CANCEL' } : null
+      )
+      alert('매칭이 거절되어 예약이 취소되었습니다.')
     } catch (error) {
       console.error('Failed to reject matching:', error)
       alert('매칭 거절에 실패했습니다.')
