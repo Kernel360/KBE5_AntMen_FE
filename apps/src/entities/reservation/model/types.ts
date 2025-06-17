@@ -1,6 +1,9 @@
 export interface UserSummary {
-  userId: number
-  name: string
+  userId: number;
+  name: string;
+  gender: string; // "남성" | "여성"
+  age: number;
+  profileImage: string;
   // 필요한 경우 추가 필드
 }
 
@@ -15,17 +18,18 @@ export interface Matching {
 }
 
 export interface ReservationHistory {
-  reservationId: number
-  categoryName: string
-  reservationStatus: ReservationStatus
-  reservationDate: string
-  totalDuration: number
-  totalAmount: number
-  customer: UserSummary
-  manager: UserSummary
-  address: string
-  selectedOptions: string[]
-  matchings: Matching[]
+  reservationId: number;
+  categoryName: string;
+  reservationStatus: ReservationStatus;
+  reservationDate: string;
+  totalDuration: number;
+  totalAmount: number;
+  reservationMemo: string;
+  customer: UserSummary;
+  manager: UserSummary;
+  address: string;
+  selectedOptions: string[];
+  matchings: Matching[];
 }
 
 // FE에서 사용하는 예약 상태 코드 타입 (API 매핑은 ReservationStatusMap 참고)
@@ -42,7 +46,7 @@ export type ReservationStatus =
 export const ReservationStatusLabel: Record<ReservationStatus, string> = {
   WAITING: '대기중',
   MATCHING: '매칭중',
-  PAY: '결제대기',
+  PAY: '결제 완료',
   DONE: '완료',
   CANCEL: '취소',
   ERROR: '오류',

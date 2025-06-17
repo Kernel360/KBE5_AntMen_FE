@@ -46,7 +46,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
       case 'MATCHING':
         return '매칭중'
       case 'PAY':
-        return '결제대기'
+        return '결제완료'
       case 'DONE':
         return '완료'
       case 'CANCEL':
