@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 
@@ -18,14 +19,16 @@ export const MenuItem = ({
     return (
       <button
         onClick={onClick}
-        className="flex justify-between items-center w-full px-4 py-4"
+        className="flex justify-between items-center w-full"
       >
-        <li>
+        <li className="flex justify-between items-center w-full hover:bg-gray-100 px-4 py-4">
           <div className="flex items-center gap-4">
-            <img
+            <Image
               src={icon}
               alt={label + ' 아이콘'}
               className="w-6 h-6 flex items-center justify-center text-gray-800"
+              width={24}
+              height={24}
             />
             <span className="text-black text-base font-medium">{label}</span>
           </div>
@@ -51,16 +54,15 @@ export const MenuItem = ({
   }
 
   return (
-    <Link
-      href={href}
-      className="flex justify-between items-center w-full px-4 py-4"
-    >
-      <li>
+    <Link href={href} className="flex justify-between items-center w-full">
+      <li className="flex justify-between items-center w-full hover:bg-gray-100 px-4 py-4">
         <div className="flex items-center gap-4">
-          <img
+          <Image
             src={icon}
             alt={label + ' 아이콘'}
             className="w-6 h-6 flex items-center justify-center text-gray-800"
+            width={24}
+            height={24}
           />
           <span className="text-black text-base font-medium">{label}</span>
         </div>
