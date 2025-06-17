@@ -40,7 +40,7 @@ const PaymentInfoSection = ({
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-600">결제 완료일</span>
           <span className="text-sm font-medium text-black">
-            {new Date(payment.payCreatedTime).toLocaleDateString('ko-KR')}
+            {new Date(payment.pay_createdTime).toLocaleDateString('ko-KR')}
           </span>
         </div>
       </div>
