@@ -1,9 +1,9 @@
-import { BottomNavigation } from "@/shared/ui/BottomAppBar/BottomManagerNavigation";
+import { BottomNavigation } from '@/shared/ui/BottomAppBar/BottomManagerNavigation'
 
 export default function NavigationLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <>
@@ -12,5 +12,5 @@ export default function NavigationLayout({
       </div>
       <BottomNavigation />
     </>
-  );
+  )
 }

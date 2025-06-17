@@ -1,12 +1,12 @@
 'use client'
 
-import { BellIcon, UserCircleIcon } from '@heroicons/react/24/outline'
+import { BellIcon, UserCircleIcon } from '@heroicons/react/24/solid'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
-import { BubbleBackground } from './BubbleBackground'
 import LoginRequiredModal from '@/shared/ui/modal/LoginRequiredModal'
 import { checkUserAuth } from '@/features/auth/lib/auth'
 import Link from 'next/link'
+import { CalendarIcon } from '@heroicons/react/24/outline'
 
 interface HomeHeaderProps {
   title?: string
@@ -19,8 +19,6 @@ interface HomeHeaderProps {
 
 export function HomeHeader({
   title = '제목입니다.',
-  subtitle = '소제목입니다.',
-  buttonText = '버튼입니다.',
   onButtonClick,
   buttonIcon,
   requireAuth = 'CUSTOMER',
@@ -52,36 +50,36 @@ export function HomeHeader({
     // 잘못된 접근
     if (requireAuth != authResult.userRole) {
       authResult.message = '해당 접근 권한이 없습니다.'
-      if (authResult.userRole == 'CUSTOMER') {
-        alert(authResult.message)
-        router.push('/')
-        return
-      } else if (authResult.userRole == 'MANAGER') {
-        alert(authResult.message)
-        router.push('/manager')
-        return
+      switch (authResult.userRole) {
+        case 'CUSTOMER':
+          alert(authResult.message)
+          router.push('/')
+          return
+        case 'MANAGER':
+          alert(authResult.message)
+          router.push('/manager')
+          return
+        default:
+          alert(authResult.message)
+          return
       }
     }
 
     // 정상 접근
     if (onButtonClick) {
-      onButtonClick()
+      router.push('/reservation')
     }
   }
 
   return (
-    <section className="relative bg-primary p-4 pb-6 overflow-hidden">
-      <BubbleBackground />
-      <div className="relative z-10">
+    <section className="relative w-full bg-primary pb-6 overflow-hidden">
+      {/* <BubbleBackground /> */}
+      <div className="relative z-10 pt-4 container">
         <div className="flex justify-end mb-6">
-          <div className="flex gap-4">
-            <button
-              className="relative"
-              onClick={() => router.push('/login')}
-              aria-label="로그인"
-            >
+          <div className="flex gap-[10px]">
+            <Link className="relative" href="/login" aria-label="로그인">
               <UserCircleIcon className="w-6 h-6 text-white" />
-            </button>
+            </Link>
             <button
               className="relative"
               onClick={handleNotificationClick}
@@ -94,42 +92,20 @@ export function HomeHeader({
             </button>
           </div>
         </div>
-        {(title || subtitle) && (
-          <div className="mb-6">
-            {title && (
-              <h1 className="text-2xl font-bold mb-1 text-gray-900">
-                앤트워커로 매주
-                <br />
-                10시간을 절약해요
-              </h1>
-            )}
-            {subtitle && <p className="text-base text-gray-900">{subtitle}</p>}
-          </div>
-        )}
-        {buttonText && (
-          <div className="flex gap-2 h-[190px] mb-6">
-            <div className="w-1/2 flex flex-col h-full gap-2">
-              <button className="w-full h-full bg-white rounded-xl relative flex items-center justify-center">
-              <Link href="/reservation/select-address?categoryId=3">
-              <span className="font-semibold">에어컨 청소</span>
-              </Link>
-              </button>
-              <button className="w-full h-full bg-white rounded-xl flex items-center relative justify-center">
-                <span className="font-semibold">가사 청소</span>
-                <Link href="/reservation/select-address?categoryId=1">
-                 
-                </Link>
-              </button>
-            </div>
-            <button
-              onClick={handleRequireLogin}
-              className="w-1/2 h-full bg-white rounded-xl flex items-center justify-center gap-2 mb-6"
-            >
-              {buttonIcon}
-              <span className="font-semibold">{buttonText}</span>
-            </button>
-          </div>
-        )}
+
+        <h1 className="text-2xl font-semibold mb-4 text-gray-900">
+          앤트워커로 매주
+          <br />
+          10시간을 절약해요
+        </h1>
+
+        <button
+          onClick={handleRequireLogin}
+          className="w-full h-[58px] bg-white rounded-xl flex items-center mb-4 justify-center gap-2"
+        >
+          <CalendarIcon className="w-[18px] h-[18px] text-black" />
+          <span className="font-semibold">예약하기</span>
+        </button>
       </div>
       <LoginRequiredModal
         isOpen={loginModalOpen}
