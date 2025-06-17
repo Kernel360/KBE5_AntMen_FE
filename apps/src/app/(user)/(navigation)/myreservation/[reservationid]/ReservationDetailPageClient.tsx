@@ -32,45 +32,54 @@ const ReservationHeader = () => {
   )
 }
 
+// 예약 상태 섹션
+const ReservationStatusSection = ({ reservation }: { reservation: ReservationHistory }) => {
+  return (
+    <div className="bg-white px-5 py-6 mb-3 rounded-xl">
+      <h2 className="text-lg font-bold text-black mb-6">예약 상태</h2>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-600">예약 신청일</span>
+          <span className="text-sm font-medium text-black">{reservation.reservationDate}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-600">신청 시간</span>
+          <span className="text-sm font-medium text-black">{reservation.reservationTime || '-'}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-600">주소</span>
+          <span className="text-sm font-medium text-black text-right max-w-[200px]">{reservation.address}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // 서비스 정보 섹션
 const ServiceInfoSection = ({ reservation }: { reservation: ReservationHistory }) => {
   return (
-    <div className="bg-white px-5 py-6">
+    <div className="bg-white px-5 py-6 mb-3 rounded-xl">
       <h2 className="text-lg font-bold text-black mb-6">서비스 정보</h2>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-600">서비스 유형</span>
-          <span className="text-sm font-medium text-black">
-            {reservation.categoryName}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-600">
-            신청 날짜
-          </span>
-          <span className="text-sm font-medium text-black">
-            {reservation.reservationDate}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-600">
-            신청 시간
-          </span>
-          <span className="text-sm font-medium text-black">
-            {reservation.reservationTime}
-          </span>
+          <span className="text-sm font-medium text-black">{reservation.categoryName}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-600">소요 시간</span>
-          <span className="text-sm font-medium text-black">
-            {reservation.totalDuration}시간
+          <span className="text-sm font-medium text-black">{reservation.totalDuration}시간</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-600">선택한 옵션</span>
+          <span className="text-sm font-medium text-black text-right max-w-[200px]">
+            {reservation.selectedOptions && reservation.selectedOptions.length > 0
+              ? reservation.selectedOptions.join(', ')
+              : '없음'}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-600">주소</span>
-          <span className="text-sm font-medium text-black text-right max-w-[200px]">
-            {reservation.address}
-          </span>
+          <span className="text-sm font-medium text-gray-600">결제 금액</span>
+          <span className="text-base font-bold text-black">{reservation.totalAmount?.toLocaleString()}원</span>
         </div>
       </div>
     </div>
@@ -78,36 +87,20 @@ const ServiceInfoSection = ({ reservation }: { reservation: ReservationHistory }
 }
 
 // 매칭 매니저 정보 섹션
-const ManagerInfoSection = ({ manager }: { manager?: ReservationHistory['manager'] }) => {
-  if (!manager) {
-    return (
-      <div className="bg-white px-5 py-6">
-        <h2 className="text-lg font-bold text-black mb-6">매칭 매니저</h2>
+const ManagerInfoSection = ({ manager }: { manager?: any }) => {
+  return (
+    <div className="bg-white px-5 py-6 mb-3 rounded-xl">
+      <h2 className="text-lg font-bold text-black mb-6">매칭 매니저</h2>
+      {manager ? (
+        <div className="flex flex-col gap-2">
+          <span className="text-base font-bold text-black">{manager.name}</span>
+          <span className="text-sm text-gray-600">{manager.gender} · {manager.age}세</span>
+        </div>
+      ) : (
         <div className="flex items-center justify-center text-gray-400 h-20">
           매칭된 매니저가 없습니다.
         </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="bg-white px-5 py-6">
-      <h2 className="text-lg font-bold text-black mb-6">매칭 매니저</h2>
-      <div className="flex items-start gap-4">
-        <div className="w-15 h-15 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-          <span className="text-base font-black text-white">
-            {manager.profileImage ? manager.profileImage : manager.name?.[0] || '👤'}
-          </span>
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="text-lg font-black text-black">{manager.name}</h3>
-          </div>
-          <p className="text-sm text-gray-600">
-            {manager.gender} · {manager.age}세
-          </p>
-        </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -241,14 +234,13 @@ export const ReservationDetailPageClient = ({
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <ReservationHeader />
-
       <main className="flex-grow pb-24">
-        <div className="space-y-2">
+        <div className="space-y-4">
+          <ReservationStatusSection reservation={reservation} />
           <ServiceInfoSection reservation={reservation} />
-          <ManagerInfoSection manager={reservation.manager} />
+          <ManagerInfoSection manager={reservation.matchings[0]?.manager} />
         </div>
       </main>
-
       {reservation.reservationStatus === 'WAITING' && (
         <MatchingActionSection
           matchingId={reservation.reservationId}
