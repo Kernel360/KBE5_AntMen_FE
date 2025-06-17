@@ -1,7 +1,7 @@
 import { Reservation, ReservationHistory, ReservationStatus } from '../model/types';
 import { customFetch } from '@/shared/api/base';
 
-const BASE_URL = 'http://localhost:9092/v1/manager/reservations';
+const BASE_URL = 'https://api.antmen.site:9092/v1/manager/reservations';
 
 class ApiError extends Error {
   constructor(
@@ -35,27 +35,7 @@ export async function getMyReservations(token: string): Promise<Reservation[]> {
   }
 }
 
-export async function getReservationById(id: number, token: string): Promise<Reservation> {
-  try {
-    const data = await customFetch<Reservation>(`${BASE_URL}/${id}`, {
-      headers: {
-        Authorization: token,
-      },
-    });
-    return data;
-  } catch (error: any) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError(
-      '서버와 통신하는데 실패했습니다',
-      500,
-      'Internal Server Error'
-    );
-  }
-}
-
-export async function getReservationHistory(id: number, token: string): Promise<ReservationHistory> {
+export async function getReservationDetail(id: number, token: string): Promise<ReservationHistory> {
   try {
     const data = await customFetch<ReservationHistory>(`${BASE_URL}/${id}/history`, {
       headers: {
