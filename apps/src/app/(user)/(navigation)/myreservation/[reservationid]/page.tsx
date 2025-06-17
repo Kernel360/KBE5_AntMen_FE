@@ -1,19 +1,7 @@
 // 내 예약 -> 예약 상세 페이지
-
-/**
- * TODO: 예약 상세 페이지 디자인 수정 필요
- *
- * 1. 결제하면 결제 컴포넌트 불러오기 ✅
- * 2. 예약 취소 버튼 누르면 예약 취소 모달 띄우기 RejectReservationModal ✅
- * 3. 결제 페이지 이동 필요 ✅
- * 4. 예약 리스트 예약 상태 수정 ✅
- * 5. 매니저 리스트 추가 필요
- * 6. 환불 기능 구현 ✅
- * 7. 모달 컴포넌트 분리 ✅
- **/
-
+'use client'
 import { Suspense } from 'react'
-import type { Reservation } from '@/entities/reservation/model/types'
+import type { ReservationHistory } from '@/entities/reservation/model/types'
 import { ReservationDetailPageClient } from './ReservationDetailPageClient'
 import { notFound } from 'next/navigation'
 import { customFetch } from '@/shared/api/base'
@@ -25,18 +13,18 @@ interface PageProps {
 }
 
 // --- 데이터 페칭 함수 ---
-async function getReservationDetail(id: string): Promise<Reservation | null> {
+async function getReservationDetail(id: string): Promise<ReservationHistory | null> {
   try {
     console.log('ReservationDetailPage: params.reservationid =', id) // 실제 전달 값 확인
     // 실제 백엔드 API 주소로 변경
     const res = await customFetch(
-      `https://api.antmen.site:9091/api/v1/customer/reservations/${id}`,
+      `https://api.antmen.site:9091/api/v1/customer/reservations/${id}/history`,
       {
         cache: 'no-store', // 항상 최신 데이터를 가져옴
       },
     )
 
-    return res as Reservation
+    return res as ReservationHistory
   } catch (error) {
     console.error('Failed to fetch reservation detail:', error)
     // 에러 발생 시에도 null 반환
@@ -58,20 +46,6 @@ function PageSkeleton() {
 
       <main className="flex-grow pb-24">
         <div className="space-y-2">
-          {/* Reservation Status Skeleton */}
-          <div className="bg-white px-5 py-6">
-            <div className="h-6 w-24 bg-gray-200 rounded mb-6"></div>
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <div className="w-20 h-5 bg-gray-200 rounded"></div>
-                <div className="w-28 h-5 bg-gray-200 rounded"></div>
-              </div>
-              <div className="flex justify-between">
-                <div className="w-16 h-5 bg-gray-200 rounded"></div>
-                <div className="w-24 h-5 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-          </div>
           {/* Service Info Skeleton */}
           <div className="bg-white px-5 py-6">
             <div className="h-6 w-24 bg-gray-200 rounded mb-6"></div>
@@ -86,7 +60,7 @@ function PageSkeleton() {
               </div>
             </div>
           </div>
-          {/* Cleaner Info Skeleton */}
+          {/* Manager Info Skeleton */}
           <div className="bg-white px-5 py-6">
             <div className="h-6 w-24 bg-gray-200 rounded mb-6"></div>
             <div className="flex items-start gap-4">
@@ -94,20 +68,6 @@ function PageSkeleton() {
               <div className="flex-1 space-y-2">
                 <div className="h-6 w-20 bg-gray-200 rounded"></div>
                 <div className="h-5 w-32 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-          </div>
-          {/* Payment Skeleton */}
-          <div className="bg-white px-5 py-6">
-            <div className="h-6 w-32 bg-gray-200 rounded mb-6"></div>
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <div className="w-24 h-5 bg-gray-200 rounded"></div>
-                <div className="w-20 h-5 bg-gray-200 rounded"></div>
-              </div>
-              <div className="flex justify-between pt-2 border-t">
-                <div className="w-28 h-6 bg-gray-200 rounded"></div>
-                <div className="w-24 h-6 bg-gray-200 rounded"></div>
               </div>
             </div>
           </div>
