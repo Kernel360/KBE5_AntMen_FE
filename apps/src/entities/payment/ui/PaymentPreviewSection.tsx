@@ -1,9 +1,9 @@
-import { PaymentRequest } from '../model/types'
+import { PaymentRequestDto } from '../model/types'
 
 const PaymentPreviewSection = ({
   paymentRequest,
 }: {
-  paymentRequest: PaymentRequest
+  paymentRequest: PaymentRequestDto
 }) => {
   const formatCurrency = (amount: number) => {
     return `₩${amount.toLocaleString()}`

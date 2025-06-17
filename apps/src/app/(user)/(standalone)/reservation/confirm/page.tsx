@@ -6,8 +6,6 @@ import { createReservation, ReservationRequest } from '@/shared/api';
 import { checkCustomerAuth } from '@/features/auth/lib/auth';
 import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
-import { PaymentRequest, Payment } from '@/entities/payment/model/types';
-
 interface ReservationInfo {
   customerId: number;
   categoryId: number;
