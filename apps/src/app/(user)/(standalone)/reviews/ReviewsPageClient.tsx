@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { StaticStarRating } from '@/shared/ui/StaticStarRating';
 import { EllipsisVerticalIcon, StarIcon as StarIconSolid, XMarkIcon } from '@heroicons/react/24/solid';
 import type { Review } from '@/entities/review/model/types';
+import { ReviewCard } from '@/entities/review/ui/ReviewCard';
 
 function EditReviewModal({
     isOpen, onClose, review, onSave,
@@ -77,46 +78,6 @@ function EditReviewModal({
     );
 }
 
-function MyReviewCard({ review, onEdit, onDelete }: {
-  review: Review,
-  onEdit: (review: Review) => void,
-  onDelete: (review: Review) => void
-}) {
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  return (
-    <div className="bg-gray-50 rounded-lg p-4">
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-1">
-          <span className="font-bold text-slate-800 text-lg">{review.managerName}</span>
-          <div className="flex items-center gap-2">
-            <StaticStarRating rating={review.rating} />
-            <div className="relative">
-              <button onClick={() => setMenuOpen(!menuOpen)} className="p-1">
-                <EllipsisVerticalIcon className="w-5 h-5 text-slate-500" />
-              </button>
-              {menuOpen && (
-                <div
-                  className="absolute right-0 mt-2 w-28 bg-white rounded-md shadow-lg z-10 border"
-                  onMouseLeave={() => setMenuOpen(false)}
-                >
-                  <button onClick={() => { onEdit(review); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-100">수정</button>
-                  <button onClick={() => { onDelete(review); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">삭제</button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="text-sm text-slate-500">
-          {/* serviceType, serviceDate가 필요하면 reservationId로 fetch 필요 */}
-          {new Date(review.createdAt).toLocaleDateString('ko-KR')}
-        </div>
-      </div>
-      <p className="text-slate-700 text-sm leading-relaxed">{review.comment}</p>
-    </div>
-  );
-}
-
 function EmptyState() {
   return (
     <div className="text-center py-20">
@@ -124,8 +85,6 @@ function EmptyState() {
     </div>
   );
 }
-
-// ... EditReviewModal, DeleteConfirmModal은 기존 목업 코드 그대로 복붙해서 사용
 
 export default function ReviewsPageClient({ initialReviews }: { initialReviews: Review[] }) {
   const router = useRouter();
@@ -177,11 +136,17 @@ export default function ReviewsPageClient({ initialReviews }: { initialReviews: 
       <div className="p-5 space-y-4">
         {reviews.length > 0
           ? reviews.map(review => (
-            <MyReviewCard
+            <ReviewCard
               key={review.id}
               review={review}
-              onEdit={handleOpenEditModal}
-              onDelete={handleOpenDeleteModal}
+              onEdit={id => {
+                const r = reviews.find(r => r.id === id);
+                if (r) handleOpenEditModal(r);
+              }}
+              onDelete={id => {
+                const r = reviews.find(r => r.id === id);
+                if (r) handleOpenDeleteModal(r);
+              }}
             />
           ))
           : <EmptyState />
@@ -189,7 +154,6 @@ export default function ReviewsPageClient({ initialReviews }: { initialReviews: 
       </div>
 
       {/* 모달 렌더링 */}
-      {/* EditReviewModal, DeleteConfirmModal은 기존 목업 코드 그대로 사용 */}
       <EditReviewModal
   isOpen={isEditModalOpen}
   onClose={handleCloseModals}

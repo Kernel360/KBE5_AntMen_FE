@@ -17,7 +17,7 @@ interface MorePageUIProps {
 }
 
 export const MorePageUI = ({ user }: MorePageUIProps) => {
-  const { logout } = useAuthStore()
+  const { logout, user: authUser } = useAuthStore()
   const router = useRouter()
 
   const handleLogout = () => {
@@ -34,6 +34,14 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
     }
   }
 
+  const handleReviewManageClick = () => {
+    if (authUser.userRole === 'MANAGER') {
+      router.push('/manager/reviews')
+    } else {
+      router.push('/reviews')
+    }
+  }
+
   const menuItems = [
     {
       icon: '/icons/linear-bell.svg',
@@ -46,7 +54,11 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
       href: '/favorites',
     },
     { icon: '/icons/linear-check.svg', label: '이용내역', href: '/history' },
-    { icon: '/icons/linear-review.svg', label: '리뷰관리', href: '/reviews' },
+    {
+      icon: '/icons/linear-review.svg',
+      label: '리뷰관리',
+      onClick: handleReviewManageClick,
+    },
     {
       icon: '/icons/linear-setting.svg',
       label: '로그아웃',
