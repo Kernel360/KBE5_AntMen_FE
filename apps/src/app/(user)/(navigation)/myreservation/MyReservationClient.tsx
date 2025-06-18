@@ -7,14 +7,15 @@ import { useRouter } from 'next/navigation'
 import { ReservationCard } from '@/entities/reservation/ui/ReservationCard'
 import type {
   Reservation,
-  ReservationTab,
 } from '@/entities/reservation/model/types'
 import { CustomerAuthGuard } from '@/components/auth/CustomerAuthGuard'
 import Cookies from 'js-cookie'
 
+export type ReservationTab = 'pending' | 'upcoming' | 'past'
+
 export const MyReservationClient: FC = () => {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<ReservationTab>('upcoming')
+  const [activeTab, setActiveTab] = useState<ReservationTab>('pending')
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -65,9 +66,16 @@ export const MyReservationClient: FC = () => {
 
   const filteredReservations = reservations.filter((r) => {
     const status = r.reservationStatus?.toUpperCase()
-    return activeTab === 'upcoming'
-      ? ['SCHEDULED', 'WAITING', 'MATCHING', 'PAY'].includes(status)
-      : ['DONE', 'CANCEL', 'ERROR'].includes(status)
+    if (activeTab === 'pending') {
+      // 매칭 전 예약: WAITING
+      return status === 'WAITING'
+    } else if (activeTab === 'upcoming') {
+      // 진행중 예약: SCHEDULED, MATCHING, PAY
+      return ['SCHEDULED', 'MATCHING', 'PAY'].includes(status)
+    } else {
+      // 지난 예약: DONE, CANCEL, ERROR
+      return ['DONE', 'CANCEL', 'ERROR'].includes(status)
+    }
   })
 
   return (
@@ -91,13 +99,26 @@ export const MyReservationClient: FC = () => {
       <div className="sticky top-[72px] z-20 bg-white">
         <div className="flex gap-10 px-5">
           <button
+            onClick={() => setActiveTab('pending')}
+            className="flex flex-col items-center gap-2"
+          >
+            <span
+              className={`text-base ${activeTab === 'pending' ? 'font-extrabold text-[#0fbcd6]' : 'font-medium text-[#999999]'}`}
+            >
+              매칭 전 예약
+            </span>
+            {activeTab === 'pending' && (
+              <div className="h-0.5 w-full bg-[#0fbcd6]" />
+            )}
+          </button>
+          <button
             onClick={() => setActiveTab('upcoming')}
             className="flex flex-col items-center gap-2"
           >
             <span
               className={`text-base ${activeTab === 'upcoming' ? 'font-extrabold text-[#0fbcd6]' : 'font-medium text-[#999999]'}`}
             >
-              예정된 예약
+              진행중 예약
             </span>
             {activeTab === 'upcoming' && (
               <div className="h-0.5 w-full bg-[#0fbcd6]" />

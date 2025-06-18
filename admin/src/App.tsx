@@ -4,11 +4,18 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AdminLayout } from './pages/admin/AdminLayout';
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { Dashboard } from './pages/admin/Dashboard';
-import { Users } from './pages/admin/Users';
+import { UsersCustomer } from './pages/admin/UsersCustomer';
+import { UsersManager } from './pages/admin/UsersManager';
+import { UsersWaiting } from './pages/admin/UsersWaiting';
 import { CustomerSupport } from './pages/admin/CustomerSupport';
-import { OperationSupport } from './pages/admin/OperationSupport';
-import { MemberSearch } from './pages/admin/MemberSearch';
-import { Refunds } from './pages/admin/Refunds';
+import { ManagerSupport } from './pages/admin/ManagerSupport';
+import { FinanceSales } from './pages/admin/FinanceSales';
+import { FinanceSettlement } from './pages/admin/FinanceSettlement';
+import { FinanceRefund } from './pages/admin/FinanceRefund';
+import { Algorithm } from './pages/admin/Algorithm';
+import { RecommendAlgorithm } from './pages/admin/RecommendAlgorithm';
+import UsersBlacklist from './pages/admin/UsersBlacklist';
+import { DollarSign, GitBranch, LayoutDashboard, Users, MessageSquare, BarChart } from 'lucide-react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,6 +26,55 @@ const queryClient = new QueryClient({
   },
 });
 
+const menuItems = [
+    {
+        title: '대시보드',
+        icon: <LayoutDashboard className="w-4 h-4" />,
+        path: '/admin/dashboard'
+    },
+    {
+        title: '회원관리',
+        icon: <Users className="w-4 h-4" />,
+        submenu: [
+            { title: '수요자', path: '/admin/users/customer' },
+            { title: '매니저', path: '/admin/users/manager' },
+            { title: '승인 대기 매니저', path: '/admin/users/waiting' }
+        ]
+    },
+    {
+        title: '문의관리',
+        icon: <MessageSquare className="w-4 h-4" />,
+        submenu: [
+            { title: '고객문의', path: '/admin/support/customer' },
+            { title: '매니저문의', path: '/admin/support/manager' }
+        ]
+    },
+    {
+        title: '통계',
+        icon: <BarChart className="w-4 h-4" />,
+        submenu: [
+            { title: '매칭률', path: '/admin/statistics/matching' },
+            { title: '예약률', path: '/admin/statistics/reservation' },
+            { title: '만족도', path: '/admin/statistics/satisfaction' },
+            { title: '환불 분석', path: '/admin/statistics/refund' }
+        ]
+    },
+    {
+        title: '재무관리',
+        icon: <DollarSign className="w-4 h-4" />,
+        submenu: [
+            { title: '매출분석', path: '/admin/finance/sales' },
+            { title: '매니저 정산', path: '/admin/finance/settlement' },
+            { title: '환불관리', path: '/admin/finance/refund' }
+        ]
+    },
+    {
+        title: '매칭 알고리즘',
+        icon: <GitBranch className="w-4 h-4" />,
+        path: '/admin/algorithm'
+    }
+];
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -28,13 +84,20 @@ function App() {
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
-              <Route path="users" element={<Users />} />
-              <Route path="customer-support" element={<CustomerSupport />} />
-              <Route path="operation-support" element={<OperationSupport />} />
-              <Route path="member-search" element={<MemberSearch />} />
-              <Route path="refunds" element={<Refunds />} />
+              <Route path="users/customer" element={<UsersCustomer />} />
+              <Route path="users/manager" element={<UsersManager />} />
+              <Route path="users/waiting" element={<UsersWaiting />} />
+              <Route path="users/blacklist" element={<UsersBlacklist />} />
+              <Route path="support/customer" element={<CustomerSupport />} />
+              <Route path="support/manager" element={<ManagerSupport />} />
+              <Route path="finance/sales" element={<FinanceSales />} />
+              <Route path="finance/settlement" element={<FinanceSettlement />} />
+              <Route path="finance/refund" element={<FinanceRefund />} />
+              <Route path="algorithm" element={<Algorithm />} />
+              <Route path="algorithm/recommend" element={<RecommendAlgorithm />} />
+              <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
             </Route>
             <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
           </Routes>

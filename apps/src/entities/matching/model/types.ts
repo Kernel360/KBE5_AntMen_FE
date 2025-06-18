@@ -68,3 +68,8 @@ export interface MatchingDto {
   refuseReason: string
   manager: UserSummaryDto
 }
+
+export interface MatchingResponseRequestDto {
+  matchingIsFinal: boolean
+  matchingRefuseReason?: string
+}

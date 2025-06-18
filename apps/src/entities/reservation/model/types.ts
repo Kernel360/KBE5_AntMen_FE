@@ -25,6 +25,7 @@ export interface ReservationHistory {
   totalDuration: number;
   totalAmount: number;
   reservationMemo: string;
+  reservationTime: string;
   customer: UserSummary;
   manager: UserSummary;
   address: string;
