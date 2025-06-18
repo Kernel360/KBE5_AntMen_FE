@@ -4,23 +4,36 @@
  */
 'use client'
 
-import React, { Suspense, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { calculateEndTime } from '@/shared/lib/utils';
-import { 
-  DateSelector, 
-  TimeSelector, 
+import React, { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Image from 'next/image'
+import Link from 'next/link'
+import { calculateEndTime } from '@/shared/lib/utils'
+import {
+  DateSelector,
+  TimeSelector,
   TimePickerModal,
   VisitTimePickerModal,
   AdditionalOptions,
-  useReservationForm
-} from '@/features/reservation';
-import { getCategoryById, getCategoryOptionsByCategoryId, Category, CategoryOption } from '@/shared/api/category';
+  useReservationForm,
+} from '@/features/reservation'
+import {
+  getCategoryById,
+  getCategoryOptionsByCategoryId,
+  Category,
+  CategoryOption,
+} from '@/shared/api/category'
 
 // ReservationForm 컴포넌트: 실제 UI를 렌더링합니다.
-const ReservationForm = ({ initialCategory, initialOptions, addressId }: { initialCategory: Category; initialOptions: CategoryOption[]; addressId: number }) => {
+const ReservationForm = ({
+  initialCategory,
+  initialOptions,
+  addressId,
+}: {
+  initialCategory: Category
+  initialOptions: CategoryOption[]
+  addressId: number
+}) => {
   const {
     selectedDate,
     setSelectedDate,
@@ -52,7 +65,11 @@ const ReservationForm = ({ initialCategory, initialOptions, addressId }: { initi
     handleResetTime,
     visitTimeSlots,
     isSubmitting,
-  } = useReservationForm({ initialCategory, initialOptions, addressId });
+  } = useReservationForm({ initialCategory, initialOptions, addressId })
+
+  // 필수값 체크: 실제 필수값에 맞게 수정하세요
+  const isFormValid = !!selectedDate && !!selectedHours && !!selectedVisitTime
+  // ... 기타 필수값 체크 필요시 추가
 
   return (
     <div className="bg-gray-50">
@@ -76,18 +93,15 @@ const ReservationForm = ({ initialCategory, initialOptions, addressId }: { initi
 
         {/* 선택된 카테고리 정보 표시 */}
         <div className="px-4 py-3 bg-gray-50 border-b">
-            <h2 className="text-lg font-bold">{initialCategory.categoryName}</h2>
-            <p className="text-sm text-gray-600">
-                시간당 {initialCategory.categoryPrice.toLocaleString()}원 (기본 {initialCategory.categoryTime}시간)
-            </p>
+          <h2 className="text-lg font-bold">{initialCategory.categoryName}</h2>
+          <p className="text-sm text-gray-600">
+            시간당 {initialCategory.categoryPrice.toLocaleString()}원 (기본{' '}
+            {initialCategory.categoryTime}시간)
+          </p>
         </div>
-        
+
         {/* Content */}
         <main className="px-4 py-6">
-          <h1 className="text-xl font-bold text-gray-800 mb-8">
-            예약 정보를 입력해 주세요.
-          </h1>
-
           <DateSelector
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
@@ -173,57 +187,64 @@ const ReservationForm = ({ initialCategory, initialOptions, addressId }: { initi
             </div>
             <button
               onClick={handleNext}
-              disabled={isSubmitting}
-              className="w-36 h-12 bg-cyan-500 text-white rounded-xl font-bold text-lg hover:bg-cyan-600 active:scale-95 transition-all shadow-lg hover:shadow-cyan-500/30 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={!isFormValid || isSubmitting}
+              className={`w-36 h-12 rounded-xl font-bold text-base active:scale-95 transition-all shadow-lg hover:shadow-cyan-500/30
+                ${isFormValid && !isSubmitting ? 'bg-primary text-[#222]' : 'bg-gray-400 text-white cursor-not-allowed'}
+              `}
             >
-              {isSubmitting ? '처리 중...' : '매칭 매니저 찾기'}
+              {isSubmitting ? '처리 중...' : '매니저 찾기'}
             </button>
           </div>
         </div>
       </section>
     </div>
-  );
+  )
 }
 
 // Wrapper 컴포넌트: URL 파라미터를 읽고 데이터를 fetch합니다.
 const ReservationFormWrapper = () => {
-  const searchParams = useSearchParams();
-  const categoryId = searchParams?.get('categoryId');
-  const addressId = searchParams?.get('addressId');
-  const addressIdNum = Number(addressId);
+  const searchParams = useSearchParams()
+  const categoryId = searchParams?.get('categoryId')
+  const addressId = searchParams?.get('addressId')
+  const addressIdNum = Number(addressId)
 
-  const [category, setCategory] = useState<Category | null>(null);
-  const [options, setOptions] = useState<CategoryOption[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [category, setCategory] = useState<Category | null>(null)
+  const [options, setOptions] = useState<CategoryOption[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!categoryId || !addressId || isNaN(addressIdNum) || addressIdNum <= 0) {
-      setError('카테고리 또는 주소 정보가 올바르지 않습니다.');
-      setLoading(false);
-      return;
+      setError('카테고리 또는 주소 정보가 올바르지 않습니다.')
+      setLoading(false)
+      return
     }
 
     // localStorage에 pendingReservation 값이 있으면 복원
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('pendingReservation');
+      const saved = localStorage.getItem('pendingReservation')
       if (saved) {
         try {
-          const data = JSON.parse(saved);
-          if (data.categoryId && (!categoryId || String(data.categoryId) === String(categoryId))) {
+          const data = JSON.parse(saved)
+          if (
+            data.categoryId &&
+            (!categoryId || String(data.categoryId) === String(categoryId))
+          ) {
             // 카테고리 정보와 옵션을 fetch해서 복원
             Promise.all([
               getCategoryById(data.categoryId),
-              getCategoryOptionsByCategoryId(data.categoryId)
-            ]).then(([categoryData, optionsData]) => {
-              setCategory(categoryData);
-              setOptions(optionsData);
-              setLoading(false);
-            }).catch((err) => {
-              setError('예약 정보를 불러오는 데 실패했습니다.');
-              setLoading(false);
-            });
-            return;
+              getCategoryOptionsByCategoryId(data.categoryId),
+            ])
+              .then(([categoryData, optionsData]) => {
+                setCategory(categoryData)
+                setOptions(optionsData)
+                setLoading(false)
+              })
+              .catch((err) => {
+                setError('예약 정보를 불러오는 데 실패했습니다.')
+                setLoading(false)
+              })
+            return
           }
         } catch (e) {
           // JSON 파싱 실패 시 무시하고 새로 입력
@@ -232,34 +253,41 @@ const ReservationFormWrapper = () => {
     }
 
     if (!categoryId) {
-      setError('카테고리 정보가 없습니다.');
-      setLoading(false);
-      return;
+      setError('카테고리 정보가 없습니다.')
+      setLoading(false)
+      return
     }
 
     const fetchData = async () => {
       try {
-        setLoading(true);
+        setLoading(true)
         const [categoryData, optionsData] = await Promise.all([
           getCategoryById(categoryId),
-          getCategoryOptionsByCategoryId(categoryId)
-        ]);
-        setCategory(categoryData);
-        setOptions(optionsData);
+          getCategoryOptionsByCategoryId(categoryId),
+        ])
+        setCategory(categoryData)
+        setOptions(optionsData)
       } catch (err) {
-        setError('예약 정보를 불러오는 데 실패했습니다.');
+        setError('예약 정보를 불러오는 데 실패했습니다.')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-    fetchData();
-  }, [categoryId, addressId, addressIdNum]);
+    }
+    fetchData()
+  }, [categoryId, addressId, addressIdNum])
 
-  if (loading) return <div>예약 정보 로딩 중...</div>;
-  if (error || !category) return <div>{error || '예약 정보를 찾을 수 없습니다.'}</div>;
+  if (loading) return <div>예약 정보 로딩 중...</div>
+  if (error || !category)
+    return <div>{error || '예약 정보를 찾을 수 없습니다.'}</div>
 
-  return <ReservationForm initialCategory={category} initialOptions={options} addressId={addressIdNum} />;
-};
+  return (
+    <ReservationForm
+      initialCategory={category}
+      initialOptions={options}
+      addressId={addressIdNum}
+    />
+  )
+}
 
 // 최종 export되는 페이지 컴포넌트
 export default function ReservationPage() {
@@ -267,5 +295,5 @@ export default function ReservationPage() {
     <Suspense fallback={<div>로딩...</div>}>
       <ReservationFormWrapper />
     </Suspense>
-  );
-} 
+  )
+}

@@ -12,8 +12,6 @@ export default function Home() {
   return (
     <div className="bg-white">
       <HomeHeader />
-      <CategorySwiper />
-      <EventBannerSwiper />
       <NoticeSection />
     </div>
   )

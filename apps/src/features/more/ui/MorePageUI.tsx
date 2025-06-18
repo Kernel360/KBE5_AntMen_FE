@@ -6,19 +6,14 @@ import { useAuthStore } from '@/shared/stores/authStore'
 import { useRouter } from 'next/navigation'
 import Cookies from 'js-cookie'
 import Image from 'next/image'
+import { cookies } from 'next/headers'
 
-interface MorePageUIProps {
-  user: {
-    userName: string
-    userEmail: string
-    userType: string
-    userPoint: number
-  }
-}
-
-export const MorePageUI = ({ user }: MorePageUIProps) => {
+export const MorePageUI = () => {
   const { logout } = useAuthStore()
   const router = useRouter()
+
+  const userData = useAuthStore((state) => state.userData)
+  console.log(userData)
 
   const handleLogout = () => {
     if (window.confirm('로그아웃 하시겠습니까?')) {
@@ -68,11 +63,8 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
         더보기
       </h3>
 
-      <ProfileSection
-        name={user.userName}
-        membershipType={user.userType}
-        email={user.userEmail}
-      />
+      <ProfileSection />
+
       <section className="mx-5 mt-4 bg-[#9CDAFB] rounded-xl flex flex-col items-center justify-between py-4 mb-4 gap-4">
         {/* <span className="w-full h-[1px] bg-[#E1F3FE]" /> */}
         <div className="flex flex-col gap-4 w-full px-5">
@@ -88,7 +80,7 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
           </figure>
           <div className="flex items-center justify-between w-full">
             <span className="text-xl font-semibold text-black">
-              {user.userPoint}원
+              {userData && user.userPoint}원
             </span>
             <ul className="flex gap-2">
               <li className="bg-white rounded-full px-4 py-1 text-sm font-medium text-gray-900 hover:cursor-pointer">

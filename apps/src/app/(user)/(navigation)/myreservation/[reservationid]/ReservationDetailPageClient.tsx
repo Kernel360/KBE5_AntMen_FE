@@ -305,38 +305,7 @@ const ActionButtonsSection = ({
   }
 
   return (
-    <div className="sticky bottom-0 bg-white p-5 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-      {/* 버튼 로직 */}
-      {reservation.reservationStatus === 'WAITING' && (
-        <button
-          onClick={onPayment}
-          className="w-full bg-[#4abed9] text-white rounded-xl py-4 font-bold text-base"
-        >
-          결제하기
-        </button>
-      )}
-      {reservation.reservationStatus === 'WAITING' && (
-        <div className="flex gap-3">
-          <button
-            onClick={() => setIsActionModalOpen(true)}
-            className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-4 font-bold text-base"
-          >
-            예약 취소/변경
-          </button>
-          <button
-            onClick={handleContactWorker}
-            className="flex-1 bg-[#4abed9] text-white rounded-xl py-4 font-bold text-base"
-          >
-            담당자와 통화
-          </button>
-        </div>
-      )}
-      {reservation.reservationStatus === 'DONE' && (
-        <button className="w-full bg-gray-200 text-gray-500 rounded-xl py-4 font-bold text-base cursor-not-allowed">
-          완료된 예약입니다
-        </button>
-      )}
-
+    <div className="sticky bottom-0 bg-white">
       {/* 모달 */}
       <ReservationActionModal
         isOpen={isActionModalOpen}
@@ -419,7 +388,7 @@ export const ReservationDetailPageClient = ({
     <div className="flex flex-col min-h-screen bg-gray-50">
       <ReservationHeader />
 
-      <main className="flex-grow pb-24">
+      <main className="flex-grow">
         <div className="space-y-2">
           <ReservationStatusSection reservation={reservation} />
           <ServiceInfoSection reservation={reservation} />

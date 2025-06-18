@@ -30,8 +30,7 @@ export function HomeHeader({
     const authResult = checkUserAuth()
 
     if (!authResult.isAuthenticated) {
-      alert(authResult.message)
-      router.push('/login')
+      setLoginModalOpen(true)
       return
     }
     router.push('/notifications')
@@ -65,10 +64,8 @@ export function HomeHeader({
       }
     }
 
-    // 정상 접근
-    if (onButtonClick) {
-      router.push('/reservation')
-    }
+    // 정상 접근: 무조건 /reservation으로 이동
+    router.push('/reservation')
   }
 
   return (

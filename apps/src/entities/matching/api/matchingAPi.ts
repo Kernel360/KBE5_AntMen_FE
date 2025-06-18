@@ -1,7 +1,7 @@
 import { customFetch } from '@/shared/api/base'
 import { ReservationHistoryDto } from '../model/types'
 
-const BASE_URL = 'https://api.antmen.site:9092/v1/manager'
+const BASE_URL = 'http://localhost:9092/v1/manager'
 
 export const getMatchingRequests = async (): Promise<
   ReservationHistoryDto[]
@@ -10,17 +10,28 @@ export const getMatchingRequests = async (): Promise<
 }
 
 export const acceptMatchingRequest = async (
-  requestId: string,
+  matchingId: string,
 ): Promise<void> => {
-  return customFetch<void>(`${BASE_URL}/matching/${requestId}/accept`, {
+  return customFetch<void>(`${BASE_URL}/matching/${matchingId}`, {
     method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      matchingManagerIsAccept: true,
+      matchingRefuseReason: '',
+    }),
   })
 }
 
 export const rejectMatchingRequest = async (
-  requestId: string,
+  matchingId: string,
+  refuseReason: string = '',
 ): Promise<void> => {
-  return customFetch<void>(`${BASE_URL}/matching/${requestId}/reject`, {
+  return customFetch<void>(`${BASE_URL}/matching/${matchingId}`, {
     method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      matchingManagerIsAccept: false,
+      matchingRefuseReason: refuseReason,
+    }),
   })
 }

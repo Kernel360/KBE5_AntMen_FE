@@ -27,7 +27,7 @@ const LoginRequiredModal = ({ isOpen, onClose }: LoginRequiredModalProps) => {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-end justify-center ${
+      className={`fixed inset-0 z-[9999] flex items-end justify-center ${
         animate === 'in' ? 'bg-black bg-opacity-50' : 'animate-fade-out'
       }`}
       onClick={(e) => {

@@ -1,10 +1,10 @@
-'use client';
+'use client'
 
-import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
-import { MAX_MANAGER_COUNT } from '@/widgets/manager/model/manager';
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
+import { MAX_MANAGER_COUNT } from '@/widgets/manager/model/manager'
 
 interface MatchingHeaderProps {
-  selectedCount: number;
+  selectedCount: number
 }
 
 export function MatchingHeader({ selectedCount }: MatchingHeaderProps) {
@@ -16,7 +16,7 @@ export function MatchingHeader({ selectedCount }: MatchingHeaderProps) {
         </span>
       </div>
     </div>
-  );
+  )
 
   return (
     <header className="sticky top-0 z-10 bg-white">
@@ -27,5 +27,5 @@ export function MatchingHeader({ selectedCount }: MatchingHeaderProps) {
         subtitle={`최대 ${MAX_MANAGER_COUNT}명까지 선택 가능합니다`}
       />
     </header>
-  );
-} 
+  )
+}

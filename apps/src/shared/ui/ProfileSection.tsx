@@ -25,7 +25,7 @@ export const ProfileSection = ({
         </figure>
         <div className="flex flex-col  gap-1">
           <span className="text-lg leading-none font-medium text-black">
-            {name}
+            {name ?? '로그인 후 이용해주세요'}
           </span>
           <span className="text-sm leading-none font-normal text-[#121212]">
             {email}
