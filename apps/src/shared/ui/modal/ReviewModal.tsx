@@ -2,19 +2,22 @@
 
 import React, { useState } from 'react';
 import { X, Star } from 'lucide-react';
+import type { ReviewAuthorType, ReviewRequest } from '@/shared/api/review';
 
 interface ReviewModalProps {
   isOpen: boolean;
+  reservationId: number;
   onClose: () => void;
-  onSubmit: (rating: number, content: string) => void;
-  customerName: string;
+  onSubmit: (dto: ReviewRequest) => void;
+  authorType: ReviewAuthorType;
 }
 
 export const ReviewModal: React.FC<ReviewModalProps> = ({
   isOpen,
+  reservationId,
   onClose,
   onSubmit,
-  customerName,
+  authorType,
 }) => {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -30,7 +33,13 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
       return;
     }
 
-    onSubmit(rating, content.trim());
+    onSubmit({
+      reservationId,
+      reviewRating: rating,
+      reviewComment: content.trim(),
+      reviewAuthor: authorType,
+    });
+    
     // 모달 초기화
     setRating(0);
     setHoveredRating(0);
@@ -62,7 +71,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-900 mb-2">업무 후기 작성</h2>
           <p className="text-sm text-gray-600">
-            <span className="font-medium">{customerName}</span> 고객님과의 업무는 어떠셨나요?
+            고객님과의 업무는 어떠셨나요?
           </p>
         </div>
 

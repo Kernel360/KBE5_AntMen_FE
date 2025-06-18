@@ -15,6 +15,9 @@ import {
   changeReservationStatus,
   getMyReservations,
 } from '@/entities/reservation/api/reservationApi'
+import { useAuthStore } from '@/shared/stores/authStore'
+import { createReview } from '@/entities/review/api/reviewApi'
+import type { ReviewRequest, ReviewAuthorType } from '@/shared/api/review'
 
 interface ManagerReservationsClientProps {
   initialReservations: Reservation[]
@@ -31,14 +34,14 @@ export const ManagerReservationsClient = ({
   )
   const [reviewModal, setReviewModal] = useState<{
     isOpen: boolean
-    reservationId: string
-    customerName: string
+    reservationId: number
   }>({
     isOpen: false,
-    reservationId: '',
-    customerName: '',
+    reservationId: 0,
   })
   const [error, setError] = useState<string | null>(null)
+  const { user } = useAuthStore()
+  const userRole = user.userRole
 
   // 클라이언트에서 예약 데이터 fetch
   const fetchReservations = async () => {
@@ -134,51 +137,50 @@ export const ManagerReservationsClient = ({
 
     setReviewModal({
       isOpen: true,
-      reservationId: id,
-      customerName: '고객님',
+      reservationId: Number(id),
     })
   }
 
   const handleWriteReview = (id: string) => {
-    const reservation = reservations.find(
-      (r) => r.reservationId.toString() === id,
-    )
-    if (!reservation) return
-
     setReviewModal({
       isOpen: true,
-      reservationId: id,
-      customerName: '고객님',
+      reservationId: Number(id),
     })
   }
 
-  const handleReviewSubmit = async (rating: number, content: string) => {
-    const reviewData = {
-      rating,
-      content,
-      createdAt: new Date().toISOString(),
+  const handleReviewSubmit = async (dto: ReviewRequest) => {
+    try {
+      const rawToken = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('auth-token='))
+        ?.split('=')[1] || '';
+      const decodedToken = decodeURIComponent(rawToken);
+      const token = decodedToken.replace(/^Bearer\s+/, '');
+
+      console.log('리뷰 제출 데이터:', dto);
+      const response = await createReview(dto, token);
+      console.log('리뷰 제출 응답:', response);
+
+      await fetchReservations();
+      console.log('예약 목록 갱신 후:', reservations);
+
+      setReviewModal({
+        isOpen: false,
+        reservationId: 0,
+      });
+
+      alert('후기가 성공적으로 등록되었습니다!');
+    } catch (e) {
+      console.error('리뷰 등록 에러:', e);
+      alert('리뷰 등록에 실패했습니다.');
     }
-
-    await updateReservationStatus(reviewModal.reservationId, {
-      reservationStatus: 'DONE',
-    })
-
-    // 모달 닫기
-    setReviewModal({
-      isOpen: false,
-      reservationId: '',
-      customerName: '',
-    })
-
-    alert('후기가 성공적으로 등록되었습니다!')
-  }
+  };
 
   const handleReviewModalClose = () => {
     // 후기를 작성하지 않고 모달을 닫았을 때
     setReviewModal({
       isOpen: false,
-      reservationId: '',
-      customerName: '',
+      reservationId: 0,
     })
   }
 
@@ -392,9 +394,10 @@ export const ManagerReservationsClient = ({
       {reviewModal.isOpen && (
         <ReviewModal
           isOpen={reviewModal.isOpen}
+          reservationId={reviewModal.reservationId}
           onClose={handleReviewModalClose}
           onSubmit={handleReviewSubmit}
-          customerName={reviewModal.customerName}
+          authorType={userRole as ReviewAuthorType}
         />
       )}
     </main>

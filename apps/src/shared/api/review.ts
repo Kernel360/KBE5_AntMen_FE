@@ -2,6 +2,13 @@ import { customFetch } from './base'
 
 export type ReviewAuthorType = 'CUSTOMER' | 'MANAGER'
 
+export interface ReviewRequest {
+  reservationId: number
+  reviewRating: number
+  reviewComment?: string
+  reviewAuthor: ReviewAuthorType
+}
+
 export interface ReviewResponse {
   reviewId: number
   reviewCustomerId: number
