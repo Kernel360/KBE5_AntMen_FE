@@ -215,7 +215,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-[#666666]">이용 시간</span>
           <span className="text-sm font-medium text-black">
-            {reservationDuration}분
+            {reservationDuration}시간
           </span>
         </div>
       </div>

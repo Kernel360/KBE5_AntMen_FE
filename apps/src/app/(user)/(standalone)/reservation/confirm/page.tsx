@@ -6,7 +6,6 @@ import { createReservation, ReservationRequest } from '@/shared/api';
 import { checkCustomerAuth } from '@/features/auth/lib/auth';
 import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
-
 interface ReservationInfo {
   customerId: number;
   categoryId: number;
@@ -26,6 +25,7 @@ interface ReservationInfo {
     rating: number;
     description: string;
   }>;
+  reservationId: string;
 }
 
 export default function ReservationConfirmPage() {
@@ -93,10 +93,10 @@ export default function ReservationConfirmPage() {
 
       // ReservationRequest 타입에 맞게 데이터 변환
       const finalPayload: ReservationRequest = {
-        customerId: Number(userId), // 항상 로그인 유저 id로 세팅
+        customerId: Number(userId),
         categoryId: reservationInfo.categoryId,
         addressId: parseInt(reservationInfo.addressId),
-        reservationCreatedAt: new Date().toISOString(),  // 현재 시간을 ISO 문자열로
+        reservationCreatedAt: new Date().toISOString(),
         reservationDate: reservationInfo.reservationDate,
         reservationTime: reservationInfo.reservationTime,
         reservationDuration: Number(reservationInfo.reservationDuration),
@@ -107,14 +107,13 @@ export default function ReservationConfirmPage() {
         managerIds: reservationInfo.selectedManagers.map(manager => Number(manager.id))
       };
 
-      console.log('백엔드로 전송되는 데이터:', finalPayload);
       const response = await createReservation(finalPayload);
 
       // 예약 완료 후 localStorage 정리
       localStorage.removeItem('pendingReservation');
 
-      // 예약 완료 페이지로 이동
-      router.push(`/reservation/${response.reservationId}/confirmation`);
+      // 결제 페이지로 이동
+      router.push(`/payment/${response.reservationId}`);
     } catch (error) {
       console.error('예약 생성 오류:', error);
       alert(error instanceof Error ? error.message : '예약 생성 중 오류가 발생했습니다.');

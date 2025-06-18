@@ -1,160 +1,274 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Button } from '../../components/ui/button';
+import { Card } from '../../components/ui/card';
 import {
     LayoutDashboard,
     Users,
+    Search,
     MessageCircle,
     Headphones,
-    Search,
-    CreditCard,
+    Receipt,
+    LogOut,
     Menu,
     X,
-    Settings,
-    LogOut
+    BarChart2
 } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Separator } from '../../components/ui/separator';
 
 interface MenuItem {
     id: string;
     label: string;
-    icon: React.ComponentType<{ className?: string }>;
     path: string;
+    icon: React.ElementType;
+    subItems?: {
+        id: string;
+        label: string;
+        path: string;
+        icon: React.ElementType;
+    }[];
 }
 
 const menuItems: MenuItem[] = [
-    { id: 'dashboard', label: '대시보드', icon: LayoutDashboard, path: '/admin/dashboard' },
-    { id: 'users', label: '사용자 관리', icon: Users, path: '/admin/users' },
-    { id: 'customer-support', label: '고객상담', icon: MessageCircle, path: '/admin/customer-support' },
-    { id: 'operation-support', label: '운영상담', icon: Headphones, path: '/admin/operation-support' },
-    { id: 'member-search', label: '회원조회', icon: Search, path: '/admin/member-search' },
-    { id: 'refunds', label: '환불처리', icon: CreditCard, path: '/admin/refunds' },
+    {
+        id: 'dashboard',
+        label: '대시보드',
+        path: '/admin/dashboard',
+        icon: LayoutDashboard
+    },
+    {
+        id: 'users',
+        label: '회원관리',
+        path: '/admin/users',
+        icon: Users,
+        subItems: [
+            {
+                id: 'users-waiting',
+                label: '승인 대기 매니저',
+                path: '/admin/users/waiting',
+                icon: Users
+            },
+            {
+                id: 'users-customer',
+                label: '수요자',
+                path: '/admin/users/customer',
+                icon: Users
+            },
+            {
+                id: 'users-manager',
+                label: '매니저',
+                path: '/admin/users/manager',
+                icon: Users
+            },
+            {
+                id: 'users-blacklist',
+                label: '블랙리스트 관리',
+                path: '/admin/users/blacklist',
+                icon: Users
+            }
+        ]
+    },
+    {
+        id: 'support',
+        label: '문의관리',
+        path: '/admin/support',
+        icon: MessageCircle,
+        subItems: [
+            {
+                id: 'customer-support',
+                label: '고객문의',
+                path: '/admin/support/customer',
+                icon: MessageCircle
+            },
+            {
+                id: 'manager-support',
+                label: '매니저문의',
+                path: '/admin/support/manager',
+                icon: Headphones
+            }
+        ]
+    },
+    {
+        id: 'finance',
+        label: '재무관리',
+        path: '/admin/finance',
+        icon: Receipt,
+        subItems: [
+            { id: 'finance-sales', label: '매출분석', path: '/admin/finance/sales', icon: Receipt },
+            { id: 'finance-settlement', label: '매니저 정산', path: '/admin/finance/settlement', icon: Receipt },
+            { id: 'finance-refund', label: '환불관리', path: '/admin/finance/refund', icon: Receipt }
+        ]
+    },
+    {
+        id: 'statistics',
+        label: '통계',
+        path: '/admin/statistics',
+        icon: BarChart2,
+        subItems: [
+            { id: 'stat-matching', label: '매칭률', path: '/admin/statistics/matching', icon: BarChart2 },
+            { id: 'stat-reservation', label: '예약률', path: '/admin/statistics/reservation', icon: BarChart2 },
+            { id: 'stat-satisfaction', label: '만족도', path: '/admin/statistics/satisfaction', icon: BarChart2 },
+            { id: 'stat-refund', label: '환불 분석', path: '/admin/statistics/refund', icon: BarChart2 }
+        ]
+    },
+    {
+        id: 'algorithm',
+        label: '매칭 알고리즘',
+        path: '/admin/algorithm',
+        icon: BarChart2,
+        subItems: [
+            {
+                id: 'algorithm-review',
+                label: '알고리즘 검토',
+                path: '/admin/algorithm',
+                icon: BarChart2
+            },
+            {
+                id: 'algorithm-recommend',
+                label: '추천 기준 설정',
+                path: '/admin/algorithm/recommend',
+                icon: BarChart2
+            }
+        ]
+    }
 ];
 
 export const AdminLayout: React.FC = () => {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
 
-    const handleMenuClick = (path: string) => {
+    const isActive = (path: string) => {
+        return location.pathname === path;
+    };
+
+    const handleMenuClick = (item: MenuItem) => {
+        if (item.subItems) {
+            setExpandedMenu(expandedMenu === item.id ? null : item.id);
+            if (item.subItems.length > 0) {
+                navigate(item.subItems[0].path);
+            } else {
+                navigate(item.path);
+            }
+        } else {
+            navigate(item.path);
+        }
+    };
+
+    const handleSubMenuClick = (path: string) => {
         navigate(path);
-        setSidebarOpen(false);
     };
 
     const handleLogout = () => {
-        // 로컬 스토리지에서 토큰 및 사용자 정보 제거
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminUser');
-
-        // 로그인 페이지로 이동
+        // 로그아웃 로직 구현
         navigate('/admin/login');
     };
 
-    const isActive = (path: string) => location.pathname === path;
-
     return (
-        <div className="h-screen bg-gray-50 flex">
-            {/* Mobile sidebar overlay */}
-            {sidebarOpen && (
-                <div
-                    className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
-
-            {/* Sidebar */}
-            <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static lg:inset-0
-      `}>
-                <div className="flex items-center justify-between h-16 px-6 border-b">
-                    <h1 className="text-xl font-bold text-gray-900">관리자 패널</h1>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="lg:hidden"
-                        onClick={() => setSidebarOpen(false)}
-                    >
-                        <X className="h-5 w-5" />
-                    </Button>
-                </div>
-
-                <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-                    {menuItems.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                            <Button
-                                key={item.id}
-                                variant={isActive(item.path) ? "default" : "ghost"}
-                                className={`w-full justify-start ${
-                                    isActive(item.path)
-                                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                        : 'text-gray-700 hover:bg-gray-100'
-                                }`}
-                                onClick={() => handleMenuClick(item.path)}
-                            >
-                                <Icon className="mr-3 h-5 w-5" />
-                                {item.label}
-                            </Button>
-                        );
-                    })}
-                </nav>
-
-                <div className="border-t p-4">
-                    <div className="mb-4">
-                        <p className="text-sm font-medium text-gray-900">관리자</p>
-                        <p className="text-xs text-gray-500">admin@company.com</p>
-                    </div>
-                    <Separator className="my-2" />
-                    <div className="space-y-1">
-                        <Button variant="ghost" className="w-full justify-start text-gray-700">
-                            <Settings className="mr-3 h-4 w-4" />
-                            설정
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            className="w-full justify-start text-gray-700 hover:text-red-600 hover:bg-red-50"
-                            onClick={handleLogout}
-                        >
-                            <LogOut className="mr-3 h-4 w-4" />
-                            로그아웃
-                        </Button>
-                    </div>
-                </div>
-            </aside>
-
-            {/* Main content */}
-            <div className="flex-1 flex flex-col lg:ml-0">
-                {/* Top bar */}
-                <header className="bg-white shadow-sm border-b h-16 flex-shrink-0">
-                    <div className="flex items-center justify-between h-full px-4 lg:px-6">
+        <div className="h-screen flex flex-col bg-gray-100">
+            {/* Top Header */}
+            <header className="bg-white shadow-sm border-b h-16 flex-shrink-0">
+                <div className="flex items-center justify-between h-full px-4 lg:px-6">
+                    <div className="flex items-center">
                         <Button
                             variant="ghost"
                             size="icon"
                             className="lg:hidden"
-                            onClick={() => setSidebarOpen(true)}
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                         >
-                            <Menu className="h-5 w-5" />
+                            {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                         </Button>
+                        <h1 className="text-xl font-bold text-gray-900 ml-4">AntWorker 관리자</h1>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                        <span className="text-sm text-gray-500">
+                            {new Date().toLocaleDateString('ko-KR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                weekday: 'long'
+                            })}
+                        </span>
+                    </div>
+                </div>
+            </header>
 
-                        <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">
-                {new Date().toLocaleDateString('ko-KR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    weekday: 'long'
-                })}
-              </span>
+            <div className="flex-1 flex overflow-hidden">
+                {/* Sidebar */}
+                <div
+                    className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r transform transition-transform duration-200 ease-in-out ${
+                        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                    } lg:translate-x-0 h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)]`}
+                >
+                    <div className="h-full flex flex-col">
+                        {/* Menu Items */}
+                        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                            {menuItems.map((item) => {
+                                const Icon = item.icon;
+                                const hasSubItems = item.subItems && item.subItems.length > 0;
+                                const isExpanded = expandedMenu === item.id;
+                                const isSubMenuActive = hasSubItems && item.subItems!.some(subItem => isActive(subItem.path));
+
+                                return (
+                                    <div key={item.id}>
+                                        <Button
+                                            variant={isActive(item.path) || isSubMenuActive ? "default" : "ghost"}
+                                            className={`w-full justify-start ${
+                                                isActive(item.path) || isSubMenuActive
+                                                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                                    : 'text-gray-700 hover:bg-gray-100'
+                                            }`}
+                                            onClick={() => handleMenuClick(item)}
+                                        >
+                                            <Icon className="mr-3 h-5 w-5" />
+                                            {item.label}
+                                        </Button>
+                                        {hasSubItems && isExpanded && (
+                                            <div className="bg-gray-50 rounded-b-lg w-full">
+                                                {item.subItems!.map((subItem, idx) => (
+                                                    <Button
+                                                        key={subItem.id}
+                                                        variant={isActive(subItem.path) ? "default" : "ghost"}
+                                                        className={`w-full justify-start ${
+                                                            isActive(subItem.path)
+                                                                ? 'bg-blue-100 text-blue-900 hover:bg-blue-200'
+                                                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                                        } ${idx === 0 ? 'rounded-t-lg' : ''} ${idx === item.subItems!.length - 1 ? 'rounded-b-lg' : ''} p-0 h-12 pl-12`}
+                                                        style={{ borderTop: idx !== 0 ? 'none' : undefined }}
+                                                        onClick={() => handleSubMenuClick(subItem.path)}
+                                                    >
+                                                        {subItem.label}
+                                                    </Button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </nav>
+
+                        {/* Logout Button */}
+                        <div className="p-4 border-t">
+                            <Button
+                                variant="ghost"
+                                className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
+                                onClick={handleLogout}
+                            >
+                                <LogOut className="mr-3 h-5 w-5" />
+                                로그아웃
+                            </Button>
                         </div>
                     </div>
-                </header>
+                </div>
 
-                {/* Page content */}
-                <main className="flex-1 p-4 lg:p-6 overflow-auto">
-                    <Outlet />
-                </main>
+                {/* Main Content */}
+                <div className="flex-1 overflow-auto">
+                    <div className="p-6">
+                        <Card className="p-6">
+                            <Outlet />
+                        </Card>
+                    </div>
+                </div>
             </div>
         </div>
     );

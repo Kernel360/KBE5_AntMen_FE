@@ -18,23 +18,39 @@ import {
     AlertCircle,
     User,
     MessageSquare,
-    Send
+    Send,
+    Headphones,
+    Server,
+    Shield,
+    Zap,
+    Bug,
+    Settings
 } from 'lucide-react';
 
-interface CustomerTicket {
+interface SupportTicket {
     id: number;
+    type: 'customer' | 'manager';
     title: string;
-    category: 'general' | 'billing' | 'technical' | 'refund' | 'account';
-    priority: 'low' | 'medium' | 'high' | 'urgent';
-    status: 'new' | 'in_progress' | 'waiting' | 'resolved' | 'closed';
+    category: 'general' | 'billing' | 'technical' | 'refund' | 'account' | 'system' | 'security' | 'performance' | 'bug' | 'feature' | 'maintenance';
+    priority: 'low' | 'medium' | 'high' | 'urgent' | 'critical';
+    status: 'new' | 'in_progress' | 'waiting' | 'resolved' | 'closed' | 'assigned' | 'testing';
     content: string;
     createdAt: string;
     lastResponse: string;
     assignedTo?: string;
-    customerInfo: {
+    customerInfo?: {
         name: string;
         email: string;
     };
+    managerInfo?: {
+        name: string;
+        position: string;
+        location?: string;
+    };
+    affectedSystems?: string[];
+    estimatedTime?: number;
+    actualTime?: number;
+    reporter?: string;
     responses: Array<{
         id: number;
         author: string;
@@ -44,9 +60,10 @@ interface CustomerTicket {
     }>;
 }
 
-const sampleTickets: CustomerTicket[] = [
+const sampleTickets: SupportTicket[] = [
     {
         id: 1,
+        type: 'customer',
         title: '결제가 안돼요',
         category: 'billing',
         priority: 'high',
@@ -67,8 +84,57 @@ const sampleTickets: CustomerTicket[] = [
                 isStaff: false
             }
         ]
+    },
+    {
+        id: 2,
+        type: 'manager',
+        title: '서버 과부하 문제',
+        category: 'system',
+        priority: 'critical',
+        status: 'in_progress',
+        content: '메인 서버의 CPU 사용률이 90%를 넘어서고 있습니다.',
+        createdAt: '2025-06-06 10:15',
+        lastResponse: '2025-06-06 11:30',
+        assignedTo: '시스템관리자',
+        managerInfo: {
+            name: '이매니저',
+            position: '서울지역 매니저',
+            location: '강남점'
+        },
+        reporter: '모니터링 시스템',
+        estimatedTime: 4,
+        actualTime: 2,
+        affectedSystems: ['웹서버', '데이터베이스'],
+        responses: [
+            {
+                id: 1,
+                author: '이매니저',
+                content: '서버 과부하 문제가 발생했습니다.',
+                timestamp: '2025-06-06 10:15',
+                isStaff: true
+            },
+            {
+                id: 2,
+                author: '시스템관리자',
+                content: '부하 분산을 위해 추가 서버를 배포하겠습니다.',
+                timestamp: '2025-06-06 11:30',
+                isStaff: true
+            }
+        ]
     }
 ];
+
+const getCategoryIcon = (category: string) => {
+    switch (category) {
+        case 'system': return <Server className="h-4 w-4" />;
+        case 'security': return <Shield className="h-4 w-4" />;
+        case 'performance': return <Zap className="h-4 w-4" />;
+        case 'bug': return <Bug className="h-4 w-4" />;
+        case 'feature': return <Settings className="h-4 w-4" />;
+        case 'maintenance': return <Settings className="h-4 w-4" />;
+        default: return <MessageCircle className="h-4 w-4" />;
+    }
+};
 
 const getCategoryBadge = (category: string) => {
     const categories = {
@@ -76,11 +142,24 @@ const getCategoryBadge = (category: string) => {
         billing: { label: '결제문의', color: 'bg-blue-100 text-blue-800' },
         technical: { label: '기술문의', color: 'bg-purple-100 text-purple-800' },
         refund: { label: '환불문의', color: 'bg-red-100 text-red-800' },
-        account: { label: '계정문의', color: 'bg-green-100 text-green-800' }
+        account: { label: '계정문의', color: 'bg-green-100 text-green-800' },
+        system: { label: '시스템', color: 'bg-orange-100 text-orange-800' },
+        security: { label: '보안', color: 'bg-red-100 text-red-800' },
+        performance: { label: '성능', color: 'bg-yellow-100 text-yellow-800' },
+        bug: { label: '버그', color: 'bg-orange-100 text-orange-800' },
+        feature: { label: '기능', color: 'bg-green-100 text-green-800' },
+        maintenance: { label: '유지보수', color: 'bg-gray-100 text-gray-800' }
     };
 
     const cat = categories[category as keyof typeof categories] || categories.general;
-    return <Badge className={cat.color}>{cat.label}</Badge>;
+    const Icon = getCategoryIcon(category);
+
+    return (
+        <Badge className={cat.color}>
+            {Icon}
+            <span className="ml-1">{cat.label}</span>
+        </Badge>
+    );
 };
 
 const getPriorityBadge = (priority: string) => {
@@ -88,7 +167,8 @@ const getPriorityBadge = (priority: string) => {
         low: { label: '낮음', color: 'bg-gray-100 text-gray-800' },
         medium: { label: '보통', color: 'bg-blue-100 text-blue-800' },
         high: { label: '높음', color: 'bg-orange-100 text-orange-800' },
-        urgent: { label: '긴급', color: 'bg-red-100 text-red-800' }
+        urgent: { label: '긴급', color: 'bg-red-100 text-red-800' },
+        critical: { label: '치명적', color: 'bg-red-200 text-red-900' }
     };
 
     const pri = priorities[priority as keyof typeof priorities] || priorities.medium;
@@ -99,10 +179,14 @@ const getStatusBadge = (status: string) => {
     switch (status) {
         case 'new':
             return <Badge variant="outline"><MessageCircle className="w-3 h-3 mr-1" />신규</Badge>;
+        case 'assigned':
+            return <Badge className="bg-blue-100 text-blue-800">배정됨</Badge>;
         case 'in_progress':
             return <Badge className="bg-blue-100 text-blue-800"><Clock className="w-3 h-3 mr-1" />진행중</Badge>;
         case 'waiting':
             return <Badge className="bg-yellow-100 text-yellow-800"><AlertCircle className="w-3 h-3 mr-1" />대기</Badge>;
+        case 'testing':
+            return <Badge className="bg-purple-100 text-purple-800">테스트중</Badge>;
         case 'resolved':
             return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />해결</Badge>;
         case 'closed':
@@ -112,17 +196,19 @@ const getStatusBadge = (status: string) => {
     }
 };
 
-export const CustomerSupport: React.FC = () => {
-    const [tickets, setTickets] = useState<CustomerTicket[]>(sampleTickets);
-    const [selectedTicket, setSelectedTicket] = useState<CustomerTicket | null>(null);
+export const Support: React.FC = () => {
+    const [tickets, setTickets] = useState<SupportTicket[]>(sampleTickets);
+    const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
     const [replyContent, setReplyContent] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [typeFilter, setTypeFilter] = useState<string>('all');
     const [priorityFilter, setPriorityFilter] = useState<string>('all');
 
     const filteredTickets = tickets.filter(ticket => {
         const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
+        const matchesType = typeFilter === 'all' || ticket.type === typeFilter;
         const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
-        return matchesStatus && matchesPriority;
+        return matchesStatus && matchesType && matchesPriority;
     });
 
     const handleStatusChange = (ticketId: number, newStatus: string) => {
@@ -167,7 +253,9 @@ export const CustomerSupport: React.FC = () => {
 
     const stats = {
         total: tickets.length,
-        urgent: tickets.filter(t => t.priority === 'urgent').length,
+        customer: tickets.filter(t => t.type === 'customer').length,
+        manager: tickets.filter(t => t.type === 'manager').length,
+        critical: tickets.filter(t => t.priority === 'critical').length,
         inProgress: tickets.filter(t => t.status === 'in_progress').length,
         resolved: tickets.filter(t => t.status === 'resolved').length
     };
@@ -176,15 +264,15 @@ export const CustomerSupport: React.FC = () => {
         <div className="space-y-6">
             {/* Page Header */}
             <div>
-                <h1 className="text-3xl font-bold text-gray-900">고객문의</h1>
-                <p className="text-gray-600 mt-2">고객 문의를 관리하세요</p>
+                <h1 className="text-3xl font-bold text-gray-900">상담관리</h1>
+                <p className="text-gray-600 mt-2">고객 문의와 매니저 문의를 통합 관리하세요</p>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">전체 문의</CardTitle>
+                        <CardTitle className="text-sm font-medium">전체 상담</CardTitle>
                         <MessageCircle className="h-4 w-4 text-blue-600" />
                     </CardHeader>
                     <CardContent>
@@ -194,11 +282,31 @@ export const CustomerSupport: React.FC = () => {
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">긴급 문의</CardTitle>
+                        <CardTitle className="text-sm font-medium">고객 문의</CardTitle>
+                        <User className="h-4 w-4 text-green-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.customer}</div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">매니저 문의</CardTitle>
+                        <Headphones className="h-4 w-4 text-orange-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.manager}</div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">긴급 이슈</CardTitle>
                         <AlertCircle className="h-4 w-4 text-red-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-600">{stats.urgent}</div>
+                        <div className="text-2xl font-bold text-red-600">{stats.critical}</div>
                     </CardContent>
                 </Card>
 
@@ -229,8 +337,18 @@ export const CustomerSupport: React.FC = () => {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center justify-between">
-                                문의 목록
+                                상담 목록
                                 <div className="flex space-x-2">
+                                    <Select value={typeFilter} onValueChange={setTypeFilter}>
+                                        <SelectTrigger className="w-24">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">전체</SelectItem>
+                                            <SelectItem value="customer">고객</SelectItem>
+                                            <SelectItem value="manager">매니저</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                     <Select value={statusFilter} onValueChange={setStatusFilter}>
                                         <SelectTrigger className="w-24">
                                             <SelectValue />
@@ -249,7 +367,7 @@ export const CustomerSupport: React.FC = () => {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="all">우선순위</SelectItem>
-                                            <SelectItem value="urgent">긴급</SelectItem>
+                                            <SelectItem value="critical">긴급</SelectItem>
                                             <SelectItem value="high">높음</SelectItem>
                                             <SelectItem value="medium">보통</SelectItem>
                                         </SelectContent>
@@ -273,10 +391,21 @@ export const CustomerSupport: React.FC = () => {
                                                 {getPriorityBadge(ticket.priority)}
                                             </div>
                                             <div className="flex items-center space-x-2">
-                                                <User className="h-3 w-3 text-gray-400" />
-                                                <span className="text-xs text-gray-600">
-                                                    {ticket.customerInfo.name}
-                                                </span>
+                                                {ticket.type === 'customer' ? (
+                                                    <>
+                                                        <User className="h-3 w-3 text-gray-400" />
+                                                        <span className="text-xs text-gray-600">
+                                                            {ticket.customerInfo?.name}
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Headphones className="h-3 w-3 text-gray-400" />
+                                                        <span className="text-xs text-gray-600">
+                                                            {ticket.managerInfo?.name} ({ticket.managerInfo?.position})
+                                                        </span>
+                                                    </>
+                                                )}
                                             </div>
                                             <div className="flex items-center justify-between">
                                                 {getStatusBadge(ticket.status)}
@@ -301,9 +430,16 @@ export const CustomerSupport: React.FC = () => {
                                     <div>
                                         <CardTitle>{selectedTicket.title}</CardTitle>
                                         <CardDescription className="flex items-center space-x-4 mt-2">
-                                            <span>
-                                                {selectedTicket.customerInfo.name} ({selectedTicket.customerInfo.email})
-                                            </span>
+                                            {selectedTicket.type === 'customer' ? (
+                                                <span>
+                                                    {selectedTicket.customerInfo?.name} ({selectedTicket.customerInfo?.email})
+                                                </span>
+                                            ) : (
+                                                <span>
+                                                    {selectedTicket.managerInfo?.name} ({selectedTicket.managerInfo?.position})
+                                                    {selectedTicket.managerInfo?.location && ` - ${selectedTicket.managerInfo.location}`}
+                                                </span>
+                                            )}
                                             <span>•</span>
                                             <span>{selectedTicket.createdAt}</span>
                                         </CardDescription>
@@ -319,6 +455,9 @@ export const CustomerSupport: React.FC = () => {
                                     <TabsList>
                                         <TabsTrigger value="conversation">대화내용</TabsTrigger>
                                         <TabsTrigger value="details">상세정보</TabsTrigger>
+                                        {selectedTicket.type === 'manager' && (
+                                            <TabsTrigger value="progress">진행상황</TabsTrigger>
+                                        )}
                                     </TabsList>
 
                                     <TabsContent value="conversation" className="space-y-4">
@@ -367,8 +506,10 @@ export const CustomerSupport: React.FC = () => {
                                                     </SelectTrigger>
                                                     <SelectContent className="bg-white border-gray-200 shadow-lg">
                                                         <SelectItem value="new" className="hover:bg-gray-100 focus:bg-gray-100 text-gray-900">신규</SelectItem>
+                                                        <SelectItem value="assigned" className="hover:bg-gray-100 focus:bg-gray-100 text-gray-900">배정됨</SelectItem>
                                                         <SelectItem value="in_progress" className="hover:bg-gray-100 focus:bg-gray-100 text-gray-900">진행중</SelectItem>
                                                         <SelectItem value="waiting" className="hover:bg-gray-100 focus:bg-gray-100 text-gray-900">대기</SelectItem>
+                                                        <SelectItem value="testing" className="hover:bg-gray-100 focus:bg-gray-100 text-gray-900">테스트중</SelectItem>
                                                         <SelectItem value="resolved" className="hover:bg-gray-100 focus:bg-gray-100 text-gray-900">해결</SelectItem>
                                                         <SelectItem value="closed" className="hover:bg-gray-100 focus:bg-gray-100 text-gray-900">종료</SelectItem>
                                                     </SelectContent>
@@ -399,6 +540,28 @@ export const CustomerSupport: React.FC = () => {
                                                 <label className="text-sm font-medium text-gray-700">담당자</label>
                                                 <p className="mt-1 text-sm text-gray-900">{selectedTicket.assignedTo || '미배정'}</p>
                                             </div>
+                                            {selectedTicket.type === 'manager' && (
+                                                <>
+                                                    <div>
+                                                        <label className="text-sm font-medium text-gray-700">위치</label>
+                                                        <p className="mt-1 text-sm text-gray-900">{selectedTicket.managerInfo?.location || '미정'}</p>
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-sm font-medium text-gray-700">예상 시간</label>
+                                                        <p className="mt-1 text-sm text-gray-900">
+                                                            {selectedTicket.estimatedTime ? `${selectedTicket.estimatedTime}시간` : '미정'}
+                                                        </p>
+                                                    </div>
+                                                    <div>
+                                                        <label className="text-sm font-medium text-gray-700">영향받는 시스템</label>
+                                                        <div className="mt-1 flex flex-wrap gap-2">
+                                                            {selectedTicket.affectedSystems?.map((system, index) => (
+                                                                <Badge key={index} variant="outline">{system}</Badge>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
                                             <div className="col-span-2">
                                                 <label className="text-sm font-medium text-gray-700">최초 문의내용</label>
                                                 <p className="mt-1 text-sm text-gray-900 p-3 bg-gray-50 rounded">
@@ -407,6 +570,42 @@ export const CustomerSupport: React.FC = () => {
                                             </div>
                                         </div>
                                     </TabsContent>
+
+                                    {selectedTicket.type === 'manager' && (
+                                        <TabsContent value="progress" className="space-y-4">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-700">생성일시</label>
+                                                    <p className="mt-1 text-sm text-gray-900">{selectedTicket.createdAt}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-700">최종 업데이트</label>
+                                                    <p className="mt-1 text-sm text-gray-900">{selectedTicket.lastResponse}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-700">소요 시간</label>
+                                                    <p className="mt-1 text-sm text-gray-900">
+                                                        {selectedTicket.actualTime ? `${selectedTicket.actualTime}시간` : '진행중'}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-700">진행률</label>
+                                                    <div className="mt-1">
+                                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                                            <div
+                                                                className="bg-blue-600 h-2 rounded-full transition-all"
+                                                                style={{
+                                                                    width: selectedTicket.status === 'resolved' ? '100%' :
+                                                                        selectedTicket.status === 'in_progress' ? '60%' :
+                                                                            selectedTicket.status === 'assigned' ? '30%' : '10%'
+                                                                }}
+                                                            ></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </TabsContent>
+                                    )}
                                 </Tabs>
                             </CardContent>
                         </Card>
@@ -415,7 +614,7 @@ export const CustomerSupport: React.FC = () => {
                             <CardContent className="flex items-center justify-center h-64">
                                 <div className="text-center text-gray-500">
                                     <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                                    <p>문의를 선택하여 상세내용을 확인하세요</p>
+                                    <p>상담을 선택하여 상세내용을 확인하세요</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -424,4 +623,4 @@ export const CustomerSupport: React.FC = () => {
             </div>
         </div>
     );
-};
+}; 

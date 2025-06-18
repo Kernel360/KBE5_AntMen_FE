@@ -1,17 +1,17 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { customFetch } from '@/shared/api/base'
-import type { Reservation } from '@/entities/reservation/model/types'
+import type { ReservationHistory } from '@/entities/reservation/model/types'
 import { ReservationDetailPageClient } from '@/app/(user)/(navigation)/myreservation/[reservationid]/ReservationDetailPageClient'
 
 // 예약 상세 데이터 패칭 함수
-async function getReservationDetail(id: string): Promise<Reservation | null> {
+async function getReservationDetail(id: string): Promise<ReservationHistory | null> {
   try {
     const res = await customFetch(
       `https://api.antmen.site:9092/v1/manager/reservations/${id}`,
       { cache: 'no-store' },
     )
-    return res as Reservation
+    return res as ReservationHistory
   } catch (error) {
     console.error('Failed to fetch reservation detail:', error)
     return null
