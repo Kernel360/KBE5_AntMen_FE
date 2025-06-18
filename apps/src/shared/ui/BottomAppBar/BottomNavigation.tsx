@@ -1,30 +1,31 @@
 'use client'
 
-import {
-  HomeIcon,
-  CalendarIcon,
-  StarIcon,
-  EllipsisHorizontalIcon,
-  ClipboardDocumentListIcon,
-} from '@heroicons/react/24/outline'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { navConfig } from './navConfig'
+import type { UserRole, NavItemConfig } from './types'
+import { useAuthStore } from '@/shared/stores/authStore'
+import { useState } from 'react'
+import LoginRequiredModal from '@/shared/ui/modal/LoginRequiredModal'
 
-interface NavItemProps {
-  icon: string
-  activeIcon?: string
-  label: string
-  isActive?: boolean
-  href: string
+interface BottomNavigationProps {
+  userRole?: UserRole
 }
 
-function NavItem({ icon, activeIcon, label, isActive, href }: NavItemProps) {
+const NavItem = ({
+  icon,
+  activeIcon,
+  label,
+  isActive,
+  href,
+  onClick,
+}: NavItemConfig & { isActive: boolean; onClick?: () => void }) => {
   const router = useRouter()
-
   return (
     <button
-      onClick={() => router.push(href)}
+      onClick={onClick ? onClick : () => router.push(href)}
       className="flex flex-1 flex-col items-center"
+      aria-current={isActive ? 'page' : undefined}
     >
       <div className="relative flex items-center justify-center w-9 h-9 overflow-hidden">
         <Image
@@ -44,54 +45,53 @@ function NavItem({ icon, activeIcon, label, isActive, href }: NavItemProps) {
   )
 }
 
-export function BottomNavigation() {
+export const BottomNavigation = ({ userRole }: BottomNavigationProps) => {
   const pathname = usePathname()
+  const router = useRouter()
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
+  const [modalOpen, setModalOpen] = useState(false)
+  // MANAGER만 별도, 나머지는 모두 CUSTOMER로 처리
+  const bottomNav =
+    userRole === 'MANAGER' ? navConfig['MANAGER'] : navConfig['CUSTOMER']
 
-  const navItems = [
-    {
-      icon: '/icons/footer-home.svg',
-      activeIcon: '/icons/footer-home-active.svg',
-      label: '홈',
-      href: '/',
-    },
-    {
-      icon: '/icons/footer-chat.svg',
-      activeIcon: '/icons/footer-chat-active.svg',
-      label: '게시판',
-      href: '/boards',
-    },
-    {
-      icon: '/icons/footer-check.svg',
-      activeIcon: '/icons/footer-check-active.svg',
-      label: '내 예약',
-      href: '/myreservation',
-    },
-    {
-      icon: '/icons/footer-star.svg',
-      activeIcon: '/icons/footer-star-active.svg',
-      label: '이벤트',
-      href: '/events',
-    },
-    {
-      icon: '/icons/footer-dot.svg',
-      activeIcon: '/icons/footer-dot-active.svg',
-      label: '더보기',
-      href: '/more',
-    },
-  ]
+  if (!bottomNav.length) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 mx-auto flex h-[64px] max-w-mobile items-center justify-between gap-4 border-t bg-white px-2 py-2">
-      {navItems.map((item) => (
-        <NavItem
-          key={item.href}
-          icon={item.icon}
-          activeIcon={item.activeIcon}
-          label={item.label}
-          isActive={pathname === item.href}
-          href={item.href}
-        />
-      ))}
-    </div>
+    <>
+      <nav
+        className="fixed bottom-0 left-0 right-0 mx-auto flex h-[64px] max-w-mobile items-center justify-between gap-4 border-t bg-white px-2 py-2 z-50"
+        aria-label="하단 네비게이션"
+      >
+        {bottomNav.map((item) => {
+          // 더보기, 내 예약 버튼만 예외 처리
+          if (item.label === '더보기' || item.label === '내 예약') {
+            return (
+              <NavItem
+                key={item.href}
+                {...item}
+                isActive={pathname === item.href}
+                onClick={() => {
+                  if (!isLoggedIn) setModalOpen(true)
+                  else {
+                    router.push(item.href)
+                  }
+                }}
+              />
+            )
+          }
+          return (
+            <NavItem
+              key={item.href}
+              {...item}
+              isActive={pathname === item.href}
+            />
+          )
+        })}
+      </nav>
+      <LoginRequiredModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+      />
+    </>
   )
 }

@@ -1,42 +1,42 @@
-'use client';
+'use client'
 
-import React, { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import Image from 'next/image';
-import { getReservationDetail } from '@/entities/reservation/api/reservationApi';
-import type { ReservationHistory} from '@/entities/reservation/model/types';
-import { getAuthToken } from '@/features/auth/lib/auth';
+import React, { useEffect, useState } from 'react'
+import { useRouter, useParams } from 'next/navigation'
+import Image from 'next/image'
+import { getReservationDetail } from '@/entities/reservation/api/reservationApi'
+import type { ReservationHistory} from '@/entities/reservation/model/types'
+import { getAuthToken } from '@/features/auth/lib/auth'
 
 export default function ManagerReservationDetailPage() {
-  const router = useRouter();
-  const params = useParams();
-  const reservationId = params?.id as string;
-  const [reservation, setReservation] = useState<ReservationHistory | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter()
+  const params = useParams()
+  const reservationId = params?.id as string
+  const [reservation, setReservation] = useState<ReservationHistory | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchReservation = async () => {
-      if (!reservationId || reservationId === 'unknown') return;
-      setLoading(true);
-      setError(null);
+      if (!reservationId || reservationId === 'unknown') return
+      setLoading(true)
+      setError(null)
       try {
-        const token = getAuthToken();
+        const token = getAuthToken()
         if (!token) {
-          setError('인증 정보가 없습니다. 다시 로그인 해주세요.');
-          setLoading(false);
-          return;
+          setError('인증 정보가 없습니다. 다시 로그인 해주세요.')
+          setLoading(false)
+          return
         }
-        const data = await getReservationDetail(Number(reservationId), token);
-        setReservation(data);
+        const data = await getReservationDetail(Number(reservationId), token)
+        setReservation(data)
       } catch (e: any) {
-        setError(e?.message || '예약 정보를 불러오지 못했습니다.');
+        setError(e?.message || '예약 정보를 불러오지 못했습니다.')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-    fetchReservation();
-  }, [reservationId]);
+    }
+    fetchReservation()
+  }, [reservationId])
 
   return (
     <main className="flex min-h-screen flex-col bg-gray-50">
@@ -104,7 +104,7 @@ export default function ManagerReservationDetailPage() {
                     <span key={opt} className="bg-gray-100 rounded-lg px-4 py-1 text-base font-medium text-gray-700">{opt}</span>
                   ))
                 ) : (
-                  <span className="text-gray-400">-</span>
+                  <span className="text-gray-400">옵션을 선택하지 않았습니다</span>
                 )}
               </div>
             </section>
@@ -115,7 +115,9 @@ export default function ManagerReservationDetailPage() {
                 <Image src="/icons/linear-share.svg" alt="특이사항" width={20} height={20} />
                 <span className="text-lg font-bold">특이사항</span>
               </div>
-              <div className="text-gray-700 text-base">{reservation.reservationMemo ? reservation.reservationMemo : '수요자가 작성하지 않았습니다.'}</div>
+              <div className="text-gray-700 text-base">
+                {reservation.reservationMemo ? reservation.reservationMemo : '수요자가 작성하지 않았습니다'}
+              </div>
             </section>
 
             {/* 결제 정보 카드 */}
@@ -133,5 +135,5 @@ export default function ManagerReservationDetailPage() {
         ) : null}
       </div>
     </main>
-  );
+  )
 } 

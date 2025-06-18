@@ -211,7 +211,7 @@ export default function ReservationConfirmPage() {
             <button
               onClick={handleConfirm}
               disabled={isLoading}
-              className="w-full h-14 rounded-2xl font-semibold text-white text-lg bg-primary disabled:bg-slate-200 disabled:text-slate-400"
+              className="w-full h-14 rounded-2xl font-semibold text-black text-base bg-primary disabled:bg-slate-200 disabled:text-slate-400"
             >
               {isLoading ? '예약 생성 중...' : '예약하기'}
             </button>

@@ -8,7 +8,11 @@ import {
   MatchingFilterTab,
   MatchingRequest,
 } from '@/entities/matching'
-import { getMatchingRequests } from '@/entities/matching/api/matchingAPi'
+import {
+  getMatchingRequests,
+  acceptMatchingRequest,
+  rejectMatchingRequest,
+} from '@/entities/matching/api/matchingAPi'
 import { MatchingRequestCard } from '@/features/matching'
 
 const tabs: { id: MatchingFilterTab; label: string }[] = [
@@ -68,16 +72,24 @@ const ManagerMatchingPage = () => {
     return true // 임시로 전체 반환
   })
 
-  const handleAccept = (requestId: number) => {
-    // TODO: API 호출 및 상태 갱신
-    // setRequests(...)
-    console.log(`매칭 요청 ${requestId} 수락됨`)
+  const handleAccept = async (requestId: number) => {
+    try {
+      await acceptMatchingRequest(String(requestId))
+      // TODO: setRequests로 상태 갱신 (API 재호출 또는 optimistic update)
+      alert(`매칭 요청 ${requestId} 수락됨`)
+    } catch (e) {
+      alert('수락 처리 중 오류가 발생했습니다.')
+    }
   }
 
-  const handleReject = (requestId: number) => {
-    // TODO: API 호출 및 상태 갱신
-    // setRequests(...)
-    console.log(`매칭 요청 ${requestId} 거절됨`)
+  const handleReject = async (requestId: number) => {
+    try {
+      await rejectMatchingRequest(String(requestId))
+      // TODO: setRequests로 상태 갱신 (API 재호출 또는 optimistic update)
+      alert(`매칭 요청 ${requestId} 거절됨`)
+    } catch (e) {
+      alert('거절 처리 중 오류가 발생했습니다.')
+    }
   }
 
   const handleBack = () => {
@@ -85,9 +97,9 @@ const ManagerMatchingPage = () => {
   }
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-gray-100">
       {/* 헤더 */}
-      <header className="flex items-center justify-between p-5">
+      <header className="flex items-center justify-between p-5 bg-white">
         <button
           onClick={handleBack}
           className="flex h-6 w-6 items-center justify-center"

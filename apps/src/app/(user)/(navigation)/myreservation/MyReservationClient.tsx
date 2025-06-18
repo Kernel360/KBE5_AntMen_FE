@@ -156,10 +156,6 @@ export const MyReservationClient: FC = () => {
           </div>
         ) : (
           <div className="flex h-[500px] flex-col items-center justify-center gap-6 p-6">
-            <div className="relative h-[120px] w-[120px]">
-              <div className="absolute left-[10px] top-[10px] h-[100px] w-[100px] bg-[#BBBBBB]" />
-              <div className="absolute left-[60px] top-[40px] h-[20px] w-[20px] rounded-full border-[6px] border-[#BBBBBB]" />
-            </div>
             <div className="flex flex-col items-center gap-3">
               <h2 className="text-xl font-bold text-[#222222]">
                 예약 내역이 없습니다
