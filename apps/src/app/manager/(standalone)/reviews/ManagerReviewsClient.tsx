@@ -8,6 +8,7 @@ import { StaticStarRating } from '@/shared/ui/StaticStarRating';
 import { EllipsisVerticalIcon, StarIcon as StarIconSolid, XMarkIcon } from '@heroicons/react/24/solid';
 import { mapReviewResponseToModel } from '@/entities/review/lib/mappers';
 import type { Review } from '@/entities/review/model/types';
+import { updateReview } from '@/entities/review/api/reviewApi';
 
 // API fetch helpers
 async function fetchReceivedReviews() {
@@ -70,10 +71,11 @@ function EditReviewModal({
   isOpen: boolean;
   onClose: () => void;
   review: Review | null;
-  onSave: (id: string, newRating: number, newContent: string) => void;
+  onSave: (id: string, newRating: number, newContent: string) => Promise<void>;
 }) {
   const [rating, setRating] = useState(0);
   const [content, setContent] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (review) {
@@ -84,9 +86,22 @@ function EditReviewModal({
 
   if (!isOpen || !review) return null;
 
-  const handleSave = () => {
-    onSave(review.id, rating, content);
-    onClose();
+  const handleSave = async () => {
+    if (rating === 0) {
+      alert('별점을 선택해주세요.');
+      return;
+    }
+    if (!content.trim()) {
+      alert('리뷰 내용을 입력해주세요.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await onSave(review.id, rating, content);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -94,7 +109,9 @@ function EditReviewModal({
       <div className="bg-white rounded-lg p-6 w-full max-w-sm">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold">리뷰 수정</h2>
-          <button onClick={onClose}><XMarkIcon className="w-6 h-6"/></button>
+          <button onClick={onClose} disabled={isSubmitting}>
+            <XMarkIcon className="w-6 h-6"/>
+          </button>
         </div>
         <div className="space-y-4">
           <div>
@@ -103,8 +120,10 @@ function EditReviewModal({
               {[1, 2, 3, 4, 5].map((star) => (
                 <StarIconSolid
                   key={star}
-                  className={`w-8 h-8 cursor-pointer ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`}
-                  onClick={() => setRating(star)}
+                  className={`w-8 h-8 cursor-pointer ${
+                    star <= rating ? 'text-yellow-400' : 'text-gray-300'
+                  } ${isSubmitting ? 'opacity-50' : ''}`}
+                  onClick={() => !isSubmitting && setRating(star)}
                 />
               ))}
             </div>
@@ -119,21 +138,28 @@ function EditReviewModal({
               className="w-full p-2 border border-gray-300 rounded-md"
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              disabled={isSubmitting}
+              maxLength={200}
             />
+            <div className="text-right text-xs text-gray-500 mt-1">
+              {content.length}/200
+            </div>
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-200 rounded-md text-sm font-medium"
+            className="px-4 py-2 bg-gray-200 rounded-md text-sm font-medium disabled:opacity-50"
+            disabled={isSubmitting}
           >
             취소
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-cyan-500 text-white rounded-md text-sm font-medium"
+            className="px-4 py-2 bg-cyan-500 text-white rounded-md text-sm font-medium disabled:opacity-50"
+            disabled={isSubmitting}
           >
-            저장
+            {isSubmitting ? '저장 중...' : '저장'}
           </button>
         </div>
       </div>
@@ -217,9 +243,30 @@ export default function ManagerReviewsClient() {
     setEditModalOpen(false);
     setDeleteModalOpen(false);
   };
-  const handleSaveReview = (id: string, newRating: number, newContent: string) => {
-    setWrittenReviews(prev => prev.map(r => r.id === id ? { ...r, rating: newRating, comment: newContent } : r));
-    handleCloseModals();
+  const handleSaveReview = async (id: string, newRating: number, newContent: string) => {
+    try {
+      // API 호출
+      await updateReview(Number(id), {
+        reviewRating: newRating,
+        reviewComment: newContent,
+      });
+
+      // 성공 시 로컬 상태 업데이트
+      setWrittenReviews(prev => prev.map(r => 
+        r.id === id 
+          ? { ...r, rating: newRating, comment: newContent } 
+          : r
+      ));
+
+      // 모달 닫기
+      handleCloseModals();
+      
+      // 성공 메시지
+      alert('리뷰가 성공적으로 수정되었습니다.');
+    } catch (error) {
+      console.error('리뷰 수정 실패:', error);
+      alert('리뷰 수정에 실패했습니다.');
+    }
   };
   const handleDeleteReview = () => {
     if (selectedReview) {
