@@ -1,115 +1,159 @@
-import { Suspense } from 'react'
-import { notFound } from 'next/navigation'
-import { customFetch } from '@/shared/api/base'
-import type { ReservationHistory } from '@/entities/reservation/model/types'
-import { ReservationDetailPageClient } from '@/app/(user)/(navigation)/myreservation/[reservationid]/ReservationDetailPageClient'
+'use client'
 
-// 예약 상세 데이터 패칭 함수
-async function getReservationDetail(id: string): Promise<ReservationHistory | null> {
-  try {
-    const res = await customFetch(
-      `https://api.antmen.site:9092/v1/manager/reservations/${id}`,
-      { cache: 'no-store' },
-    )
-    return res as ReservationHistory
-  } catch (error) {
-    console.error('Failed to fetch reservation detail:', error)
-    return null
-  }
-}
+import React, { useEffect, useState } from 'react'
+import { useRouter, useParams } from 'next/navigation'
+import Image from 'next/image'
+import { getReservationDetail } from '@/entities/reservation/api/reservationApi'
+import type { ReservationHistory} from '@/entities/reservation/model/types'
+import { getAuthToken } from '@/features/auth/lib/auth'
 
-// Skeleton UI (user 상세와 동일하게 유지)
-function PageSkeleton() {
+export default function ManagerMatchingDetailPage() {
+  const router = useRouter()
+  const params = useParams()
+  const reservationId = params?.id as string
+  const [reservation, setReservation] = useState<ReservationHistory | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchReservation = async () => {
+      if (!reservationId || reservationId === 'unknown') return
+      setLoading(true)
+      setError(null)
+      try {
+        const token = getAuthToken()
+        if (!token) {
+          setError('인증 정보가 없습니다. 다시 로그인 해주세요.')
+          setLoading(false)
+          return
+        }
+        const data = await getReservationDetail(Number(reservationId), token)
+        setReservation(data)
+      } catch (e: any) {
+        setError(e?.message || '예약 정보를 불러오지 못했습니다.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchReservation()
+  }, [reservationId])
+
+  // TODO: 예약 상태, 예약 시간, 고객 정보
+  // reservations/id/page.tsx 에서도 동일하게 수정해야함!
   return (
-    <div className="flex flex-col bg-gray-50 animate-pulse">
-      {/* Header Skeleton */}
-      <header className="bg-white px-5 py-4">
-        <div className="flex items-center gap-4">
-          <div className="w-6 h-6 bg-gray-200 rounded"></div>
-          <div className="w-32 h-8 bg-gray-200 rounded"></div>
-        </div>
+    <main className="flex min-h-screen flex-col bg-gray-50">
+      {/* Header */}
+      <header className="flex items-center justify-between p-5 bg-white border-b">
+        <button 
+          onClick={() => router.back()} 
+          className="flex h-6 w-6 items-center justify-center"
+        >
+          <Image src="/icons/arrow-left.svg" alt="뒤로가기" width={24} height={24} />
+        </button>
+        <h1 className="flex-1 text-center text-2xl font-bold">매칭 요청 확인</h1>
+        <div className="h-6 w-6" />
       </header>
+      <div className="flex flex-1 flex-col gap-6 p-5 max-w-xl mx-auto w-full">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="text-4xl">⏳</div>
+            <div className="mt-4 text-lg text-gray-600">예약 정보를 불러오는 중...</div>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="text-4xl">❌</div>
+            <div className="mt-4 text-lg text-red-600">{error}</div>
+          </div>
+        ) : reservation ? (
+          <>
+            {/* 서비스 정보 카드 */}
+            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-4">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="bg-primary/20 rounded-full p-3">
+                  <Image src="/icons/customer.svg" alt="서비스" width={32} height={32}/>
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-gray-900">{reservation.categoryName}</div>
+                  <div className="text-gray-500 text-base">일반 가정집 청소 서비스</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-gray-700 text-base">
+                <Image src="/icons/linear-check.svg" alt="날짜" width={20} height={20} />
+                <span>{reservation.reservationDate}</span>
+                <span className="mx-1">·</span>
+                <span>총 {reservation.totalDuration}시간</span>
+              </div>
+            </section>
 
-      <main className="flex-grow pb-24">
-        <div className="space-y-2">
-          {/* Reservation Status Skeleton */}
-          <div className="bg-white px-5 py-6">
-            <div className="h-6 w-24 bg-gray-200 rounded mb-6"></div>
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <div className="w-20 h-5 bg-gray-200 rounded"></div>
-                <div className="w-28 h-5 bg-gray-200 rounded"></div>
+            {/* 주소 정보 카드 */}
+            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Image src="/icons/map-pin.svg" alt="주소" width={20} height={20} />
+                <span className="text-lg font-bold">주소 정보</span>
               </div>
-              <div className="flex justify-between">
-                <div className="w-16 h-5 bg-gray-200 rounded"></div>
-                <div className="w-24 h-5 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-          </div>
-          {/* Service Info Skeleton */}
-          <div className="bg-white px-5 py-6">
-            <div className="h-6 w-24 bg-gray-200 rounded mb-6"></div>
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <div className="w-20 h-5 bg-gray-200 rounded"></div>
-                <div className="w-28 h-5 bg-gray-200 rounded"></div>
-              </div>
-              <div className="flex justify-between">
-                <div className="w-16 h-5 bg-gray-200 rounded"></div>
-                <div className="w-24 h-5 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-          </div>
-          {/* Cleaner Info Skeleton */}
-          <div className="bg-white px-5 py-6">
-            <div className="h-6 w-24 bg-gray-200 rounded mb-6"></div>
-            <div className="flex items-start gap-4">
-              <div className="w-15 h-15 bg-gray-200 rounded-full"></div>
-              <div className="flex-1 space-y-2">
-                <div className="h-6 w-20 bg-gray-200 rounded"></div>
-                <div className="h-5 w-32 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-          </div>
-          {/* Payment Skeleton */}
-          <div className="bg-white px-5 py-6">
-            <div className="h-6 w-32 bg-gray-200 rounded mb-6"></div>
-            <div className="space-y-4">
-              <div className="flex justify-between">
-                <div className="w-24 h-5 bg-gray-200 rounded"></div>
-                <div className="w-20 h-5 bg-gray-200 rounded"></div>
-              </div>
-              <div className="flex justify-between pt-2 border-t">
-                <div className="w-28 h-6 bg-gray-200 rounded"></div>
-                <div className="w-24 h-6 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
+              <div className="text-gray-800 text-base font-medium">{reservation.address}</div>
+            </section>
 
-      {/* Action Button Skeleton */}
-      <div className="sticky bottom-0 bg-white p-5 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-        <div className="w-full h-12 bg-gray-200 rounded-xl"></div>
+            {/* 옵션 카드 */}
+            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Image src="/icons/linear-bell.svg" alt="옵션" width={20} height={20}/>
+                <span className="text-lg font-bold">옵션 내용</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {reservation.selectedOptions && reservation.selectedOptions.length > 0 ? (
+                  reservation.selectedOptions.map((opt) => (
+                    <span key={opt} className="bg-gray-100 rounded-lg px-4 py-1 text-base font-medium text-gray-700">{opt}</span>
+                  ))
+                ) : (
+                  <span className="text-gray-400">옵션을 선택하지 않았습니다</span>
+                )}
+              </div>
+            </section>
+
+            {/* 특이사항 카드 */}
+            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Image src="/icons/linear-share.svg" alt="특이사항" width={20} height={20} />
+                <span className="text-lg font-bold">특이사항</span>
+              </div>
+              <div className="text-gray-700 text-base">
+                {reservation.reservationMemo ? reservation.reservationMemo : '수요자가 작성하지 않았습니다'}
+              </div>
+            </section>
+
+            {/* 결제 정보 카드 */}
+            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Image src="/icons/linear-card.svg" alt="결제" width={20} height={20} />
+                <span className="text-lg font-bold">결제 정보</span>
+              </div>
+              <div className="flex justify-between text-base">
+                <span className="text-gray-500">결제 금액</span>
+                <span className="font-bold text-primary">{reservation.totalAmount.toLocaleString()}원</span>
+              </div>
+            </section>
+
+            {/* 매칭 수락/거절 버튼 */}
+            <div className="sticky bottom-0 bg-white p-5 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {/* TODO: 매칭 수락 로직 */}}
+                  className="flex-1 bg-[#4abed9] text-white rounded-xl py-4 font-bold text-base"
+                >
+                  매칭 수락
+                </button>
+                <button
+                  onClick={() => {/* TODO: 매칭 거절 로직 */}}
+                  className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-4 font-bold text-base"
+                >
+                  매칭 거절
+                </button>
+              </div>
+            </div>
+          </>
+        ) : null}
       </div>
-    </div>
-  )
-}
-
-export default async function MatchingDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
-  const reservationDetail = await getReservationDetail(params.id)
-
-  if (!reservationDetail) {
-    notFound()
-  }
-
-  return (
-    <Suspense fallback={<PageSkeleton />}>
-      <ReservationDetailPageClient initialReservation={reservationDetail} />
-    </Suspense>
+    </main>
   )
 }
