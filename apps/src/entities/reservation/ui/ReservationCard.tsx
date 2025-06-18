@@ -119,6 +119,24 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
           </>
         )
       case 'DONE':
+        if (!reservation.hasReview) {
+          return (
+            <>
+              <button
+                onClick={() => onWriteReview?.(reservationId.toString())}
+                className="flex-1 rounded-[22px] bg-[#7C3AED] py-3 text-sm font-medium text-white hover:bg-[#6D28D9] transition-colors"
+              >
+                리뷰 작성
+              </button>
+              <button
+                onClick={() => onViewDetails?.(reservationId.toString())}
+                className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
+              >
+                상세보기
+              </button>
+            </>
+          )
+        }
         return (
           <>
             <button

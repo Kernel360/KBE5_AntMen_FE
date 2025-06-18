@@ -102,6 +102,7 @@ export interface Reservation {
   optionIds: number[]
   optionNames: string[]
   address: CustomerAddress
+  hasReview: boolean
 }
 
 export type ReservationTab = 'pending' | 'upcoming' | 'past'

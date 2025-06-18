@@ -178,7 +178,6 @@ function DeleteConfirmModal({
 // 이름 마스킹 함수
 function maskName(name: string) {
   if (!name) return '';
-  if (name.length <= 2) return name[0] + '*';
   return name[0] + '*'.repeat(name.length - 1);
 }
 
