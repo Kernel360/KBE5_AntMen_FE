@@ -29,4 +29,10 @@ export async function updateReview(
     method: 'PUT',
     body: JSON.stringify(dto),
   });
+}
+
+export async function deleteReview(reviewId: number): Promise<void> {
+  await customFetch<void>(`${BASE_URL}/${reviewId}`, {
+    method: 'DELETE',
+  });
 } 

@@ -57,3 +57,17 @@ export const updateReview = async (
     }
   )
 }
+
+/**
+ * 리뷰를 삭제하는 API 함수
+ * @param reviewId - 삭제할 리뷰 ID
+ * @returns void - 삭제 성공 시 아무 것도 반환하지 않음
+ */
+export const deleteReview = async (reviewId: number): Promise<void> => {
+  await customFetch<void>(
+    `http://localhost:9092/v1/manager/reviews/${reviewId}`,
+    {
+      method: 'DELETE',
+    }
+  )
+}

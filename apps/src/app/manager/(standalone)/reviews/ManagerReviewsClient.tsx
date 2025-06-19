@@ -8,7 +8,7 @@ import { StaticStarRating } from '@/shared/ui/StaticStarRating';
 import { EllipsisVerticalIcon, StarIcon as StarIconSolid, XMarkIcon } from '@heroicons/react/24/solid';
 import { mapReviewResponseToModel } from '@/entities/review/lib/mappers';
 import type { Review } from '@/entities/review/model/types';
-import { updateReview } from '@/entities/review/api/reviewApi';
+import { updateReview, deleteReview } from '@/entities/review/api/reviewApi';
 
 // API fetch helpers
 async function fetchReceivedReviews() {
@@ -171,10 +171,12 @@ function DeleteConfirmModal({
   isOpen,
   onClose,
   onConfirm,
+  isDeleting,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void>;
+  isDeleting: boolean;
 }) {
   if (!isOpen) return null;
   return (
@@ -183,17 +185,19 @@ function DeleteConfirmModal({
         <h2 className="text-lg font-bold mb-4">리뷰 삭제</h2>
         <p className="text-slate-600 mb-6">정말로 이 리뷰를 삭제하시겠습니까?</p>
         <div className="flex justify-center gap-4">
-           <button
+          <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 bg-gray-200 rounded-md text-sm font-medium"
+            className="flex-1 px-4 py-2 bg-gray-200 rounded-md text-sm font-medium disabled:opacity-50"
+            disabled={isDeleting}
           >
             취소
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-2 bg-red-500 text-white rounded-md text-sm font-medium"
+            className="flex-1 px-4 py-2 bg-red-500 text-white rounded-md text-sm font-medium disabled:opacity-50"
+            disabled={isDeleting}
           >
-            삭제
+            {isDeleting ? '삭제 중...' : '삭제'}
           </button>
         </div>
       </div>
@@ -217,6 +221,7 @@ export default function ManagerReviewsClient() {
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -268,10 +273,28 @@ export default function ManagerReviewsClient() {
       alert('리뷰 수정에 실패했습니다.');
     }
   };
-  const handleDeleteReview = () => {
-    if (selectedReview) {
+  const handleDeleteReview = async () => {
+    if (!selectedReview) return;
+
+    try {
+      setIsDeleting(true);
+      
+      // API 호출
+      await deleteReview(Number(selectedReview.id));
+
+      // 성공 시 로컬 상태 업데이트
       setWrittenReviews(prev => prev.filter(r => r.id !== selectedReview.id));
+
+      // 모달 닫기
       handleCloseModals();
+      
+      // 성공 메시지
+      alert('리뷰가 성공적으로 삭제되었습니다.');
+    } catch (error) {
+      console.error('리뷰 삭제 실패:', error);
+      alert('리뷰 삭제에 실패했습니다.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -371,6 +394,7 @@ export default function ManagerReviewsClient() {
         isOpen={isDeleteModalOpen}
         onClose={handleCloseModals}
         onConfirm={handleDeleteReview}
+        isDeleting={isDeleting}
       />
     </main>
   );
