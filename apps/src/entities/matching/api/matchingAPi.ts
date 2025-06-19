@@ -32,7 +32,6 @@ export const acceptMatchingRequest = async (
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       matchingManagerIsAccept: true,
-      matchingRefuseReason: '',
     }),
   })
 }
@@ -43,6 +42,11 @@ export const rejectMatchingRequest = async (
 ): Promise<void> => {
   return customFetch<void>(`${BASE_URL}/matching/${matchingId}`, {
     method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      matchingManagerIsAccept: false,
+      matchingRefuseReason: refuseReason,
+    }),
   })
 }
 
