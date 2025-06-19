@@ -1,4 +1,4 @@
-import { customFetch } from '@/shared/api/customFetch'
+import { customFetch } from '@/shared/api/base'
 import type { UserData } from '../model/types'
 
 export async function fetchUserDataApi(
