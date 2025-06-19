@@ -1,11 +1,16 @@
 export interface Review {
   id: string;
-  workId: string;
+  customerId: string;
+  customerName: string;
+  customerProfile: string;
+  managerId: string;
+  managerName: string;
+  managerProfile: string;
+  reservationId: string;
   rating: number;
-  serviceCompletionComment?: string;
-  customerFeedback?: string;
+  comment: string;
+  authorType: 'CUSTOMER' | 'MANAGER';
   createdAt: string;
-  updatedAt?: string;
 }
 
 export interface CreateReviewRequest {
