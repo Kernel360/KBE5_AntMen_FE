@@ -174,7 +174,7 @@ export const AdminLayout: React.FC = () => {
     return (
         <div className="h-screen flex flex-col bg-gray-100">
             {/* Top Header */}
-            <header className="bg-white shadow-sm border-b h-16 flex-shrink-0">
+            <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm border-b h-16 flex-shrink-0">
                 <div className="flex items-center justify-between h-full px-4 lg:px-6">
                     <div className="flex items-center">
                         <Button
@@ -200,12 +200,19 @@ export const AdminLayout: React.FC = () => {
                 </div>
             </header>
 
-            <div className="flex-1 flex overflow-hidden">
-                {/* Sidebar */}
+            <div className="flex-1 flex overflow-hidden pt-16">
+                {/* 오버레이: 모바일에서 사이드바 열렸을 때만 헤더 아래에서 노출 */}
+                {isSidebarOpen && (
+                    <div
+                        className="fixed top-16 left-0 right-0 bottom-0 z-40 bg-black bg-opacity-30 lg:hidden transition-opacity"
+                        onClick={() => setIsSidebarOpen(false)}
+                    />
+                )}
+                {/* Sidebar: 헤더 아래에서만 열림, 모바일에서는 top-16, 데스크탑에서는 static */}
                 <div
-                    className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r transform transition-transform duration-200 ease-in-out ${
+                    className={`fixed top-16 lg:top-0 left-0 z-50 w-4/5 max-w-xs bg-white border-r transform transition-transform duration-200 ease-in-out ${
                         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                    } lg:translate-x-0 h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)]`}
+                    } lg:static lg:w-64 lg:max-w-none lg:translate-x-0 h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)]`}
                 >
                     <div className="h-full flex flex-col">
                         {/* Menu Items */}
@@ -271,7 +278,7 @@ export const AdminLayout: React.FC = () => {
                 {/* Main Content */}
                 <div className="flex-1 overflow-auto">
                     <div className="p-6">
-                        <Card className="p-6">
+                        <Card className="p-8 bg-white shadow rounded-lg">
                             <Outlet />
                         </Card>
                     </div>
