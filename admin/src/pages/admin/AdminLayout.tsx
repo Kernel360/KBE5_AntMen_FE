@@ -12,7 +12,8 @@ import {
     LogOut,
     Menu,
     X,
-    BarChart2
+    BarChart2,
+    GitBranch
 } from 'lucide-react';
 
 interface MenuItem {
@@ -88,6 +89,32 @@ const menuItems: MenuItem[] = [
         ]
     },
     {
+        id: 'matching',
+        label: '매칭관리',
+        path: '/admin/matching',
+        icon: GitBranch,
+        subItems: [
+            {
+                id: 'manual-matching',
+                label: '수동매칭',
+                path: '/admin/matching/manual',
+                icon: GitBranch
+            },
+            {
+                id: 'algorithm-review',
+                label: '알고리즘 검토',
+                path: '/admin/matching/algorithm',
+                icon: GitBranch
+            },
+            {
+                id: 'algorithm-recommend',
+                label: '추천 기준 설정',
+                path: '/admin/matching/recommend',
+                icon: GitBranch
+            }
+        ]
+    },
+    {
         id: 'finance',
         label: '재무관리',
         path: '/admin/finance',
@@ -108,26 +135,6 @@ const menuItems: MenuItem[] = [
             { id: 'stat-reservation', label: '예약률', path: '/admin/statistics/reservation', icon: BarChart2 },
             { id: 'stat-satisfaction', label: '만족도', path: '/admin/statistics/satisfaction', icon: BarChart2 },
             { id: 'stat-refund', label: '환불 분석', path: '/admin/statistics/refund', icon: BarChart2 }
-        ]
-    },
-    {
-        id: 'algorithm',
-        label: '매칭 알고리즘',
-        path: '/admin/algorithm',
-        icon: BarChart2,
-        subItems: [
-            {
-                id: 'algorithm-review',
-                label: '알고리즘 검토',
-                path: '/admin/algorithm',
-                icon: BarChart2
-            },
-            {
-                id: 'algorithm-recommend',
-                label: '추천 기준 설정',
-                path: '/admin/algorithm/recommend',
-                icon: BarChart2
-            }
         ]
     }
 ];

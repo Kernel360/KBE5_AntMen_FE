@@ -12,8 +12,13 @@ import { ManagerSupport } from './pages/admin/ManagerSupport';
 import { FinanceSales } from './pages/admin/FinanceSales';
 import { FinanceSettlement } from './pages/admin/FinanceSettlement';
 import { FinanceRefund } from './pages/admin/FinanceRefund';
-import { Algorithm } from './pages/admin/Algorithm';
-import { RecommendAlgorithm } from './pages/admin/RecommendAlgorithm';
+import { ManualMatching } from './pages/admin/ManualMatching';
+import { MatchingAlgorithm } from './pages/admin/MatchingAlgorithm';
+import { RecommendMatching } from './pages/admin/RecommendMatching';
+import { StatMatching } from './pages/admin/StatMatching';
+import { StatReservation } from './pages/admin/StatReservation';
+import { StatSatisfaction } from './pages/admin/StatSatisfaction';
+import { StatRefund } from './pages/admin/StatRefund';
 import UsersBlacklist from './pages/admin/UsersBlacklist';
 import { DollarSign, GitBranch, LayoutDashboard, Users, MessageSquare, BarChart } from 'lucide-react';
 
@@ -92,11 +97,17 @@ function App() {
               <Route path="users/blacklist" element={<UsersBlacklist />} />
               <Route path="support/customer" element={<CustomerSupport />} />
               <Route path="support/manager" element={<ManagerSupport />} />
+              <Route path="matching/manual" element={<ManualMatching />} />
+              <Route path="matching/algorithm" element={<MatchingAlgorithm />} />
+              <Route path="matching/recommend" element={<RecommendMatching />} />
+              <Route path="statistics" element={<Navigate to="/admin/statistics/matching" replace />} />
+              <Route path="statistics/matching" element={<StatMatching />} />
+              <Route path="statistics/reservation" element={<StatReservation />} />
+              <Route path="statistics/satisfaction" element={<StatSatisfaction />} />
+              <Route path="statistics/refund" element={<StatRefund />} />
               <Route path="finance/sales" element={<FinanceSales />} />
               <Route path="finance/settlement" element={<FinanceSettlement />} />
               <Route path="finance/refund" element={<FinanceRefund />} />
-              <Route path="algorithm" element={<Algorithm />} />
-              <Route path="algorithm/recommend" element={<RecommendAlgorithm />} />
               <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
             </Route>
             <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />

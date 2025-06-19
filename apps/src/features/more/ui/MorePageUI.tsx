@@ -63,7 +63,11 @@ export const MorePageUI = () => {
         더보기
       </h3>
 
-      <ProfileSection />
+      <ProfileSection 
+        name={userData?.userName || '로그인 후 이용해주세요'}
+        membershipType={userData?.userType || ''}
+        email={userData?.userEmail || ''}
+      />
 
       <section className="mx-5 mt-4 bg-[#9CDAFB] rounded-xl flex flex-col items-center justify-between py-4 mb-4 gap-4">
         {/* <span className="w-full h-[1px] bg-[#E1F3FE]" /> */}
@@ -80,7 +84,7 @@ export const MorePageUI = () => {
           </figure>
           <div className="flex items-center justify-between w-full">
             <span className="text-xl font-semibold text-black">
-              {userData && user.userPoint}원
+              {userData && userData.userPoint}원
             </span>
             <ul className="flex gap-2">
               <li className="bg-white rounded-full px-4 py-1 text-sm font-medium text-gray-900 hover:cursor-pointer">
