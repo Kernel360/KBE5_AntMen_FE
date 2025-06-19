@@ -6,25 +6,25 @@ import { useAuthStore } from '@/shared/stores/authStore'
 import { useRouter } from 'next/navigation'
 import Cookies from 'js-cookie'
 import Image from 'next/image'
-import { cookies } from 'next/headers'
 
-export const MorePageUI = () => {
+interface MorePageUIProps {
+  user: {
+    userName: string;
+    userPoint: number;
+    userType: string;
+    userEmail: string;
+  };
+}
+
+export const MorePageUI = ({ user }: MorePageUIProps) => {
   const { logout } = useAuthStore()
   const router = useRouter()
 
-  const userData = useAuthStore((state) => state.userData)
-  console.log(userData)
-
   const handleLogout = () => {
     if (window.confirm('로그아웃 하시겠습니까?')) {
-      // Zustand 스토어 초기화
       logout()
-
-      // 쿠키 삭제
       Cookies.remove('auth-token')
       Cookies.remove('auth-time')
-
-      // 로그인 페이지로 리다이렉트
       router.push('/login')
     }
   }
@@ -49,7 +49,6 @@ export const MorePageUI = () => {
     },
   ]
 
-  // 상단 4개 메뉴 배열
   const topMenus = [
     { icon: '/icons/linear-card.svg', label: '결제수단', href: '/payment' },
     { icon: '/icons/linear-gift.svg', label: '프로모션', href: '/promotions' },
@@ -63,10 +62,13 @@ export const MorePageUI = () => {
         더보기
       </h3>
 
-      <ProfileSection />
+      <ProfileSection
+        name={user.userName}
+        membershipType={user.userType}
+        email={user.userEmail}
+      />
 
       <section className="mx-5 mt-4 bg-[#9CDAFB] rounded-xl flex flex-col items-center justify-between py-4 mb-4 gap-4">
-        {/* <span className="w-full h-[1px] bg-[#E1F3FE]" /> */}
         <div className="flex flex-col gap-4 w-full px-5">
           <figure className="flex items-center gap-1">
             <Image
@@ -80,7 +82,7 @@ export const MorePageUI = () => {
           </figure>
           <div className="flex items-center justify-between w-full">
             <span className="text-xl font-semibold text-black">
-              {userData && user.userPoint}원
+              {user.userPoint}원
             </span>
             <ul className="flex gap-2">
               <li className="bg-white rounded-full px-4 py-1 text-sm font-medium text-gray-900 hover:cursor-pointer">
