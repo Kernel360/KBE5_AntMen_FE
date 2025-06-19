@@ -1,82 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { StaticStarRating } from '@/shared/ui/StaticStarRating';
-import { EllipsisVerticalIcon, StarIcon as StarIconSolid, XMarkIcon } from '@heroicons/react/24/solid';
 import type { Review } from '@/entities/review/model/types';
 import { ReviewCard } from '@/entities/review/ui/ReviewCard';
-
-function EditReviewModal({
-    isOpen, onClose, review, onSave,
-  }: {
-    isOpen: boolean;
-    onClose: () => void;
-    review: Review | null;
-    onSave: (id: string, newRating: number, newContent: string) => void;
-  }) {
-    const [rating, setRating] = useState(0);
-    const [content, setContent] = useState('');
-  
-    useEffect(() => {
-      if (review) {
-        setRating(review.rating);
-        setContent(review.comment); // comment 필드!
-      }
-    }, [review]);
-  
-    if (!isOpen || !review) return null;
-  
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-sm">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold">리뷰 수정</h2>
-            <button onClick={onClose}><XMarkIcon className="w-6 h-6"/></button>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">별점</label>
-              <div className="flex">
-                {[1, 2, 3, 4, 5].map(star => <StarIconSolid key={star} className={`w-8 h-8 cursor-pointer ${star <= rating ? 'text-yellow-400' : 'text-gray-300'}`} onClick={() => setRating(star)} />)}
-              </div>
-            </div>
-            <div>
-              <label htmlFor="review-content" className="block text-sm font-medium text-gray-700 mb-1">내용</label>
-              <textarea id="review-content" rows={4} className="w-full p-2 border border-gray-300 rounded-md" value={content} onChange={e => setContent(e.target.value)} />
-            </div>
-          </div>
-          <div className="mt-6 flex justify-end gap-3">
-            <button onClick={onClose} className="px-4 py-2 bg-gray-200 rounded-md text-sm font-medium">취소</button>
-            <button onClick={() => { onSave(review.id, rating, content); onClose(); }} className="px-4 py-2 bg-cyan-500 text-white rounded-md text-sm font-medium">저장</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  function DeleteConfirmModal({
-    isOpen, onClose, onConfirm
-  }: {
-    isOpen: boolean;
-    onClose: () => void;
-    onConfirm: () => void;
-  }) {
-    if (!isOpen) return null;
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-sm text-center">
-          <h2 className="text-lg font-bold mb-4">리뷰 삭제</h2>
-          <p className="text-slate-600 mb-6">정말로 이 리뷰를 삭제하시겠습니까?</p>
-          <div className="flex justify-center gap-4">
-             <button onClick={onClose} className="flex-1 px-4 py-2 bg-gray-200 rounded-md text-sm font-medium">취소</button>
-             <button onClick={onConfirm} className="flex-1 px-4 py-2 bg-red-500 text-white rounded-md text-sm font-medium">삭제</button>
-          </div>
-        </div>
-      </div>
-    );
-}
+import { EditReviewModal, DeleteConfirmModal } from '@/shared/ui/modal/ReviewModals';
+import { customerApi } from '@/shared/api/review';
+import { mapReviewResponseToModel } from '@/entities/review/lib/mappers';
 
 function EmptyState() {
   return (
@@ -86,12 +17,33 @@ function EmptyState() {
   );
 }
 
-export default function ReviewsPageClient({ initialReviews }: { initialReviews: Review[] }) {
+export default function ReviewsPageClient() {
   const router = useRouter();
-  const [reviews, setReviews] = useState(initialReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setIsLoading(true);
+        const reviewResponses = await customerApi.getMyWrittenReviews();
+        const mappedReviews = reviewResponses.map(mapReviewResponseToModel);
+        setReviews(mappedReviews);
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+        setError('리뷰를 불러오는데 실패했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, []);
 
   const handleOpenEditModal = (review: Review) => {
     setSelectedReview(review);
@@ -109,15 +61,54 @@ export default function ReviewsPageClient({ initialReviews }: { initialReviews: 
     setDeleteModalOpen(false);
   };
 
-  const handleSaveReview = (id: string, newRating: number, newContent: string) => {
-    setReviews(prev => prev.map(r => r.id === id ? { ...r, rating: newRating, comment: newContent } : r));
-    handleCloseModals();
+  const handleSaveReview = async (id: string, newRating: number, newContent: string) => {
+    try {
+      // API 호출
+      await customerApi.updateReview(Number(id), {
+        reviewRating: newRating,
+        reviewComment: newContent,
+      });
+
+      // 성공 시 로컬 상태 업데이트
+      setReviews(prev => prev.map(r => 
+        r.id === id 
+          ? { ...r, rating: newRating, comment: newContent } 
+          : r
+      ));
+
+      // 모달 닫기
+      handleCloseModals();
+      
+      // 성공 메시지
+      alert('리뷰가 성공적으로 수정되었습니다.');
+    } catch (error) {
+      console.error('리뷰 수정 실패:', error);
+      alert('리뷰 수정에 실패했습니다.');
+    }
   };
 
-  const handleDeleteReview = () => {
-    if (selectedReview) {
+  const handleDeleteReview = async () => {
+    if (!selectedReview) return;
+
+    try {
+      setIsDeleting(true);
+      
+      // API 호출
+      await customerApi.deleteReview(Number(selectedReview.id));
+
+      // 성공 시 로컬 상태 업데이트
       setReviews(prev => prev.filter(r => r.id !== selectedReview.id));
+
+      // 모달 닫기
       handleCloseModals();
+      
+      // 성공 메시지
+      alert('리뷰가 성공적으로 삭제되었습니다.');
+    } catch (error) {
+      console.error('리뷰 삭제 실패:', error);
+      alert('리뷰 삭제에 실패했습니다.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -134,8 +125,12 @@ export default function ReviewsPageClient({ initialReviews }: { initialReviews: 
 
       {/* 내용 */}
       <div className="p-5 space-y-4">
-        {reviews.length > 0
-          ? reviews.map(review => (
+        {isLoading ? (
+          <div className="text-center py-20 text-slate-400">로딩 중...</div>
+        ) : error ? (
+          <div className="text-center py-20 text-red-500">{error}</div>
+        ) : reviews.length > 0 ? (
+          reviews.map(review => (
             <ReviewCard
               key={review.id}
               review={review}
@@ -149,23 +144,24 @@ export default function ReviewsPageClient({ initialReviews }: { initialReviews: 
               }}
             />
           ))
-          : <EmptyState />
-        }
+        ) : (
+          <EmptyState />
+        )}
       </div>
 
       {/* 모달 렌더링 */}
       <EditReviewModal
-  isOpen={isEditModalOpen}
-  onClose={handleCloseModals}
-  review={selectedReview}
-  onSave={handleSaveReview}
-/>
-<DeleteConfirmModal
-  isOpen={isDeleteModalOpen}
-  onClose={handleCloseModals}
-  onConfirm={handleDeleteReview}
-/>
-    
+        isOpen={isEditModalOpen}
+        onClose={handleCloseModals}
+        review={selectedReview}
+        onSave={handleSaveReview}
+      />
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseModals}
+        onConfirm={handleDeleteReview}
+        isDeleting={isDeleting}
+      />
     </main>
   );
 }

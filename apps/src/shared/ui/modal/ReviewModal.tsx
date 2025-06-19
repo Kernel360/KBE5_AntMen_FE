@@ -71,7 +71,9 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-900 mb-2">업무 후기 작성</h2>
           <p className="text-sm text-gray-600">
-            고객님과의 업무는 어떠셨나요?
+            {authorType === 'MANAGER' 
+              ? '고객님과의 업무는 어떠셨나요?' 
+              : '매니저님과의 업무는 어떠셨나요?'}
           </p>
         </div>
 
@@ -120,7 +122,9 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="고객님과의 업무에 대한 소감을 자유롭게 작성해주세요."
+            placeholder={authorType === 'MANAGER' 
+              ? "고객님과의 업무에 대한 소감을 자유롭게 작성해주세요."
+              : "매니저님과의 업무에 대한 소감을 자유롭게 작성해주세요."}
             className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#4DD0E1] focus:border-transparent"
             maxLength={200}
           />

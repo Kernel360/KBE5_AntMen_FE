@@ -16,8 +16,7 @@ import {
   getMyReservations,
 } from '@/entities/reservation/api/reservationApi'
 import { useAuthStore } from '@/shared/stores/authStore'
-import { createReview } from '@/entities/review/api/reviewApi'
-import type { ReviewRequest, ReviewAuthorType } from '@/shared/api/review'
+import { managerApi, type ReviewRequest, type ReviewAuthorType } from '@/shared/api/review'
 
 interface ManagerReservationsClientProps {
   initialReservations: Reservation[]
@@ -150,15 +149,8 @@ export const ManagerReservationsClient = ({
 
   const handleReviewSubmit = async (dto: ReviewRequest) => {
     try {
-      const rawToken = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('auth-token='))
-        ?.split('=')[1] || '';
-      const decodedToken = decodeURIComponent(rawToken);
-      const token = decodedToken.replace(/^Bearer\s+/, '');
-
       console.log('리뷰 제출 데이터:', dto);
-      const response = await createReview(dto, token);
+      const response = await managerApi.createReview(dto);
       console.log('리뷰 제출 응답:', response);
 
       await fetchReservations();
