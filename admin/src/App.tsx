@@ -31,55 +31,6 @@ const queryClient = new QueryClient({
   },
 });
 
-const menuItems = [
-    {
-        title: '대시보드',
-        icon: <LayoutDashboard className="w-4 h-4" />,
-        path: '/admin/dashboard'
-    },
-    {
-        title: '회원관리',
-        icon: <Users className="w-4 h-4" />,
-        submenu: [
-            { title: '수요자', path: '/admin/users/customer' },
-            { title: '매니저', path: '/admin/users/manager' },
-            { title: '승인 대기 매니저', path: '/admin/users/waiting' }
-        ]
-    },
-    {
-        title: '문의관리',
-        icon: <MessageSquare className="w-4 h-4" />,
-        submenu: [
-            { title: '고객문의', path: '/admin/support/customer' },
-            { title: '매니저문의', path: '/admin/support/manager' }
-        ]
-    },
-    {
-        title: '통계',
-        icon: <BarChart className="w-4 h-4" />,
-        submenu: [
-            { title: '매칭률', path: '/admin/statistics/matching' },
-            { title: '예약률', path: '/admin/statistics/reservation' },
-            { title: '만족도', path: '/admin/statistics/satisfaction' },
-            { title: '환불 분석', path: '/admin/statistics/refund' }
-        ]
-    },
-    {
-        title: '재무관리',
-        icon: <DollarSign className="w-4 h-4" />,
-        submenu: [
-            { title: '매출분석', path: '/admin/finance/sales' },
-            { title: '매니저 정산', path: '/admin/finance/settlement' },
-            { title: '환불관리', path: '/admin/finance/refund' }
-        ]
-    },
-    {
-        title: '매칭 알고리즘',
-        icon: <GitBranch className="w-4 h-4" />,
-        path: '/admin/algorithm'
-    }
-];
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
