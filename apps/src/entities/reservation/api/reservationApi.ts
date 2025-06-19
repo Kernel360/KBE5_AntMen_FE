@@ -1,7 +1,7 @@
 import { Reservation, ReservationHistory, ReservationStatus } from '../model/types';
 import { customFetch } from '@/shared/api/base';
 
-const BASE_URL = 'http://localhost:9092/v1/manager/reservations';
+const BASE_URL = 'https://api.antmen.site:9092/v1/manager/reservations';
 
 class ApiError extends Error {
   constructor(

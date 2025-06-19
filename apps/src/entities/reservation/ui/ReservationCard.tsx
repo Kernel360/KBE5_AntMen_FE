@@ -167,6 +167,45 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
 
   const renderCustomerButtons = () => {
     if (userType !== 'customer') return null
+    
+    if (reservationStatus === 'DONE') {
+      if (!reservation.hasReview && onWriteReview) {
+        return (
+          <>
+            <button
+              onClick={() => onWriteReview(reservationId.toString())}
+              className="flex-1 rounded-[22px] bg-[#4DD0E1] py-3 text-sm font-medium text-white hover:bg-[#26C6DA] transition-colors"
+            >
+              리뷰 작성
+            </button>
+            <button
+              onClick={() => onViewDetails?.(reservationId.toString())}
+              className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
+            >
+              상세보기
+            </button>
+          </>
+        )
+      } else {
+        return (
+          <>
+            <button
+              disabled
+              className="flex-1 rounded-[22px] bg-[#B0BEC5] py-3 text-sm font-medium text-white cursor-not-allowed"
+            >
+              완료됨
+            </button>
+            <button
+              onClick={() => onViewDetails?.(reservationId.toString())}
+              className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
+            >
+              상세보기
+            </button>
+          </>
+        )
+      }
+    }
+    
     return (
       <button
         onClick={() => onViewDetails?.(reservationId.toString())}

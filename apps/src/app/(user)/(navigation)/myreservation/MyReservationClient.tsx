@@ -9,6 +9,10 @@ import type {
   Reservation,
 } from '@/entities/reservation/model/types'
 import { CustomerAuthGuard } from '@/components/auth/CustomerAuthGuard'
+import { ReviewModal } from '@/shared/ui/modal/ReviewModal'
+import type { ReviewRequest } from '@/shared/api/review'
+import { customerApi } from '@/shared/api/review'
+import { getMyReservations } from '@/shared/api/reservation'
 import Cookies from 'js-cookie'
 
 export type ReservationTab = 'pending' | 'upcoming' | 'past'
@@ -18,6 +22,8 @@ export const MyReservationClient: FC = () => {
   const [activeTab, setActiveTab] = useState<ReservationTab>('pending')
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [loading, setLoading] = useState(true)
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false)
+  const [selectedReservationId, setSelectedReservationId] = useState<number | null>(null)
 
   useEffect(() => {
     getReservations()
@@ -25,28 +31,7 @@ export const MyReservationClient: FC = () => {
 
   const getReservations = async (): Promise<void> => {
     try {
-      let rawToken = Cookies.get('auth-token')?.trim() || ''
-      if (rawToken.startsWith('Bearer ')) {
-        rawToken = rawToken.slice(7)
-      }
-
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-        ...(rawToken && { Authorization: `Bearer ${rawToken}` }),
-      }
-
-      const res = await fetch(
-        `https://api.antmen.site:9091/api/v1/customer/reservations`,
-        {
-          cache: 'no-store',
-          method: 'GET',
-          headers,
-        },
-      )
-
-      if (!res.ok) throw new Error('Failed to fetch reservations')
-
-      const data = await res.json()
+      const data = await getMyReservations()
       const normalized = normalizeReservations(data)
       setReservations(normalized)
     } catch (error) {
@@ -62,6 +47,28 @@ export const MyReservationClient: FC = () => {
 
   const handleNewReservation = () => {
     router.push('/reservation/form')
+  }
+
+  const handleOpenReviewModal = (id: string) => {
+    setSelectedReservationId(Number(id))
+    setIsReviewModalOpen(true)
+  }
+
+  const handleCloseReviewModal = () => {
+    setSelectedReservationId(null)
+    setIsReviewModalOpen(false)
+  }
+
+  const handleSubmitReview = async (dto: ReviewRequest) => {
+    try {
+      await customerApi.createReview(dto)
+      await getReservations()
+      handleCloseReviewModal()
+      alert('리뷰가 성공적으로 등록되었습니다.')
+    } catch (error) {
+      console.error('Error submitting review:', error)
+      alert('리뷰 등록에 실패했습니다. 다시 시도해주세요.')
+    }
   }
 
   const filteredReservations = reservations.filter((r) => {
@@ -151,6 +158,11 @@ export const MyReservationClient: FC = () => {
                 onViewDetails={() =>
                   handleViewDetails(String(reservation.reservationId))
                 }
+                onWriteReview={
+                  reservation.reservationStatus === 'DONE' && !reservation.hasReview
+                    ? () => handleOpenReviewModal(String(reservation.reservationId))
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -175,6 +187,16 @@ export const MyReservationClient: FC = () => {
           </div>
         )}
       </div>
+
+      {isReviewModalOpen && selectedReservationId && (
+        <ReviewModal
+          isOpen={isReviewModalOpen}
+          reservationId={selectedReservationId}
+          onClose={handleCloseReviewModal}
+          onSubmit={handleSubmitReview}
+          authorType="CUSTOMER"
+        />
+      )}
     </>
   )
 }
@@ -200,6 +222,7 @@ function normalizeReservations(raw: any[]): Reservation[] {
     optionIds: r.optionIds,
     optionNames: r.optionNames,
     address: r.address,
+    hasReview: r.hasReview,
   }))
 }
 

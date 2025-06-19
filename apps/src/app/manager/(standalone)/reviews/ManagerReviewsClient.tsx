@@ -11,20 +11,6 @@ import type { Review } from '@/entities/review/model/types';
 import { managerApi } from '@/shared/api/review';
 import { EditReviewModal, DeleteConfirmModal } from '@/shared/ui/modal/ReviewModals';
 
-// API fetch helpers
-async function fetchReceivedReviews() {
-  const res = await fetch('http://localhost:9092/v1/manager/reviews/my/received', { credentials: 'include' });
-  if (!res.ok) throw new Error('받은 리뷰를 불러오지 못했습니다');
-  const data = await res.json();
-  return data.map(mapReviewResponseToModel);
-}
-async function fetchWrittenReviews() {
-  const res = await fetch('http://localhost:9092/v1/manager/reviews/my/written', { credentials: 'include' });
-  if (!res.ok) throw new Error('작성한 리뷰를 불러오지 못했습니다');
-  const data = await res.json();
-  return data.map(mapReviewResponseToModel);
-}
-
 type ActiveTab = 'received' | 'written';
 
 function EmptyState({ tab }: { tab: ActiveTab }) {

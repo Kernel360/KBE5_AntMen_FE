@@ -2,8 +2,8 @@ import { customFetch } from './base'
 
 export type ReviewAuthorType = 'CUSTOMER' | 'MANAGER'
 
-const MANAGER_BASE_URL = 'http://localhost:9092/v1/manager/reviews'
-const CUSTOMER_BASE_URL = 'http://localhost:9091/api/v1/customer/reviews'
+const MANAGER_BASE_URL = 'https://api.antmen.site:9092/v1/manager/reviews'
+const CUSTOMER_BASE_URL = 'https://api.antmen.site:9091/api/v1/customer/reviews'
 
 export interface ReviewRequest {
   reservationId: number
