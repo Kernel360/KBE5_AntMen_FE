@@ -1,4 +1,4 @@
-import { BottomNavigation } from '@/shared/ui/BottomAppBar/BottomManagerNavigation'
+import { BottomNavigation } from '@/shared/ui/BottomAppBar'
 
 export default function NavigationLayout({
   children,
@@ -10,7 +10,7 @@ export default function NavigationLayout({
       <div id="page-container" className="min-h-screen pb-[72px]">
         {children}
       </div>
-      <BottomNavigation />
+      <BottomNavigation userRole="MANAGER" />
     </>
   )
 }

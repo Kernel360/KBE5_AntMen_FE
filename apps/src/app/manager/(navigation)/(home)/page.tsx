@@ -17,7 +17,6 @@ export default function ManagerHomePage() {
         onButtonClick={() => router.push('/manager/salary')}
         buttonIcon={<BanknotesIcon className="w-6 h-6 text-black" />}
       />
-      <CategorySwiper />
       <NoticeSection />
     </main>
   )

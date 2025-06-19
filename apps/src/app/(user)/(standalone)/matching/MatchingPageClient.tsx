@@ -5,6 +5,12 @@ import { MatchingHeader, ManagerList, BottomSection } from '@/widgets/manager'
 import { useManagerSelection } from '@/features/manager-selection'
 import type { Manager } from '@/widgets/manager/model/manager'
 
+// 매니저 매칭 알고리즘 함수 (추후 확장 가능)
+function getMatchedManagers(managers: Manager[], count: number = 5): Manager[] {
+  // TODO: 추후 알고리즘 적용 (예: 적합도, 거리, 평점 등)
+  return managers.slice(0, count)
+}
+
 export default function MatchingPageClient() {
   const [managers, setManagers] = useState<Manager[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -25,21 +31,24 @@ export default function MatchingPageClient() {
         console.log('클라이언트에서 읽은 예약 정보:', reservationInfo)
 
         // 매니저 목록 가져오기
-        const response = await fetch('https://api.antmen.site:9091/api/v1/matchings', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            reservationDate: reservationInfo.reservationDate,
-            reservationTime: reservationInfo.reservationTime,
-            reservationDuration: reservationInfo.reservationDuration,
-            location: {
-              district: reservationInfo.addressId,
+        const response = await fetch(
+          'https://api.antmen.site:9091/api/v1/matchings',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
             },
-          }),
-        })
+            body: JSON.stringify({
+              reservationDate: reservationInfo.reservationDate,
+              reservationTime: reservationInfo.reservationTime,
+              reservationDuration: reservationInfo.reservationDuration,
+              location: {
+                district: reservationInfo.addressId,
+              },
+            }),
+          },
+        )
 
         if (!response.ok) {
           throw new Error(`매니저 조회 실패: ${response.status}`)
@@ -95,6 +104,9 @@ export default function MatchingPageClient() {
     fetchManagers()
   }, [])
 
+  // 매칭된 매니저만 추출 (현재는 5명만)
+  const matchedManagers = getMatchedManagers(managers, 5)
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex justify-center">
@@ -113,13 +125,13 @@ export default function MatchingPageClient() {
       <div className="w-full max-w-[375px] min-h-screen flex flex-col bg-slate-50">
         <MatchingHeader selectedCount={selectedManagers.length} />
         <ManagerList
-          managers={managers}
+          managers={matchedManagers}
           selectedManagers={selectedManagers}
           onManagerSelect={handleManagerSelect}
         />
         <BottomSection
           selectedManagers={selectedManagers}
-          managers={managers}
+          managers={matchedManagers}
         />
       </div>
     </div>

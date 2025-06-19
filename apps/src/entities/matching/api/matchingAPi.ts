@@ -1,5 +1,8 @@
 import { customFetch } from '@/shared/api/base'
-import { ReservationHistoryDto, MatchingResponseRequestDto } from '../model/types'
+import {
+  ReservationHistoryDto,
+  MatchingResponseRequestDto,
+} from '../model/types'
 
 const BASE_URL = 'https://api.antmen.site:9092/v1/manager'
 const MATCHING_API_URL = 'https://api.antmen.site:9091/api/v1/matchings'
@@ -8,7 +11,7 @@ class ApiError extends Error {
   constructor(
     message: string,
     public status: number,
-    public statusText: string
+    public statusText: string,
   ) {
     super(message)
     this.name = 'ApiError'
@@ -22,17 +25,23 @@ export const getMatchingRequests = async (): Promise<
 }
 
 export const acceptMatchingRequest = async (
-  requestId: string,
+  matchingId: string,
 ): Promise<void> => {
-  return customFetch<void>(`${BASE_URL}/matching/${requestId}/accept`, {
+  return customFetch<void>(`${BASE_URL}/matching/${matchingId}`, {
     method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      matchingManagerIsAccept: true,
+      matchingRefuseReason: '',
+    }),
   })
 }
 
 export const rejectMatchingRequest = async (
-  requestId: string,
+  matchingId: string,
+  refuseReason: string = '',
 ): Promise<void> => {
-  return customFetch<void>(`${BASE_URL}/matching/${requestId}/reject`, {
+  return customFetch<void>(`${BASE_URL}/matching/${matchingId}`, {
     method: 'PUT',
   })
 }
@@ -60,7 +69,7 @@ export const respondToMatching = async (
       throw new ApiError(
         errorData?.errorMessage || '매칭 응답에 실패했습니다.',
         response.status,
-        response.statusText
+        response.statusText,
       )
     }
 
@@ -73,7 +82,7 @@ export const respondToMatching = async (
     throw new ApiError(
       '서버와 통신하는데 실패했습니다',
       500,
-      'Internal Server Error'
+      'Internal Server Error',
     )
   }
 }

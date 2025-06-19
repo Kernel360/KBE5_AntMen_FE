@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 // 내 예약 페이지 (예약리스트)
 
@@ -8,8 +8,8 @@
  * 2. 지난 예약 연결
  */
 
-import { Suspense } from 'react';
-import MyReservationClientWithAuth from './MyReservationClient';
+import { Suspense } from 'react'
+import MyReservationClientWithAuth from './MyReservationClient'
 
 function PageSkeleton() {
   return (
@@ -23,10 +23,10 @@ function PageSkeleton() {
       {/* Tab Skeleton */}
       <div className="sticky top-[72px] z-20 bg-white">
         <div className="flex flex-col gap-4 px-5">
-            <div className="flex gap-10">
-                <div className="h-7 w-24 rounded bg-gray-200 animate-pulse" />
-                <div className="h-7 w-20 rounded bg-gray-200 animate-pulse" />
-            </div>
+          <div className="flex gap-10">
+            <div className="h-7 w-24 rounded bg-gray-200 animate-pulse" />
+            <div className="h-7 w-20 rounded bg-gray-200 animate-pulse" />
+          </div>
         </div>
       </div>
       {/* Card List Skeleton */}
@@ -36,15 +36,15 @@ function PageSkeleton() {
         <div className="h-48 w-full rounded-xl bg-gray-200 animate-pulse" />
       </div>
     </div>
-  );
+  )
 }
 
 export default function MyReservationPage() {
   return (
-    <main className="flex min-h-screen flex-col bg-white">
+    <main className="flex flex-col bg-gray-100 pb-[72px]">
       <Suspense fallback={<PageSkeleton />}>
         <MyReservationClientWithAuth />
       </Suspense>
     </main>
-  );
-} 
+  )
+}
