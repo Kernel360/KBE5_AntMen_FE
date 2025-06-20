@@ -158,7 +158,7 @@ const ManagerMatchingPage = () => {
                 <MatchingRequestCard
                   key={request.reservationId}
                   request={toMatchingRequest(request)}
-                  onAccept={() => handleAccept(request.reservationId)}
+                  onAccept={() => handleAccept(request.matchings[0].matchingId)}
                   onReject={() => handleReject(request.reservationId)}
                 />
               ) : null,

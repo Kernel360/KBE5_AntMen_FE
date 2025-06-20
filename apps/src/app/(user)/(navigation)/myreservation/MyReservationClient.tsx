@@ -46,7 +46,7 @@ export const MyReservationClient: FC = () => {
   }
 
   const handleNewReservation = () => {
-    router.push('/reservation/form')
+    router.push('/reservation')
   }
 
   const handleOpenReviewModal = (id: string) => {
