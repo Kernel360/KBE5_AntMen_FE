@@ -115,7 +115,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
 
         return (
           <>
-            {reservation.hasCheckedIn ? (
+            {reservation.checkinAt ? (
               <button
                 onClick={() => onCheckOut?.(reservationId.toString())}
                 className="flex-1 rounded-[22px] bg-[#FFB74D] py-3 text-sm font-medium text-white hover:bg-[#FFA726] transition-colors"
@@ -310,10 +310,4 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
       </div>
     </div>
   )
-}
-
-declare module '../model/types' {
-  interface Reservation {
-    hasCheckedIn?: boolean
-  }
 }

@@ -14,6 +14,8 @@ import {
 import {
   changeReservationStatus,
   getMyReservations,
+  checkIn,
+  checkOut,
 } from '@/entities/reservation/api/reservationApi'
 import { useAuthStore } from '@/shared/stores/authStore'
 import { managerApi, type ReviewRequest, type ReviewAuthorType } from '@/shared/api/review'
@@ -31,8 +33,14 @@ export const ManagerReservationsClient = ({
   const [reservations, setReservations] = useState<Reservation[]>(
     initialReservations.map(mapReservationApiToClient),
   )
-  const [checkedInIds, setCheckedInIds] = useState(new Set<number>())
   const [reviewModal, setReviewModal] = useState<{
+    isOpen: boolean
+    reservationId: number
+  }>({
+    isOpen: false,
+    reservationId: 0,
+  })
+  const [checkoutModal, setCheckoutModal] = useState<{
     isOpen: boolean
     reservationId: number
   }>({
@@ -117,26 +125,84 @@ export const ManagerReservationsClient = ({
     }
   }
 
-  const handleCheckIn = (id: string) => {
+  const handleCheckIn = async (id: string) => {
     console.log('Check-in for reservation:', id)
-    setCheckedInIds(prev => new Set(prev).add(Number(id)))
+    const rawToken =
+      document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('auth-token='))
+        ?.split('=')[1] || ''
+    const decodedToken = decodeURIComponent(rawToken)
+    const token = decodedToken.replace(/^Bearer\s+/, '')
+    const authHeader = `Bearer ${token}`
+
+    const checkinTime = new Date().toISOString()
+
+    // Optimistic Update
+    setReservations(prev =>
+      prev.map(r =>
+        r.reservationId.toString() === id
+          ? { ...r, checkinAt: checkinTime }
+          : r,
+      ),
+    )
+
+    try {
+      await checkIn(Number(id), checkinTime, authHeader)
+    } catch (error) {
+      console.error('Check-in failed:', error)
+      alert('체크인에 실패했습니다. 다시 시도해주세요.')
+      // Rollback on error
+      setReservations(prev =>
+        prev.map(r =>
+          r.reservationId.toString() === id ? { ...r, checkinAt: null } : r,
+        ),
+      )
+    }
   }
 
-  const handleCheckOut = async (id: string) => {
+  const handleCheckOut = (id: string) => {
     console.log('Check-out for reservation:', id)
-    const reservation = reservations.find(
-      (r) => r.reservationId.toString() === id,
-    )
-    if (!reservation) return
-
-    await updateReservationStatus(id, {
-      reservationStatus: 'DONE',
-    })
-
-    setReviewModal({
+    setCheckoutModal({
       isOpen: true,
       reservationId: Number(id),
     })
+  }
+
+  const handleCheckoutSubmit = async (comment: string) => {
+    if (!checkoutModal.reservationId) return
+
+    const id = checkoutModal.reservationId
+    const rawToken =
+      document.cookie
+        .split('; ')
+        .find(row => row.startsWith('auth-token='))
+        ?.split('=')[1] || ''
+    const decodedToken = decodeURIComponent(rawToken)
+    const token = decodedToken.replace(/^Bearer\s+/, '')
+    const authHeader = `Bearer ${token}`
+
+    const checkoutTime = new Date().toISOString()
+    
+    try {
+      await checkOut(id, { checkoutAt: checkoutTime, comment }, authHeader)
+      
+      // 로컬 상태 DONE으로 변경
+      await updateReservationStatus(id.toString(), {
+        reservationStatus: 'DONE',
+      })
+
+      // 리뷰 모달 열기
+      setReviewModal({
+        isOpen: true,
+        reservationId: id,
+      })
+    } catch (error) {
+      console.error('Check-out failed:', error)
+      alert('체크아웃에 실패했습니다.')
+    } finally {
+      setCheckoutModal({ isOpen: false, reservationId: 0 })
+    }
   }
 
   const handleWriteReview = (id: string) => {
@@ -344,10 +410,7 @@ export const ManagerReservationsClient = ({
             {filteredReservations.map((reservation) => (
               <ReservationCard
                 key={reservation.reservationId}
-                reservation={{
-                  ...reservation,
-                  hasCheckedIn: checkedInIds.has(reservation.reservationId),
-                }}
+                reservation={reservation}
                 userType="manager"
                 onCheckIn={handleCheckIn}
                 onCheckOut={handleCheckOut}
@@ -394,7 +457,66 @@ export const ManagerReservationsClient = ({
           authorType={userRole as ReviewAuthorType}
         />
       )}
+      
+      {/* Checkout Comment Modal */}
+      {checkoutModal.isOpen && (
+        <CheckoutCommentModal
+          isOpen={checkoutModal.isOpen}
+          onClose={() => setCheckoutModal({ isOpen: false, reservationId: 0 })}
+          onSubmit={handleCheckoutSubmit}
+        />
+      )}
     </main>
+  )
+}
+
+const CheckoutCommentModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (comment: string) => void
+}) => {
+  const [comment, setComment] = useState('')
+
+  if (!isOpen) return null
+
+  const handleSubmit = () => {
+    if (!comment.trim()) {
+      alert('코멘트를 입력해주세요.')
+      return
+    }
+    onSubmit(comment)
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 w-[90%] max-w-md">
+        <h3 className="text-lg font-bold mb-4">체크아웃 코멘트</h3>
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="고객에게 전달할 코멘트를 남겨주세요."
+          className="w-full h-32 p-3 border border-gray-300 rounded-lg mb-4"
+        />
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-3 font-bold"
+          >
+            취소
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="flex-1 bg-[#4abed9] text-white rounded-xl py-3 font-bold"
+          >
+            체크아웃 완료
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 

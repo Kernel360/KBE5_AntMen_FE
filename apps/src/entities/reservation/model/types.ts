@@ -104,6 +104,7 @@ export interface Reservation {
   optionNames: string[]
   address: CustomerAddress
   hasReview: boolean
+  checkinAt?: string | null
 }
 
 export type ReservationTab = 'pending' | 'upcoming' | 'past'

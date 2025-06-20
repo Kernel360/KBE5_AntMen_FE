@@ -1,5 +1,6 @@
 import { Reservation, ReservationHistory, ReservationStatus } from '../model/types';
 import { customFetch } from '@/shared/api/base';
+import { useAuthStore } from '@/shared/stores/authStore'
 
 const BASE_URL = 'https://api.antmen.site:9092/v1/manager/reservations';
 
@@ -14,7 +15,7 @@ class ApiError extends Error {
   }
 }
 
-export async function getMyReservations(token: string): Promise<Reservation[]> {
+export const getMyReservations = async (token: string): Promise<Reservation[]> => {
   try {
     const data = await customFetch<Reservation[]>(BASE_URL, {
       headers: {
@@ -79,4 +80,61 @@ export async function changeReservationStatus(
       'Internal Server Error'
     );
   }
+}
+
+export const checkIn = async (
+  reservationId: number,
+  checkinAt: string,
+  token: string,
+): Promise<void> => {
+  await customFetch<void>(
+    `${BASE_URL}/${reservationId}/checkin`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+      },
+      body: JSON.stringify({ checkinAt }),
+    },
+  )
+}
+
+export const checkOut = async (
+  reservationId: number,
+  data: { checkoutAt: string; comment: string },
+  token: string,
+): Promise<void> => {
+  await customFetch<void>(
+    `${BASE_URL}/${reservationId}/check-out`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+      },
+      body: JSON.stringify(data),
+    },
+  )
+}
+
+export interface ReservationComment {
+  reservationId: number
+  checkinAt: string | null
+  checkoutAt: string | null
+  comment: string | null
+}
+
+export const getReservationComment = async (
+  reservationId: number,
+  token: string,
+): Promise<ReservationComment> => {
+  return customFetch<ReservationComment>(
+    `${BASE_URL}/${reservationId}/comment`,
+    {
+      headers: {
+        Authorization: token,
+      },
+    },
+  )
 } 
