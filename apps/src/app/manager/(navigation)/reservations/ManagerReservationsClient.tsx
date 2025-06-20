@@ -31,6 +31,7 @@ export const ManagerReservationsClient = ({
   const [reservations, setReservations] = useState<Reservation[]>(
     initialReservations.map(mapReservationApiToClient),
   )
+  const [checkedInIds, setCheckedInIds] = useState(new Set<number>())
   const [reviewModal, setReviewModal] = useState<{
     isOpen: boolean
     reservationId: number
@@ -116,11 +117,9 @@ export const ManagerReservationsClient = ({
     }
   }
 
-  const handleCheckIn = async (id: string) => {
+  const handleCheckIn = (id: string) => {
     console.log('Check-in for reservation:', id)
-    await updateReservationStatus(id, {
-      reservationStatus: 'MATCHING',
-    })
+    setCheckedInIds(prev => new Set(prev).add(Number(id)))
   }
 
   const handleCheckOut = async (id: string) => {
@@ -345,7 +344,10 @@ export const ManagerReservationsClient = ({
             {filteredReservations.map((reservation) => (
               <ReservationCard
                 key={reservation.reservationId}
-                reservation={reservation}
+                reservation={{
+                  ...reservation,
+                  hasCheckedIn: checkedInIds.has(reservation.reservationId),
+                }}
                 userType="manager"
                 onCheckIn={handleCheckIn}
                 onCheckOut={handleCheckOut}
