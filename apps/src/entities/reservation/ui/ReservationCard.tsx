@@ -83,33 +83,53 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
 
   const renderManagerButtons = () => {
     if (userType !== 'manager') return null
+
     switch (reservationStatus) {
       case 'WAITING':
         return (
-          <>
-            <button
-              onClick={() => onCheckIn?.(reservationId.toString())}
-              className="flex-1 rounded-[22px] bg-[#4DD0E1] py-3 text-sm font-medium text-white hover:bg-[#26C6DA] transition-colors"
-            >
-              Check-in
-            </button>
+          <button
+            onClick={() => onViewDetails?.(reservationId.toString())}
+            className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
+          >
+            상세보기
+          </button>
+        )
+      case 'MATCHING': {
+        const today = new Date()
+        const resDate = new Date(reservationDate)
+        const isReservationDay =
+          today.getFullYear() === resDate.getFullYear() &&
+          today.getMonth() === resDate.getMonth() &&
+          today.getDate() === resDate.getDate()
+
+        if (!isReservationDay) {
+          return (
             <button
               onClick={() => onViewDetails?.(reservationId.toString())}
               className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
             >
               상세보기
             </button>
-          </>
-        )
-      case 'MATCHING':
+          )
+        }
+
         return (
           <>
-            <button
-              onClick={() => onCheckOut?.(reservationId.toString())}
-              className="flex-1 rounded-[22px] bg-[#FFB74D] py-3 text-sm font-medium text-white hover:bg-[#FFA726] transition-colors"
-            >
-              Check-out
-            </button>
+            {reservation.checkinAt ? (
+              <button
+                onClick={() => onCheckOut?.(reservationId.toString())}
+                className="flex-1 rounded-[22px] bg-[#FFB74D] py-3 text-sm font-medium text-white hover:bg-[#FFA726] transition-colors"
+              >
+                Check-out
+              </button>
+            ) : (
+              <button
+                onClick={() => onCheckIn?.(reservationId.toString())}
+                className="flex-1 rounded-[22px] bg-[#4DD0E1] py-3 text-sm font-medium text-white hover:bg-[#26C6DA] transition-colors"
+              >
+                Check-in
+              </button>
+            )}
             <button
               onClick={() => onViewDetails?.(reservationId.toString())}
               className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
@@ -118,6 +138,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
             </button>
           </>
         )
+      }
       case 'DONE':
         if (!reservation.hasReview) {
           return (

@@ -8,6 +8,7 @@ import type {
   ReservationStatus,
 } from '@/entities/reservation/model/types'
 import { respondToMatching } from '@/entities/matching/api/matchingAPi'
+import { RejectionModal } from '@/shared/ui/modal/RejectionModal'
 
 interface ReservationDetailPageClientProps {
   initialReservation: ReservationHistory | null
@@ -132,77 +133,46 @@ const ManagerInfoSection = ({ manager }: { manager?: any }) => {
 }
 
 // 매칭 응답 액션 버튼 섹션
-const MatchingActionSection = ({
-  matchingId,
+const ActionSection = ({
   onAccept,
   onReject,
+  isProcessing,
 }: {
-  matchingId: number
   onAccept: () => void
   onReject: (reason: string) => void
+  isProcessing: boolean
 }) => {
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false)
-  const [rejectReason, setRejectReason] = useState('')
-
-  const handleRejectConfirm = () => {
-    if (!rejectReason.trim()) {
-      alert('거절 사유를 입력해주세요.')
-      return
-    }
-    onReject(rejectReason)
-    setIsRejectModalOpen(false)
-    setRejectReason('')
-  }
 
   return (
-    <div className="sticky bottom-0 bg-white p-5 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-      <div className="flex gap-3">
-        <button
-          onClick={onAccept}
-          className="flex-1 bg-[#4abed9] text-white rounded-xl py-4 font-bold text-base"
-        >
-          매칭 수락
-        </button>
-        <button
-          onClick={() => setIsRejectModalOpen(true)}
-          className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-4 font-bold text-base"
-        >
-          매칭 거절
-        </button>
+    <>
+      <div className="sticky bottom-20 bg-white p-5 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+        <div className="flex gap-3">
+          <button
+            onClick={onAccept}
+            disabled={isProcessing}
+            className="flex-1 bg-[#4abed9] text-white rounded-xl py-4 font-bold text-base disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            {isProcessing ? '처리 중...' : '매칭 수락'}
+          </button>
+          <button
+            onClick={() => setIsRejectModalOpen(true)}
+            disabled={isProcessing}
+            className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-4 font-bold text-base disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            매칭 거절
+          </button>
+        </div>
       </div>
 
-      {/* 거절 사유 입력 모달 */}
-      {isRejectModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-[90%] max-w-md">
-            <h3 className="text-lg font-bold mb-4">매칭 거절 사유</h3>
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="거절 사유를 입력해주세요"
-              className="w-full h-32 p-3 border border-gray-300 rounded-lg mb-4"
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setIsRejectModalOpen(false)
-                  setRejectReason('')
-                }}
-                className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-3 font-bold"
-              >
-                취소
-              </button>
-              <button
-                onClick={handleRejectConfirm}
-                className="flex-1 bg-[#4abed9] text-white rounded-xl py-3 font-bold"
-              >
-                확인
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <RejectionModal
+        isOpen={isRejectModalOpen}
+        onClose={() => setIsRejectModalOpen(false)}
+        onSubmit={onReject}
+        title="매칭 거절 사유"
+        isProcessing={isProcessing}
+      />
+    </>
   )
 }
 
@@ -214,6 +184,7 @@ export const ReservationDetailPageClient = ({
   const [reservation, setReservation] = useState<ReservationHistory | null>(
     initialReservation,
   )
+  const [isProcessing, setIsProcessing] = useState(false)
 
   if (!reservation) {
     return (
@@ -227,8 +198,10 @@ export const ReservationDetailPageClient = ({
   }
 
   const handleAcceptMatching = async () => {
+    if (isProcessing || !reservation?.matchings[0]?.matchingId) return
+    setIsProcessing(true)
     try {
-      await respondToMatching(reservation.reservationId, {
+      await respondToMatching(reservation.matchings[0].matchingId, {
         matchingIsFinal: true,
       })
       setReservation((prev) =>
@@ -238,12 +211,16 @@ export const ReservationDetailPageClient = ({
     } catch (error) {
       console.error('Failed to accept matching:', error)
       alert('매칭 수락에 실패했습니다.')
+    } finally {
+      setIsProcessing(false)
     }
   }
 
   const handleRejectMatching = async (reason: string) => {
+    if (isProcessing || !reservation?.matchings[0]?.matchingId) return
+    setIsProcessing(true)
     try {
-      await respondToMatching(reservation.reservationId, {
+      await respondToMatching(reservation.matchings[0].matchingId, {
         matchingIsFinal: false,
         matchingRefuseReason: reason,
       })
@@ -254,6 +231,8 @@ export const ReservationDetailPageClient = ({
     } catch (error) {
       console.error('Failed to reject matching:', error)
       alert('매칭 거절에 실패했습니다.')
+    } finally {
+      setIsProcessing(false)
     }
   }
 
@@ -269,10 +248,10 @@ export const ReservationDetailPageClient = ({
         </div>
       </main>
       {reservation.reservationStatus === 'WAITING' && (
-        <MatchingActionSection
-          matchingId={reservation.reservationId}
+        <ActionSection
           onAccept={handleAcceptMatching}
           onReject={handleRejectMatching}
+          isProcessing={isProcessing}
         />
       )}
     </div>

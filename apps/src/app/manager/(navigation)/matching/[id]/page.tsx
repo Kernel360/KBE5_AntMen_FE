@@ -4,8 +4,13 @@ import React, { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { getReservationDetail } from '@/entities/reservation/api/reservationApi'
-import type { ReservationHistory} from '@/entities/reservation/model/types'
+import type { ReservationHistory } from '@/entities/reservation/model/types'
 import { getAuthToken } from '@/features/auth/lib/auth'
+import {
+  acceptMatchingRequest,
+  rejectMatchingRequest,
+} from '@/entities/matching/api/matchingAPi'
+import { RejectionModal } from '@/shared/ui/modal/RejectionModal'
 
 export default function ManagerMatchingDetailPage() {
   const router = useRouter()
@@ -14,6 +19,8 @@ export default function ManagerMatchingDetailPage() {
   const [reservation, setReservation] = useState<ReservationHistory | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false)
 
   useEffect(() => {
     const fetchReservation = async () => {
@@ -37,6 +44,40 @@ export default function ManagerMatchingDetailPage() {
     }
     fetchReservation()
   }, [reservationId])
+
+  const handleAccept = async () => {
+    if (!reservation?.matchings[0]?.matchingId || isProcessing) return
+    setIsProcessing(true)
+    try {
+      await acceptMatchingRequest(String(reservation.matchings[0].matchingId))
+      alert('매칭을 수락했습니다.')
+      router.push('/manager/matching')
+    } catch (e: any) {
+      setError(e.message || '매칭 수락 중 오류가 발생했습니다.')
+      alert(e.message || '매칭 수락 중 오류가 발생했습니다.')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleReject = async (reason: string) => {
+    if (!reservation?.matchings[0]?.matchingId || isProcessing) return
+    setIsProcessing(true)
+    try {
+      await rejectMatchingRequest(
+        String(reservation.matchings[0].matchingId),
+        reason,
+      )
+      alert('매칭을 거절했습니다.')
+      router.push('/manager/matching')
+    } catch (e: any) {
+      setError(e.message || '매칭 거절 중 오류가 발생했습니다.')
+      alert(e.message || '매칭 거절 중 오류가 발생했습니다.')
+    } finally {
+      setIsProcessing(false)
+      setIsRejectModalOpen(false)
+    }
+  }
 
   // TODO: 예약 상태, 예약 시간, 고객 정보
   // reservations/id/page.tsx 에서도 동일하게 수정해야함!
@@ -135,25 +176,36 @@ export default function ManagerMatchingDetailPage() {
             </section>
 
             {/* 매칭 수락/거절 버튼 */}
-            <div className="sticky bottom-0 bg-white p-5 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {/* TODO: 매칭 수락 로직 */}}
-                  className="flex-1 bg-[#4abed9] text-white rounded-xl py-4 font-bold text-base"
-                >
-                  매칭 수락
-                </button>
-                <button
-                  onClick={() => {/* TODO: 매칭 거절 로직 */}}
-                  className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-4 font-bold text-base"
-                >
-                  매칭 거절
-                </button>
+            {reservation.reservationStatus === 'WAITING' && (
+              <div className="sticky bottom-20 bg-white p-5 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleAccept}
+                    disabled={isProcessing}
+                    className="flex-1 bg-[#4abed9] text-white rounded-xl py-4 font-bold text-base disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    {isProcessing ? '처리 중...' : '매칭 수락'}
+                  </button>
+                  <button
+                    onClick={() => setIsRejectModalOpen(true)}
+                    disabled={isProcessing}
+                    className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-4 font-bold text-base disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    매칭 거절
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </>
         ) : null}
       </div>
+      <RejectionModal
+        isOpen={isRejectModalOpen}
+        onClose={() => setIsRejectModalOpen(false)}
+        onSubmit={handleReject}
+        title="매칭 거절 사유"
+        isProcessing={isProcessing}
+      />
     </main>
   )
 }

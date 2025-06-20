@@ -3,18 +3,23 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { MatchingRequest } from '@/entities/matching';
+import { useRouter } from 'next/navigation';
 
 interface MatchingRequestCardProps {
   request: MatchingRequest;
-  onAccept: (requestId: string) => void;
-  onReject: (requestId: string) => void;
+  onAccept: () => void;
+  onReject: () => void;
+  isProcessing?: boolean;
 }
 
 export const MatchingRequestCard = ({ 
   request, 
   onAccept, 
-  onReject 
+  onReject,
+  isProcessing = false,
 }: MatchingRequestCardProps) => {
+  const router = useRouter();
+
   const formatPayment = (amount: number) => {
     return `₩${amount.toLocaleString()}`;
   };
@@ -112,8 +117,9 @@ export const MatchingRequestCard = ({
             onClick={(e) => {
               e.preventDefault(); // 링크 클릭 방지
               e.stopPropagation(); // 이벤트 버블링 방지
-              onReject(request.id);
+              onReject();
             }}
+            disabled={isProcessing}
             className="flex-1 h-10 border border-gray-300 rounded-2xl text-sm font-black text-gray-600 hover:bg-gray-50 transition-colors"
             aria-label={`${request.categoryName} 매칭 요청 거절`}
           >
@@ -123,8 +129,9 @@ export const MatchingRequestCard = ({
             onClick={(e) => {
               e.preventDefault(); // 링크 클릭 방지
               e.stopPropagation(); // 이벤트 버블링 방지
-              onAccept(request.id);
+              onAccept();
             }}
+            disabled={isProcessing}
             className="flex-1 h-10 bg-[#0fbcd6] rounded-2xl text-sm font-black text-white hover:bg-[#0ca8c0] transition-colors"
             aria-label={`${request.categoryName} 매칭 요청 수락`}
           >

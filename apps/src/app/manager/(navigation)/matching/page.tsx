@@ -14,6 +14,7 @@ import {
   rejectMatchingRequest,
 } from '@/entities/matching/api/matchingAPi'
 import { MatchingRequestCard } from '@/features/matching'
+import { RejectionModal } from '@/shared/ui/modal/RejectionModal'
 
 const tabs: { id: MatchingFilterTab; label: string }[] = [
   { id: 'all', label: '전체' },
@@ -49,7 +50,12 @@ const ManagerMatchingPage = () => {
   const [activeTab, setActiveTab] = useState<MatchingFilterTab>('all')
   const [requests, setRequests] = useState<ReservationHistoryDto[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [rejection, setRejection] = useState<{
+    isOpen: boolean
+    matchingId: number | null
+  }>({ isOpen: false, matchingId: null })
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,23 +78,35 @@ const ManagerMatchingPage = () => {
     return true // 임시로 전체 반환
   })
 
-  const handleAccept = async (requestId: number) => {
+  const handleAccept = async (matchingId: number) => {
+    setIsProcessing(true)
     try {
-      await acceptMatchingRequest(String(requestId))
-      // TODO: setRequests로 상태 갱신 (API 재호출 또는 optimistic update)
-      alert(`매칭 요청 ${requestId} 수락됨`)
+      await acceptMatchingRequest(String(matchingId))
+      setRequests((prev) =>
+        prev.filter((r) => r.matchings[0].matchingId !== matchingId),
+      )
+      alert('매칭을 수락했습니다.')
     } catch (e) {
       alert('수락 처리 중 오류가 발생했습니다.')
+    } finally {
+      setIsProcessing(false)
     }
   }
 
-  const handleReject = async (requestId: number) => {
+  const handleReject = async (reason: string) => {
+    if (!rejection.matchingId) return
+    setIsProcessing(true)
     try {
-      await rejectMatchingRequest(String(requestId))
-      // TODO: setRequests로 상태 갱신 (API 재호출 또는 optimistic update)
-      alert(`매칭 요청 ${requestId} 거절됨`)
+      await rejectMatchingRequest(String(rejection.matchingId), reason)
+      setRequests((prev) =>
+        prev.filter((r) => r.matchings[0].matchingId !== rejection.matchingId),
+      )
+      alert('매칭을 거절했습니다.')
     } catch (e) {
       alert('거절 처리 중 오류가 발생했습니다.')
+    } finally {
+      setIsProcessing(false)
+      setRejection({ isOpen: false, matchingId: null })
     }
   }
 
@@ -159,7 +177,13 @@ const ManagerMatchingPage = () => {
                   key={request.reservationId}
                   request={toMatchingRequest(request)}
                   onAccept={() => handleAccept(request.matchings[0].matchingId)}
-                  onReject={() => handleReject(request.reservationId)}
+                  onReject={() =>
+                    setRejection({
+                      isOpen: true,
+                      matchingId: request.matchings[0].matchingId,
+                    })
+                  }
+                  isProcessing={isProcessing}
                 />
               ) : null,
             )
@@ -174,6 +198,13 @@ const ManagerMatchingPage = () => {
           )}
         </section>
       </div>
+      <RejectionModal
+        isOpen={rejection.isOpen}
+        onClose={() => setRejection({ isOpen: false, matchingId: null })}
+        onSubmit={handleReject}
+        title="매칭 거절 사유"
+        isProcessing={isProcessing}
+      />
     </main>
   )
 }
