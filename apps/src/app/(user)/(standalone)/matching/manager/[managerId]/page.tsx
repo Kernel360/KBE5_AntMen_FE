@@ -209,16 +209,16 @@ export default function ManagerDetailPage() {
               <div key={review.id} className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-slate-800">
-                    {review.userName}
+                    {review.customerName}
                   </span>
                   <div className="flex items-center gap-1">
                     {renderStars(review.rating)}
                   </div>
                 </div>
                 <p className="text-slate-700 text-sm leading-relaxed mb-2">
-                  {review.content}
+                  {review.comment}
                 </p>
-                <p className="text-xs text-slate-500">{review.date}</p>
+                <p className="text-xs text-slate-500">{review.createdAt}</p>
               </div>
             ))}
           </div>
