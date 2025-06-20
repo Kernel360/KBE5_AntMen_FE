@@ -256,14 +256,36 @@ export const ManagerReservationsClient = ({
     router.push('/manager/matching')
   }
 
-  const filteredReservations = reservations.filter((reservation) =>
-    activeTab === 'upcoming'
-      ? reservation.reservationStatus === 'WAITING' ||
-        reservation.reservationStatus === 'MATCHING'
-      : reservation.reservationStatus === 'DONE' ||
-        reservation.reservationStatus === 'CANCEL' ||
-        reservation.reservationStatus === 'ERROR',
-  )
+  const filteredReservations = reservations.filter((reservation) => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // 시간, 분, 초를 0으로 설정하여 날짜만 비교
+
+    const reservationDate = new Date(reservation.reservationDate)
+    reservationDate.setHours(0, 0, 0, 0)
+
+    const isPastDate = reservationDate < today
+
+    const isUpcomingStatus =
+      reservation.reservationStatus === 'WAITING' ||
+      reservation.reservationStatus === 'MATCHING'
+
+    const isPastStatus =
+      reservation.reservationStatus === 'DONE' ||
+      reservation.reservationStatus === 'CANCEL' ||
+      reservation.reservationStatus === 'ERROR'
+
+    if (activeTab === 'upcoming') {
+      // 오늘 또는 미래의 날짜 && 예정된 상태
+      return !isPastDate && isUpcomingStatus
+    }
+
+    if (activeTab === 'past') {
+      // 지난 날짜이거나 || 이미 지난 상태
+      return isPastDate || isPastStatus
+    }
+
+    return false // 그 외의 경우
+  })
 
   if (error) {
     return (
