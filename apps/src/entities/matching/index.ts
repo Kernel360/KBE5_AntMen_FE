@@ -7,4 +7,6 @@ export type {
   ReservationHistoryDto,
   UserSummaryDto,
   MatchingDto,
+  PageableResponse,
+  PaginatedMatchingResponse,
 } from './model/types'

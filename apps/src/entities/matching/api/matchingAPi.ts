@@ -2,9 +2,10 @@ import { customFetch } from '@/shared/api/base'
 import {
   ReservationHistoryDto,
   MatchingResponseRequestDto,
+  PaginatedMatchingResponse,
 } from '../model/types'
 
-const BASE_URL = 'https://api.antmen.site:9092/v1/manager'
+const BASE_URL = 'http://localhost:9092/v1/manager'
 const MATCHING_API_URL = 'https://api.antmen.site:9091/api/v1/matchings'
 
 class ApiError extends Error {
@@ -18,10 +19,13 @@ class ApiError extends Error {
   }
 }
 
-export const getMatchingRequests = async (): Promise<
-  ReservationHistoryDto[]
-> => {
-  return customFetch<ReservationHistoryDto[]>(`${BASE_URL}/matching/list`)
+export const getMatchingRequests = async (
+  page: number = 0,
+  size: number = 5,
+): Promise<PaginatedMatchingResponse> => {
+  return customFetch<PaginatedMatchingResponse>(
+    `${BASE_URL}/matching/list?page=${page}&size=${size}`,
+  )
 }
 
 export const acceptMatchingRequest = async (

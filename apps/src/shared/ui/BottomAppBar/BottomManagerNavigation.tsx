@@ -10,15 +10,17 @@ import {
   HandRaisedIcon,
 } from '@heroicons/react/24/outline'
 import { useRouter, usePathname } from 'next/navigation'
+import { useAuthStore } from '@/shared/stores/authStore'
 
 interface NavItemProps {
   icon: React.ReactNode
   label: string
   isActive?: boolean
   href: string
+  badgeCount?: number
 }
 
-function NavItem({ icon, label, isActive, href }: NavItemProps) {
+function NavItem({ icon, label, isActive, href, badgeCount }: NavItemProps) {
   const router = useRouter()
 
   return (
@@ -32,6 +34,13 @@ function NavItem({ icon, label, isActive, href }: NavItemProps) {
         >
           {icon}
         </div>
+        {badgeCount && badgeCount > 0 && (
+          <div className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-red-500 rounded-full flex items-center justify-center">
+            <span className="text-xs text-white font-medium px-1">
+              {badgeCount > 99 ? '99+' : badgeCount}
+            </span>
+          </div>
+        )}
       </div>
       <span
         className={`text-xs whitespace-nowrap ${isActive ? 'text-[#333333]' : 'text-[#999999]'}`}
@@ -44,6 +53,7 @@ function NavItem({ icon, label, isActive, href }: NavItemProps) {
 
 export function BottomNavigation() {
   const pathname = usePathname()
+  const { matchingRequestCount } = useAuthStore()
 
   return (
     <div className="fixed bottom-0 left-0 right-0 mx-auto flex h-[72px] max-w-mobile items-center justify-between gap-4 border-t bg-white px-2 pt-3 pb-1.5">
@@ -70,6 +80,7 @@ export function BottomNavigation() {
         label="매칭 요청"
         isActive={pathname === '/manager/matching'}
         href="/manager/matching"
+        badgeCount={matchingRequestCount}
       />
       <NavItem
         icon={<EllipsisHorizontalIcon className="h-full w-full" />}
