@@ -60,7 +60,7 @@ export function ManagerList({ managers, selectedManagers, onManagerSelect }: Man
   };
 
   return (
-    <div className="flex flex-col gap-4 p-5">
+    <div className="flex flex-col gap-4 p-5 pt-20">
       <div className="max-w-[420px] mx-auto flex flex-col gap-4">
         {managers.map((manager) => {
           const priority = getManagerPriority(manager.id);

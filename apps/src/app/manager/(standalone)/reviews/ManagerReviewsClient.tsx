@@ -10,6 +10,7 @@ import { mapReviewResponseToModel } from '@/entities/review/lib/mappers';
 import type { Review } from '@/entities/review/model/types';
 import { managerApi } from '@/shared/api/review';
 import { EditReviewModal, DeleteConfirmModal } from '@/shared/ui/modal/ReviewModals';
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
 
 type ActiveTab = 'received' | 'written';
 
@@ -149,14 +150,10 @@ export default function ManagerReviewsClient() {
 
   return (
     <main className="flex min-h-screen flex-col bg-white">
-      {/* Header */}
-      <header className="flex items-center justify-between p-5 border-b">
-        <button onClick={() => router.back()} className="p-1">
-          <Image src="/icons/arrow-left.svg" alt="뒤로가기" width={24} height={24} />
-        </button>
-        <h1 className="flex-1 text-center text-xl font-bold">리뷰 관리</h1>
-        <div className="w-6" />
-      </header>
+      <CommonHeader 
+        title="리뷰 관리"
+        showBackButton
+      />
 
       {/* Tab Navigation */}
       <nav className="flex">

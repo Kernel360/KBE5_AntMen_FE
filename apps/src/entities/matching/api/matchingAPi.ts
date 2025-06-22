@@ -5,7 +5,7 @@ import {
   PaginatedMatchingResponse,
 } from '../model/types'
 
-const BASE_URL = 'http://localhost:9092/v1/manager'
+const BASE_URL = 'https://api.antmen.site:9092/v1/manager'
 const MATCHING_API_URL = 'https://api.antmen.site:9091/api/v1/matchings'
 
 class ApiError extends Error {

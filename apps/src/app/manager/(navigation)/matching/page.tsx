@@ -17,6 +17,7 @@ import {
 import { MatchingRequestCard } from '@/features/matching'
 import { RejectionModal } from '@/shared/ui/modal/RejectionModal'
 import { useAuthStore } from '@/shared/stores/authStore'
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 
 const tabs: { id: MatchingFilterTab; label: string }[] = [
   { id: 'all', label: '전체' },
@@ -194,25 +195,13 @@ const ManagerMatchingPage = () => {
 
   return (
     <main className="min-h-screen bg-gray-100">
-      {/* 헤더 */}
-      <header className="flex items-center justify-between p-5 bg-white">
-        <button
-          onClick={handleBack}
-          className="flex h-6 w-6 items-center justify-center"
-        >
-          <Image
-            src="/icons/arrow-left.svg"
-            alt="뒤로가기"
-            width={24}
-            height={24}
-          />
-        </button>
-        <h1 className="flex-1 text-center text-2xl font-bold">매칭 요청</h1>
-        <div className="h-6 w-6" /> {/* 정렬을 위한 공간 */}
-      </header>
+      <CommonHeader 
+        title="매칭 요청"
+        showCloseButton
+      />
 
-      {/* 콘텐츠 */}
-      <div className="p-4">
+      {/* 콘텐츠 - 헤더 높이만큼 여백 확보 */}
+      <div className="pt-20 p-4 pb-20 min-h-[calc(100vh-64px)]">
         {/* 필터 탭 */}
         <section
           className="flex gap-2 mb-4"

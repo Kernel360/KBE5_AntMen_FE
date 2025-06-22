@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PostList } from '@/widgets/post/PostList';
-import { BoardType, NoticeSortOption, InquirySortOption } from '@/shared/types/board';
-import { BoardHeader } from '@/widgets/post/BoardHeader';
+import { NoticeSortOption, InquirySortOption } from '@/shared/types/board';
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
 import { BoardSearchBar } from '@/widgets/post/BoardSearchBar';
 import { BoardTabs } from '@/widgets/post/BoardTabs';
 import { BoardSortModal } from '@/widgets/post/BoardSortModal';
@@ -56,23 +56,26 @@ export default function BoardsPage() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <div className="sticky top-0 z-10">
-        <BoardHeader />
-        <BoardSearchBar 
-          onSearch={handleSearch}
-          onFilterClick={() => setIsSortModalOpen(true)}
-        />
-        <BoardTabs
-          userRole="customer"
-          activeTab={activeTab}
-          onTabChange={(tab) => {
-            if (tab === '공지사항' || tab === '서비스 문의') {
-              setActiveTab(tab);
-            }
-          }}
-        />
-      </div>
-      <div className="pb-[72px]">
+      <CommonHeader
+        title="게시판"
+        showCloseButton={true}
+      />
+      <div className="pt-16 pb-20">
+        <div className="sticky top-16 z-10 bg-white">
+          <BoardSearchBar 
+            onSearch={handleSearch}
+            onFilterClick={() => setIsSortModalOpen(true)}
+          />
+          <BoardTabs
+            userRole="customer"
+            activeTab={activeTab}
+            onTabChange={(tab) => {
+              if (tab === '공지사항' || tab === '서비스 문의') {
+                setActiveTab(tab);
+              }
+            }}
+          />
+        </div>
         <div className="mx-auto w-full max-w-[430px]">
           <PostList 
             userRole="customer"

@@ -56,19 +56,19 @@ export default function ManagerBoardsPage() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <div className="sticky top-0 z-10">
-        <BoardHeader />
-        <BoardSearchBar 
-          onSearch={handleSearch}
-          onFilterClick={() => setIsSortModalOpen(true)}
-        />
-        <BoardTabs
-          userRole="manager"
-          activeTab={activeTab}
-          onTabChange={(tab) => setActiveTab(tab as typeof activeTab)}
-        />
-      </div>
-      <div className="pb-[72px]">
+      <BoardHeader />
+      <div className="pt-16 pb-20">
+        <div className="sticky top-16 z-10 bg-white">
+          <BoardSearchBar 
+            onSearch={handleSearch}
+            onFilterClick={() => setIsSortModalOpen(true)}
+          />
+          <BoardTabs
+            userRole="manager"
+            activeTab={activeTab}
+            onTabChange={(tab) => setActiveTab(tab as typeof activeTab)}
+          />
+        </div>
         <div className="mx-auto w-full max-w-[430px]">
           <PostList 
             userRole="manager"

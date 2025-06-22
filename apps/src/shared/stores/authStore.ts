@@ -11,8 +11,13 @@ interface User {
   id: number
   name: string
   email: string
-  role: 'CUSTOMER' | 'MANAGER'
+  role: UserRole
   profileImage?: string
+}
+
+interface AuthLoginPayload {
+  userId: number
+  userRole: UserRole
 }
 
 interface AuthState {
@@ -27,7 +32,7 @@ interface AuthState {
 }
 
 interface AuthActions {
-  login: (user: User, token: string) => void
+  login: (authUser: AuthLoginPayload, token: string) => void
   logout: () => void
   setToken: (token: string | null) => void
   setUserData: (data: UserData | null) => void
@@ -53,10 +58,18 @@ export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
     immer((set) => ({
       ...initialState,
-      login: (user, token) => {
+      login: (authUser, token) => {
         set((state) => {
           state.isLoggedIn = true
-          state.user = user
+          state.user = {
+            userId: authUser.userId,
+            userRole: authUser.userRole,
+            id: authUser.userId,
+            name: '',
+            email: '',
+            role: authUser.userRole,
+            profileImage: '',
+          }
           state.token = token
         })
       },

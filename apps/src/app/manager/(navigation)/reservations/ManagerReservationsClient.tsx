@@ -19,17 +19,20 @@ import {
 } from '@/entities/reservation/api/reservationApi'
 import { useAuthStore } from '@/shared/stores/authStore'
 import { managerApi, type ReviewRequest, type ReviewAuthorType } from '@/shared/api/review'
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 
 interface ManagerReservationsClientProps {
   initialReservations: Reservation[]
 }
+
+type ReservationFilterTab = 'scheduled' | 'today' | 'past'
 
 export const ManagerReservationsClient = ({
   initialReservations,
 }: ManagerReservationsClientProps) => {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [activeTab, setActiveTab] = useState<ReservationTab>('upcoming')
+  const [activeTab, setActiveTab] = useState<ReservationFilterTab>('scheduled')
   const [reservations, setReservations] = useState<Reservation[]>(
     initialReservations.map(mapReservationApiToClient),
   )
@@ -49,7 +52,59 @@ export const ManagerReservationsClient = ({
   })
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuthStore()
-  const userRole = user.userRole
+  const userRole = user?.userRole
+
+  // 탭 정의
+  const tabs: { id: ReservationFilterTab; label: string }[] = [
+    { id: 'scheduled', label: '예정된 업무' },
+    { id: 'today', label: '오늘 업무' },
+    { id: 'past', label: '지난 업무' },
+  ]
+
+  // 오늘 날짜 체크 함수
+  const isToday = (dateString: string) => {
+    const today = new Date()
+    const date = new Date(dateString)
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    )
+  }
+
+  // 과거 날짜 체크 함수
+  const isPast = (dateString: string) => {
+    const today = new Date()
+    const date = new Date(dateString)
+    today.setHours(0, 0, 0, 0)
+    date.setHours(0, 0, 0, 0)
+    return date < today
+  }
+
+  // 미래 날짜 체크 함수 (오늘 제외)
+  const isFuture = (dateString: string) => {
+    const today = new Date()
+    const date = new Date(dateString)
+    today.setHours(0, 0, 0, 0)
+    date.setHours(0, 0, 0, 0)
+    return date > today
+  }
+
+  // 예약 필터링
+  const filteredReservations = reservations.filter((reservation) => {
+    const reservationDate = reservation.reservationDate
+    
+    switch (activeTab) {
+      case 'scheduled':
+        return isFuture(reservationDate)
+      case 'today':
+        return isToday(reservationDate)
+      case 'past':
+        return isPast(reservationDate)
+      default:
+        return true
+    }
+  })
 
   // 클라이언트에서 예약 데이터 fetch
   const fetchReservations = async () => {
@@ -256,99 +311,42 @@ export const ManagerReservationsClient = ({
     router.push('/manager/matching')
   }
 
-  const filteredReservations = reservations.filter((reservation) => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0) // 시간, 분, 초를 0으로 설정하여 날짜만 비교
-
-    const reservationDate = new Date(reservation.reservationDate)
-    reservationDate.setHours(0, 0, 0, 0)
-
-    const isPastDate = reservationDate < today
-
-    const isUpcomingStatus =
-      reservation.reservationStatus === 'WAITING' ||
-      reservation.reservationStatus === 'MATCHING'
-
-    const isPastStatus =
-      reservation.reservationStatus === 'DONE' ||
-      reservation.reservationStatus === 'CANCEL' ||
-      reservation.reservationStatus === 'ERROR'
-
-    if (activeTab === 'upcoming') {
-      // 오늘 또는 미래의 날짜 && 예정된 상태
-      return !isPastDate && isUpcomingStatus
-    }
-
-    if (activeTab === 'past') {
-      // 지난 날짜이거나 || 이미 지난 상태
-      return isPastDate || isPastStatus
-    }
-
-    return false // 그 외의 경우
-  })
-
   if (error) {
     return (
-      <main className="flex min-h-screen flex-col bg-white">
-        {/* Header */}
-        <header className="flex items-center justify-between p-5">
-          <button
-            onClick={() => router.back()}
-            className="flex h-6 w-6 items-center justify-center"
-          >
-            <Image
-              src="/icons/arrow-left.svg"
-              alt="뒤로가기"
-              width={24}
-              height={24}
-            />
-          </button>
-          <h1 className="flex-1 text-center text-2xl font-bold">업무 내역</h1>
-          <div className="h-6 w-6" /> {/* Spacer for alignment */}
-        </header>
+      <main className="min-h-screen bg-gray-50">
+        <CommonHeader 
+          title="업무 내역"
+          showCloseButton
+        />
 
         {/* Tab Section */}
-        <div className="flex flex-col gap-4 px-5">
-          <div className="flex gap-10">
-            <button
-              onClick={() => setActiveTab('upcoming')}
-              className="flex flex-col items-center gap-2"
-            >
-              <span
-                className={`text-base ${
-                  activeTab === 'upcoming'
-                    ? 'font-extrabold text-[#4DD0E1]'
-                    : 'font-medium text-[#B0BEC5]'
-                }`}
+        <div className="sticky top-[64px] z-20 bg-white border-b">
+          <div className="flex gap-10 px-5 py-3">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as ReservationFilterTab)}
+                className="flex flex-col items-center gap-2"
               >
-                예정된 업무
-              </span>
-              {activeTab === 'upcoming' && (
-                <div className="h-0.5 w-full bg-[#4DD0E1]" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('past')}
-              className="flex flex-col items-center gap-2"
-            >
-              <span
-                className={`text-base ${
-                  activeTab === 'past'
-                    ? 'font-extrabold text-[#4DD0E1]'
-                    : 'font-medium text-[#B0BEC5]'
-                }`}
-              >
-                지난 업무
-              </span>
-              {activeTab === 'past' && (
-                <div className="h-0.5 w-full bg-[#4DD0E1]" />
-              )}
-            </button>
+                <span
+                  className={`text-base ${
+                    activeTab === tab.id
+                      ? 'font-extrabold text-[#4DD0E1]'
+                      : 'font-medium text-[#B0BEC5]'
+                  }`}
+                >
+                  {tab.label}
+                </span>
+                {activeTab === tab.id && (
+                  <div className="h-0.5 w-full bg-[#4DD0E1]" />
+                )}
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Error 안내문구 */}
-        <section className="flex flex-1 flex-col items-center justify-center bg-gray-50 p-5">
+        <section className="pt-0 p-5 pb-20 min-h-[calc(100vh-64px-60px)] flex flex-col items-center justify-center">
           <div className="flex flex-col items-center">
             <h2 className="text-xl font-semibold text-red-600 mb-2">
               오류가 발생했습니다
@@ -367,107 +365,83 @@ export const ManagerReservationsClient = ({
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-white">
-      {/* Header */}
-      <header className="flex items-center justify-between p-5">
-        <button
-          onClick={() => router.back()}
-          className="flex h-6 w-6 items-center justify-center"
-        >
-          <Image
-            src="/icons/arrow-left.svg"
-            alt="뒤로가기"
-            width={24}
-            height={24}
-          />
-        </button>
-        <h1 className="flex-1 text-center text-2xl font-bold">업무 내역</h1>
-        <div className="h-6 w-6" /> {/* Spacer for alignment */}
-      </header>
-
-      {/* Tab Section */}
-      <div className="flex flex-col gap-4 px-5">
-        <div className="flex gap-10">
-          <button
-            onClick={() => setActiveTab('upcoming')}
-            className="flex flex-col items-center gap-2"
-          >
-            <span
-              className={`text-base ${
-                activeTab === 'upcoming'
-                  ? 'font-extrabold text-[#4DD0E1]'
-                  : 'font-medium text-[#B0BEC5]'
-              }`}
-            >
-              예정된 업무
-            </span>
-            {activeTab === 'upcoming' && (
-              <div className="h-0.5 w-full bg-[#4DD0E1]" />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('past')}
-            className="flex flex-col items-center gap-2"
-          >
-            <span
-              className={`text-base ${
-                activeTab === 'past'
-                  ? 'font-extrabold text-[#4DD0E1]'
-                  : 'font-medium text-[#B0BEC5]'
-              }`}
-            >
-              지난 업무
-            </span>
-            {activeTab === 'past' && (
-              <div className="h-0.5 w-full bg-[#4DD0E1]" />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Reservation List or 안내문구 */}
-      <section className="flex flex-1 flex-col overflow-y-auto bg-gray-50 p-5">
-        {filteredReservations.length > 0 ? (
-          <div className="space-y-4">
-            {filteredReservations.map((reservation) => (
-              <ReservationCard
-                key={reservation.reservationId}
-                reservation={reservation}
-                userType="manager"
-                onCheckIn={handleCheckIn}
-                onCheckOut={handleCheckOut}
-                onWriteReview={handleWriteReview}
-                onCancel={handleCancel}
-                onViewDetails={handleViewDetails}
-              />
+    <main className="min-h-screen bg-gray-50">
+      <CommonHeader 
+        title="업무 내역"
+        showCloseButton
+      />
+      
+      {/* 헤더 아래 적절한 여백 확보 */}
+      <div className="pt-16">
+        {/* 탭 - 게시판과 동일한 스타일 */}
+        <div className="sticky top-[64px] z-10 bg-white border-b border-gray-200">
+          <div className="grid grid-cols-3">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative py-3.5 text-sm font-medium transition-colors ${
+                  activeTab === tab.id ? 'bg-primary/10' : ''
+                }`}
+              >
+                <span className={activeTab === tab.id ? 'text-primary' : 'text-gray-600'}>
+                  {tab.label}
+                </span>
+                {activeTab === tab.id && (
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />
+                )}
+              </button>
             ))}
           </div>
-        ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-2xl bg-white">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100" />
-            <div className="text-center">
-              <p className="text-lg font-bold text-gray-800">
-                {activeTab === 'upcoming'
-                  ? '예정된 업무가 없습니다'
-                  : '지난 업무가 없습니다'}
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                {activeTab === 'upcoming'
-                  ? '새로운 업무를 찾거나 매칭 요청을 확인해보세요.'
-                  : '완료된 업무 내역이 여기에 표시됩니다.'}
-              </p>
+        </div>
+
+        {/* 예약 목록 */}
+        <div className="pb-20">
+          {filteredReservations.length > 0 ? (
+            <div className="space-y-4 p-4">
+              {filteredReservations.map((reservation) => (
+                <ReservationCard
+                  key={reservation.reservationId}
+                  reservation={reservation}
+                  userType="manager"
+                  onCheckIn={handleCheckIn}
+                  onCheckOut={handleCheckOut}
+                  onWriteReview={handleWriteReview}
+                  onCancel={handleCancel}
+                  onViewDetails={handleViewDetails}
+                />
+              ))}
             </div>
-            {activeTab === 'upcoming' && (
-              <button
-                onClick={handleNewWork}
-                className="rounded-xl bg-gray-800 px-6 py-3 text-base font-bold text-white"
-              >
-                새로운 업무 찾기
-              </button>
-            )}
-          </div>
-        )}
-      </section>
+          ) : (
+            <div className="flex h-64 flex-col items-center justify-center space-y-4">
+              <div className="text-center">
+                <p className="text-lg font-bold text-gray-800">
+                  {activeTab === 'scheduled'
+                    ? '예정된 업무가 없습니다'
+                    : activeTab === 'today'
+                    ? '오늘 업무가 없습니다'
+                    : '지난 업무가 없습니다'}
+                </p>
+                <p className="mt-2 text-sm text-gray-500">
+                  {activeTab === 'scheduled'
+                    ? '새로운 업무를 찾거나 매칭 요청을 확인해보세요.'
+                    : activeTab === 'today'
+                    ? '오늘의 업무가 여기에 표시됩니다.'
+                    : '완료된 업무 내역이 여기에 표시됩니다.'}
+                </p>
+              </div>
+              {activeTab === 'scheduled' && (
+                <button
+                  onClick={handleNewWork}
+                  className="rounded-lg bg-blue-500 px-6 py-3 text-white hover:bg-blue-600"
+                >
+                  새 업무 찾기
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Review Modal */}
       {reviewModal.isOpen && (

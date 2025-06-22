@@ -11,6 +11,7 @@ import {
   rejectMatchingRequest,
 } from '@/entities/matching/api/matchingAPi'
 import { RejectionModal } from '@/shared/ui/modal/RejectionModal'
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 
 export default function ManagerMatchingDetailPage() {
   const router = useRouter()
@@ -82,19 +83,12 @@ export default function ManagerMatchingDetailPage() {
   // TODO: 예약 상태, 예약 시간, 고객 정보
   // reservations/id/page.tsx 에서도 동일하게 수정해야함!
   return (
-    <main className="flex min-h-screen flex-col bg-gray-50">
-      {/* Header */}
-      <header className="flex items-center justify-between p-5 bg-white border-b">
-        <button 
-          onClick={() => router.back()} 
-          className="flex h-6 w-6 items-center justify-center"
-        >
-          <Image src="/icons/arrow-left.svg" alt="뒤로가기" width={24} height={24} />
-        </button>
-        <h1 className="flex-1 text-center text-2xl font-bold">매칭 요청 확인</h1>
-        <div className="h-6 w-6" />
-      </header>
-      <div className="flex flex-1 flex-col gap-6 p-5 max-w-xl mx-auto w-full">
+    <main className="min-h-screen bg-gray-50">
+      <CommonHeader 
+        title="매칭 요청 확인"
+        showBackButton
+      />
+      <div className="pt-20 p-5 pb-32 min-h-[calc(100vh-64px)] flex flex-col gap-6 max-w-xl mx-auto w-full">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="text-4xl">⏳</div>
@@ -174,31 +168,32 @@ export default function ManagerMatchingDetailPage() {
                 <span className="font-bold text-primary">{reservation.totalAmount.toLocaleString()}원</span>
               </div>
             </section>
-
-            {/* 매칭 수락/거절 버튼 */}
-            {reservation.reservationStatus === 'WAITING' && (
-              <div className="sticky bottom-20 bg-white p-5 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleAccept}
-                    disabled={isProcessing}
-                    className="flex-1 bg-[#4abed9] text-white rounded-xl py-4 font-bold text-base disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  >
-                    {isProcessing ? '처리 중...' : '매칭 수락'}
-                  </button>
-                  <button
-                    onClick={() => setIsRejectModalOpen(true)}
-                    disabled={isProcessing}
-                    className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-4 font-bold text-base disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  >
-                    매칭 거절
-                  </button>
-                </div>
-              </div>
-            )}
           </>
         ) : null}
       </div>
+
+      {/* 매칭 수락/거절 버튼 - 화면 바닥에 고정 */}
+      {reservation && reservation.reservationStatus === 'WAITING' && (
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile bg-white border-t border-gray-200 p-4 shadow-lg z-50">
+          <div className="flex gap-3">
+            <button
+              onClick={handleAccept}
+              disabled={isProcessing}
+              className="flex-1 bg-primary text-white rounded-xl py-4 font-bold text-base disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors hover:bg-primary/90"
+            >
+              {isProcessing ? '처리 중...' : '매칭 수락'}
+            </button>
+            <button
+              onClick={() => setIsRejectModalOpen(true)}
+              disabled={isProcessing}
+              className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-4 font-bold text-base disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors hover:bg-gray-300"
+            >
+              매칭 거절
+            </button>
+          </div>
+        </div>
+      )}
+
       <RejectionModal
         isOpen={isRejectModalOpen}
         onClose={() => setIsRejectModalOpen(false)}
