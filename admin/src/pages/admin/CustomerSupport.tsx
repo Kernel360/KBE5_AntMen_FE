@@ -513,16 +513,16 @@ export const CustomerSupport: React.FC = () => {
                             <div className="flex gap-4">
                                 <div className="flex-1">
                                     <Label>상태</Label>
-                                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <Select value={statusFilter} onValueChange={setStatusFilter}>
                                         <SelectTrigger>
                                             <SelectValue placeholder="상태 선택" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">전체</SelectItem>
-                                            <SelectItem value="new">신규</SelectItem>
-                                            <SelectItem value="in_progress">진행중</SelectItem>
-                                            <SelectItem value="waiting">대기</SelectItem>
-                                            <SelectItem value="resolved">해결</SelectItem>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">전체</SelectItem>
+                                        <SelectItem value="new">신규</SelectItem>
+                                        <SelectItem value="in_progress">진행중</SelectItem>
+                                        <SelectItem value="waiting">대기</SelectItem>
+                                        <SelectItem value="resolved">해결</SelectItem>
                                             <SelectItem value="closed">종료</SelectItem>
                                         </SelectContent>
                                     </Select>
@@ -539,8 +539,8 @@ export const CustomerSupport: React.FC = () => {
                                             <SelectItem value="medium">보통</SelectItem>
                                             <SelectItem value="high">높음</SelectItem>
                                             <SelectItem value="urgent">긴급</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    </SelectContent>
+                                </Select>
                                 </div>
                             </div>
                         </CardContent>
@@ -552,7 +552,7 @@ export const CustomerSupport: React.FC = () => {
                         <Card>
                             <CardHeader>
                                 <CardTitle>문의 목록</CardTitle>
-                            </CardHeader>
+                        </CardHeader>
                             <CardContent>
                                 <div className="space-y-2">
                                     {filteredTickets.map((ticket) => (
@@ -570,17 +570,17 @@ export const CustomerSupport: React.FC = () => {
                                                 <div className="flex gap-1">
                                                     {getPriorityBadge(ticket.priority)}
                                                     {getStatusBadge(ticket.status)}
-                                                </div>
+                                            </div>
                                             </div>
                                             <div className="flex justify-between items-center text-xs text-gray-500">
                                                 <span>{ticket.customerInfo.name}</span>
                                                 <span>{ticket.createdAt}</span>
-                                            </div>
                                         </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
 
                         {/* Ticket Detail */}
                         <Card>
@@ -597,14 +597,14 @@ export const CustomerSupport: React.FC = () => {
                                                 {getPriorityBadge(selectedTicket.priority)}
                                                 {getStatusBadge(selectedTicket.status)}
                                             </div>
-                                        </div>
+                                                        </div>
 
                                         <div className="bg-gray-50 p-3 rounded-lg">
                                             <p className="text-sm">{selectedTicket.content}</p>
                                             <div className="text-xs text-gray-500 mt-2">
                                                 {selectedTicket.customerInfo.name} • {selectedTicket.createdAt}
-                                            </div>
-                                        </div>
+                                                    </div>
+                                                </div>
 
                                         <div className="space-y-2">
                                             <Label>상태 변경</Label>
@@ -635,8 +635,8 @@ export const CustomerSupport: React.FC = () => {
                                             />
                                             <Button onClick={handleSendReply} className="w-full">
                                                 <Send className="w-4 h-4 mr-2" />
-                                                답변 전송
-                                            </Button>
+                                                    답변 전송
+                                                </Button>
                                         </div>
 
                                         <div className="space-y-2">
@@ -655,8 +655,8 @@ export const CustomerSupport: React.FC = () => {
                                                         <div>{response.content}</div>
                                                         <div className="text-xs text-gray-500 mt-1">
                                                             {response.timestamp}
-                                                        </div>
-                                                    </div>
+                                            </div>
+                                            </div>
                                                 ))}
                                             </div>
                                         </div>
@@ -664,11 +664,11 @@ export const CustomerSupport: React.FC = () => {
                                 ) : (
                                     <div className="text-center text-gray-500 py-8">
                                         문의를 선택하세요
-                                    </div>
+                                </div>
                                 )}
                             </CardContent>
                         </Card>
-                    </div>
+                </div>
                 </TabsContent>
             </Tabs>
         </div>
