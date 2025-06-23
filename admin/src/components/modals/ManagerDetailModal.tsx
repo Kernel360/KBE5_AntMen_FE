@@ -44,15 +44,33 @@ export function ManagerDetailModal({
   const [selectedFileUrl, setSelectedFileUrl] = useState<string | null>(null);
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [selectedFileType, setSelectedFileType] = useState<'image' | 'pdf' | 'unsupported'>('image');
 
   if (!managerData) return null;
+
+  // 파일 확장자로 파일 타입 확인
+  const getFileType = (fileUrl: string): 'image' | 'pdf' | 'unsupported' => {
+    const extension = fileUrl.toLowerCase().split('.').pop();
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension || '')) {
+      return 'image';
+    } else if (extension === 'pdf') {
+      return 'pdf';
+    }
+    return 'unsupported';
+  };
 
   const handleProfileClick = () => {
     setIsProfileModalOpen(true);
   };
 
   const handleFilePreview = (fileUrl: string) => {
+    const fileType = getFileType(fileUrl);
     setSelectedFileUrl(fileUrl);
+    setSelectedFileType(fileType);
+    setImageError(false);
+    setImageLoading(true);
   };
 
   const handleRejectClick = () => {
@@ -109,29 +127,55 @@ export function ManagerDetailModal({
               {/* 신분증 파일 */}
               <div>
                 <h3 className="font-medium mb-2">신분증 파일:</h3>
-                <div className="flex items-center gap-2">
-                  {managerData.managerFileUrls.map((file) => (
-                    <div key={file.id}>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleFilePreview(file.fileUrl)}
-                      >
-                        미리보기
-                      </Button>
-                      <a
-                        href={file.fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-2"
-                      >
-                        <Button variant="outline" size="sm">
-                          다운로드
-                        </Button>
-                      </a>
-                    </div>
-                  ))}
-                </div>
+                {managerData.managerFileUrls.length > 0 ? (
+                  <div className="space-y-2">
+                    {managerData.managerFileUrls.map((file, index) => {
+                      const fileType = getFileType(file.fileUrl);
+                      const fileName = file.fileUrl.split('/').pop() || `파일 ${index + 1}`;
+                      
+                      return (
+                        <div key={file.id} className="flex items-center justify-between p-2 border rounded-lg">
+                          <div className="flex flex-col">
+                            <span className="text-sm text-gray-600">
+                              파일 {index + 1}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {fileName}
+                            </span>
+                            {fileType === 'unsupported' && (
+                              <span className="text-xs text-orange-500">
+                                미리보기 지원 안함 (이미지/PDF만 지원)
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleFilePreview(file.fileUrl)}
+                              disabled={fileType === 'unsupported'}
+                            >
+                              미리보기
+                            </Button>
+                            <a
+                              href={file.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <Button variant="outline" size="sm">
+                                다운로드
+                              </Button>
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="p-4 bg-gray-50 rounded-lg text-center text-gray-500">
+                    등록된 신분증 파일이 없습니다.
+                  </div>
+                )}
               </div>
             </div>
 
@@ -160,15 +204,20 @@ export function ManagerDetailModal({
               <div>
                 <span className="font-medium">활동시간:</span> {managerData.managerTime}
               </div>
-              <div>
-                <span className="font-medium">상태:</span> {managerData.managerStatus}
-              </div>
-              {managerData.rejectReason && (
-                <div className="col-span-2">
-                  <span className="font-medium">거절 사유:</span> {managerData.rejectReason}
-                </div>
-              )}
             </div>
+
+            {/* 재신청 시 이전 거절사유 표시 */}
+            {managerData.rejectReason && (
+              <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h4 className="font-medium text-orange-800 mb-1">재신청 - 이전 거절사유</h4>
+                    <p className="text-sm text-orange-700">{managerData.rejectReason}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {showRejectInput ? (
               <div className="mt-8">
@@ -240,20 +289,78 @@ export function ManagerDetailModal({
 
       {/* 신분증 파일 미리보기 모달 */}
       <Dialog open={!!selectedFileUrl} onOpenChange={() => setSelectedFileUrl(null)}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl max-h-[90vh]">
           <div className="relative">
             <button
-              className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-md hover:bg-gray-100"
+              className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-md hover:bg-gray-100 z-10"
               onClick={() => setSelectedFileUrl(null)}
             >
               <X className="w-4 h-4" />
             </button>
             {selectedFileUrl && (
-              <img
-                src={selectedFileUrl}
-                alt="신분증 미리보기"
-                className="w-full h-auto"
-              />
+              <div className="w-full">
+                {imageLoading && selectedFileType === 'image' && (
+                  <div className="flex items-center justify-center h-64">
+                    <div className="text-gray-500">이미지 로딩 중...</div>
+                  </div>
+                )}
+                
+                {selectedFileType === 'image' && (
+                  <>
+                    {imageError ? (
+                      <div className="flex flex-col items-center justify-center h-64 bg-gray-50 rounded-lg">
+                        <p className="text-gray-500 mb-2">이미지를 불러올 수 없습니다.</p>
+                        <a
+                          href={selectedFileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:underline"
+                        >
+                          파일 다운로드
+                        </a>
+                      </div>
+                    ) : (
+                      <img
+                        src={selectedFileUrl}
+                        alt="신분증 미리보기"
+                        className="w-full h-auto max-h-[75vh] object-contain"
+                        onLoad={() => setImageLoading(false)}
+                        onError={() => {
+                          setImageLoading(false);
+                          setImageError(true);
+                        }}
+                        style={{ display: imageLoading ? 'none' : 'block' }}
+                      />
+                    )}
+                  </>
+                )}
+
+                {selectedFileType === 'pdf' && (
+                  <div className="w-full h-[75vh]">
+                    <iframe
+                      src={selectedFileUrl}
+                      className="w-full h-full border-0"
+                      title="PDF 미리보기"
+                      onLoad={() => setImageLoading(false)}
+                    />
+                  </div>
+                )}
+
+                {selectedFileType === 'unsupported' && (
+                  <div className="flex flex-col items-center justify-center h-64 bg-gray-50 rounded-lg">
+                    <p className="text-gray-500 mb-2">지원하지 않는 파일 형식입니다.</p>
+                    <p className="text-sm text-gray-400 mb-4">이미지 파일(JPG, PNG, GIF 등) 또는 PDF 파일만 미리보기 가능합니다.</p>
+                    <a
+                      href={selectedFileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline"
+                    >
+                      파일 다운로드
+                    </a>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </DialogContent>
