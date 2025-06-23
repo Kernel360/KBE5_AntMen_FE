@@ -4,16 +4,24 @@ import React, { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import { getReservationDetail } from '@/entities/reservation/api/reservationApi'
-import type { ReservationHistory} from '@/entities/reservation/model/types'
+import type { ReservationHistory } from '@/entities/reservation/model/types'
 import { getAuthToken } from '@/features/auth/lib/auth'
+import {
+  acceptMatchingRequest,
+  rejectMatchingRequest,
+} from '@/entities/matching/api/matchingAPi'
+import { RejectionModal } from '@/shared/ui/modal/RejectionModal'
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 
-export default function ManagerReservationDetailPage() {
+export default function ManagerMatchingDetailPage() {
   const router = useRouter()
   const params = useParams()
   const reservationId = params?.id as string
   const [reservation, setReservation] = useState<ReservationHistory | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false)
 
   useEffect(() => {
     const fetchReservation = async () => {
@@ -38,20 +46,49 @@ export default function ManagerReservationDetailPage() {
     fetchReservation()
   }, [reservationId])
 
+  const handleAccept = async () => {
+    if (!reservation?.matchings[0]?.matchingId || isProcessing) return
+    setIsProcessing(true)
+    try {
+      await acceptMatchingRequest(String(reservation.matchings[0].matchingId))
+      alert('매칭을 수락했습니다.')
+      router.push('/manager/matching')
+    } catch (e: any) {
+      setError(e.message || '매칭 수락 중 오류가 발생했습니다.')
+      alert(e.message || '매칭 수락 중 오류가 발생했습니다.')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleReject = async (reason: string) => {
+    if (!reservation?.matchings[0]?.matchingId || isProcessing) return
+    setIsProcessing(true)
+    try {
+      await rejectMatchingRequest(
+        String(reservation.matchings[0].matchingId),
+        reason,
+      )
+      alert('매칭을 거절했습니다.')
+      router.push('/manager/matching')
+    } catch (e: any) {
+      setError(e.message || '매칭 거절 중 오류가 발생했습니다.')
+      alert(e.message || '매칭 거절 중 오류가 발생했습니다.')
+    } finally {
+      setIsProcessing(false)
+      setIsRejectModalOpen(false)
+    }
+  }
+
+  // TODO: 예약 상태, 예약 시간, 고객 정보
+  // reservations/id/page.tsx 에서도 동일하게 수정해야함!
   return (
-    <main className="flex min-h-screen flex-col bg-gray-50">
-      {/* Header */}
-      <header className="flex items-center justify-between p-5 bg-white border-b">
-        <button 
-          onClick={() => router.back()} 
-          className="flex h-6 w-6 items-center justify-center"
-        >
-          <Image src="/icons/arrow-left.svg" alt="뒤로가기" width={24} height={24} />
-        </button>
-        <h1 className="flex-1 text-center text-2xl font-bold">예약 확인</h1>
-        <div className="h-6 w-6" />
-      </header>
-      <div className="flex flex-1 flex-col gap-6 p-5 max-w-xl mx-auto w-full">
+    <main className="min-h-screen bg-gray-50">
+      <CommonHeader 
+        title="매칭 요청 확인"
+        showBackButton
+      />
+      <div className="pt-20 p-5 pb-32 min-h-[calc(100vh-64px)] flex flex-col gap-6 max-w-xl mx-auto w-full">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="text-4xl">⏳</div>
@@ -134,6 +171,36 @@ export default function ManagerReservationDetailPage() {
           </>
         ) : null}
       </div>
+
+      {/* 매칭 수락/거절 버튼 - 화면 바닥에 고정 */}
+      {reservation && reservation.reservationStatus === 'WAITING' && (
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile bg-white border-t border-gray-200 p-4 shadow-lg z-50">
+          <div className="flex gap-3">
+            <button
+              onClick={handleAccept}
+              disabled={isProcessing}
+              className="flex-1 bg-primary text-white rounded-xl py-4 font-bold text-base disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors hover:bg-primary/90"
+            >
+              {isProcessing ? '처리 중...' : '매칭 수락'}
+            </button>
+            <button
+              onClick={() => setIsRejectModalOpen(true)}
+              disabled={isProcessing}
+              className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-4 font-bold text-base disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors hover:bg-gray-300"
+            >
+              매칭 거절
+            </button>
+          </div>
+        </div>
+      )}
+
+      <RejectionModal
+        isOpen={isRejectModalOpen}
+        onClose={() => setIsRejectModalOpen(false)}
+        onSubmit={handleReject}
+        title="매칭 거절 사유"
+        isProcessing={isProcessing}
+      />
     </main>
   )
-} 
+}

@@ -1,3 +1,6 @@
+'use client'
+
+import React from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { FreeMode } from 'swiper/modules'
 import 'swiper/css'
@@ -34,8 +37,10 @@ export function CategorySwiper() {
       href: '/reservation/select-address?categoryId=5',
     },
   ]
+
   return (
     <section className="bg-white rounded-t-3xl relative z-10 -mt-6 py-4">
+      {/* @ts-ignore - Swiper 타입 호환성 문제 임시 해결 */}
       <Swiper
         spaceBetween={8}
         slidesPerView="auto"
@@ -45,6 +50,7 @@ export function CategorySwiper() {
         modules={[FreeMode]}
       >
         {categories.map((cat, idx) => (
+          // @ts-ignore - SwiperSlide 타입 호환성 문제 임시 해결
           <SwiperSlide
             key={cat.label + idx}
             className={[

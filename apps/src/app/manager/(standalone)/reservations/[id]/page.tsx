@@ -6,8 +6,9 @@ import Image from 'next/image'
 import { getReservationDetail } from '@/entities/reservation/api/reservationApi'
 import type { ReservationHistory} from '@/entities/reservation/model/types'
 import { getAuthToken } from '@/features/auth/lib/auth'
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 
-export default function ManagerMatchingDetailPage() {
+export default function ManagerReservationDetailPage() {
   const router = useRouter()
   const params = useParams()
   const reservationId = params?.id as string
@@ -38,22 +39,13 @@ export default function ManagerMatchingDetailPage() {
     fetchReservation()
   }, [reservationId])
 
-  // TODO: 예약 상태, 예약 시간, 고객 정보
-  // reservations/id/page.tsx 에서도 동일하게 수정해야함!
   return (
-    <main className="flex min-h-screen flex-col bg-gray-50">
-      {/* Header */}
-      <header className="flex items-center justify-between p-5 bg-white border-b">
-        <button 
-          onClick={() => router.back()} 
-          className="flex h-6 w-6 items-center justify-center"
-        >
-          <Image src="/icons/arrow-left.svg" alt="뒤로가기" width={24} height={24} />
-        </button>
-        <h1 className="flex-1 text-center text-2xl font-bold">매칭 요청 확인</h1>
-        <div className="h-6 w-6" />
-      </header>
-      <div className="flex flex-1 flex-col gap-6 p-5 max-w-xl mx-auto w-full">
+    <main className="min-h-screen bg-gray-50">
+      <CommonHeader 
+        title="예약 확인"
+        showBackButton
+      />
+      <div className="pt-20 p-5 pb-20 min-h-[calc(100vh-64px)] flex flex-col gap-6 max-w-xl mx-auto w-full">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="text-4xl">⏳</div>
@@ -133,27 +125,9 @@ export default function ManagerMatchingDetailPage() {
                 <span className="font-bold text-primary">{reservation.totalAmount.toLocaleString()}원</span>
               </div>
             </section>
-
-            {/* 매칭 수락/거절 버튼 */}
-            <div className="sticky bottom-0 bg-white p-5 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {/* TODO: 매칭 수락 로직 */}}
-                  className="flex-1 bg-[#4abed9] text-white rounded-xl py-4 font-bold text-base"
-                >
-                  매칭 수락
-                </button>
-                <button
-                  onClick={() => {/* TODO: 매칭 거절 로직 */}}
-                  className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-4 font-bold text-base"
-                >
-                  매칭 거절
-                </button>
-              </div>
-            </div>
           </>
         ) : null}
       </div>
     </main>
   )
-}
+} 

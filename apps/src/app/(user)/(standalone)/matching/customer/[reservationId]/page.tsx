@@ -13,6 +13,7 @@ import { BiTimeFive } from 'react-icons/bi'
 import { MdThumbUp } from 'react-icons/md'
 import { MANAGER_LIST } from '@/widgets/manager/model/manager'
 import type { IconType } from 'react-icons'
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 
 const DynamicIcon = ({
   icon,
@@ -71,21 +72,15 @@ export default function ReservationDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="w-full max-w-mobile mx-auto min-h-screen flex flex-col bg-white">
-        {/* Header */}
-        <header className="sticky top-0 z-30 flex items-center justify-between p-4 border-b bg-white">
-          <Link href="/matching" className="text-gray-800">
-            <DynamicIcon icon={IoChevronBack} size={24} />
-          </Link>
-          <h1 className="text-lg font-medium">매칭 상세</h1>
-          <button className="text-gray-800">
-            <DynamicIcon icon={IoEllipsisHorizontal} size={24} />
-          </button>
-        </header>
-
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto pb-[140px]">
+    <main className="min-h-screen bg-gray-50">
+      <CommonHeader 
+        title="매칭 진행"
+        showBackButton
+      />
+      
+      {/* 콘텐츠 */}
+      <div className="pt-0 p-4 pb-20 min-h-[calc(100vh-64px)]">
+        <div className="w-full max-w-mobile mx-auto min-h-screen flex flex-col bg-white">
           {/* Profile Section */}
           <div className="px-4 py-6">
             <div className="flex flex-col items-center">
@@ -183,6 +178,6 @@ export default function ReservationDetailPage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }
