@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getAllCategories, Category } from '@/shared/api/category';
 import { CustomerAuthGuard } from '@/components/auth/CustomerAuthGuard';
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
 
 interface ServiceCardProps {
   title: string;
@@ -109,23 +110,14 @@ function ReservationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white relative">
-      {/* Navigation Header */}
-      <div className="h-14 flex justify-between items-center px-4 border-b border-[#EEEEEE]">
-        <Link href="/" className="w-6 h-6 flex items-center justify-center">
-          <Image
-            src="/icons/arrow-left.svg"
-            alt="Back"
-            width={24}
-            height={24}
-          />
-        </Link>
-        <h1 className="text-lg font-bold">예약하기</h1>
-        <div className="w-6" /> {/* Spacer for alignment */}
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <CommonHeader 
+        title="예약하기"
+        showBackButton
+      />
 
       {/* Content */}
-      <div className="px-4 py-4 space-y-2.5">
+      <div className="pt-20 px-4 py-4 pb-20 min-h-[calc(100vh-64px)] space-y-2.5">
         {categories.map((category, index) => (
           <ServiceCard
             key={category.categoryId}

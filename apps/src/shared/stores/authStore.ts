@@ -8,40 +8,68 @@ export type UserRole = 'CUSTOMER' | 'MANAGER' | 'ADMIN'
 interface User {
   userId: number | null
   userRole: UserRole | null
+  id: number
+  name: string
+  email: string
+  role: UserRole
+  profileImage?: string
+}
+
+interface AuthLoginPayload {
+  userId: number
+  userRole: UserRole
 }
 
 interface AuthState {
   isLoggedIn: boolean
-  user: User
+  user: User | null
   token: string | null
   userData: UserData | null
+  accessToken: string | null
+  refreshToken: string | null
+  isLoading: boolean
+  matchingRequestCount: number
 }
 
 interface AuthActions {
-  login: (user: User, token: string) => void
+  login: (authUser: AuthLoginPayload, token: string) => void
   logout: () => void
   setToken: (token: string | null) => void
   setUserData: (data: UserData | null) => void
+  setUser: (user: User | null) => void
+  setTokens: (accessToken: string, refreshToken: string) => void
+  clearAuth: () => void
+  setLoading: (loading: boolean) => void
+  setMatchingRequestCount: (count: number) => void
 }
 
 const initialState: AuthState = {
   isLoggedIn: false,
-  user: {
-    userId: null,
-    userRole: null,
-  },
+  user: null,
   token: null,
   userData: null,
+  accessToken: null,
+  refreshToken: null,
+  isLoading: true,
+  matchingRequestCount: 0,
 }
 
 export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
     immer((set) => ({
       ...initialState,
-      login: (user, token) => {
+      login: (authUser, token) => {
         set((state) => {
           state.isLoggedIn = true
-          state.user = user
+          state.user = {
+            userId: authUser.userId,
+            userRole: authUser.userRole,
+            id: authUser.userId,
+            name: '',
+            email: '',
+            role: authUser.userRole,
+            profileImage: '',
+          }
           state.token = token
         })
       },
@@ -60,10 +88,28 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           state.userData = data
         })
       },
+      setUser: (user) => set({ user }),
+      setTokens: (accessToken, refreshToken) =>
+        set({ accessToken, refreshToken }),
+      clearAuth: () =>
+        set({ 
+          user: null, 
+          accessToken: null, 
+          refreshToken: null,
+          matchingRequestCount: 0,
+        }),
+      setLoading: (isLoading) => set({ isLoading }),
+      setMatchingRequestCount: (count) => set({ matchingRequestCount: count }),
     })),
     {
-      name: 'auth-storage', // storage-key
+      name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        user: state.user,
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+        matchingRequestCount: state.matchingRequestCount,
+      }),
     },
   ),
 )

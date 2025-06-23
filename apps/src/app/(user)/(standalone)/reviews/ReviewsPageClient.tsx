@@ -8,6 +8,7 @@ import { ReviewCard } from '@/entities/review/ui/ReviewCard';
 import { EditReviewModal, DeleteConfirmModal } from '@/shared/ui/modal/ReviewModals';
 import { customerApi } from '@/shared/api/review';
 import { mapReviewResponseToModel } from '@/entities/review/lib/mappers';
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
 
 function EmptyState() {
   return (
@@ -113,18 +114,14 @@ export default function ReviewsPageClient() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col bg-white">
-      {/* 헤더 */}
-      <header className="flex items-center justify-between p-5 border-b">
-        <button onClick={() => router.back()} className="p-1">
-          <Image src="/icons/arrow-left.svg" alt="뒤로가기" width={24} height={24} />
-        </button>
-        <h1 className="flex-1 text-center text-xl font-bold">리뷰 관리</h1>
-        <div className="w-6" />
-      </header>
+    <main className="min-h-screen bg-gray-50">
+      <CommonHeader 
+        title="리뷰 관리"
+        showBackButton
+      />
 
       {/* 내용 */}
-      <div className="p-5 space-y-4">
+      <div className="pt-0 p-5 pb-20 min-h-[calc(100vh-64px)] space-y-4">
         {isLoading ? (
           <div className="text-center py-20 text-slate-400">로딩 중...</div>
         ) : error ? (

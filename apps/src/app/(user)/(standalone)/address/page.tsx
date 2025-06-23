@@ -3,13 +3,15 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import { XMarkIcon } from '@heroicons/react/24/outline'
+import { EllipsisVerticalIcon } from '@heroicons/react/24/solid'
 import AddAddressModal from '@/features/address/ui/AddAddressModal'
-import { EllipsisVerticalIcon, XMarkIcon } from '@heroicons/react/24/solid'
-import {
-  fetchAddresses,
+import type { CustomerAddressResponse } from '@/shared/api/address'
+import { 
+  fetchAddresses, 
   createAddress,
-  CustomerAddressResponse,
 } from '@/shared/api/address'
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 
 const AddressPageUI = () => {
   const router = useRouter()
@@ -305,24 +307,15 @@ const AddressPageUI = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      {/* 헤더 */}
-      <header className="flex items-center justify-between p-5 bg-white border-b">
-        <button onClick={() => router.back()} className="p-1">
-          <Image
-            src="/icons/arrow-left.svg"
-            alt="뒤로가기"
-            width={24}
-            height={24}
-          />
-        </button>
-        <h1 className="flex-1 text-center text-xl font-bold">주소 관리</h1>
-        <div className="w-6" />
-      </header>
+    <div className="min-h-screen bg-gray-50">
+      <CommonHeader 
+        title="주소 관리"
+        showBackButton
+      />
 
       {/* 내용 */}
-      <main className="flex-grow p-5">
-        <div className="space-y-4">
+      <main className="pt-0 px-5 pb-20 min-h-[calc(100vh-64px-80px)]">
+        <div className="space-y-4 pt-5">
           {addresses.length > 0 ? (
             addresses.map((address) => (
               <AddressInfoBlock
@@ -342,7 +335,7 @@ const AddressPageUI = () => {
       </main>
 
       {/* 새 주소 추가 버튼 */}
-      <footer className="p-5 bg-white border-t">
+      <footer className="fixed bottom-[64px] left-0 right-0 p-5 bg-white border-t">
         <button
           onClick={() => setAddModalOpen(true)}
           className="w-full py-4 bg-cyan-500 text-white rounded-lg font-bold hover:bg-cyan-600 transition-colors"

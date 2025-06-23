@@ -7,7 +7,7 @@ export default function NavigationLayout({
 }) {
   return (
     <>
-      <div id="page-container" className="min-h-screen pb-[72px]">
+      <div id="page-container" className="min-h-screen pb-16">
         {children}
       </div>
       <BottomNavigation userRole="MANAGER" />
