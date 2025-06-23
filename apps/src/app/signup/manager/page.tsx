@@ -21,6 +21,7 @@ const ManagerSignUpPage = () => {
   const router = useRouter()
   const [errors, setErrors] = useState<ValidationErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isIdValid, setIsIdValid] = useState(false)
 
   const { socialProfile, isSocialSignup, clearSocialProfile } =
     useSocialProfileStore()
@@ -117,6 +118,11 @@ const ManagerSignUpPage = () => {
   }
 
   const validateForm = (): boolean => {
+    // 소셜 로그인이 아닌 경우 아이디 중복 확인 상태 체크
+    if (!isSocialSignup && !isIdValid) {
+      return false
+    }
+
     const newErrors: ValidationErrors = {}
 
     // Basic data validation
@@ -132,7 +138,7 @@ const ManagerSignUpPage = () => {
     if (!basicData.gender) newErrors.gender = '성별을 선택해주세요'
     if (!basicData.birthDate) newErrors.birthDate = '생년월일을 입력해주세요'
     if (!basicData.profileImage)
-      newErrors.profileImage = '프로필 사진을 업로드해주세요'
+      newErrors.profileImage = '프로필 이미지를 업로드해주세요'
 
     // Additional data validation
     if (!additionalData.address) newErrors.address = '주소를 입력해주세요'
@@ -144,7 +150,14 @@ const ManagerSignUpPage = () => {
       newErrors.identityFiles = '최소 1개의 신원 확인 서류가 필요합니다'
 
     setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+
+    // 필수 항목이 모두 채워지지 않은 경우
+    if (Object.keys(newErrors).length > 0) {
+      alert('모든 필수 항목을 입력해주세요')
+      return false
+    }
+
+    return true
   }
 
   const handleBack = () => {
@@ -243,6 +256,7 @@ const ManagerSignUpPage = () => {
             onImageChange={handleProfileImageChange}
             errors={errors}
             isSocialSignup={isSocialSignup}
+            onIdValidationChange={setIsIdValid}
           />
 
           {/* Manager Additional Information */}
