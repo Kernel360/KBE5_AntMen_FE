@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { User } from './types';
 
-const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
+// const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
+const API_BASE_URL = 'http://localhost:9093/api/v1';
 
 const userApi = axios.create({
     baseURL: API_BASE_URL,
@@ -31,6 +32,12 @@ export const userService = {
         return response.data;
     },
 
+    // 매니저 상세 정보 조회 (승인 대기 중인 매니저용)
+    getWaitingManagerDetail: async (userId: number): Promise<any> => {
+        const response = await userApi.get(`/admin/users/waiting-managers/${userId}`);
+        return response.data;
+    },
+
     // 매니저 승인
     approveManager: async (userId: number): Promise<void> => {
         await userApi.post(`/admin/users/${userId}/approve`);
@@ -38,7 +45,7 @@ export const userService = {
 
     // 매니저 거절
     rejectManager: async (userId: number, reason: string): Promise<void> => {
-        await userApi.post(`/admin/users/${userId}/reject`, null, { params: { reason } });
+        await userApi.post(`/admin/users/${userId}/reject`, { reason });
     },
 
     // // 사용자 생성
