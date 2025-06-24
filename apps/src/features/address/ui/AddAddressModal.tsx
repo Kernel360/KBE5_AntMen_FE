@@ -8,12 +8,14 @@ interface AddAddressModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddAddress: (address: { main: string; detail: string; addressName: string; area: number }) => void;
+  onAddressSelect?: (address: { main: string; detail: string; addressName: string; area: number }) => void;
 }
 
 const AddAddressModal: React.FC<AddAddressModalProps> = ({
   isOpen,
   onClose,
   onAddAddress,
+  onAddressSelect,
 }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState("");
@@ -36,6 +38,17 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
       fullAddress += extraAddress !== "" ? ` (${extraAddress})` : "";
     }
 
+    if (onAddressSelect) {
+      onAddressSelect({
+        main: fullAddress,
+        detail: "", // 상세주소는 빈 값
+        addressName: data.buildingName || "선택된 주소",
+        area: 0 // 기본값
+      });
+      //onClose();
+      return; // 여기서 함수 종료하여 기존 폼으로 넘어가지 않음
+    }
+
     setSelectedAddress(fullAddress);
     setIsSearching(false);
   };
@@ -49,7 +62,7 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
       setDetailAddress("");
       setAddressName("");
       setArea(0);
-      onClose();
+        onClose();
     } else {
       alert("모든 정보를 입력해주세요.");
     }
