@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import Image from 'next/image'
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
+import { AccountProfile, AccountSettings } from '@/features/account'
 
 export default function AccountPage() {
   const [eventNotification, setEventNotification] = useState(false)
@@ -43,112 +44,23 @@ export default function AccountPage() {
         showBackButton
       />
 
-      {/* Content */}
-      <main className="p-4 flex flex-col gap-y-4">
-        {/* Profile Image Upload */}
-        <div className="flex flex-col items-center mb-6">
-          <label
-            htmlFor="profileImage"
-            className="cursor-pointer group relative"
-          >
-            <div className="w-24 h-24 bg-[#F9F9F9] rounded-full flex items-center justify-center overflow-hidden">
-              {profileImage ? (
-                <>
-                  <Image
-                    width={96}
-                    height={96}
-                    src={URL.createObjectURL(profileImage)}
-                    alt="Profile preview"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm">수정하기</span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <span className="text-gray-400 text-4xl">+</span>
-                  <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm">추가하기</span>
-                  </div>
-                </>
-              )}
-            </div>
-            <input
-              type="file"
-              id="profileImage"
-              name="profileImage"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-          </label>
-        </div>
+      <main className="pt-20 pb-20">
+        <div className="space-y-6 p-5">
+          {/* Profile Image Upload */}
+          <AccountProfile 
+            profileImage={profileImage}
+            onImageChange={handleImageChange}
+          />
 
-        {/* Personal Info Section */}
-        <div className="space-y-6">
-          <div className="flex justify-between items-center py-1">
-            <span className="text-black">이름</span>
-            <span className="text-[#00BCD4]">{userInfo.name}</span>
-          </div>
-          <div className="flex justify-between items-center py-1">
-            <span className="text-black">전화번호</span>
-            <span className="text-[#00BCD4]">{userInfo.phone}</span>
-          </div>
-          <div className="flex justify-between items-center py-1">
-            <span className="text-black">생년월일</span>
-            <span className="text-[#00BCD4]">
-              {userInfo.birthDate.replace(/-/g, '.')}
-            </span>
-          </div>
-          <div className="flex justify-between items-center py-1">
-            <span className="text-black">이메일</span>
-            <span className="text-[#00BCD4]">{userInfo.email}</span>
-          </div>
-        </div>
-
-        <hr className="border-[#F0F0F0] mt-2" />
-
-        {/* Actions Section */}
-        <button
-          className="text-left py-2 text-black hover:text-[#00BCD4] transition-colors"
-          onClick={() => setIsEditModalOpen(true)}
-        >
-          정보 수정
-        </button>
-        <hr className="border-[#F0F0F0]" />
-        <button className="text-left py-2 text-black hover:text-[#00BCD4] transition-colors">
-          로그아웃
-        </button>
-        <hr className="border-[#F0F0F0]" />
-        <button className="text-left py-2 text-black hover:text-[#00BCD4] transition-colors">
-          탈퇴
-        </button>
-        <hr className="border-[#F0F0F0]" />
-
-        {/* Notifications Section */}
-        <div className="space-y-6 pb-6">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-black">이벤트 소식 알림</span>
-              <Toggle
-                enabled={eventNotification}
-                onChange={setEventNotification}
-              />
-            </div>
-            <p className="text-xs text-[#999999]">
-              카카오톡, SMS, 앱푸시를 통해 이벤트 소식을 알려드립니다.
-            </p>
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-black">앱 푸시 알림</span>
-              <Toggle enabled={appNotification} onChange={setAppNotification} />
-            </div>
-            <p className="text-xs text-[#999999]">
-              중요한 서비스 진행 소식을 알려드려요.
-            </p>
-          </div>
+          {/* Account Settings */}
+          <AccountSettings 
+            userInfo={userInfo}
+            eventNotification={eventNotification}
+            appNotification={appNotification}
+            onEventNotificationChange={setEventNotification}
+            onAppNotificationChange={setAppNotification}
+            onEditClick={() => setIsEditModalOpen(true)}
+          />
         </div>
       </main>
 
