@@ -1,64 +1,55 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createReservation, ReservationRequest } from '@/shared/api';
-import { checkCustomerAuth } from '@/features/auth/lib/auth';
+import { createReservation } from '@/shared/api/reservation';
+import { ReservationStorage } from '@/shared/lib/reservationStorage';
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
 import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
-interface ReservationInfo {
-  customerId: number;
-  categoryId: number;
-  addressId: string;
-  reservationDate: string;
-  reservationTime: string;
-  reservationDuration: number;
-  reservationMemo: string;
-  reservationAmount: number;
-  additionalDuration: number;
-  optionIds: number[];
-  selectedManagers: Array<{
-    id: string;
-    name: string;
-    gender: string;
-    age: number;
-    rating: number;
-    description: string;
-  }>;
-  reservationId: string;
-}
 
 export default function ReservationConfirmPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [reservationInfo, setReservationInfo] = useState<ReservationInfo | null>(null);
+  const [reservationInfo, setReservationInfo] = useState<any | null>(null);
+  const [selectedManagers, setSelectedManagers] = useState<any[]>([]);
+  const [isDataReady, setIsDataReady] = useState(false);
 
   useEffect(() => {
-    // localStorage에서 예약 정보 가져오기
-    const savedData = localStorage.getItem('pendingReservation');
-    if (!savedData) {
-      alert('예약 정보를 찾을 수 없습니다.');
-      router.push('/');
-      return;
-    }
+    const loadReservationData = () => {
+      try {
+        // 세션에서 예약 정보 가져오기
+        const savedDataStr = sessionStorage.getItem('currentReservation');
+        
+        if (!savedDataStr) {
+          console.log('예약 정보가 없습니다.');
+          // 예약 폼으로 리다이렉트
+          router.push('/reservation/form');
+          return;
+        }
 
-    setReservationInfo(JSON.parse(savedData));
+        const savedData = JSON.parse(savedDataStr);
+        console.log('확인 페이지에서 로드된 예약 정보:', savedData);
+
+        // 선택된 매니저들 처리
+        if (savedData.selectedManagers && Array.isArray(savedData.selectedManagers)) {
+          setSelectedManagers(savedData.selectedManagers);
+        }
+
+        setReservationInfo(savedData);
+        setIsDataReady(true);
+      } catch (error) {
+        console.error('예약 정보 로드 실패:', error);
+        router.push('/reservation/form');
+      }
+    };
+
+    loadReservationData();
   }, [router]);
 
   const handleConfirm = async () => {
-    if (!reservationInfo) return;
-    
-    // 인증 체크
-    const authResult = checkCustomerAuth();
-    if (!authResult.isAuthenticated || authResult.message) {
-      alert(authResult.message);
-      if (!authResult.isAuthenticated) {
-        router.push('/login');
-      } else if (authResult.userRole === 'MANAGER') {
-        router.push('/manager');
-      } else {
-        router.push('/');
-      }
+    if (!reservationInfo) {
+      console.error('예약 정보가 없습니다.');
       return;
     }
 
@@ -81,18 +72,12 @@ export default function ReservationConfirmPage() {
       router.push('/login');
       return;
     }
-    setIsLoading(true);
-    try {
-      // 필수 필드 검증
-      if (!reservationInfo.addressId) {
-        throw new Error('주소 정보가 필요합니다.');
-      }
-      if (!reservationInfo.categoryId) {
-        throw new Error('카테고리 정보가 필요합니다.');
-      }
 
-      // ReservationRequest 타입에 맞게 데이터 변환
-      const finalPayload: ReservationRequest = {
+    setIsLoading(true);
+
+    try {
+      // develop 브랜치와 동일한 구조로 예약 생성 API 호출
+      const reservationRequest = {
         customerId: Number(userId),
         categoryId: reservationInfo.categoryId,
         addressId: parseInt(reservationInfo.addressId),
@@ -104,31 +89,47 @@ export default function ReservationConfirmPage() {
         reservationAmount: Number(reservationInfo.reservationAmount),
         additionalDuration: Number(reservationInfo.additionalDuration || 0),
         optionIds: (reservationInfo.optionIds || []).map(Number),
-        managerIds: reservationInfo.selectedManagers.map(manager => Number(manager.id))
+        managerIds: selectedManagers.map(manager => Number(manager.id))
       };
+      
+      const newReservation = await createReservation(reservationRequest);
+      
+      console.log('예약 생성 성공:', newReservation);
 
-      const response = await createReservation(finalPayload);
-
-      // 예약 완료 후 localStorage 정리
-      localStorage.removeItem('pendingReservation');
-
-      // 결제 페이지로 이동
-      router.push(`/payment/${response.reservationId}`);
+      // 예약 생성 후 결제 페이지로 이동 (세션 정리는 결제 완료 후)
+      router.push(`/payment/${newReservation.reservationId}`);
     } catch (error) {
-      console.error('예약 생성 오류:', error);
-      alert(error instanceof Error ? error.message : '예약 생성 중 오류가 발생했습니다.');
+      console.error('예약 생성 실패:', error);
+      alert('예약 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setIsLoading(false);
     }
   };
 
+
+
+  if (!isDataReady) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">예약 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!reservationInfo) {
     return (
-      <div className="min-h-screen bg-slate-50 flex justify-center">
-        <div className="w-full max-w-[375px] min-h-screen flex flex-col bg-slate-50">
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-slate-500">예약 정보를 불러오는 중...</div>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">예약 정보를 찾을 수 없습니다</h2>
+          <button
+            onClick={() => router.push('/reservation/form')}
+            className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90"
+          >
+            새로 예약하기
+          </button>
         </div>
       </div>
     );
@@ -137,13 +138,13 @@ export default function ReservationConfirmPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex justify-center">
       <div className="w-full max-w-[375px] min-h-screen flex flex-col bg-slate-50">
-        <header className="sticky top-0 z-10 bg-white border-b border-slate-200">
-          <div className="px-4 h-14 flex items-center justify-between">
-            <h1 className="text-lg font-semibold">예약 확인</h1>
-          </div>
-        </header>
+        {/* 헤더 */}
+        <CommonHeader 
+          title="예약 확인"
+          showBackButton
+        />
 
-        <div className="flex-1 p-4">
+        <div className="flex-1 p-4 pt-20">
           <div className="bg-white rounded-2xl p-5 space-y-6">
             {/* 예약 정보 */}
             <div>
@@ -163,29 +164,29 @@ export default function ReservationConfirmPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">지역</span>
-                  <span className="font-medium">{reservationInfo.addressId}</span>
+                  <span className="font-medium">6</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-600">예약 금액</span>
-                  <span className="font-medium">{reservationInfo.reservationAmount.toLocaleString()}원</span>
+                  <span className="font-medium">{reservationInfo.reservationAmount?.toLocaleString()}원</span>
                 </div>
               </div>
             </div>
 
-            {/* 선택된 매니저 정보 */}
-            {reservationInfo.selectedManagers.length > 0 && (
+            {/* 선택한 매니저 */}
+            {selectedManagers.length > 0 && (
               <div>
                 <h2 className="text-lg font-semibold mb-3">선택한 매니저</h2>
                 <div className="space-y-4">
-                  {reservationInfo.selectedManagers.map((manager, index) => (
+                  {selectedManagers.map((manager, index) => (
                     <div key={manager.id} className="bg-slate-50 rounded-xl p-4">
-                      <div className="flex items-center gap-3 mb-2">
+                      <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center">
                           <span className="text-lg font-medium text-slate-600">
-                            {manager.name[0]}
+                            {manager.name.charAt(0)}
                           </span>
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <h3 className="font-medium">{manager.name} 매니저</h3>
                           <p className="text-sm text-slate-500">
                             {manager.gender} · {manager.age}세
@@ -200,6 +201,14 @@ export default function ReservationConfirmPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* 요청사항 */}
+            {reservationInfo.reservationMemo && (
+              <div>
+                <h2 className="text-lg font-semibold mb-3">요청사항</h2>
+                <p className="text-slate-700">{reservationInfo.reservationMemo}</p>
               </div>
             )}
           </div>

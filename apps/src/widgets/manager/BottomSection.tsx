@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import type { Manager } from '@/widgets/manager/model/manager'
+import { ReservationStorage } from '@/shared/lib/reservationStorage'
 
 interface BottomSectionProps {
   selectedManagers: string[]
@@ -36,41 +37,51 @@ export function BottomSection({
     setIsLoading(true)
 
     try {
-      const pendingReservationJSON = localStorage.getItem('pendingReservation')
-      if (!pendingReservationJSON) {
+      // 세션에서 예약 정보 가져오기
+      const reservationInfoStr = sessionStorage.getItem('currentReservation')
+      
+      if (!reservationInfoStr) {
         throw new Error(
           '예약 정보를 찾을 수 없습니다. 예약 과정을 다시 시작해 주세요.',
         )
       }
 
+      const reservationInfo = JSON.parse(reservationInfoStr)
+      console.log('매니저 선택 완료 - 예약 정보:', reservationInfo)
+      console.log('선택된 매니저:', selectedManagers)
+
       // 선택된 매니저 정보를 예약 정보와 함께 저장
-      const reservationInfo = JSON.parse(pendingReservationJSON)
+      const selectedManagerDetails = selectedManagers.length > 0
+        ? selectedManagers
+            .map((id) => {
+              const manager = managers.find((m) => m.id === id)
+              return manager
+                ? {
+                    id: manager.id,
+                    name: manager.name,
+                    gender: manager.gender,
+                    age: manager.age,
+                    rating: manager.rating,
+                    description: manager.description,
+                  }
+                : null
+            })
+            .filter(Boolean)
+        : []
+
+      // 매니저 선택 정보를 예약 정보에 추가 (ID와 상세 정보 모두 저장)
       const updatedReservationInfo = {
         ...reservationInfo,
-        selectedManagers:
-          selectedManagers.length > 0
-            ? selectedManagers
-                .map((id) => {
-                  const manager = managers.find((m) => m.id === id)
-                  return manager
-                    ? {
-                        id: manager.id,
-                        name: manager.name,
-                        gender: manager.gender,
-                        age: manager.age,
-                        rating: manager.rating,
-                        description: manager.description,
-                      }
-                    : null
-                })
-                .filter(Boolean)
-            : [],
+        selectedManagerIds: selectedManagers, // ID 배열
+        selectedManagers: selectedManagerDetails, // 상세 정보 배열
       }
 
-      localStorage.setItem(
-        'pendingReservation',
-        JSON.stringify(updatedReservationInfo),
-      )
+      // 세션에 업데이트된 정보 저장
+      sessionStorage.setItem('currentReservation', JSON.stringify(updatedReservationInfo))
+      console.log('매니저 선택 정보 저장 완료:', {
+        ids: selectedManagers,
+        details: selectedManagerDetails
+      })
 
       // 예약 확인 페이지로 이동
       router.push('/reservation/confirm')
