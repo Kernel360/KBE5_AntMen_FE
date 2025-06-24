@@ -67,7 +67,7 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
   }, 0);
 
   const baseServicePrice = calculatePrice(selectedHours, initialCategory.categoryPrice, initialCategory.categoryPrice, initialCategory.categoryTime);
-  const currentTotalPrice = baseServicePrice + totalOptionsPrice;
+  const totalPrice = baseServicePrice + totalOptionsPrice;
   const totalDuration = selectedHours * 60 + totalOptionsTime;
 
   // 실시간 자동 저장 기능 제거 - handleNext에서만 저장
@@ -126,7 +126,7 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
       reservationTime: formattedTime,
       reservationDuration: selectedHours,
       reservationMemo: memo,
-      reservationAmount: currentTotalPrice,
+      reservationAmount: totalPrice,
       additionalDuration: selectedHours - initialCategory.categoryTime,
       optionIds: selectedCategoryOptions,
     };
@@ -182,7 +182,7 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
     basePrice: initialCategory.categoryPrice,
     pricePerHour: initialCategory.categoryPrice,
     
-    totalPrice: currentTotalPrice,
+    totalPrice: totalPrice,
     
     handleTimeChange,
     handleNext,

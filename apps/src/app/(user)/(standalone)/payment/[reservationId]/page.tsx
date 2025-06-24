@@ -148,7 +148,7 @@ export default function PaymentPage({ params }: PaymentPageProps) {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-slate-600">서비스</span>
-                <span className="font-medium">{reservationData.categoryName || '일반 청소'}</span>
+                <span className="font-medium">{reservationData.categoryName}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-600">예약 번호</span>
