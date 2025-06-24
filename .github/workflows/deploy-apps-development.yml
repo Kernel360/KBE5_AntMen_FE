@@ -156,8 +156,6 @@ jobs:
 
             echo "정리 후 디스크 사용량:"
             df -h /
-            
-            echo "배포 테스트 1"
 
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REGISTRY
 
