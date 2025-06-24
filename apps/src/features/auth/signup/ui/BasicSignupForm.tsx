@@ -1,5 +1,8 @@
+'use client'
+
 import Image from 'next/image'
-import React from 'react'
+import React, { useState } from 'react'
+import { LoginIdInput } from './LoginIdInput'
 
 export interface BasicSignupFormData {
   username: string
@@ -20,6 +23,7 @@ interface BasicSignupFormProps {
     [key: string]: string
   }
   isSocialSignup?: boolean
+  onIdValidationChange: (isValid: boolean) => void
 }
 
 export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
@@ -28,6 +32,7 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
   onImageChange,
   errors = {},
   isSocialSignup = false,
+  onIdValidationChange,
 }) => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -75,60 +80,17 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
         )}
       </div>
 
-      {/* Username
-      <div className="space-y-2">
-        <label className="block text-base font-medium">아이디</label>
-        <input
-          type="text"
-          name="username"
-          value={formData.username}
-          onChange={onChange}
-          className={`w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none ${
-            errors.username ? 'border-2 border-red-500' : ''
-          }`}
-          placeholder="아이디를 입력해주세요"
-        />
-        {errors.username && (
-          <span className="text-red-500 text-sm">{errors.username}</span>
-        )}
-      </div> */}
       {!isSocialSignup && (
         <>
           {/* Username */}
-          <div className="space-y-2">
-            <label className="block text-base font-medium">아이디</label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={onChange}
-              className={`w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none ${
-                errors.username ? 'border-2 border-red-500' : ''
-              }`}
-              placeholder="아이디를 입력해주세요"
-            />
-            {errors.username && (
-              <span className="text-red-500 text-sm">{errors.username}</span>
-            )}
-          </div>
+          <LoginIdInput
+            value={formData.username}
+            onChange={onChange}
+            error={errors.username}
+            disabled={isSocialSignup}
+            onValidationChange={onIdValidationChange}
+          />
 
-          {/* Password
-      <div className="space-y-2">
-        <label className="block text-base font-medium">비밀번호</label>
-        <input
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={onChange}
-          className={`w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none ${
-            errors.password ? 'border-2 border-red-500' : ''
-          }`}
-          placeholder="비밀번호를 입력해주세요"
-        />
-        {errors.password && (
-          <span className="text-red-500 text-sm">{errors.password}</span>
-        )}
-      </div> */}
           {/* Password */}
           <div className="space-y-2">
             <label className="block text-base font-medium">비밀번호</label>

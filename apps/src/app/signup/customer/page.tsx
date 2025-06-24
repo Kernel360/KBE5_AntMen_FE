@@ -16,6 +16,7 @@ const CustomerSignUpPage = () => {
   const router = useRouter()
   const [errors, setErrors] = useState<ValidationErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isIdValid, setIsIdValid] = useState(false)
 
   const { socialProfile, isSocialSignup, clearSocialProfile } =
     useSocialProfileStore()
@@ -90,7 +91,19 @@ const CustomerSignUpPage = () => {
     if (!basicData.birthDate) newErrors.birthDate = '생년월일을 입력해주세요'
 
     setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+
+    // 소셜 로그인이 아닌 경우 아이디 중복 확인 상태 체크
+    if (!isSocialSignup && !isIdValid) {
+      return false
+    }
+
+    // 필수 항목이 모두 채워지지 않은 경우
+    if (Object.keys(newErrors).length > 0) {
+      alert('모든 필수 항목을 입력해주세요')
+      return false
+    }
+
+    return true
   }
 
   const handleBack = () => {
@@ -102,8 +115,11 @@ const CustomerSignUpPage = () => {
     e.preventDefault()
 
     if (!validateForm()) {
-      // Show error message
-      alert('모든 필수 항목을 입력해주세요.')
+      // ID 중복 확인이 필요한 경우는 alert를 표시하지 않음 (UI에 표시됨)
+      // 하지만 다른 필수 항목이 비어있는 경우는 alert 표시
+      if (isSocialSignup || isIdValid) {
+        alert('모든 필수 항목을 입력해주세요')
+      }
       return
     }
 
@@ -179,6 +195,7 @@ const CustomerSignUpPage = () => {
             onImageChange={handleProfileImageChange}
             errors={errors}
             isSocialSignup={isSocialSignup}
+            onIdValidationChange={setIsIdValid}
           />
 
           {/* Submit Button */}

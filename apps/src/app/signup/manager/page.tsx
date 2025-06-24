@@ -21,9 +21,10 @@ const ManagerSignUpPage = () => {
   const router = useRouter()
   const [errors, setErrors] = useState<ValidationErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isIdValid, setIsIdValid] = useState(false)
 
   const { socialProfile, isSocialSignup, clearSocialProfile } =
-      useSocialProfileStore()
+    useSocialProfileStore()
 
   const [basicData, setBasicData] = useState<BasicSignupFormData>({
     username: '',
@@ -132,6 +133,12 @@ const ManagerSignUpPage = () => {
     }
   }, [errors.address])
 
+  const validateForm = (): boolean => {
+    // 소셜 로그인이 아닌 경우 아이디 중복 확인 상태 체크
+    if (!isSocialSignup && !isIdValid) {
+      return false
+    }
+
   const handleAddressDetailChange = useCallback((detail: string) => {
     setAdditionalData((prev) => ({
       ...prev,
@@ -190,6 +197,13 @@ const ManagerSignUpPage = () => {
       newErrors.identityFiles = '최소 1개의 신원 확인 서류가 필요합니다'
 
     setErrors(newErrors)
+
+    // 필수 항목이 모두 채워지지 않은 경우
+    if (Object.keys(newErrors).length > 0) {
+      alert('모든 필수 항목을 입력해주세요')
+      return false
+    }
+
     return Object.keys(newErrors).length === 0
   }, [basicData, additionalData, identityFiles, isSocialSignup])
 
@@ -204,6 +218,7 @@ const ManagerSignUpPage = () => {
     // 유효성 검사 활성화
 
     if (!validateForm()) {
+      // Show error message
       alert('모든 필수 항목을 입력해주세요.')
       return
     }
@@ -326,8 +341,10 @@ const ManagerSignUpPage = () => {
       const data = await response.json()
       console.log('회원가입 성공:', data)
 
-      // 성공 처리
+      // 가입 성공 후 스토어 클리어
       clearSocialProfile()
+
+      // Redirect to pending page instead of login page
       router.push('/signup/manager/pending')
 
     } catch (error) {
@@ -396,6 +413,7 @@ const ManagerSignUpPage = () => {
                 onImageChange={handleProfileImageChange}
                 errors={errors}
                 isSocialSignup={isSocialSignup}
+                onIdValidationChange={setIsIdValid}
             />
 
             {/* Manager Additional Information */}
