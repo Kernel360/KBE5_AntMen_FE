@@ -262,17 +262,22 @@ const ManagerSignUpPage = () => {
       if (process.env.NODE_ENV === 'development') {
         console.log('\n=== FormData 내용 ===');
         formData.forEach((value, key) => {
+          // value의 자료형 확인
+          const valueType = typeof value;
+          const constructor = value.constructor.name;
+
           if (value instanceof File) {
-            console.log(`📁 ${key}: [파일] ${value.name} (${(value.size/1024).toFixed(1)}KB)`);
+            console.log(`📁 ${key}: [파일] ${value.name} (${(value.size/1024).toFixed(1)}KB) - ${value.type}`);
+            console.log(`   타입: ${valueType}, 생성자: ${constructor}`);
           } else {
             console.log(`📝 ${key}: ${value}`);
+            console.log(`   타입: ${valueType}, 생성자: ${constructor}`);
           }
         });
       }
 
       // API 호출
-      //const response = await fetch('https://api.antmen.site:9092/v1/manager/signup', {
-      const response = await fetch('https://localhost:9092/v1/manager/signup', {
+      const response = await fetch('https://api.antmen.site:9092/v1/manager/signup', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
