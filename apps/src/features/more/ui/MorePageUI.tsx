@@ -7,6 +7,19 @@ import { useAuthStore } from '@/shared/stores/authStore'
 import { useRouter } from 'next/navigation'
 import Cookies from 'js-cookie'
 import Image from 'next/image'
+import Link from 'next/link'
+import { 
+  UserCircleIcon, 
+  BellIcon, 
+  HeartIcon, 
+  CheckCircleIcon, 
+  ChatBubbleBottomCenterTextIcon, 
+  ArrowRightOnRectangleIcon,
+  CreditCardIcon,
+  GiftIcon,
+  ShareIcon,
+  MegaphoneIcon
+} from '@heroicons/react/24/outline'
 
 interface MorePageUIProps {
   user: {
@@ -40,33 +53,42 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
 
   const menuItems = [
     {
-      icon: '/icons/linear-bell.svg',
+      icon: <BellIcon className="w-6 h-6" />,
       label: 'Antwork에서 알림',
       href: '/notifications',
     },
     {
-      icon: '/icons/linear-heart.svg',
+      icon: <HeartIcon className="w-6 h-6" />,
       label: '찜한 도우미',
       href: '/favorites',
     },
-    { icon: '/icons/linear-check.svg', label: '이용내역', href: '/history' },
     {
-      icon: '/icons/linear-review.svg',
+      icon: <CheckCircleIcon className="w-6 h-6" />,
+      label: '이용내역',
+      href: '/history'
+    },
+    {
+      icon: <ChatBubbleBottomCenterTextIcon className="w-6 h-6" />,
       label: '리뷰관리',
       onClick: handleReviewManageClick,
     },
     {
-      icon: '/icons/linear-setting.svg',
+      icon: <UserCircleIcon className="w-6 h-6" />,
+      label: '계정관리',
+      href: '/account',
+    },
+    {
+      icon: <ArrowRightOnRectangleIcon className="w-6 h-6" />,
       label: '로그아웃',
       onClick: handleLogout,
     },
   ]
 
   const topMenus = [
-    { icon: '/icons/linear-card.svg', label: '결제수단', href: '/payment' },
-    { icon: '/icons/linear-gift.svg', label: '프로모션', href: '/promotions' },
-    { icon: '/icons/linear-share.svg', label: '친구초대', href: '/invite' },
-    { icon: '/icons/linear-notice.svg', label: '공지사항', href: '/notice' },
+    { icon: <CreditCardIcon className="w-6 h-6" />, label: '결제수단', href: '/payment' },
+    { icon: <GiftIcon className="w-6 h-6" />, label: '프로모션', href: '/promotions' },
+    { icon: <ShareIcon className="w-6 h-6" />, label: '친구초대', href: '/invite' },
+    { icon: <MegaphoneIcon className="w-6 h-6" />, label: '공지사항', href: '/notice' },
   ]
 
   return (
@@ -114,21 +136,16 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
           <section className="bg-gray-100 rounded-xl shadow-sm py-4 flex flex-col mb-5">
             <div className="container flex justify-between items-center px-4">
               {topMenus.map((menu) => (
-                <div
+                <Link
                   key={menu.label}
+                  href={menu.href}
                   className="flex flex-1 flex-col items-center gap-1"
                 >
-                  <Image
-                    src={menu.icon}
-                    alt={menu.label}
-                    className="w-6 h-6 mb-1"
-                    width={24}
-                    height={24}
-                  />
+                  {menu.icon}
                   <span className="text-xs text-gray-900 font-medium">
                     {menu.label}
                   </span>
-                </div>
+                </Link>
               ))}
             </div>
           </section>
