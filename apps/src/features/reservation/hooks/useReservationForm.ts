@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import dayjs, { Dayjs } from 'dayjs';
 import { Category, CategoryOption } from '@/shared/api/category';
 import { calculatePrice } from '@/shared/lib/utils';
+import { ReservationStorage } from '@/shared/lib/reservationStorage';
 
 export const useReservationForm = ({ initialCategory, initialOptions, addressId }: { initialCategory: Category; initialOptions: CategoryOption[]; addressId: number }) => {
   const router = useRouter();
@@ -26,26 +27,33 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // localStorage 값으로 폼 상태 복원
+  // 수정 모드일 때 sessionStorage에서 기존 데이터 로드
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('pendingReservation');
-      if (saved) {
+    const loadSavedData = () => {
+      if (typeof window !== 'undefined') {
         try {
-          const data = JSON.parse(saved);
-          if (data) {
-            if (data.reservationDate) setSelectedDate(dayjs(data.reservationDate));
-            if (data.reservationTime) setSelectedVisitTime(data.reservationTime);
-            if (data.reservationDuration) setSelectedHours(data.reservationDuration);
-            if (Array.isArray(data.optionIds)) setSelectedCategoryOptions(data.optionIds);
-            if (data.reservationMemo) setMemo(data.reservationMemo);
+          const savedStr = sessionStorage.getItem('currentReservation');
+          if (savedStr) {
+            const saved = JSON.parse(savedStr);
+            
+            // 같은 카테고리의 예약 정보면 폼에 채우기
+            if (saved.categoryId === initialCategory.categoryId) {
+              if (saved.reservationDate) setSelectedDate(dayjs(saved.reservationDate));
+              if (saved.reservationTime) setSelectedVisitTime(saved.reservationTime);
+              if (saved.reservationDuration) setSelectedHours(saved.reservationDuration);
+              if (Array.isArray(saved.optionIds)) setSelectedCategoryOptions(saved.optionIds);
+              if (saved.reservationMemo) setMemo(saved.reservationMemo);
+              console.log('✏️ 수정 모드: 기존 예약 정보 로드됨');
+            }
           }
         } catch (e) {
-          // 파싱 실패 시 무시
+          console.error('예약 정보 복원 중 오류:', e);
         }
       }
-    }
-  }, []);
+    };
+
+    loadSavedData();
+  }, [initialCategory.categoryId]);
 
   // Computed Values
   const totalOptionsPrice = selectedCategoryOptions.reduce((total, optionId) => {
@@ -59,8 +67,10 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
   }, 0);
 
   const baseServicePrice = calculatePrice(selectedHours, initialCategory.categoryPrice, initialCategory.categoryPrice, initialCategory.categoryTime);
-  const totalPrice = baseServicePrice + totalOptionsPrice;
+  const currentTotalPrice = baseServicePrice + totalOptionsPrice;
   const totalDuration = selectedHours * 60 + totalOptionsTime;
+
+  // 실시간 자동 저장 기능 제거 - handleNext에서만 저장
 
   // Event Handlers
   const handleTimeChange = (increment: boolean) => {
@@ -108,8 +118,7 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
 
     // API 호출 대신, 사용자가 입력한 정보를 객체로 만듭니다.
     const reservationDetails = {
-      // customerId는 로그인 정보가 구현된 후 채워져야 합니다.
-      customerId: 1, // 임시 ID
+      // customerId는 ReservationStorage에서 자동으로 설정됩니다
       addressId: addressId, // 반드시 props로 받은 값 사용
       categoryId: initialCategory.categoryId,
       categoryName: initialCategory.categoryName,
@@ -117,18 +126,17 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
       reservationTime: formattedTime,
       reservationDuration: selectedHours,
       reservationMemo: memo,
-      reservationAmount: totalPrice,
+      reservationAmount: currentTotalPrice,
       additionalDuration: selectedHours - initialCategory.categoryTime,
       optionIds: selectedCategoryOptions,
     };
 
     try {
-      // 예약 정보를 localStorage에 저장
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('pendingReservation', JSON.stringify(reservationDetails));
-      }
+      // localStorage 저장 대신 sessionStorage에 임시 저장 (탭별로 분리)
+      sessionStorage.setItem('currentReservation', JSON.stringify(reservationDetails));
+      console.log('📝 예약 정보 세션에 저장:', reservationDetails);
 
-      // 매칭 페이지로 이동 (서버 컴포넌트에서 자동으로 매니저 리스트를 가져옵니다)
+      // 매칭 페이지로 이동
       router.push('/matching');
     } catch (error) {
       console.error('매니저 조회 중 오류 발생:', error);
@@ -174,7 +182,7 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
     basePrice: initialCategory.categoryPrice,
     pricePerHour: initialCategory.categoryPrice,
     
-    totalPrice,
+    totalPrice: currentTotalPrice,
     
     handleTimeChange,
     handleNext,
