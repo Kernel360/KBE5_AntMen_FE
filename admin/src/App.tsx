@@ -20,7 +20,7 @@ import { StatReservation } from './pages/admin/StatReservation';
 import { StatSatisfaction } from './pages/admin/StatSatisfaction';
 import { StatRefund } from './pages/admin/StatRefund';
 import UsersBlacklist from './pages/admin/UsersBlacklist';
-import { DollarSign, GitBranch, LayoutDashboard, Users, MessageSquare, BarChart } from 'lucide-react';
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
