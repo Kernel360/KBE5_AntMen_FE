@@ -1,19 +1,61 @@
 import Link from 'next/link';
-import { CheckCircleIcon } from '@heroicons/react/24/solid';
+import { CheckCircleIcon, HomeIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/solid';
 
 const Page = () => {
   return (
-    <main className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-      <CheckCircleIcon className="w-16 h-16 text-emerald-500 mb-4" />
-      <h1 className="text-2xl font-bold mb-2">예약이 완료되었습니다!</h1>
-      <p className="text-gray-600 mb-8">예약 내역은 예약 현황에서 확인하실 수 있습니다.</p>
-      <div className="flex gap-3">
-        <Link href="/" className="px-6 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium transition">
-          홈으로 돌아가기
-        </Link>
-        <Link href="/myreservation" className="px-6 py-2 rounded-lg bg-primary text-black font-medium hover:bg-primary-dark transition">
-          예약 현황 보기
-        </Link>
+    <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+      <div className="bg-white rounded-2xl p-6 max-w-md mx-auto shadow-lg text-center">
+        {/* 성공 아이콘 */}
+        <div className="w-16 h-16 mx-auto mb-4 bg-emerald-100 rounded-full flex items-center justify-center">
+          <CheckCircleIcon className="w-10 h-10 text-emerald-600" />
+        </div>
+
+        {/* 메인 메시지 */}
+        <h1 className="text-xl font-bold text-gray-900 mb-2">
+          예약이 완료되었습니다! 🎉
+        </h1>
+        <p className="text-gray-600 mb-5 text-sm leading-relaxed">
+          전문 매니저가 배정되면 알림을 보내드릴게요.<br/>
+          예약 내역은 내 예약에서 확인하실 수 있어요.
+        </p>
+
+        {/* 다음 단계 안내 */}
+        <div className="mb-6 p-4 bg-gray-50 rounded-xl">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">다음 단계</h3>
+          <div className="space-y-2 text-xs text-gray-600">
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-[10px] leading-none">1</div>
+              <span>매니저 배정 및 알림 발송</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-[10px] leading-none">2</div>
+              <span>예약 시간 30분 전 확인 연락</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold text-[10px] leading-none">3</div>
+              <span>전문적이고 친절한 서비스 제공</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 액션 버튼들 */}
+        <div className="space-y-3">
+          <Link 
+            href="/myreservation" 
+            className="w-full py-3 px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+          >
+            <ClipboardDocumentListIcon className="w-4 h-4" />
+            내 예약 확인하기
+          </Link>
+          
+          <Link 
+            href="/" 
+            className="w-full py-2.5 px-6 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+          >
+            <HomeIcon className="w-4 h-4" />
+            홈으로 돌아가기
+          </Link>
+        </div>
       </div>
     </main>
   );

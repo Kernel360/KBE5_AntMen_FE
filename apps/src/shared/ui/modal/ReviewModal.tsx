@@ -2,19 +2,22 @@
 
 import React, { useState } from 'react';
 import { X, Star } from 'lucide-react';
+import type { ReviewAuthorType, ReviewRequest } from '@/shared/api/review';
 
 interface ReviewModalProps {
   isOpen: boolean;
+  reservationId: number;
   onClose: () => void;
-  onSubmit: (rating: number, content: string) => void;
-  customerName: string;
+  onSubmit: (dto: ReviewRequest) => void;
+  authorType: ReviewAuthorType;
 }
 
 export const ReviewModal: React.FC<ReviewModalProps> = ({
   isOpen,
+  reservationId,
   onClose,
   onSubmit,
-  customerName,
+  authorType,
 }) => {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
@@ -30,7 +33,13 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
       return;
     }
 
-    onSubmit(rating, content.trim());
+    onSubmit({
+      reservationId,
+      reviewRating: rating,
+      reviewComment: content.trim(),
+      reviewAuthor: authorType,
+    });
+    
     // 모달 초기화
     setRating(0);
     setHoveredRating(0);
@@ -60,9 +69,11 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
 
         {/* 헤더 */}
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">업무 후기 작성</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">리뷰 작성</h2>
           <p className="text-sm text-gray-600">
-            <span className="font-medium">{customerName}</span> 고객님과의 업무는 어떠셨나요?
+            {authorType === 'MANAGER' 
+              ? '고객님과의 업무는 어떠셨나요?' 
+              : '매니저님의 서비스는 어떠셨나요?'}
           </p>
         </div>
 
@@ -111,7 +122,9 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="고객님과의 업무에 대한 소감을 자유롭게 작성해주세요."
+            placeholder={authorType === 'MANAGER' 
+              ? "업무에 대한 소감을 자유롭게 작성해주세요."
+              : "서비스에 대한 평가를 자유롭게 작성해주세요."}
             className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#4DD0E1] focus:border-transparent"
             maxLength={200}
           />
@@ -132,7 +145,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
             onClick={handleSubmit}
             className="flex-1 py-3 bg-[#4DD0E1] text-white rounded-lg font-medium hover:bg-[#26C6DA] transition-colors"
           >
-            후기 등록
+            등록
           </button>
         </div>
       </div>

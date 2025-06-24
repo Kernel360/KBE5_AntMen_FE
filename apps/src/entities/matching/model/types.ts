@@ -73,3 +73,35 @@ export interface MatchingResponseRequestDto {
   matchingIsFinal: boolean
   matchingRefuseReason?: string
 }
+
+// 페이징된 응답을 위한 타입 추가
+export interface PageableResponse<T> {
+  totalPages: number
+  totalElements: number
+  first: boolean
+  last: boolean
+  size: number
+  content: T[]
+  number: number
+  sort: {
+    empty: boolean
+    sorted: boolean
+    unsorted: boolean
+  }
+  pageable: {
+    pageNumber: number
+    pageSize: number
+    sort: {
+      empty: boolean
+      sorted: boolean
+      unsorted: boolean
+    }
+    offset: number
+    paged: boolean
+    unpaged: boolean
+  }
+  numberOfElements: number
+  empty: boolean
+}
+
+export type PaginatedMatchingResponse = PageableResponse<ReservationHistoryDto>

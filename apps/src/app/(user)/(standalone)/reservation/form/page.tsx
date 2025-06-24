@@ -9,6 +9,7 @@ import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { calculateEndTime } from '@/shared/lib/utils'
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 import {
   DateSelector,
   TimeSelector,
@@ -75,24 +76,13 @@ const ReservationForm = ({
     <div className="bg-gray-50">
       <div className="relative mx-auto max-w-screen-sm bg-white min-h-screen pb-28">
         {/* Navigation Header */}
-        <header className="sticky top-0 bg-white z-10 shadow-sm">
-          <div className="h-14 flex items-center px-4">
-            <Link
-              href="/reservation"
-              className="w-6 h-6 flex items-center justify-center"
-            >
-              <Image
-                src="/icons/arrow-left.svg"
-                alt="Back"
-                width={24}
-                height={24}
-              />
-            </Link>
-          </div>
-        </header>
+        <CommonHeader 
+          title="  "
+          showBackButton
+        />
 
         {/* 선택된 카테고리 정보 표시 */}
-        <div className="px-4 py-3 bg-gray-50 border-b">
+        <div className="px-4 py-3 bg-gray-50 border-b pt-20">
           <h2 className="text-lg font-bold">{initialCategory.categoryName}</h2>
           <p className="text-sm text-gray-600">
             시간당 {initialCategory.categoryPrice.toLocaleString()}원 (기본{' '}

@@ -7,6 +7,7 @@ import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Dayjs } from 'dayjs';
 import 'dayjs/locale/ko';
+import dayjs from 'dayjs';
 import { formatDate } from '@/shared/lib/utils';
 
 // MUI 테마 커스터마이징
@@ -90,6 +91,7 @@ export const DateSelector = ({
                   onDateChange(newValue);
                   onCalendarClose();
                 }}
+                minDate={dayjs()}
                 sx={{
                   width: '100%',
                   '& .MuiPickersDay-root': {

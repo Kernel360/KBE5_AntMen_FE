@@ -69,9 +69,9 @@ export function HomeHeader({
   }
 
   return (
-    <section className="relative w-full bg-primary pb-6 overflow-hidden">
+    <section className="relative w-full bg-primary pb-6 overflow-hidden z-10">
       {/* <BubbleBackground /> */}
-      <div className="relative z-10 pt-4 container">
+      <div className="relative z-20 pt-4 container">
         <div className="flex justify-end mb-6">
           <div className="flex gap-[10px]">
             <Link className="relative" href="/login" aria-label="로그인">

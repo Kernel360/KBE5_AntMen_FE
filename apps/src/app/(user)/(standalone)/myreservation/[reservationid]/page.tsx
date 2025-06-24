@@ -1,8 +1,7 @@
-// 내 예약 -> 예약 상세 페이지
 'use client'
 import { Suspense } from 'react'
 import type { ReservationHistory } from '@/entities/reservation/model/types'
-import { ReservationDetailPageClient } from './ReservationDetailPageClient'
+import { ReservationDetailPageClient } from '@/app/(user)/(standalone)/myreservation/[reservationid]/ReservationDetailPageClient'
 import { notFound } from 'next/navigation'
 import { customFetch } from '@/shared/api/base'
 
@@ -36,15 +35,19 @@ async function getReservationDetail(id: string): Promise<ReservationHistory | nu
 function PageSkeleton() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 animate-pulse">
-      {/* Header Skeleton */}
-      <header className="bg-white px-5 py-4">
-        <div className="flex items-center gap-4">
-          <div className="w-6 h-6 bg-gray-200 rounded"></div>
-          <div className="w-32 h-8 bg-gray-200 rounded"></div>
+      {/* Header Skeleton - CommonHeader 스타일 */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 z-[9999] w-full max-w-mobile bg-white border-b border-gray-200 shadow-sm">
+        <div className="h-[64px] flex items-stretch relative">
+          <div className="absolute left-0 w-[48px] h-[64px] flex items-center justify-start pl-4">
+            <div className="h-6 w-6 rounded bg-gray-200 animate-pulse" />
+          </div>
+          <div className="w-full h-[64px] flex flex-col items-center justify-center mx-[48px]">
+            <div className="h-5 w-20 rounded bg-gray-200 animate-pulse" />
+          </div>
         </div>
-      </header>
+      </div>
 
-      <main className="flex-grow pb-24">
+      <main className="flex-grow pt-16 pb-8">
         <div className="space-y-2">
           {/* Service Info Skeleton */}
           <div className="bg-white px-5 py-6">
@@ -94,4 +97,4 @@ export default async function ReservationDetailPage({ params }: PageProps) {
       <ReservationDetailPageClient initialReservation={reservationDetail} />
     </Suspense>
   )
-}
+} 

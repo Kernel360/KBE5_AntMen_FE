@@ -21,6 +21,7 @@ export interface ReservationResponse {
   reservationAmount: number
   optionIds: number[]
   optionNames: string[]
+  hasReview: boolean
 }
 
 /**

@@ -14,31 +14,97 @@ import {
 import {
   changeReservationStatus,
   getMyReservations,
+  checkIn,
+  checkOut,
 } from '@/entities/reservation/api/reservationApi'
+import { useAuthStore } from '@/shared/stores/authStore'
+import { managerApi, type ReviewRequest, type ReviewAuthorType } from '@/shared/api/review'
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 
 interface ManagerReservationsClientProps {
   initialReservations: Reservation[]
 }
+
+type ReservationFilterTab = 'scheduled' | 'today' | 'past'
 
 export const ManagerReservationsClient = ({
   initialReservations,
 }: ManagerReservationsClientProps) => {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [activeTab, setActiveTab] = useState<ReservationTab>('upcoming')
+  const [activeTab, setActiveTab] = useState<ReservationFilterTab>('scheduled')
   const [reservations, setReservations] = useState<Reservation[]>(
     initialReservations.map(mapReservationApiToClient),
   )
   const [reviewModal, setReviewModal] = useState<{
     isOpen: boolean
-    reservationId: string
-    customerName: string
+    reservationId: number
   }>({
     isOpen: false,
-    reservationId: '',
-    customerName: '',
+    reservationId: 0,
+  })
+  const [checkoutModal, setCheckoutModal] = useState<{
+    isOpen: boolean
+    reservationId: number
+  }>({
+    isOpen: false,
+    reservationId: 0,
   })
   const [error, setError] = useState<string | null>(null)
+  const { user } = useAuthStore()
+  const userRole = user?.userRole
+
+  // 탭 정의
+  const tabs: { id: ReservationFilterTab; label: string }[] = [
+    { id: 'scheduled', label: '예정된 업무' },
+    { id: 'today', label: '오늘 업무' },
+    { id: 'past', label: '지난 업무' },
+  ]
+
+  // 오늘 날짜 체크 함수
+  const isToday = (dateString: string) => {
+    const today = new Date()
+    const date = new Date(dateString)
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    )
+  }
+
+  // 과거 날짜 체크 함수
+  const isPast = (dateString: string) => {
+    const today = new Date()
+    const date = new Date(dateString)
+    today.setHours(0, 0, 0, 0)
+    date.setHours(0, 0, 0, 0)
+    return date < today
+  }
+
+  // 미래 날짜 체크 함수 (오늘 제외)
+  const isFuture = (dateString: string) => {
+    const today = new Date()
+    const date = new Date(dateString)
+    today.setHours(0, 0, 0, 0)
+    date.setHours(0, 0, 0, 0)
+    return date > today
+  }
+
+  // 예약 필터링
+  const filteredReservations = reservations.filter((reservation) => {
+    const reservationDate = reservation.reservationDate
+    
+    switch (activeTab) {
+      case 'scheduled':
+        return isFuture(reservationDate)
+      case 'today':
+        return isToday(reservationDate)
+      case 'past':
+        return isPast(reservationDate)
+      default:
+        return true
+    }
+  })
 
   // 클라이언트에서 예약 데이터 fetch
   const fetchReservations = async () => {
@@ -116,69 +182,117 @@ export const ManagerReservationsClient = ({
 
   const handleCheckIn = async (id: string) => {
     console.log('Check-in for reservation:', id)
-    await updateReservationStatus(id, {
-      reservationStatus: 'MATCHING',
+    const rawToken =
+      document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('auth-token='))
+        ?.split('=')[1] || ''
+    const decodedToken = decodeURIComponent(rawToken)
+    const token = decodedToken.replace(/^Bearer\s+/, '')
+    const authHeader = `Bearer ${token}`
+
+    const checkinTime = new Date().toISOString()
+
+    // Optimistic Update
+    setReservations(prev =>
+      prev.map(r =>
+        r.reservationId.toString() === id
+          ? { ...r, checkinAt: checkinTime }
+          : r,
+      ),
+    )
+
+    try {
+      await checkIn(Number(id), checkinTime, authHeader)
+    } catch (error) {
+      console.error('Check-in failed:', error)
+      alert('체크인에 실패했습니다. 다시 시도해주세요.')
+      // Rollback on error
+      setReservations(prev =>
+        prev.map(r =>
+          r.reservationId.toString() === id ? { ...r, checkinAt: null } : r,
+        ),
+      )
+    }
+  }
+
+  const handleCheckOut = (id: string) => {
+    console.log('Check-out for reservation:', id)
+    setCheckoutModal({
+      isOpen: true,
+      reservationId: Number(id),
     })
   }
 
-  const handleCheckOut = async (id: string) => {
-    console.log('Check-out for reservation:', id)
-    const reservation = reservations.find(
-      (r) => r.reservationId.toString() === id,
-    )
-    if (!reservation) return
+  const handleCheckoutSubmit = async (comment: string) => {
+    if (!checkoutModal.reservationId) return
 
-    await updateReservationStatus(id, {
-      reservationStatus: 'DONE',
-    })
+    const id = checkoutModal.reservationId
+    const rawToken =
+      document.cookie
+        .split('; ')
+        .find(row => row.startsWith('auth-token='))
+        ?.split('=')[1] || ''
+    const decodedToken = decodeURIComponent(rawToken)
+    const token = decodedToken.replace(/^Bearer\s+/, '')
+    const authHeader = `Bearer ${token}`
 
-    setReviewModal({
-      isOpen: true,
-      reservationId: id,
-      customerName: '고객님',
-    })
+    const checkoutTime = new Date().toISOString()
+    
+    try {
+      await checkOut(id, { checkoutAt: checkoutTime, comment }, authHeader)
+      
+      // 로컬 상태 DONE으로 변경
+      await updateReservationStatus(id.toString(), {
+        reservationStatus: 'DONE',
+      })
+
+      // 리뷰 모달 열기
+      setReviewModal({
+        isOpen: true,
+        reservationId: id,
+      })
+    } catch (error) {
+      console.error('Check-out failed:', error)
+      alert('체크아웃에 실패했습니다.')
+    } finally {
+      setCheckoutModal({ isOpen: false, reservationId: 0 })
+    }
   }
 
   const handleWriteReview = (id: string) => {
-    const reservation = reservations.find(
-      (r) => r.reservationId.toString() === id,
-    )
-    if (!reservation) return
-
     setReviewModal({
       isOpen: true,
-      reservationId: id,
-      customerName: '고객님',
+      reservationId: Number(id),
     })
   }
 
-  const handleReviewSubmit = async (rating: number, content: string) => {
-    const reviewData = {
-      rating,
-      content,
-      createdAt: new Date().toISOString(),
+  const handleReviewSubmit = async (dto: ReviewRequest) => {
+    try {
+      console.log('리뷰 제출 데이터:', dto);
+      const response = await managerApi.createReview(dto);
+      console.log('리뷰 제출 응답:', response);
+
+      await fetchReservations();
+      console.log('예약 목록 갱신 후:', reservations);
+
+      setReviewModal({
+        isOpen: false,
+        reservationId: 0,
+      });
+
+      alert('후기가 성공적으로 등록되었습니다!');
+    } catch (e) {
+      console.error('리뷰 등록 에러:', e);
+      alert('리뷰 등록에 실패했습니다.');
     }
-
-    await updateReservationStatus(reviewModal.reservationId, {
-      reservationStatus: 'DONE',
-    })
-
-    // 모달 닫기
-    setReviewModal({
-      isOpen: false,
-      reservationId: '',
-      customerName: '',
-    })
-
-    alert('후기가 성공적으로 등록되었습니다!')
-  }
+  };
 
   const handleReviewModalClose = () => {
     // 후기를 작성하지 않고 모달을 닫았을 때
     setReviewModal({
       isOpen: false,
-      reservationId: '',
-      customerName: '',
+      reservationId: 0,
     })
   }
 
@@ -197,77 +311,42 @@ export const ManagerReservationsClient = ({
     router.push('/manager/matching')
   }
 
-  const filteredReservations = reservations.filter((reservation) =>
-    activeTab === 'upcoming'
-      ? reservation.reservationStatus === 'WAITING' ||
-        reservation.reservationStatus === 'MATCHING'
-      : reservation.reservationStatus === 'DONE' ||
-        reservation.reservationStatus === 'CANCEL' ||
-        reservation.reservationStatus === 'ERROR',
-  )
-
   if (error) {
     return (
-      <main className="flex min-h-screen flex-col bg-white">
-        {/* Header */}
-        <header className="flex items-center justify-between p-5">
-          <button
-            onClick={() => router.back()}
-            className="flex h-6 w-6 items-center justify-center"
-          >
-            <Image
-              src="/icons/arrow-left.svg"
-              alt="뒤로가기"
-              width={24}
-              height={24}
-            />
-          </button>
-          <h1 className="flex-1 text-center text-2xl font-bold">업무 내역</h1>
-          <div className="h-6 w-6" /> {/* Spacer for alignment */}
-        </header>
+      <main className="min-h-screen bg-gray-50">
+        <CommonHeader 
+          title="업무 내역"
+          showCloseButton
+        />
 
         {/* Tab Section */}
-        <div className="flex flex-col gap-4 px-5">
-          <div className="flex gap-10">
-            <button
-              onClick={() => setActiveTab('upcoming')}
-              className="flex flex-col items-center gap-2"
-            >
-              <span
-                className={`text-base ${
-                  activeTab === 'upcoming'
-                    ? 'font-extrabold text-[#4DD0E1]'
-                    : 'font-medium text-[#B0BEC5]'
-                }`}
+        <div className="sticky top-[64px] z-20 bg-white border-b">
+          <div className="flex gap-10 px-5 py-3">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as ReservationFilterTab)}
+                className="flex flex-col items-center gap-2"
               >
-                예정된 업무
-              </span>
-              {activeTab === 'upcoming' && (
-                <div className="h-0.5 w-full bg-[#4DD0E1]" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('past')}
-              className="flex flex-col items-center gap-2"
-            >
-              <span
-                className={`text-base ${
-                  activeTab === 'past'
-                    ? 'font-extrabold text-[#4DD0E1]'
-                    : 'font-medium text-[#B0BEC5]'
-                }`}
-              >
-                지난 업무
-              </span>
-              {activeTab === 'past' && (
-                <div className="h-0.5 w-full bg-[#4DD0E1]" />
-              )}
-            </button>
+                <span
+                  className={`text-base ${
+                    activeTab === tab.id
+                      ? 'font-extrabold text-[#4DD0E1]'
+                      : 'font-medium text-[#B0BEC5]'
+                  }`}
+                >
+                  {tab.label}
+                </span>
+                {activeTab === tab.id && (
+                  <div className="h-0.5 w-full bg-[#4DD0E1]" />
+                )}
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Error 안내문구 */}
-        <section className="flex flex-1 flex-col items-center justify-center bg-gray-50 p-5">
+        <section className="pt-0 p-5 pb-20 min-h-[calc(100vh-64px-60px)] flex flex-col items-center justify-center">
           <div className="flex flex-col items-center">
             <h2 className="text-xl font-semibold text-red-600 mb-2">
               오류가 발생했습니다
@@ -286,118 +365,154 @@ export const ManagerReservationsClient = ({
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-white">
-      {/* Header */}
-      <header className="flex items-center justify-between p-5">
-        <button
-          onClick={() => router.back()}
-          className="flex h-6 w-6 items-center justify-center"
-        >
-          <Image
-            src="/icons/arrow-left.svg"
-            alt="뒤로가기"
-            width={24}
-            height={24}
-          />
-        </button>
-        <h1 className="flex-1 text-center text-2xl font-bold">업무 내역</h1>
-        <div className="h-6 w-6" /> {/* Spacer for alignment */}
-      </header>
-
-      {/* Tab Section */}
-      <div className="flex flex-col gap-4 px-5">
-        <div className="flex gap-10">
-          <button
-            onClick={() => setActiveTab('upcoming')}
-            className="flex flex-col items-center gap-2"
-          >
-            <span
-              className={`text-base ${
-                activeTab === 'upcoming'
-                  ? 'font-extrabold text-[#4DD0E1]'
-                  : 'font-medium text-[#B0BEC5]'
-              }`}
-            >
-              예정된 업무
-            </span>
-            {activeTab === 'upcoming' && (
-              <div className="h-0.5 w-full bg-[#4DD0E1]" />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('past')}
-            className="flex flex-col items-center gap-2"
-          >
-            <span
-              className={`text-base ${
-                activeTab === 'past'
-                  ? 'font-extrabold text-[#4DD0E1]'
-                  : 'font-medium text-[#B0BEC5]'
-              }`}
-            >
-              지난 업무
-            </span>
-            {activeTab === 'past' && (
-              <div className="h-0.5 w-full bg-[#4DD0E1]" />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Reservation List or 안내문구 */}
-      <section className="flex flex-1 flex-col overflow-y-auto bg-gray-50 p-5">
-        {filteredReservations.length > 0 ? (
-          <div className="space-y-4">
-            {filteredReservations.map((reservation) => (
-              <ReservationCard
-                key={reservation.reservationId}
-                reservation={reservation}
-                userType="manager"
-                onCheckIn={handleCheckIn}
-                onCheckOut={handleCheckOut}
-                onWriteReview={handleWriteReview}
-                onCancel={handleCancel}
-                onViewDetails={handleViewDetails}
-              />
+    <main className="min-h-screen bg-gray-50">
+      <CommonHeader 
+        title="업무 내역"
+        showCloseButton
+      />
+      
+      {/* 헤더 아래 적절한 여백 확보 */}
+      <div className="pt-16">
+        {/* 탭 - 게시판과 동일한 스타일 */}
+        <div className="sticky top-[64px] z-10 bg-white border-b border-gray-200">
+          <div className="grid grid-cols-3">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative py-3.5 text-sm font-medium transition-colors ${
+                  activeTab === tab.id ? 'bg-primary/10' : ''
+                }`}
+              >
+                <span className={activeTab === tab.id ? 'text-primary' : 'text-gray-600'}>
+                  {tab.label}
+                </span>
+                {activeTab === tab.id && (
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />
+                )}
+              </button>
             ))}
           </div>
-        ) : (
-          <div className="flex flex-1 flex-col items-center justify-center gap-6 rounded-2xl bg-white">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100" />
-            <div className="text-center">
-              <p className="text-lg font-bold text-gray-800">
-                {activeTab === 'upcoming'
-                  ? '예정된 업무가 없습니다'
-                  : '지난 업무가 없습니다'}
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                {activeTab === 'upcoming'
-                  ? '새로운 업무를 찾거나 매칭 요청을 확인해보세요.'
-                  : '완료된 업무 내역이 여기에 표시됩니다.'}
-              </p>
+        </div>
+
+        {/* 예약 목록 */}
+        <div className="pb-20">
+          {filteredReservations.length > 0 ? (
+            <div className="space-y-4 p-4">
+              {filteredReservations.map((reservation) => (
+                <ReservationCard
+                  key={reservation.reservationId}
+                  reservation={reservation}
+                  userType="manager"
+                  onCheckIn={handleCheckIn}
+                  onCheckOut={handleCheckOut}
+                  onWriteReview={handleWriteReview}
+                  onCancel={handleCancel}
+                  onViewDetails={handleViewDetails}
+                />
+              ))}
             </div>
-            {activeTab === 'upcoming' && (
-              <button
-                onClick={handleNewWork}
-                className="rounded-xl bg-gray-800 px-6 py-3 text-base font-bold text-white"
-              >
-                새로운 업무 찾기
-              </button>
-            )}
-          </div>
-        )}
-      </section>
+          ) : (
+            <div className="flex h-64 flex-col items-center justify-center space-y-4">
+              <div className="text-center">
+                <p className="text-lg font-bold text-gray-800">
+                  {activeTab === 'scheduled'
+                    ? '예정된 업무가 없습니다'
+                    : activeTab === 'today'
+                    ? '오늘 업무가 없습니다'
+                    : '지난 업무가 없습니다'}
+                </p>
+                <p className="mt-2 text-sm text-gray-500">
+                  {activeTab === 'scheduled'
+                    ? '새로운 업무를 찾거나 매칭 요청을 확인해보세요.'
+                    : activeTab === 'today'
+                    ? '오늘의 업무가 여기에 표시됩니다.'
+                    : '완료된 업무 내역이 여기에 표시됩니다.'}
+                </p>
+              </div>
+              {activeTab === 'scheduled' && (
+                <button
+                  onClick={handleNewWork}
+                  className="rounded-lg bg-blue-500 px-6 py-3 text-white hover:bg-blue-600"
+                >
+                  새 업무 찾기
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Review Modal */}
       {reviewModal.isOpen && (
         <ReviewModal
           isOpen={reviewModal.isOpen}
+          reservationId={reviewModal.reservationId}
           onClose={handleReviewModalClose}
           onSubmit={handleReviewSubmit}
-          customerName={reviewModal.customerName}
+          authorType={userRole as ReviewAuthorType}
+        />
+      )}
+      
+      {/* Checkout Comment Modal */}
+      {checkoutModal.isOpen && (
+        <CheckoutCommentModal
+          isOpen={checkoutModal.isOpen}
+          onClose={() => setCheckoutModal({ isOpen: false, reservationId: 0 })}
+          onSubmit={handleCheckoutSubmit}
         />
       )}
     </main>
+  )
+}
+
+const CheckoutCommentModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (comment: string) => void
+}) => {
+  const [comment, setComment] = useState('')
+
+  if (!isOpen) return null
+
+  const handleSubmit = () => {
+    if (!comment.trim()) {
+      alert('코멘트를 입력해주세요.')
+      return
+    }
+    onSubmit(comment)
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl p-6 w-[90%] max-w-md">
+        <h3 className="text-lg font-bold mb-4">체크아웃 코멘트</h3>
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="고객에게 전달할 코멘트를 남겨주세요."
+          className="w-full h-32 p-3 border border-gray-300 rounded-lg mb-4"
+        />
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-3 font-bold"
+          >
+            취소
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="flex-1 bg-[#4abed9] text-white rounded-xl py-3 font-bold"
+          >
+            체크아웃 완료
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 

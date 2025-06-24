@@ -6,6 +6,7 @@ import { EditProfileModal } from '@/shared/ui/modal/EditProfileModal'
 import Link from 'next/link'
 import { useState } from 'react'
 import Image from 'next/image'
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 
 export default function AccountPage() {
   const [eventNotification, setEventNotification] = useState(false)
@@ -36,14 +37,11 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="flex items-center gap-x-2.5 px-4 py-4">
-        <Link href="/" className="p-1">
-          <ArrowLeft className="w-6 h-6 text-black" />
-        </Link>
-        <h1 className="text-2xl font-bold text-black">계정 정보</h1>
-      </header>
+    <div className="min-h-screen bg-gray-50">
+      <CommonHeader 
+        title="계정 관리"
+        showBackButton
+      />
 
       {/* Content */}
       <main className="p-4 flex flex-col gap-y-4">
