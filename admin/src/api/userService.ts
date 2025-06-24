@@ -45,7 +45,10 @@ export const userService = {
 
     // 매니저 거절
     rejectManager: async (userId: number, reason: string): Promise<void> => {
-        await userApi.post(`/admin/users/${userId}/reject`, { reason });
+        console.log('rejectManager 호출:', { userId, reason });
+        await userApi.post(`/admin/users/${userId}/reject`, null, {
+            params: { reason }
+        });
     },
 
     // // 사용자 생성

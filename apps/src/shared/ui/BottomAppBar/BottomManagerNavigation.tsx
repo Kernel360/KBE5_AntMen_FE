@@ -12,7 +12,6 @@ import {
 } from '@heroicons/react/24/outline'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/shared/stores/authStore'
-import { getMatchingRequests } from '@/entities/matching/api/matchingAPi'
 
 interface NavItemProps {
   icon: React.ReactNode
@@ -36,7 +35,7 @@ function NavItem({ icon, label, isActive, href, badgeCount }: NavItemProps) {
         >
           {icon}
         </div>
-        {badgeCount !== undefined && badgeCount > 0 && (
+        {typeof badgeCount === 'number' && badgeCount > 0 && (
           <div className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-red-500 rounded-full flex items-center justify-center">
             <span className="text-xs text-white font-medium px-1">
               {badgeCount > 99 ? '99+' : badgeCount}
@@ -55,28 +54,18 @@ function NavItem({ icon, label, isActive, href, badgeCount }: NavItemProps) {
 
 export function BottomNavigation() {
   const pathname = usePathname()
-  const { user, isLoggedIn, matchingRequestCount, setMatchingRequestCount } = useAuthStore()
-
-  // 매니저 로그인 시 매칭 요청 개수 불러오기
+  const { user, isLoggedIn, matchingRequestCount, fetchMatchingRequestCount } = useAuthStore()
+  
+  // 매니저 로그인 상태일 때만 매칭 요청 개수 갱신 (페이지 접근 시)
   useEffect(() => {
-    const fetchMatchingRequestCount = async () => {
-      if (isLoggedIn && user?.userRole === 'MANAGER') {
-        try {
-          const data = await getMatchingRequests(0, 1) // 첫 페이지만 가져와서 총 개수만 확인
-          setMatchingRequestCount(data.totalElements)
-        } catch (error) {
-          console.error('매칭 요청 개수를 불러오는데 실패했습니다:', error)
-          // 에러 시 0으로 설정 (기존 값 유지하지 않고 명시적으로 0 설정)
-          setMatchingRequestCount(0)
-        }
-      } else if (!isLoggedIn || user?.userRole !== 'MANAGER') {
-        // 매니저가 아니거나 로그아웃한 경우 0으로 설정
-        setMatchingRequestCount(0)
+    if (isLoggedIn && user?.userRole === 'MANAGER') {
+      // 로그인 시점에 이미 매칭 요청 개수를 가져왔으므로,
+      // 여기서는 매칭 페이지 접근 시에만 갱신
+      if (pathname === '/manager/matching') {
+        fetchMatchingRequestCount()
       }
     }
-
-    fetchMatchingRequestCount()
-  }, [isLoggedIn, user?.userRole, setMatchingRequestCount])
+  }, [isLoggedIn, user?.userRole, pathname, fetchMatchingRequestCount])
 
   return (
     <div className="fixed bottom-0 left-0 right-0 mx-auto flex h-[72px] max-w-mobile items-center justify-between gap-4 border-t bg-white px-2 pt-3 pb-1.5">

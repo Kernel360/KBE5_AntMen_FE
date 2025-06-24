@@ -36,7 +36,7 @@ const NavItem = ({
           height={24}
           className="w-6 h-6"
         />
-        {badgeCount && badgeCount > 0 && (
+        {typeof badgeCount === 'number' && badgeCount > 0 && (
           <div className="absolute top-0 right-0 min-w-[16px] h-[16px] bg-red-500 rounded-full flex items-center justify-center z-10 shadow-md">
             <span className="text-xs text-white font-medium leading-none px-0.5">
               {badgeCount > 99 ? '99+' : badgeCount}

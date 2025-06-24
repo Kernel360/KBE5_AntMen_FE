@@ -87,7 +87,7 @@ export function LoginGateway() {
           }
 
           // 3. Zustand 스토어에 로그인 정보 저장
-          loginToStore(user, result.token)
+          await loginToStore(user, result.token)
 
           // 4. 쿠키에 토큰 저장 (7일 만료)
           Cookies.set('auth-token', formatTokenForServer(result.token), {

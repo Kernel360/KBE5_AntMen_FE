@@ -13,7 +13,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
     const { login, logout } = useAuthStore();
 
     useEffect(() => {
-        const initializeAuth = () => {
+        const initializeAuth = async () => {
             const token = Cookies.get('auth-token');
             console.log('🔄 인증 초기화 시작');
             console.log('🍪 저장된 토큰:', token);
@@ -43,7 +43,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
                 };
                 console.log('👤 복원할 유저 정보:', user);
 
-                login(user, token);
+                await login(user, token);
                 console.log('✅ 인증 상태 복원 완료');
             } catch (error) {
                 console.error('❌ 토큰 검증 실패:', error);

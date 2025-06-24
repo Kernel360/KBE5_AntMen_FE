@@ -92,7 +92,7 @@ export function useLoginOrigin() {
         }
 
         // 4. Zustand 스토어에 로그인 정보 저장
-        loginToStore(user, result.token)
+        await loginToStore(user, result.token)
         console.log('💾 authStore 저장 완료')
 
         // 5. 쿠키에 토큰 저장 (7일 만료)
