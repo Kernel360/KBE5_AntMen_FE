@@ -37,12 +37,11 @@ const ManagerSignUpPage = () => {
     profileImage: null,
   })
 
-  // ✅ 수정된 additionalData - 위경도 분리
   const [additionalData, setAdditionalData] = useState<ManagerAdditionalData>({
     address: '',
     addressDetail: '',
-    latitude: null,   // 위도
-    longitude: null,  // 경도
+    latitude: null,
+    longitude: null,
     workHours: {
       start: '09:00',
       end: '18:00',
@@ -133,12 +132,6 @@ const ManagerSignUpPage = () => {
     }
   }, [errors.address])
 
-  const validateForm = (): boolean => {
-    // 소셜 로그인이 아닌 경우 아이디 중복 확인 상태 체크
-    if (!isSocialSignup && !isIdValid) {
-      return false
-    }
-
   const handleAddressDetailChange = useCallback((detail: string) => {
     setAdditionalData((prev) => ({
       ...prev,
@@ -172,6 +165,11 @@ const ManagerSignUpPage = () => {
   }, [])
 
   const validateForm = useCallback((): boolean => {
+    // 소셜 로그인이 아닌 경우 아이디 중복 확인 상태 체크
+    if (!isSocialSignup && !isIdValid) {
+      return false
+    }
+
     const newErrors: ValidationErrors = {}
 
     // Basic data validation
@@ -205,7 +203,7 @@ const ManagerSignUpPage = () => {
     }
 
     return Object.keys(newErrors).length === 0
-  }, [basicData, additionalData, identityFiles, isSocialSignup])
+  }, [basicData, additionalData, identityFiles, isSocialSignup, isIdValid])
 
   const handleBack = useCallback(() => {
     clearSocialProfile()
