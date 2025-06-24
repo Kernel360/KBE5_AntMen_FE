@@ -8,11 +8,6 @@ export type UserRole = 'CUSTOMER' | 'MANAGER' | 'ADMIN'
 interface User {
   userId: number | null
   userRole: UserRole | null
-  id: number
-  name: string
-  email: string
-  role: UserRole
-  profileImage?: string
 }
 
 interface AuthLoginPayload {
@@ -64,11 +59,6 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           state.user = {
             userId: authUser.userId,
             userRole: authUser.userRole,
-            id: authUser.userId,
-            name: '',
-            email: '',
-            role: authUser.userRole,
-            profileImage: '',
           }
           state.token = token
         })
