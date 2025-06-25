@@ -1,49 +1,45 @@
-# Multi-stage build로 최적화
-FROM node:20.11-alpine AS base
+# Node.js serve 기반 admin React 앱 Dockerfile
 
-# 필요한 도구들 설치
-RUN apk add --no-cache libc6-compat
+# 빌드 단계
+FROM node:20.11-alpine AS builder
+
+# 빌드 도구 설치
+RUN apk add --no-cache python3 make g++ libc6-compat
+
 WORKDIR /app
 
-# 의존성 설치 단계 (캐시 최적화)
-FROM base AS deps
-# 루트 및 필요한 workspace의 package.json만 복사
+# package.json 파일들 복사
 COPY package.json yarn.lock ./
 COPY admin/package.json ./admin/
 COPY packages/ui/package.json ./packages/ui/
-# apps는 admin 빌드에 불필요하므로 제외
 
-# 프로덕션 의존성만 설치
-RUN yarn install --frozen-lockfile --production=false
+# apps workspace 더미 생성
+RUN mkdir -p apps && echo '{"name": "apps", "private": true, "version": "1.0.0"}' > apps/package.json
 
-# 빌드 단계
-FROM base AS builder
-WORKDIR /app
+# 의존성 설치
+RUN yarn install --frozen-lockfile
 
-# 의존성 복사
-COPY --from=deps /app/node_modules ./node_modules
-
-# 빌드에 필요한 소스만 복사
+# 소스 코드 복사
 COPY admin/ ./admin/
 COPY packages/ui/ ./packages/ui/
-COPY package.json yarn.lock ./
 
-# admin 빌드만 실행
+# admin 빌드
 WORKDIR /app/admin
 RUN yarn build
 
-# 프로덕션 실행 단계 (정적 파일 서빙)
-FROM node:20.11-alpine AS runner
+# 프로덕션 단계 - Node.js + serve
+FROM node:20.11-alpine
 
-# serve는 npm 패키지이므로 전역 설치
-RUN npm install -g serve
+# serve 패키지 전역 설치
+RUN npm install -g serve@14
 
 WORKDIR /app
 
 # 빌드된 파일만 복사
 COPY --from=builder /app/admin/build ./build
 
+# 포트 노출
 EXPOSE 3001
 
 # serve로 정적 파일 서빙 (SPA 지원)
-CMD ["serve", "-s", "build", "-l", "3001"]
+CMD ["serve", "-s", "build", "-l", "3001", "--no-clipboard"]
