@@ -50,9 +50,14 @@ jobs:
           file: apps/Dockerfile
           push: true
           tags: ${{ env.ECR_REGISTRY }}/users-app:latest
-          cache-from: type=gha,scope=users-app
-          cache-to: type=gha,mode=max,scope=users-app
+          cache-from: |
+            type=gha,scope=users-app
+            type=registry,ref=${{ env.ECR_REGISTRY }}/users-app:cache
+          cache-to: |
+            type=gha,mode=max,scope=users-app
+            type=registry,ref=${{ env.ECR_REGISTRY }}/users-app:cache,mode=max
           build-args: |
+            BUILDKIT_INLINE_CACHE=1
             NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
             NEXT_PUBLIC_GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
             NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE=${{ secrets.GOOGLE_RESPONSE_TYPE }}
@@ -89,8 +94,14 @@ jobs:
           file: admin/Dockerfile
           push: true
           tags: ${{ env.ECR_REGISTRY }}/admin-app:latest
-          cache-from: type=gha,scope=admin-app
-          cache-to: type=gha,mode=max,scope=admin-app
+          cache-from: |
+            type=gha,scope=admin-app
+            type=registry,ref=${{ env.ECR_REGISTRY }}/admin-app:cache
+          cache-to: |
+            type=gha,mode=max,scope=admin-app
+            type=registry,ref=${{ env.ECR_REGISTRY }}/admin-app:cache,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
 
   prepare-deploy:
     runs-on: ubuntu-latest
@@ -129,10 +140,20 @@ jobs:
             mkdir -p /home/ubuntu/apps/client
             sudo chown -R ubuntu:ubuntu /home/ubuntu/apps/client
             
-            # Docker 리소스 정리 (주간 1회 또는 디스크 사용량 80% 초과시)
-            if [ $(date +%u) -eq 1 ] || [ $(df / | tail -1 | awk '{print $5}' | sed 's/%//') -gt 80 ]; then
-              echo "🧹 Docker 리소스 정리 중..."
+            # 시스템 리소스 확인
+            echo "📊 시스템 상태:"
+            df -h / | head -2
+            free -h
+            docker system df
+            
+            # Docker 리소스 정리 (조건부)
+            DISK_USAGE=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
+            if [ $(date +%u) -eq 1 ] || [ $DISK_USAGE -gt 80 ]; then
+              echo "🧹 Docker 리소스 정리 중... (디스크 사용률: ${DISK_USAGE}%)"
               docker system prune -af --volumes
+              echo "✅ Docker 정리 완료"
+            else
+              echo "⏭️ Docker 정리 건너뛰기 (디스크 사용률: ${DISK_USAGE}%)"
             fi
 
       - name: Copy deployment files
@@ -153,8 +174,10 @@ jobs:
         include:
           - image: users-app
             service: users-app
+            port: 3000
           - image: admin-app
             service: admin-app
+            port: 3001
       max-parallel: 1
 
     steps:
@@ -177,37 +200,65 @@ jobs:
             # 환경변수 로드
             set -a && source .env && set +a
 
-            # 로그 및 상태 출력
-            echo "🚀 Deploying ${{ matrix.service }}"
-            echo "📊 시스템 리소스 확인:"
-            df -h / | head -2
-            docker system df
+            # 배포 시작 로그
+            echo "🚀 배포 시작: ${{ matrix.service }}"
+            echo "⏰ 시작 시간: $(date '+%Y-%m-%d %H:%M:%S')"
 
             # ECR 로그인
+            echo "🔐 ECR 로그인 중..."
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
             docker login --username AWS --password-stdin $ECR_REGISTRY
 
-            # 이미지 풀 및 컨테이너 재시작
+            # 이미지 풀
             echo "📦 이미지 풀링: ${{ matrix.image }}"
             docker pull $ECR_REGISTRY/${{ matrix.image }}:latest
 
+            # 컨테이너 재시작 (무중단 배포)
             echo "🔄 컨테이너 재시작: ${{ matrix.service }}"
-            docker compose down ${{ matrix.service }} 2>/dev/null || true
+            
+            # 기존 컨테이너 중지 (graceful)
+            if docker compose ps ${{ matrix.service }} | grep -q "Up"; then
+              echo "⏹️ 기존 컨테이너 중지 중..."
+              docker compose stop ${{ matrix.service }}
+            fi
+            
+            # 새 컨테이너 시작
+            echo "▶️ 새 컨테이너 시작 중..."
             docker compose up -d ${{ matrix.service }}
 
             # 배포 상태 확인
             echo "✅ 배포 완료 확인:"
-            sleep 10
-            docker compose ps ${{ matrix.service }}
-            docker compose logs --tail=20 ${{ matrix.service }}
-
-            # 간단한 헬스체크
-            if [ "${{ matrix.service }}" = "users-app" ]; then
-              echo "🏥 헬스체크: users-app"
-              curl -f http://localhost:3000 > /dev/null 2>&1 && echo "✅ users-app 정상" || echo "❌ users-app 비정상"
-            elif [ "${{ matrix.service }}" = "admin-app" ]; then
-              echo "🏥 헬스체크: admin-app"
-              curl -f http://localhost:3001 > /dev/null 2>&1 && echo "✅ admin-app 정상" || echo "❌ admin-app 비정상"
+            sleep 15
+            
+            # 컨테이너 상태 확인
+            if docker compose ps ${{ matrix.service }} | grep -q "Up"; then
+              echo "✅ 컨테이너 정상 실행 중"
+            else
+              echo "❌ 컨테이너 실행 실패"
+              docker compose logs --tail=20 ${{ matrix.service }}
+              exit 1
             fi
+            
+            # 로그 출력
+            echo "📋 최근 로그:"
+            docker compose logs --tail=10 ${{ matrix.service }}
+
+            # 헬스체크
+            echo "🏥 헬스체크 시작..."
+            for i in {1..5}; do
+              if curl -f -s http://localhost:${{ matrix.port }} > /dev/null; then
+                echo "✅ ${{ matrix.service }} 헬스체크 성공 (시도 $i/5)"
+                break
+              else
+                echo "⏳ ${{ matrix.service }} 헬스체크 대기 중... (시도 $i/5)"
+                sleep 10
+              fi
+            
+              if [ $i -eq 5 ]; then
+                echo "❌ ${{ matrix.service }} 헬스체크 실패"
+                docker compose logs --tail=30 ${{ matrix.service }}
+              fi
+            done
 
             echo "🎉 ${{ matrix.service }} 배포 완료!"
+            echo "⏰ 완료 시간: $(date '+%Y-%m-%d %H:%M:%S')"
