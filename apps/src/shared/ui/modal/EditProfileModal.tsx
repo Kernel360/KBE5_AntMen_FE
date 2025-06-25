@@ -1,5 +1,6 @@
 import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
+import type { UserGender } from '@/entities/account/model/types';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -9,12 +10,16 @@ interface EditProfileModalProps {
     phone: string;
     birthDate: string;
     email: string;
+    gender: UserGender;
+    userProfile: string;
   };
   onSubmit: (data: {
     name: string;
     phone: string;
     birthDate: string;
     email: string;
+    gender: UserGender;
+    userProfile: string;
   }) => void;
 }
 
@@ -32,6 +37,8 @@ export const EditProfileModal = ({
       phone: formData.get('phone') as string,
       birthDate: formData.get('birthDate') as string,
       email: formData.get('email') as string,
+      gender: initialData.gender,
+      userProfile: initialData.userProfile,
     });
   };
 

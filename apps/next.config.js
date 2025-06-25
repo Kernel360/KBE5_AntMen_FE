@@ -7,6 +7,15 @@ const nextConfig = {
     }
     return config
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.amazonaws.com',
+        pathname: '/**',
+      }
+    ],
+  },
 //   async rewrites() {
 //     return [
 //       {

@@ -10,18 +10,14 @@ interface AccountSettingsProps {
     birthDate: string
     email: string
   }
-  eventNotification: boolean
   appNotification: boolean
-  onEventNotificationChange: (value: boolean) => void
   onAppNotificationChange: (value: boolean) => void
   onEditClick: () => void
 }
 
 export const AccountSettings = ({
   userInfo,
-  eventNotification,
   appNotification,
-  onEventNotificationChange,
   onAppNotificationChange,
   onEditClick,
 }: AccountSettingsProps) => {
