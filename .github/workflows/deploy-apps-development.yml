@@ -54,7 +54,7 @@ jobs:
           if [ "${{ matrix.name }}" = "users-app" ]; then
             yarn workspace apps build
           else
-            yarn workspace admin build
+            CI=false yarn workspace admin build
           fi
 
       - name: Configure AWS credentials
