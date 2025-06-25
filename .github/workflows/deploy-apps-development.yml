@@ -81,11 +81,9 @@ jobs:
             --build-arg NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE=${{ secrets.GOOGLE_RESPONSE_TYPE }} \
             --build-arg NEXT_PUBLIC_GOOGLE_SCOPE=${{ secrets.GOOGLE_SCOPE }} \
             --build-arg NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.GOOGLE_AUTH_URL }} \
-            --cache-from $ECR_REGISTRY/${{ matrix.image }}:latest \
             -t $ECR_REGISTRY/${{ matrix.image }}:latest .
           else
             docker build -f ${{ matrix.dockerfile }} \
-            --cache-from $ECR_REGISTRY/${{ matrix.image }}:latest \
             -t $ECR_REGISTRY/${{ matrix.image }}:latest .
           fi
           
