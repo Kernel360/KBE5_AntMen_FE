@@ -4,6 +4,7 @@ import { MenuItem } from '@/shared/ui/MenuItem'
 import { ProfileSection } from '@/shared/ui/ProfileSection'
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 import { useAuthStore } from '@/shared/stores/authStore'
+import { useSecureAuth } from '@/shared/hooks/useSecureAuth'
 import { useRouter } from 'next/navigation'
 import Cookies from 'js-cookie'
 import Image from 'next/image'
@@ -18,8 +19,14 @@ interface MorePageUIProps {
 }
 
 export const MorePageUI = ({ user }: MorePageUIProps) => {
+  // 🛡️ 보안 강화: JWT 기반 사용자 정보 (최우선)
+  const { user: secureUser, logout: secureLogout } = useSecureAuth()
+  // 🔄 기존 호환성: localStorage 기반
   const { logout, user: authUser } = useAuthStore()
   const router = useRouter()
+  
+  // JWT 기반 정보 우선 사용
+  const actualUser = secureUser || authUser
 
   const handleLogout = () => {
     if (window.confirm('로그아웃 하시겠습니까?')) {
@@ -31,7 +38,7 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
   }
 
   const handleReviewManageClick = () => {
-    if (authUser?.userRole === 'MANAGER') {
+    if (actualUser?.userRole === 'MANAGER') {
       router.push('/manager/reviews')
     } else {
       router.push('/reviews')

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Cookies from 'js-cookie'
 import { useSocialProfileStore } from '@/shared/stores/socialProfileStore'
 import { useAuthStore } from '@/shared/stores/authStore'
+import { useSecureAuth } from '@/shared/hooks/useSecureAuth'
 import { jwtDecode } from 'jwt-decode'
 
 interface JwtPayload {

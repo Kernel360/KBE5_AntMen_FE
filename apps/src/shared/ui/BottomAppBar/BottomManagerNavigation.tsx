@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/shared/stores/authStore'
+import { useSecureAuth } from '@/shared/hooks/useSecureAuth'
 
 interface NavItemProps {
   icon: React.ReactNode
@@ -54,18 +55,25 @@ function NavItem({ icon, label, isActive, href, badgeCount }: NavItemProps) {
 
 export function BottomNavigation() {
   const pathname = usePathname()
+  // 🛡️ 보안 강화: JWT 기반 인증 상태 (최우선)
+  const { user: secureUser, isManager, isLoading } = useSecureAuth()
+  // 🔄 기존 호환성: localStorage 기반 (매칭 요청 수용)
   const { user, isLoggedIn, matchingRequestCount, fetchMatchingRequestCount } = useAuthStore()
+  
+  // JWT 기반 권한 우선 사용
+  const actualIsLoggedIn = isLoading ? false : (secureUser && isManager)
+  const actualUser = secureUser || user
   
   // 매니저 로그인 상태일 때만 매칭 요청 개수 갱신 (페이지 접근 시)
   useEffect(() => {
-    if (isLoggedIn && user?.userRole === 'MANAGER') {
+    if (actualIsLoggedIn && actualUser?.userRole === 'MANAGER') {
       // 로그인 시점에 이미 매칭 요청 개수를 가져왔으므로,
       // 여기서는 매칭 페이지 접근 시에만 갱신
       if (pathname === '/manager/matching') {
         fetchMatchingRequestCount()
       }
     }
-  }, [isLoggedIn, user?.userRole, pathname, fetchMatchingRequestCount])
+  }, [actualIsLoggedIn, actualUser?.userRole, pathname, fetchMatchingRequestCount])
 
   return (
     <div className="fixed bottom-0 left-0 right-0 mx-auto flex h-[72px] max-w-mobile items-center justify-between gap-4 border-t bg-white px-2 pt-3 pb-1.5">

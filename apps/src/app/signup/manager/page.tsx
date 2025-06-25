@@ -234,7 +234,7 @@ const ManagerSignUpPage = () => {
       formData.append('userName', basicData.name)
       formData.append('userTel', basicData.phone)
       formData.append('userEmail', basicData.email)
-      formData.append('userGender', basicData.gender.toUpperCase())
+      formData.append('userGender', basicData.gender) // M or W
       formData.append('userBirth', basicData.birthDate)
 
       if (isSocialSignup && socialProfile) {

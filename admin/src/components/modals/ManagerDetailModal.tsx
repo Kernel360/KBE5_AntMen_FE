@@ -52,6 +52,10 @@ export function ManagerDetailModal({
 
   // 파일 확장자로 파일 타입 확인
   const getFileType = (fileUrl: string): 'image' | 'pdf' | 'unsupported' => {
+    if (!fileUrl || typeof fileUrl !== 'string') {
+      return 'unsupported';
+    }
+    
     const extension = fileUrl.toLowerCase().split('.').pop();
     if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension || '')) {
       return 'image';
@@ -127,14 +131,16 @@ export function ManagerDetailModal({
               {/* 신분증 파일 */}
               <div>
                 <h3 className="font-medium mb-2">신분증 파일:</h3>
-                {managerData.managerFileUrls.length > 0 ? (
+                {managerData.managerFileUrls && managerData.managerFileUrls.length > 0 ? (
                   <div className="space-y-2">
                     {managerData.managerFileUrls.map((file, index) => {
-                      const fileType = getFileType(file.fileUrl);
-                      const fileName = file.fileUrl.split('/').pop() || `파일 ${index + 1}`;
+                      // 안전한 파일 정보 처리
+                      const fileUrl = file?.fileUrl || '';
+                      const fileType = getFileType(fileUrl);
+                      const fileName = fileUrl ? (fileUrl.split('/').pop() || `파일 ${index + 1}`) : `파일 ${index + 1}`;
                       
                       return (
-                        <div key={file.id} className="flex items-center justify-between p-2 border rounded-lg">
+                        <div key={file?.id || index} className="flex items-center justify-between p-2 border rounded-lg">
                           <div className="flex flex-col">
                             <span className="text-sm text-gray-600">
                               파일 {index + 1}
@@ -152,20 +158,22 @@ export function ManagerDetailModal({
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleFilePreview(file.fileUrl)}
-                              disabled={fileType === 'unsupported'}
+                              onClick={() => handleFilePreview(fileUrl)}
+                              disabled={fileType === 'unsupported' || !fileUrl}
                             >
                               미리보기
                             </Button>
-                            <a
-                              href={file.fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <Button variant="outline" size="sm">
-                                다운로드
-                              </Button>
-                            </a>
+                            {fileUrl && (
+                              <a
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Button variant="outline" size="sm">
+                                  다운로드
+                                </Button>
+                              </a>
+                            )}
                           </div>
                         </div>
                       );

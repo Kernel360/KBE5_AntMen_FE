@@ -5,15 +5,29 @@ interface DragState {
   message: string;
 }
 
+// 기존 파일 정보 (백엔드에서 온 파일)
+interface ExistingFile {
+  id: number;
+  managerFileUrl: string;
+  originalFileName: string;
+  uuidFileName: string;
+  extension: string;
+  contentType: string;
+}
+
 interface FileUploadSectionProps {
   files: File[];
   onFilesChange: (files: File[]) => void;
+  existingFiles?: ExistingFile[]; // 기존 파일들
+  onExistingFileRemove?: (fileId: number) => void; // 기존 파일 삭제
   error?: string;
 }
 
 export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
   files,
   onFilesChange,
+  existingFiles = [],
+  onExistingFileRemove,
   error,
 }) => {
   const [dragState, setDragState] = useState<DragState>({
@@ -100,7 +114,7 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`relative min-h-[120px] p-4 bg-[#F9F9F9] rounded-lg border-2 border-dashed transition-colors ${
+          className={`relative min-h-[140px] p-6 bg-[#F9F9F9] rounded-lg border-2 border-dashed transition-colors ${
             error 
               ? 'border-red-500 bg-red-50'
               : dragState.isDragging 
@@ -110,7 +124,7 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
         >
           <label 
             htmlFor="identityFiles"
-            className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer"
+            className="absolute inset-4 flex flex-col items-center justify-center cursor-pointer"
           >
             <svg 
               className={`w-8 h-8 mb-2 transition-colors ${
@@ -148,23 +162,57 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
         {error && (
           <span className="text-red-500 text-sm">{error}</span>
         )}
-        {files.length > 0 && (
+        {(existingFiles.length > 0 || files.length > 0) && (
           <div className="mt-2 space-y-2 p-4 bg-[#F9F9F9] rounded-lg">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">선택된 파일 ({files.length})</span>
-              <button
-                type="button"
-                onClick={handleRemoveAll}
-                className="text-sm text-red-500 hover:text-red-600"
-              >
-                전체 삭제
-              </button>
+              <span className="text-sm font-medium">
+                파일 목록 ({existingFiles.length + files.length})
+              </span>
+              {files.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAll}
+                  className="text-sm text-red-500 hover:text-red-600"
+                >
+                  새 파일 전체 삭제
+                </button>
+              )}
             </div>
+            
+            {/* 기존 파일들 */}
+            {existingFiles.map((file) => (
+              <div key={`existing-${file.id}`} className="flex items-center gap-2 py-2 px-3 bg-blue-50 rounded border border-blue-200">
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm text-blue-700 block truncate" title={file.originalFileName}>
+                    📎 (기존파일) {file.originalFileName}
+                  </span>
+                </div>
+                <a
+                  href={file.managerFileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-500 hover:text-blue-600 shrink-0"
+                >
+                  보기
+                </a>
+                {onExistingFileRemove && (
+                  <button
+                    type="button"
+                    onClick={() => onExistingFileRemove(file.id)}
+                    className="text-sm text-gray-400 hover:text-red-500 shrink-0"
+                  >
+                    삭제
+                  </button>
+                )}
+              </div>
+            ))}
+            
+            {/* 새로 업로드하는 파일들 */}
             {files.map((file, index) => (
-              <div key={index} className="flex items-center gap-2 py-2 px-3 bg-white rounded">
+              <div key={`new-${index}`} className="flex items-center gap-2 py-2 px-3 bg-white rounded">
                 <div className="flex-1 min-w-0">
                   <span className="text-sm text-gray-600 block truncate" title={file.name}>
-                    {file.name}
+                    📄 {file.name} (새 파일)
                   </span>
                 </div>
                 <button

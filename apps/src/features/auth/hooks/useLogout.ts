@@ -2,6 +2,7 @@ import { useAuthStore } from '@/shared/stores/authStore';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { ReservationStorage } from '@/shared/lib/reservationStorage';
+import { clearManagerStatusStore } from '@/features/manager-status';
 
 export function useLogout() {
     const { logout, user } = useAuthStore();
@@ -19,6 +20,9 @@ export function useLogout() {
 
         // 현재 사용자의 예약 관련 localStorage 데이터 정리
         ReservationStorage.clearUserReservation(userId);
+
+        // 매니저 상태 스토어 정리
+        clearManagerStatusStore(userId?.toString() || null);
 
         // Zustand 스토어 초기화
         logout();

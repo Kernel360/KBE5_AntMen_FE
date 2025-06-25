@@ -2,17 +2,21 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import type { UserData } from '@/entities/user/model/types'
+import type { ManagerStatus } from '@/entities/manager/types'
 
 export type UserRole = 'CUSTOMER' | 'MANAGER' | 'ADMIN'
 
 interface User {
   userId: number | null
   userRole: UserRole | null
+  managerStatus?: ManagerStatus | null
+  rejectionReason?: string | null
 }
 
 interface AuthLoginPayload {
   userId: number
   userRole: UserRole
+  managerStatus?: 'WAITING' | 'APPROVED' | 'REJECTED' | 'REAPPLY' | null
 }
 
 interface AuthState {
@@ -37,6 +41,8 @@ interface AuthActions {
   setLoading: (loading: boolean) => void
   setMatchingRequestCount: (count: number) => void
   fetchMatchingRequestCount: () => Promise<void>
+  updateManagerStatus: (status: ManagerStatus) => void
+  updateRejectionReason: (reason: string | null) => void
 }
 
 const initialState: AuthState = {
@@ -72,6 +78,10 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           state.user = {
             userId: authUser.userId,
             userRole: authUser.userRole,
+            // 매니저인 경우 로그인 시 받은 상태 포함
+            ...(authUser.userRole === 'MANAGER' && { 
+              managerStatus: authUser.managerStatus || null
+            })
           }
           state.token = token
         })
@@ -142,6 +152,20 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             })
           }
         }
+      },
+      updateManagerStatus: (status) => {
+        set((state) => {
+          if (state.user && state.user.userRole === 'MANAGER') {
+            state.user.managerStatus = status
+          }
+        })
+      },
+      updateRejectionReason: (reason) => {
+        set((state) => {
+          if (state.user && state.user.userRole === 'MANAGER') {
+            state.user.rejectionReason = reason
+          }
+        })
       },
     })),
     {

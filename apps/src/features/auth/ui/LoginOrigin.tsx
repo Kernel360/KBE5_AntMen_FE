@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Cookies from 'js-cookie'
 import { useAuthStore } from '@/shared/stores/authStore'
+import { useSecureAuth } from '@/shared/hooks/useSecureAuth'
 import { jwtDecode } from 'jwt-decode'
 
 type UserRole = 'CUSTOMER' | 'MANAGER' | 'ADMIN'
@@ -16,6 +17,7 @@ interface LoginFormData {
 interface LoginResponse {
   success: boolean
   token?: string
+  managerStatus?: 'WAITING' | 'APPROVED' | 'REJECTED' | 'REAPPLY' // 백엔드 enum과 매핑
   message?: string
 }
 
@@ -46,7 +48,7 @@ export function useLoginOrigin() {
     try {
       setIsLoading(true)
 
-      const response = await fetch('https://api.antmen.site:9090/api/v1/auth/login', {
+      const response = await fetch('http://localhost:9090/api/v1/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,7 +75,12 @@ export function useLoginOrigin() {
       }
 
       const result: LoginResponse = await response.json()
-      console.log('서버 응답:', result)
+      console.log('✅ 서버 응답:', result)
+      
+      // 매니저 상태 로깅
+      if (result.managerStatus) {
+        console.log('👔 매니저 상태:', result.managerStatus)
+      }
 
       if (result.success && result.token) {
         // 1. JWT 토큰 디코딩
@@ -89,7 +96,10 @@ export function useLoginOrigin() {
         const user = {
           userId: parseInt(decodedToken.sub),
           userRole: decodedToken.userRole, // 타입이 UserRole로 보장됨
+          managerStatus: result.managerStatus || null, // 🆕 백엔드에서 직접 제공하는 매니저 상태
         }
+        
+        console.log('👤 생성된 사용자 객체:', user)
 
         // 4. Zustand 스토어에 로그인 정보 저장
         await loginToStore(user, result.token)
