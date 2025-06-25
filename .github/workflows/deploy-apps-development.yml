@@ -81,7 +81,7 @@ jobs:
           --build-arg NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.GOOGLE_AUTH_URL }} \
           --platform linux/amd64 \
           --load \
-          -t $ECR_REGISTRY/${{ matrix.image }}:latest ${{ matrix.context }}
+          -t $ECR_REGISTRY/${{ matrix.image }}:latest .
 
       - name: Push Docker image
         run: |
