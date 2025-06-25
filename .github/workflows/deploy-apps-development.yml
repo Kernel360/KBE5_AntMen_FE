@@ -74,19 +74,15 @@ jobs:
       - name: Build Docker image
         run: |
           if [ "${{ matrix.image }}" = "users-app" ]; then
-            docker buildx build -f ${{ matrix.dockerfile }} \
+            docker build -f ${{ matrix.dockerfile }} \
             --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
             --build-arg NEXT_PUBLIC_GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }} \
             --build-arg NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE=${{ secrets.GOOGLE_RESPONSE_TYPE }} \
             --build-arg NEXT_PUBLIC_GOOGLE_SCOPE=${{ secrets.GOOGLE_SCOPE }} \
             --build-arg NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.GOOGLE_AUTH_URL }} \
-            --platform linux/amd64 \
-            --load \
             -t $ECR_REGISTRY/${{ matrix.image }}:latest .
           else
-            docker buildx build -f ${{ matrix.dockerfile }} \
-            --platform linux/amd64 \
-            --load \
+            docker build -f ${{ matrix.dockerfile }} \
             -t $ECR_REGISTRY/${{ matrix.image }}:latest .
           fi
 
