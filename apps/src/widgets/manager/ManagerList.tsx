@@ -73,7 +73,7 @@ export function ManagerList({ managers, selectedManagers, onManagerSelect }: Man
             >
               {isSelected && (
                 <div className="absolute right-5 top-5">
-                  <div className={`px-2.5 py-1 rounded-xl text-xs font-semibold text-white ${getPriorityColor(priority)}`}>
+                  <div className={`px-2.5 py-1 rounded-xl text-xs font-semibold text-white whitespace-nowrap ${getPriorityColor(priority)}`}>
                     {priority}순위
                   </div>
                 </div>

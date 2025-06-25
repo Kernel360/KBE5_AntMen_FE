@@ -5,7 +5,6 @@ import { Card } from '../../components/ui/card';
 import {
     LayoutDashboard,
     Users,
-    Search,
     MessageCircle,
     Headphones,
     Receipt,
