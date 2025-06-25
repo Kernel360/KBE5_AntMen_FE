@@ -118,8 +118,8 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
             error 
               ? 'border-red-500 bg-red-50'
               : dragState.isDragging 
-                ? 'border-[#0fbcd6] bg-[#F0F9FF]' 
-                : 'border-gray-300 hover:border-[#0fbcd6]'
+                ? 'border-primary bg-[#F0F9FF]' 
+                : 'border-gray-300 hover:border-primary'
           }`}
         >
           <label 
@@ -131,7 +131,7 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
                 error
                   ? 'text-red-500'
                   : dragState.isDragging 
-                    ? 'text-[#0fbcd6]' 
+                    ? 'text-primary' 
                     : 'text-gray-400'
               }`}
               fill="none" 
@@ -149,7 +149,7 @@ export const FileUploadSection: React.FC<FileUploadSectionProps> = ({
               error
                 ? 'text-red-500'
                 : dragState.isDragging 
-                  ? 'text-[#0fbcd6]' 
+                  ? 'text-primary' 
                   : 'text-gray-500'
             }`}>
               {dragState.message}

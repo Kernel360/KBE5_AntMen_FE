@@ -68,7 +68,7 @@ export function Login() {
     <div className="w-full h-full">
       {/* 헤더 섹션 - 간격 최소화 */}
       <div className="text-center mb-4">
-        <div className="w-14 h-14 bg-primary rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm">
+        <div className="w-14 h-14 bg-primary-500 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm">
           <span className="text-xl text-white font-bold">🏠</span>
         </div>
         <h1 className="text-xl font-bold text-gray-900 mb-1">AntWork</h1>
@@ -153,7 +153,7 @@ export function Login() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-primary hover:bg-primary/90 text-white py-2.5 px-4 rounded-xl font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 mt-4"
+            className="w-full bg-primary-500 hover:bg-primary-600 text-white py-2.5 px-4 rounded-xl font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 mt-4"
           >
             {isLoading ? (
               <div className="flex items-center justify-center gap-2">
@@ -202,7 +202,7 @@ export function Login() {
         <p className="text-gray-600 mb-1 text-xs">아직 계정이 없으신가요?</p>
         <Link 
           href="/signup" 
-          className="inline-flex items-center gap-1 text-primary font-semibold text-sm hover:text-primary/80 transition-colors duration-200"
+          className="inline-flex items-center gap-1 text-primary-700/80 font-semibold text-sm hover:text-primary-700 transition-colors duration-200"
         >
           <span>🚀</span>
           회원가입하기

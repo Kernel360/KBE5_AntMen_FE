@@ -16,7 +16,7 @@ const ManagerReapplySuccessPage = () => {
         {/* Main Content */}
         <div className="flex flex-col items-center justify-center min-h-screen space-y-6 pt-16">
           {/* Success Icon */}
-          <div className="w-20 h-20 bg-[#0fbcd6] rounded-full flex items-center justify-center">
+          <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center">
             <svg 
               className="w-10 h-10 text-white" 
               fill="none" 

@@ -7,6 +7,7 @@ import {
   type BasicSignupFormData,
 } from '@/features/auth/signup/ui/BasicSignupForm'
 import { useSocialProfileStore } from '@/shared/stores/socialProfileStore'
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 
 interface ValidationErrors {
   [key: string]: string
@@ -177,14 +178,15 @@ const CustomerSignUpPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white flex justify-center">
-      <div className="w-[375px] px-4 pt-4 pb-8">
-        {/* Header */}
-        <div className="mb-8">
-          <button onClick={handleBack} className="p-2 text-2xl font-bold">
-            &larr; 고객 회원가입
-          </button>
-        </div>
+    <div className="min-h-screen bg-white">
+      <CommonHeader 
+        title="고객 회원가입" 
+        showBackButton 
+        onBack={handleBack} 
+      />
+      
+      <div className="pt-24 pb-8">
+        <div className="max-w-md mx-auto px-6">
 
         {/* Main Content */}
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -202,15 +204,16 @@ const CustomerSignUpPage = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className={`w-full h-[52px] bg-[#0fbcd6] text-white rounded-lg mt-8 text-base font-medium ${
+            className={`w-full h-[52px] bg-primary-500 text-white rounded-lg mt-8 text-base font-medium ${
               isSubmitting
                 ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-[#0eaec5]'
+                : 'hover:bg-primary-600'
             }`}
           >
             {isSubmitting ? '처리중...' : '회원가입'}
           </button>
         </form>
+        </div>
       </div>
     </div>
   )

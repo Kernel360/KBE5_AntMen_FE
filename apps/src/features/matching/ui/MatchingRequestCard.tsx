@@ -71,7 +71,7 @@ export const MatchingRequestCard = ({
             </div>
           </div>
           <div className="bg-[#E8F0FE] px-2 py-1 rounded-2xl">
-            <span className="text-xs font-medium text-[#0fbcd6]">
+            <span className="text-xs font-medium text-primary">
               {getTypeLabel(request.type)}
             </span>
           </div>
@@ -102,7 +102,7 @@ export const MatchingRequestCard = ({
             <span className="text-sm font-medium text-gray-800 flex-1">
               급여
             </span>
-            <span className="text-sm font-bold text-[#0fbcd6]">
+            <span className="text-sm font-bold text-primary">
               {formatPayment(request.reservationAmount)}
             </span>
           </div>
@@ -132,7 +132,7 @@ export const MatchingRequestCard = ({
               onAccept();
             }}
             disabled={isProcessing}
-            className="flex-1 h-10 bg-[#0fbcd6] rounded-2xl text-sm font-black text-white hover:bg-[#0ca8c0] transition-colors"
+            className="flex-1 h-10 bg-primary rounded-2xl text-sm font-black text-white hover:bg-[#0ca8c0] transition-colors"
             aria-label={`${request.categoryName} 매칭 요청 수락`}
           >
             수락

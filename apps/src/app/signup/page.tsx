@@ -26,17 +26,47 @@ export default function SignupPage() {
 
         {/* Selection Cards */}
         <div className="space-y-4">
+
+          {/* Customer Card */}
+          <button
+            onClick={() => handleSelectType('customer')}
+            className="w-full p-6 border border-[#E5E7EB] rounded-xl space-y-4 text-left hover:border-primary transition-colors"
+          >
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h2 className="text-lg font-bold">고객으로 가입</h2>
+                <p className="text-sm text-[#666666]">서비스를 이용하는 고객으로 가입합니다.</p>
+              </div>
+              <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center">
+                <Image 
+                  src="/icons/customer.svg"
+                  alt="Customer Icon"
+                  width={24}
+                  height={24}
+                  className="text-white"
+                />
+              </div>
+            </div>
+            <div className="text-sm text-[#666666]">
+              <ul className="list-disc list-inside space-y-1">
+                <li>편리한 서비스 예약</li>
+                <li>전문 매니저 선택</li>
+                <li>맞춤형 서비스 이용</li>
+              </ul>
+            </div>
+          </button>
+
           {/* Manager Card */}
           <button
             onClick={() => handleSelectType('manager')}
-            className="w-full p-6 border border-[#E5E7EB] rounded-xl space-y-4 text-left hover:border-[#0fbcd6] transition-colors"
+            className="w-full p-6 border border-[#E5E7EB] rounded-xl space-y-4 text-left hover:border-primary transition-colors"
           >
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <h2 className="text-lg font-bold">매니저로 가입</h2>
                 <p className="text-sm text-[#666666]">서비스를 제공하는 매니저로 활동합니다.</p>
               </div>
-              <div className="w-12 h-12 bg-[#0fbcd6] rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center">
                 <Image 
                   src="/icons/manager.svg"
                   alt="Manager Icon"
@@ -55,34 +85,7 @@ export default function SignupPage() {
             </div>
           </button>
 
-          {/* Customer Card */}
-          <button
-            onClick={() => handleSelectType('customer')}
-            className="w-full p-6 border border-[#E5E7EB] rounded-xl space-y-4 text-left hover:border-[#0fbcd6] transition-colors"
-          >
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <h2 className="text-lg font-bold">고객으로 가입</h2>
-                <p className="text-sm text-[#666666]">서비스를 이용하는 고객으로 가입합니다.</p>
-              </div>
-              <div className="w-12 h-12 bg-[#0fbcd6] rounded-xl flex items-center justify-center">
-                <Image 
-                  src="/icons/customer.svg"
-                  alt="Customer Icon"
-                  width={24}
-                  height={24}
-                  className="text-white"
-                />
-              </div>
-            </div>
-            <div className="text-sm text-[#666666]">
-              <ul className="list-disc list-inside space-y-1">
-                <li>편리한 서비스 예약</li>
-                <li>전문 매니저 선택</li>
-                <li>맞춤형 서비스 이용</li>
-              </ul>
-            </div>
-          </button>
+          
         </div>
       </div>
     </div>

@@ -63,7 +63,7 @@ export const ErrorComponent = ({
           </button>
           <button
             onClick={reset}
-            className="flex-1 h-12 bg-[#0fbcd6] rounded-2xl text-sm font-bold text-white hover:bg-[#0ca8c0] transition-colors"
+            className="flex-1 h-12 bg-primary rounded-2xl text-sm font-bold text-white hover:bg-[#0ca8c0] transition-colors"
           >
             다시 시도
           </button>

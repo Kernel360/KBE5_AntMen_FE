@@ -86,7 +86,7 @@ export const LoginIdInput = ({
           className={`w-24 h-[52px] rounded-lg text-base font-medium ${
             isChecking || disabled
               ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-              : 'bg-[#0fbcd6] text-white hover:bg-[#0eaec5]'
+              : 'bg-primary-500 text-white hover:bg-primary-600'
           }`}
         >
           {isChecking ? '확인중...' : '중복확인'}

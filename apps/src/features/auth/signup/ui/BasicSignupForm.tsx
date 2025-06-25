@@ -85,7 +85,7 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
         />
         <label
           htmlFor="profileImage"
-          className="text-[#0fbcd6] text-sm cursor-pointer"
+          className="text-primary-700 text-sm cursor-pointer"
         >
           {formData.existingProfileImageUrl ? '프로필 사진 변경' : '프로필 사진 업로드'}
         </label>

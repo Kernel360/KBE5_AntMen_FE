@@ -170,7 +170,7 @@ export const MyReservationClient: FC = () => {
             </div>
             <button
               onClick={handleNewReservation}
-              className="mt-3 w-[280px] rounded-xl bg-[#0fbcd6] py-4 text-base font-bold text-white"
+              className="mt-3 w-[280px] rounded-xl bg-primary py-4 text-base font-bold text-white"
             >
               청소 서비스 예약하기
             </button>
