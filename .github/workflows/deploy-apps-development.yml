@@ -30,11 +30,13 @@ jobs:
             image: users-app
             repository: users-app
             needs_env: true
+            context: .
           - name: admin-app
             dockerfile: admin/Dockerfile
             image: admin-app
             repository: admin-app
             needs_env: false
+            context: .
 
     steps:
       - name: Checkout source code
@@ -78,12 +80,23 @@ jobs:
           
           # 환경변수가 필요한 경우와 아닌 경우 분리
           if [ "${{ matrix.needs_env }}" = "true" ]; then
-            docker build -f ${{ matrix.dockerfile }} --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} --build-arg NEXT_PUBLIC_GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }} --build-arg NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE=${{ secrets.GOOGLE_RESPONSE_TYPE }} --build-arg NEXT_PUBLIC_GOOGLE_SCOPE=${{ secrets.GOOGLE_SCOPE }} --build-arg NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.GOOGLE_AUTH_URL }} -t $ECR_REGISTRY/${{ matrix.image }}:latest .
+            docker build \
+              -f ${{ matrix.dockerfile }} \
+              --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
+              --build-arg NEXT_PUBLIC_GOOGLE_REDIRECT_URI="${{ secrets.GOOGLE_REDIRECT_URI }}" \
+              --build-arg NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE="${{ secrets.GOOGLE_RESPONSE_TYPE }}" \
+              --build-arg NEXT_PUBLIC_GOOGLE_SCOPE="${{ secrets.GOOGLE_SCOPE }}" \
+              --build-arg NEXT_PUBLIC_GOOGLE_AUTH_URL="${{ secrets.GOOGLE_AUTH_URL }}" \
+              -t ${ECR_REGISTRY}/${{ matrix.image }}:latest \
+              ${{ matrix.context }}
           else
-            docker build -f ${{ matrix.dockerfile }} -t $ECR_REGISTRY/${{ matrix.image }}:latest .
+            docker build \
+              -f ${{ matrix.dockerfile }} \
+              -t ${ECR_REGISTRY}/${{ matrix.image }}:latest \
+              ${{ matrix.context }}
           fi
           
-          docker push $ECR_REGISTRY/${{ matrix.image }}:latest
+          docker push ${ECR_REGISTRY}/${{ matrix.image }}:latest
 
   deploy:
     runs-on: ubuntu-latest
