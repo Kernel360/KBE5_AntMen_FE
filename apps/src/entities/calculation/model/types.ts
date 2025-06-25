@@ -15,7 +15,7 @@ export interface CalculationHistoryItem {
   reservationDate: string; // yyyy-MM-dd
   reservationAmount: number;
   categoryName: string;
-  requsetedAt: string; // ISO string
+  requestedAt: string; // ISO string
 }
 
 // 정산 요청(POST) 파라미터 타입
