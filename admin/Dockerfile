@@ -35,7 +35,8 @@ RUN yarn build
 # 프로덕션 실행 단계 (정적 파일 서빙)
 FROM node:20.11-alpine AS runner
 
-RUN apk add --no-cache serve
+# serve는 npm 패키지이므로 전역 설치
+RUN npm install -g serve
 
 WORKDIR /app
 
@@ -45,4 +46,4 @@ COPY --from=builder /app/admin/build ./build
 EXPOSE 3001
 
 # serve로 정적 파일 서빙 (SPA 지원)
-CMD ["npx", "serve", "-s", "build", "-l", "3001"]
+CMD ["serve", "-s", "build", "-l", "3001"]
