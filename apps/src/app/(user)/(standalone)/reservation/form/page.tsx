@@ -8,6 +8,7 @@ import React, { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { calculateEndTime } from '@/shared/lib/utils'
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
+import { ReservationStorage } from '@/shared/lib/reservationStorage'
 import {
   DateSelector,
   TimeSelector,
@@ -33,6 +34,32 @@ const ReservationForm = ({
   initialOptions: CategoryOption[]
   addressId: number
 }) => {
+  // 다른 카테고리 예약 시작 시 기존 예약 정보 정리 (수정 모드에서는 실행 안함)
+  useEffect(() => {
+    const checkAndClearExistingReservation = () => {
+      try {
+        const existingReservationStr = sessionStorage.getItem('currentReservation')
+        
+        if (existingReservationStr) {
+          const existingReservation = JSON.parse(existingReservationStr)
+          
+          if (existingReservation && existingReservation.categoryId !== initialCategory.categoryId) {
+            // 다른 카테고리의 예약 정보가 있으면 정리
+            sessionStorage.removeItem('currentReservation')
+            console.log('🔄 다른 카테고리 예약 시작으로 기존 예약 정보 정리:', {
+              기존: existingReservation.categoryName,
+              신규: initialCategory.categoryName
+            })
+          }
+        }
+      } catch (error) {
+        console.error('예약 정보 확인 중 오류:', error)
+      }
+    }
+
+    checkAndClearExistingReservation()
+  }, [initialCategory.categoryId, initialCategory.categoryName])
+
   const {
     selectedDate,
     setSelectedDate,
@@ -65,6 +92,8 @@ const ReservationForm = ({
     visitTimeSlots,
     isSubmitting,
   } = useReservationForm({ initialCategory, initialOptions, addressId })
+
+  // 임시저장 기능 제거됨 - 관련 코드 삭제
 
   // 필수값 체크: 실제 필수값에 맞게 수정하세요
   const isFormValid = !!selectedDate && !!selectedHours && !!selectedVisitTime
@@ -133,7 +162,8 @@ const ReservationForm = ({
         </main>
       </div>
 
-      {/* Modals */}
+      {/* 임시저장 모달 제거됨 */}
+
       <TimePickerModal
         isOpen={isTimeModalOpen}
         onClose={() => setIsTimeModalOpen(false)}

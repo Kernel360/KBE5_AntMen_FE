@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { requestPayment } from '@/entities/payment/api/paymentApi';
 import Cookies from 'js-cookie';
-import { ChevronLeft, CreditCard, Smartphone, Building2, Check } from 'lucide-react';
+import { CreditCard, Smartphone, Building2, Check } from 'lucide-react';
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
 
 interface PaymentPageProps {
   params: {
@@ -84,6 +85,10 @@ export default function PaymentPage({ params }: PaymentPageProps) {
         payAmount: reservationData?.reservationAmount || 0
       }, cleanToken);
       setMessage('결제가 성공적으로 완료되었습니다!');
+      
+      // 결제 완료 후 예약 관련 세션 정리
+      sessionStorage.removeItem('currentReservation');
+      
       setTimeout(() => {
         router.push(`/reservation/${params.reservationId}/confirmation`);
       }, 1200);
@@ -128,42 +133,70 @@ export default function PaymentPage({ params }: PaymentPageProps) {
   const formatCurrency = (amount: number) => `₩${amount?.toLocaleString()}`;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[375px] mx-auto min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex justify-center">
+      <div className="w-full max-w-screen-sm min-h-screen flex flex-col bg-slate-50">
         {/* 헤더 */}
-        <header className="bg-white px-5 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-4">
-            <button onClick={() => router.back()} className="flex items-center justify-center w-6 h-6" aria-label="뒤로가기">
-              <ChevronLeft className="w-6 h-6 text-black" />
-            </button>
-            <h1 className="text-xl font-bold text-black">결제하기</h1>
-          </div>
-        </header>
+        <CommonHeader 
+          title="결제하기"
 
-        {/* 주문 요약 */}
-        <div className="flex-1 divide-y divide-gray-100">
-          <div className="bg-white px-5 py-6">
-            <h2 className="text-lg font-bold text-black mb-4">주문 요약</h2>
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+        />
+
+        <div className="flex-1 p-4 pt-20 space-y-4">
+          {/* 주문 요약 카드 */}
+          <div className="bg-white rounded-2xl p-5">
+            <h2 className="text-lg font-semibold mb-4">주문 요약</h2>
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600">예약 번호</span>
-                <span className="text-sm font-medium text-black">{reservationData.reservationId || params.reservationId}</span>
+                <span className="text-slate-600">서비스</span>
+                <span className="font-medium">{reservationData.categoryName}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600">일시</span>
-                <span className="text-sm font-medium text-black">{reservationData.reservationDateTime || '-'}</span>
+                <span className="text-slate-600">예약 번호</span>
+                <span className="font-medium">#{reservationData.reservationId || params.reservationId}</span>
               </div>
-              <div className="w-full h-px bg-gray-200 my-3"></div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600">결제 금액</span>
-                <span className="text-sm font-medium text-black">{formatCurrency(reservationData.reservationAmount)}</span>
+                <span className="text-slate-600">예약 날짜</span>
+                <span className="font-medium">{reservationData.reservationDate || '-'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600">예약 시간</span>
+                <span className="font-medium">{reservationData.reservationTime || '-'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600">소요 시간</span>
+                <span className="font-medium">{reservationData.reservationDuration || '-'}시간</span>
+              </div>
+              {reservationData.optionNames && reservationData.optionNames.length > 0 && (
+                <div className="flex items-start justify-between">
+                  <span className="text-slate-600">추가 옵션</span>
+                  <div className="text-right">
+                    {reservationData.optionNames.map((option: string, index: number) => (
+                      <div key={index} className="font-medium text-sm">
+                        {option}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {reservationData.reservationMemo && (
+                <div className="flex items-start justify-between">
+                  <span className="text-slate-600">요청사항</span>
+                  <div className="font-medium text-right max-w-48 text-sm">
+                    {reservationData.reservationMemo}
+                  </div>
+                </div>
+              )}
+              <div className="w-full h-px bg-slate-200 my-3"></div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 font-medium">총 결제 금액</span>
+                <span className="font-bold text-lg">{formatCurrency(reservationData.reservationAmount)}</span>
               </div>
             </div>
           </div>
 
-          {/* 결제 수단 선택 */}
-          <div className="bg-white px-5 py-6">
-            <h2 className="text-lg font-bold text-black mb-4">결제 수단</h2>
+          {/* 결제 수단 선택 카드 */}
+          <div className="bg-white rounded-2xl p-5">
+            <h2 className="text-lg font-semibold mb-4">결제 수단</h2>
             <div className="space-y-3">
               {paymentMethods.map((method) => {
                 const Icon = method.icon;
@@ -172,19 +205,19 @@ export default function PaymentPage({ params }: PaymentPageProps) {
                   <button
                     key={method.id}
                     onClick={() => setSelectedMethod(method.id)}
-                    className={`w-full flex items-center justify-between p-4 border rounded-xl transition-colors ${isSelected ? 'border-[#4abed9] bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
+                    className={`w-full flex items-center justify-between p-4 border rounded-xl transition-colors ${isSelected ? 'border-primary bg-primary/5' : 'border-slate-200 hover:border-slate-300'}`}
                   >
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${method.bgColor}`}>
                         <Icon className={`w-5 h-5 ${method.color}`} />
                       </div>
                       <div className="text-left">
-                        <h3 className="text-sm font-semibold text-black">{method.name}</h3>
-                        <p className="text-xs text-gray-500">{method.description}</p>
+                        <h3 className="text-sm font-semibold">{method.name}</h3>
+                        <p className="text-xs text-slate-500">{method.description}</p>
                       </div>
                     </div>
                     {isSelected && (
-                      <div className="w-5 h-5 bg-[#4abed9] rounded-full flex items-center justify-center">
+                      <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
                         <Check className="w-3 h-3 text-white" />
                       </div>
                     )}
@@ -196,29 +229,29 @@ export default function PaymentPage({ params }: PaymentPageProps) {
         </div>
 
         {/* 결제 버튼 */}
-        <div className="bg-white border-t border-gray-100 px-5 py-6">
-          <div className="space-y-4">
+        <div className="sticky bottom-0 bg-white border-t border-slate-200">
+          <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-base font-medium text-gray-600">결제할 금액</span>
-              <span className="text-xl font-bold text-black">{formatCurrency(reservationData.reservationAmount)}</span>
+              <span className="text-slate-600">결제할 금액</span>
+              <span className="text-xl font-bold">{formatCurrency(reservationData.reservationAmount)}</span>
             </div>
             <button
               onClick={handlePayment}
               disabled={isPaying}
-              className="w-full h-14 bg-[#4abed9] rounded-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-14 bg-primary rounded-2xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-black text-base"
             >
               {isPaying ? (
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-base font-bold text-white">결제 처리 중...</span>
+                  <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                  <span>결제 처리 중...</span>
                 </div>
               ) : (
-                <span className="text-base font-bold text-white">
+                <span>
                   {formatCurrency(reservationData.reservationAmount)} 결제하기
                 </span>
               )}
             </button>
-            <p className="text-xs text-gray-500 text-center leading-relaxed">
+            <p className="text-xs text-slate-500 text-center leading-relaxed">
               결제 시 <span className="font-medium">이용약관</span> 및 <span className="font-medium">개인정보처리방침</span>에 동의한 것으로 간주됩니다.
             </p>
             {message && (

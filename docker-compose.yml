@@ -5,12 +5,14 @@ services:
       dockerfile: apps/Dockerfile
       args:
         - YARN_WORKSPACE=apps
-    image: $ECR_REGISTRY/users-app:latest
+    image: ${ECR_REGISTRY}/users-app:latest
     container_name: apps
     ports:
       - '3000:3000'
+    env_file:
+      - .env
     environment:
-      - NODE_ENV=env
+      - NODE_ENV=production
     networks:
       - shared-net
 
@@ -18,14 +20,20 @@ services:
     build:
       context: .
       dockerfile: admin/Dockerfile
-    image: $ECR_REGISTRY/admin-app:latest
+      # 빌드 캐시 최적화
+      cache_from:
+        - ${ECR_REGISTRY}/admin-app:cache
+      target: runner
+    image: ${ECR_REGISTRY}/admin-app:latest
     container_name: admin
     ports:
       - '3001:3001'
-    environment:
-      - NODE_ENV=env
+    # React SPA는 환경변수가 빌드타임에 결정되므로 런타임 env 불필요
     networks:
       - shared-net
+    # nginx 설정 (필요시)
+    # volumes:
+    #   - ./admin/nginx.conf:/etc/nginx/nginx.conf:ro
 
 networks:
   shared-net:
