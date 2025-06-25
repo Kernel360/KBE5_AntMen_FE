@@ -6,8 +6,6 @@
 
 import React, { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import Image from 'next/image'
-import Link from 'next/link'
 import { calculateEndTime } from '@/shared/lib/utils'
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 import { ReservationStorage } from '@/shared/lib/reservationStorage'
