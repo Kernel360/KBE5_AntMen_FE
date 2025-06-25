@@ -20,8 +20,8 @@ const nextConfig = {
       'react-icons',
       'framer-motion'
     ],
-    // Next.js 14.1에서 지원하는 새로운 최적화 옵션들
-    optimizeCss: true,
+    // CSS 최적화는 일단 비활성화 (critters 의존성 문제)
+    // optimizeCss: true,
     webVitalsAttribution: ['CLS', 'LCP'],
   },
 
