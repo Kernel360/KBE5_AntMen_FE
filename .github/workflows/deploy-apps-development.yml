@@ -20,44 +20,11 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
-  build-and-push:
+  build-apps:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - name: users-app
-            dockerfile: apps/Dockerfile
-            image: users-app
-            repository: users-app
-            needs_env: true
-            context: .
-          - name: admin-app
-            dockerfile: admin/Dockerfile
-            image: admin-app
-            repository: admin-app
-            needs_env: false
-            context: .
-
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile --prefer-offline
-
-      - name: Build workspace
-        run: |
-          if [ "${{ matrix.name }}" = "users-app" ]; then
-            yarn workspace apps build
-          else
-            CI=false yarn workspace admin build
-          fi
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -70,43 +37,64 @@ jobs:
 
       - name: Create ECR repository if not exists
         run: |
-          aws ecr describe-repositories --repository-names ${{ matrix.repository }} 2>/dev/null || \
-          aws ecr create-repository --repository-name ${{ matrix.repository }}
+          aws ecr describe-repositories --repository-names users-app 2>/dev/null || \
+          aws ecr create-repository --repository-name users-app
 
-      - name: Build and Push Docker image
-        run: |
-          # Docker 기본 빌더로 설정 (Buildx 비활성화)
-          export DOCKER_BUILDKIT=0
-          
-          # 환경변수가 필요한 경우와 아닌 경우 분리
-          if [ "${{ matrix.needs_env }}" = "true" ]; then
-            docker build \
-              -f ${{ matrix.dockerfile }} \
-              --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
-              --build-arg NEXT_PUBLIC_GOOGLE_REDIRECT_URI="${{ secrets.GOOGLE_REDIRECT_URI }}" \
-              --build-arg NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE="${{ secrets.GOOGLE_RESPONSE_TYPE }}" \
-              --build-arg NEXT_PUBLIC_GOOGLE_SCOPE="${{ secrets.GOOGLE_SCOPE }}" \
-              --build-arg NEXT_PUBLIC_GOOGLE_AUTH_URL="${{ secrets.GOOGLE_AUTH_URL }}" \
-              -t ${ECR_REGISTRY}/${{ matrix.image }}:latest \
-              ${{ matrix.context }}
-          else
-            docker build \
-              -f ${{ matrix.dockerfile }} \
-              -t ${ECR_REGISTRY}/${{ matrix.image }}:latest \
-              ${{ matrix.context }}
-          fi
-          
-          docker push ${ECR_REGISTRY}/${{ matrix.image }}:latest
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-  deploy:
+      - name: Build and Push users-app
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/Dockerfile
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/users-app:latest
+          cache-from: type=gha,scope=users-app
+          cache-to: type=gha,mode=max,scope=users-app
+          build-args: |
+            NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            NEXT_PUBLIC_GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
+            NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE=${{ secrets.GOOGLE_RESPONSE_TYPE }}
+            NEXT_PUBLIC_GOOGLE_SCOPE=${{ secrets.GOOGLE_SCOPE }}
+            NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.GOOGLE_AUTH_URL }}
+
+  build-admin:
     runs-on: ubuntu-latest
-    needs: build-and-push
-    strategy:
-      matrix:
-        include:
-          - image: users-app
-          - image: admin-app
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Create ECR repository if not exists
+        run: |
+          aws ecr describe-repositories --repository-names admin-app 2>/dev/null || \
+          aws ecr create-repository --repository-name admin-app
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push admin-app
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: admin/Dockerfile
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/admin-app:latest
+          cache-from: type=gha,scope=admin-app
+          cache-to: type=gha,mode=max,scope=admin-app
+
+  prepare-deploy:
+    runs-on: ubuntu-latest
+    needs: [build-apps, build-admin]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -128,7 +116,7 @@ jobs:
           NODE_ENV=production
           EOF
 
-      - name: Deploy to EC2
+      - name: Prepare EC2 deployment directory
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.EC2_PUBLIC_IP }}
@@ -136,10 +124,16 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
-            # 배포 디렉토리 준비
+            # 배포 디렉토리 정리 및 준비
             sudo rm -rf /home/ubuntu/apps/client
             mkdir -p /home/ubuntu/apps/client
             sudo chown -R ubuntu:ubuntu /home/ubuntu/apps/client
+            
+            # Docker 리소스 정리 (주간 1회 또는 디스크 사용량 80% 초과시)
+            if [ $(date +%u) -eq 1 ] || [ $(df / | tail -1 | awk '{print $5}' | sed 's/%//') -gt 80 ]; then
+              echo "🧹 Docker 리소스 정리 중..."
+              docker system prune -af --volumes
+            fi
 
       - name: Copy deployment files
         uses: appleboy/scp-action@v0.1.4
@@ -150,6 +144,25 @@ jobs:
           port: 22
           source: 'docker-compose.yml,.env'
           target: ~/apps/client
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: prepare-deploy
+    strategy:
+      matrix:
+        include:
+          - image: users-app
+            service: users-app
+          - image: admin-app
+            service: admin-app
+      max-parallel: 1
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Deploy and restart containers
         uses: appleboy/ssh-action@v0.1.6
@@ -165,16 +178,10 @@ jobs:
             set -a && source .env && set +a
 
             # 로그 및 상태 출력
-            echo "🚀 Deploying ${{ matrix.image }}"
+            echo "🚀 Deploying ${{ matrix.service }}"
             echo "📊 시스템 리소스 확인:"
             df -h / | head -2
             docker system df
-
-            # Docker 정리 (주간 1회 또는 필요시)
-            if [ $(date +%u) -eq 1 ] || [ $(df / | tail -1 | awk '{print $5}' | sed 's/%//') -gt 80 ]; then
-              echo "🧹 Docker 리소스 정리 중..."
-              docker system prune -af --volumes
-            fi
 
             # ECR 로그인
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
@@ -184,14 +191,23 @@ jobs:
             echo "📦 이미지 풀링: ${{ matrix.image }}"
             docker pull $ECR_REGISTRY/${{ matrix.image }}:latest
 
-            echo "🔄 컨테이너 재시작: ${{ matrix.image }}"
-            docker compose down ${{ matrix.image }} 2>/dev/null || true
-            docker compose up -d ${{ matrix.image }}
+            echo "🔄 컨테이너 재시작: ${{ matrix.service }}"
+            docker compose down ${{ matrix.service }} 2>/dev/null || true
+            docker compose up -d ${{ matrix.service }}
 
             # 배포 상태 확인
             echo "✅ 배포 완료 확인:"
-            sleep 5
-            docker compose ps ${{ matrix.image }}
-            docker compose logs --tail=10 ${{ matrix.image }}
+            sleep 10
+            docker compose ps ${{ matrix.service }}
+            docker compose logs --tail=20 ${{ matrix.service }}
 
-            echo "🎉 ${{ matrix.image }} 배포 완료!"
+            # 간단한 헬스체크
+            if [ "${{ matrix.service }}" = "users-app" ]; then
+              echo "🏥 헬스체크: users-app"
+              curl -f http://localhost:3000 > /dev/null 2>&1 && echo "✅ users-app 정상" || echo "❌ users-app 비정상"
+            elif [ "${{ matrix.service }}" = "admin-app" ]; then
+              echo "🏥 헬스체크: admin-app"
+              curl -f http://localhost:3001 > /dev/null 2>&1 && echo "✅ admin-app 정상" || echo "❌ admin-app 비정상"
+            fi
+
+            echo "🎉 ${{ matrix.service }} 배포 완료!"

@@ -1,13 +1,18 @@
-# Apps 워크스페이스 .dockerignore - apps 디렉토리 특화 최적화
+# 공통 .dockerignore (admin + apps 모두 사용)
 
+# Node.js 관련
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 빌드 결과물
 # Next.js 관련
 .next/
 out/
+# React 관련
 build/
 dist/
-
-# Node.js 의존성
-node_modules/
 
 # 환경 설정 (보안)
 .env*
@@ -51,7 +56,7 @@ jest.config.*
 # 소스맵 (프로덕션 제외)
 **/*.map
 
-# Vercel
+# Vercel (Next.js)
 .vercel/
 
 # 백업 및 임시 파일들
@@ -60,7 +65,7 @@ jest.config.*
 *.tmp
 *.temp
 
-# 개발 전용 폴더들 (있다면)
+# 개발 전용 폴더들
 docs/
 examples/
 stories/
@@ -71,10 +76,18 @@ scratch/
 cypress/
 cypress.json
 
-# 패키지 관리자 lock 파일들
-package-lock.json
+# Git 관련
+.git/
+.gitignore
+
+# README 등 문서 (선택적)
+# README.md
+# *.md
+
+# 패키지 관리자 백업
+package-lock.json.bak
 yarn.lock.bak
 
-# 사용하지 않는 에셋들 (있다면)
+# 사용하지 않는 에셋들
 public/mockups/
 public/dev-assets/

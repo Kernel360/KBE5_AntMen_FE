@@ -54,6 +54,7 @@ export const getCoordinatesFromAddress = async (
     address: string
 ): Promise<Coordinates | null> => {
     try {
+        /*
         const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
 
         // 더 상세한 환경변수 체크
@@ -70,6 +71,8 @@ export const getCoordinatesFromAddress = async (
 
         const url = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`;
 
+
+
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -77,6 +80,8 @@ export const getCoordinatesFromAddress = async (
                 'Content-Type': 'application/json',
             },
         });
+
+
 
         if (!response.ok) {
             if (response.status === 401) {
@@ -112,6 +117,32 @@ export const getCoordinatesFromAddress = async (
             console.error('❌ 유효하지 않은 좌표 데이터:', firstResult);
             return null;
         }
+
+        return { lat, lng };
+
+         */
+
+        const response = await fetch('/api/kakao-coords', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ address }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.documents || data.documents.length === 0) {
+            return null;
+        }
+
+        const firstResult = data.documents[0];
+        const lat = parseFloat(firstResult.y);
+        const lng = parseFloat(firstResult.x);
 
         return { lat, lng };
 
