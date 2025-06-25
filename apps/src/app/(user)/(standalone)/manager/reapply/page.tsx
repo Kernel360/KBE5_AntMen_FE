@@ -78,10 +78,6 @@ const ManagerReapplyPage = () => {
         const managerInfo = await getManagerInfo()
         console.log('📥 받아온 매니저 정보:', managerInfo)
         
-        // 기본 정보 설정 (백엔드 응답 필드명에 맞춤)
-        console.log('🚹 받아온 성별 값:', managerInfo.userGender)
-        console.log('📁 받아온 파일 목록:', managerInfo.managerFileUrls)
-        
         // 성별 값 변환: 백엔드 "남성"/"여성" → 프론트엔드 "M"/"W"
         let genderValue = '';
         if (managerInfo.userGender === '남성') {
@@ -92,9 +88,6 @@ const ManagerReapplyPage = () => {
           // 혹시 이미 M, W로 오는 경우도 대비
           genderValue = managerInfo.userGender || '';
         }
-        console.log('🔄 변환된 성별 값:', genderValue)
-        console.log('🔍 성별 값 === "M":', genderValue === 'M')
-        console.log('🔍 성별 값 === "W":', genderValue === 'W')
         
         setBasicData({
           username: managerInfo.userLoginId || '',
