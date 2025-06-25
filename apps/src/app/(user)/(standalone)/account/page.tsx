@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 import { AccountProfile, AccountSettings } from '@/features/account'
-import { accountApi } from '@/entities/account/api/accountApi'
+import { customerApi } from '@/entities/account/api/accountApi'
 import type { UserProfile, UserGender } from '@/entities/account/model/types'
 import { GENDER_DISPLAY_MAP } from '@/entities/account/model/types'
 
@@ -24,7 +24,7 @@ export default function AccountPage() {
     const fetchProfile = async () => {
       try {
         setIsLoading(true)
-        const data = await accountApi.getProfile()
+        const data = await customerApi.getProfile()
         setUserProfile(data)
       } catch (err) {
         console.error('프로필 정보를 불러오는데 실패했습니다:', err)
@@ -45,7 +45,7 @@ export default function AccountPage() {
         setProfileImage(file);
         
         // 이미지 업로드 API 호출
-        await accountApi.updateProfileImage(file);
+        await customerApi.updateProfileImage(file);
         
         // 성공하면 현재 프로필 정보에서 이미지 URL 업데이트
         if (userProfile) {
@@ -75,7 +75,7 @@ export default function AccountPage() {
     userProfile: string;
   }) => {
     try {
-      const response = await accountApi.updateProfile({
+      const response = await customerApi.updateProfile({
         userName: data.name,
         userTel: data.phone,
         userEmail: data.email,
