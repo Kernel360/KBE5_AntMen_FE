@@ -73,6 +73,10 @@ jobs:
 
       - name: Build and Push Docker image
         run: |
+          # Docker 기본 빌더로 설정 (Buildx 비활성화)
+          docker buildx use default
+          export DOCKER_BUILDKIT=0
+          
           # 환경변수가 필요한 경우와 아닌 경우 분리
           if [ "${{ matrix.needs_env }}" = "true" ]; then
             docker build -f ${{ matrix.dockerfile }} \
