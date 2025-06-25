@@ -1,13 +1,80 @@
-node_modules
-.git
-.next
-build
-dist
-yarn-error.log
+# Apps 워크스페이스 .dockerignore - apps 디렉토리 특화 최적화
+
+# Next.js 관련
+.next/
+out/
+build/
+dist/
+
+# Node.js 의존성
+node_modules/
+
+# 환경 설정 (보안)
+.env*
+!.env.example
+
+# 테스트 관련
+coverage/
+__tests__/
+*.test.*
+*.spec.*
+.nyc_output/
+
+# TypeScript 관련
+*.tsbuildinfo
+next-env.d.ts
+
+# 캐시 및 임시
+.cache/
+.parcel-cache/
+tmp/
+temp/
+
+# 로그 파일들
 *.log
+logs/
+
+# IDE 설정
+.vscode/
+.idea/
+
+# OS 파일들
 .DS_Store
-packages/ui/node_modules
-apps/node_modules
-admin/node_modules
-apps/.next
-admin/build
+Thumbs.db
+*.pem
+
+# 개발 도구 설정
+.eslintrc*
+.prettierrc*
+jest.config.*
+
+# 소스맵 (프로덕션 제외)
+**/*.map
+
+# Vercel
+.vercel/
+
+# 백업 및 임시 파일들
+*.bak
+*.backup
+*.tmp
+*.temp
+
+# 개발 전용 폴더들 (있다면)
+docs/
+examples/
+stories/
+playground/
+scratch/
+
+# E2E 테스트 (Cypress 등)
+cypress/
+cypress.json
+
+# 패키지 관리자 lock 파일들
+package-lock.json
+yarn.lock.bak
+
+# 사용하지 않는 에셋들 (있다면)
+public/mockups/
+public/dev-assets/
