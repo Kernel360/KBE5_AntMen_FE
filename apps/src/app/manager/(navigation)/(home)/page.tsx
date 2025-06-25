@@ -110,7 +110,7 @@ export default function ManagerHomePage() {
     <main className="min-h-screen bg-white">
       <div className="relative">
         <HomeHeader
-          title="앤트워커로 달라지는 일상"
+          title="앤트워크로 달라지는 일상"
           subtitle="바쁜 일상에서 효율적으로 일해보세요"
           buttonText="급여 확인하기"
           onButtonClick={() => router.push('/manager/salary')}

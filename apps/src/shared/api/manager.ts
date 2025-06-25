@@ -44,7 +44,7 @@ export const getManagerRejectionReason = async (managerId: number): Promise<stri
     }
 
     // 실제 API 호출
-    const response = await fetch(`http://localhost:9092/v1/manager/${managerId}/reject-reason`, {
+    const response = await fetch(`https://api.antmen.site:9092/v1/manager/${managerId}/reject-reason`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -83,9 +83,9 @@ export const getManagerInfo = async (): Promise<ManagerInfoResponse> => {
       throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.')
     }
     
-    console.log('🌐 API 호출:', 'http://localhost:9092/v1/manager/me')
+    console.log('🌐 API 호출:', 'https://api.antmen.site:9092/v1/manager/me')
     
-    const response = await fetch(`http://localhost:9092/v1/manager/me`, {
+    const response = await fetch(`https://api.antmen.site:9092/v1/manager/me`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ export const updateManagerInfo = async (formData: FormData): Promise<void> => {
       throw new Error('인증 토큰이 없습니다. 다시 로그인해주세요.')
     }
     
-    const response = await fetch(`http://localhost:9092/v1/manager/reapply`, {
+    const response = await fetch(`https://api.antmen.site:9092/v1/manager/reapply`, {
       method: 'PUT',
       body: formData,
       // FormData 사용 시 Content-Type 헤더는 자동 설정됨
@@ -155,9 +155,9 @@ export const getManagerStatus = async (managerId: number): Promise<ManagerStatus
     }
 
     // 실제 API 호출 - 매니저 정보에서 상태 추출
-    console.log('🌐 매니저 상태 API 호출:', `http://localhost:9092/v1/manager/me`)
+    console.log('🌐 매니저 상태 API 호출:', `https://api.antmen.site:9092/v1/manager/me`)
     
-    const response = await fetch(`http://localhost:9092/v1/manager/me`, {
+    const response = await fetch(`https://api.antmen.site:9092/v1/manager/me`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
