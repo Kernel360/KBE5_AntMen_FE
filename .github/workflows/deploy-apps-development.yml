@@ -71,9 +71,7 @@ jobs:
         with:
           registry: ${{ env.ECR_REGISTRY }}
 
-      - name: Build and Push Docker image
-        env:
-          ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
+      - name: Build Docker image
         run: |
           docker buildx build -f ${{ matrix.dockerfile }} \
           --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
@@ -82,8 +80,12 @@ jobs:
           --build-arg NEXT_PUBLIC_GOOGLE_SCOPE=${{ secrets.GOOGLE_SCOPE }} \
           --build-arg NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.GOOGLE_AUTH_URL }} \
           --platform linux/amd64 \
-          --push \
+          --load \
           -t $ECR_REGISTRY/${{ matrix.image }}:latest ${{ matrix.context }}
+
+      - name: Push Docker image
+        run: |
+          docker push $ECR_REGISTRY/${{ matrix.image }}:latest
 
   deploy:
     runs-on: ubuntu-latest
