@@ -27,6 +27,7 @@ interface MorePageUIProps {
     userPoint: number;
     userType: string;
     userEmail: string;
+    userProfile?: string;
   };
 }
 
@@ -103,6 +104,7 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
             name={user.userName}
             membershipType={user.userType}
             email={user.userEmail}
+            userProfile={user.userProfile}
           />
 
           <section className="mt-4 bg-[#9CDAFB] rounded-xl flex flex-col items-center justify-between py-4 mb-4 gap-4">
