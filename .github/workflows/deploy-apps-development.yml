@@ -74,21 +74,13 @@ jobs:
       - name: Build and Push Docker image
         run: |
           # Docker 기본 빌더로 설정 (Buildx 비활성화)
-          docker buildx use default
           export DOCKER_BUILDKIT=0
           
           # 환경변수가 필요한 경우와 아닌 경우 분리
           if [ "${{ matrix.needs_env }}" = "true" ]; then
-            docker build -f ${{ matrix.dockerfile }} \
-            --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-            --build-arg NEXT_PUBLIC_GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }} \
-            --build-arg NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE=${{ secrets.GOOGLE_RESPONSE_TYPE }} \
-            --build-arg NEXT_PUBLIC_GOOGLE_SCOPE=${{ secrets.GOOGLE_SCOPE }} \
-            --build-arg NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.GOOGLE_AUTH_URL }} \
-            -t $ECR_REGISTRY/${{ matrix.image }}:latest .
+            docker build -f ${{ matrix.dockerfile }} --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} --build-arg NEXT_PUBLIC_GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }} --build-arg NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE=${{ secrets.GOOGLE_RESPONSE_TYPE }} --build-arg NEXT_PUBLIC_GOOGLE_SCOPE=${{ secrets.GOOGLE_SCOPE }} --build-arg NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.GOOGLE_AUTH_URL }} -t $ECR_REGISTRY/${{ matrix.image }}:latest .
           else
-            docker build -f ${{ matrix.dockerfile }} \
-            -t $ECR_REGISTRY/${{ matrix.image }}:latest .
+            docker build -f ${{ matrix.dockerfile }} -t $ECR_REGISTRY/${{ matrix.image }}:latest .
           fi
           
           docker push $ECR_REGISTRY/${{ matrix.image }}:latest
