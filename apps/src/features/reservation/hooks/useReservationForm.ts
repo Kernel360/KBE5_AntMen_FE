@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import dayjs, { Dayjs } from 'dayjs';
 import { Category, CategoryOption } from '@/shared/api/category';
 import { calculatePrice } from '@/shared/lib/utils';
-import { ReservationStorage } from '@/shared/lib/reservationStorage';
 
 export const useReservationForm = ({ initialCategory, initialOptions, addressId }: { initialCategory: Category; initialOptions: CategoryOption[]; addressId: number }) => {
   const router = useRouter();
@@ -43,7 +42,6 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
               if (saved.reservationDuration) setSelectedHours(saved.reservationDuration);
               if (Array.isArray(saved.optionIds)) setSelectedCategoryOptions(saved.optionIds);
               if (saved.reservationMemo) setMemo(saved.reservationMemo);
-              console.log('✏️ 수정 모드: 기존 예약 정보 로드됨');
             }
           }
         } catch (e) {
@@ -76,7 +74,7 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
   const handleTimeChange = (increment: boolean) => {
     setSelectedHours(prev => {
       const newHours = increment ? prev + 1 : prev - 1;
-      if (newHours < initialCategory.categoryTime || newHours > 8) return prev;
+      if (newHours < initialCategory.categoryTime || newHours > 12) return prev;
       
       if (recommendedTime && newHours < Math.ceil(recommendedTime.minutes / 60)) {
         setShowTimeWarning(true);
@@ -86,8 +84,6 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
       return newHours;
     });
   };
-  console.log('selectedVisitTime', selectedVisitTime);
-  console.log('typeof selectedVisitTime:', typeof selectedVisitTime);
   
   const handleNext = async () => {
     if (!selectedDate || !selectedVisitTime || !initialCategory.categoryId) {
@@ -134,7 +130,6 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
     try {
       // localStorage 저장 대신 sessionStorage에 임시 저장 (탭별로 분리)
       sessionStorage.setItem('currentReservation', JSON.stringify(reservationDetails));
-      console.log('📝 예약 정보 세션에 저장:', reservationDetails);
 
       // 매칭 페이지로 이동
       router.push('/matching');

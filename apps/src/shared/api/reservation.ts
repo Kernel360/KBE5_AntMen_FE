@@ -1,7 +1,18 @@
 import { customFetch } from './base'
-import { Category, CategoryOption } from './category'
-import type { ReservationRequest } from '.'
-
+export interface ReservationRequest {
+  customerId: number;
+  categoryId: number;
+  addressId: number;
+  reservationCreatedAt: string;  // "YYYY-MM-DD HH:mm:ss" 형식
+  reservationDate: string;  // "YYYY-MM-DD" 형식
+  reservationTime: string;  // "HH:mm:ss" 형식
+  reservationDuration: number;
+  reservationMemo?: string;
+  reservationAmount: number;
+  additionalDuration: number;
+  optionIds: number[];
+  managerIds: number[];  // 선택한 매니저 ID 리스트
+}
 // Swagger의 ReservationResponseDto를 기반으로 타입을 정의합니다.
 export interface ReservationResponse {
   reservationId: number
@@ -11,9 +22,9 @@ export interface ReservationResponse {
   reservationTime: string // LocalTime이 string으로 변환되었다고 가정
   categoryId: number
   categoryName: string
-  recommendDuration: number
   reservationDuration: number
   managerId: number | null
+  managerName: string | null        // 매니저 이름 추가
   matchedAt: string | null
   reservationStatus: string
   reservationCancelReason: string | null
@@ -22,6 +33,7 @@ export interface ReservationResponse {
   optionIds: number[]
   optionNames: string[]
   hasReview: boolean
+  checkinAt: string | null          // 체크인 시간 추가
 }
 
 /**
