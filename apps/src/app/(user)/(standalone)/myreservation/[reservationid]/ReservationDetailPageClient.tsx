@@ -110,17 +110,19 @@ const ReservationHeaderSection = ({ reservation }: { reservation: ReservationHis
       <div className="flex items-start justify-between mb-6">
         <div>
           <p className="text-xs font-medium text-gray-500 mb-1">예약 번호</p>
-          <h1 className="text-xl font-bold text-gray-900">#{reservation.reservationId}</h1>
+          <h1 className="text-xl font-bold text-gray-900">#{reservation.reservationId}</h1> {/* TODO: 다은님 나중에 예약 번호 지우고 매칭 상태 카테고리 안에 넣어주세용 */}
         </div>
         <StatusBadge status={reservation.reservationStatus} />
       </div>
       
       {/* 서비스 타입 */}
       <div className="mb-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-1">{reservation.categoryName}</h2>
-        <p className="text-sm text-gray-600">전문 청소 서비스</p>
+        <div>
+          <p className="text-xs font-medium text-gray-500 mb-1">예약 카테고리</p>
+          <h2 className="text-lg font-bold text-gray-900 mb-1">{reservation.categoryName}</h2>
+        </div>
       </div>
-      
+
       {/* 날짜와 시간 정보 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="bg-gradient-to-br from-primary/5 to-blue-50 rounded-xl p-4 border border-primary/10">
@@ -255,37 +257,98 @@ const PaymentSection = ({ reservation }: { reservation: ReservationHistory }) =>
 }
 
 // 매니저 정보 섹션
-const ManagerSection = ({ manager }: { manager?: any }) => {
+const ManagerSection = ({ matchings }: { matchings?: any[] }) => {
+  const hasMatchings = matchings && matchings.length > 0
+
   return (
     <div className="bg-white rounded-2xl p-5 mb-4 shadow-md border border-gray-100">
       <div className="flex items-center gap-2 mb-5">
         <div className="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center">
           <UserIcon className="w-4 h-4 text-indigo-600" />
         </div>
-        <h3 className="text-lg font-bold text-gray-900">매칭 도우미</h3>
+        <h3 className="text-lg font-bold text-gray-900">
+          매칭 도우미 {hasMatchings && `(${matchings.length}명)`}
+        </h3>
       </div>
       
-      {manager ? (
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-200 to-purple-200 rounded-xl flex items-center justify-center">
-              <UserIcon className="w-6 h-6 text-indigo-700" />
-            </div>
-            <div className="flex-1">
-              <h4 className="text-base font-bold text-gray-900 mb-1">{manager.name}</h4>
-              <p className="text-sm text-gray-600 mb-2">{manager.gender} · {manager.age}세</p>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 bg-white/70 px-2 py-1 rounded-lg">
-                  <StarIcon className="w-3 h-3 text-yellow-500 fill-current" />
-                  <span className="text-xs font-bold text-gray-700">4.8</span>
-                </div>
-                <div className="bg-white/70 px-2 py-1 rounded-lg">
-                  <span className="text-xs font-semibold text-gray-700">리뷰 127개</span> {/* TODO: 예림님 여기에 리뷰 연동 부탁드려용~ */}
-                  <span className="text-xs font-semibold text-gray-700">평점 4.8</span> {/* TODO: 예림님 여기에 평점 연동 부탁드려용~ */}
+      {hasMatchings ? (
+        <div className="space-y-3">
+          {matchings.map((matching, index) => {
+            const manager = matching.manager
+            const isRequested = matching.isRequested
+            const isAccepted = matching.isAccepted
+            const priority = matching.priority
+            
+            return (
+              <div 
+                key={matching.matchingId} 
+                className={`bg-gradient-to-br rounded-xl p-4 border-2 ${
+                  isRequested 
+                    ? 'from-blue-50 to-indigo-50 border-blue-200' 
+                    : 'from-gray-50 to-slate-50 border-gray-200'
+                }`}
+              >
+                                 {/* 우선순위 배지 */}
+                 <div className="flex items-center justify-between mb-3">
+                   <div className="flex items-center gap-2">
+                     <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
+                       priority === 1 
+                         ? 'bg-yellow-100 text-yellow-800' 
+                         : priority === 2 
+                         ? 'bg-blue-100 text-blue-800'
+                         : 'bg-gray-100 text-gray-800'
+                     }`}>
+                       {priority === 1 ? '1순위' : priority === 2 ? '2순위' : `${priority}순위`}
+                     </span>
+                     {isRequested && (
+                       <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-lg text-xs font-bold">
+                         매칭 요청됨
+                       </span>
+                     )}
+                     {matching.isFinal === true && (
+                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded-lg text-xs font-bold">
+                        최종 매칭
+                       </span>
+                     )}
+                     {matching.isFinal === false && (
+                       <span className="bg-red-100 text-red-800 px-2 py-1 rounded-lg text-xs font-bold">
+                         매칭 거절
+                       </span>
+                     )}
+                   </div>
+                 </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-200 to-purple-200 rounded-xl flex items-center justify-center overflow-hidden">
+                    {manager.profileImage ? (
+                      <img 
+                        src={manager.profileImage} 
+                        alt={manager.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <UserIcon className="w-6 h-6 text-indigo-700" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-base font-bold text-gray-900 mb-1">{manager.name}</h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      {manager.gender} · {manager.age >= 0 ? `${manager.age}세` : '나이 정보 없음'}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 bg-white/70 px-2 py-1 rounded-lg">
+                        <StarIcon className="w-3 h-3 text-yellow-500 fill-current" />
+                        <span className="text-xs font-bold text-gray-700">4.8</span>
+                      </div>
+                      <div className="bg-white/70 px-2 py-1 rounded-lg">
+                        <span className="text-xs font-semibold text-gray-700">리뷰 127개</span> {/* TODO: 예림님 여기에 리뷰 연동 부탁드려용~ */}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            )
+          })}
         </div>
       ) : (
         <div className="text-center py-8">
@@ -492,7 +555,7 @@ export const ReservationDetailPageClient = ({
         <ReservationHeaderSection reservation={reservation} />
         <ServiceDetailsSection reservation={reservation} />
         <PaymentSection reservation={reservation} />
-        <ManagerSection manager={reservation.matchings[0]?.manager} />
+        <ManagerSection matchings={reservation.matchings} />
       </main>
       
       {/* 매칭 대기중일 때: 수락/거절 버튼 */}

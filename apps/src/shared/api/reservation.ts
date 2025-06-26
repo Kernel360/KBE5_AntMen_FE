@@ -25,7 +25,6 @@ export interface ReservationResponse {
   reservationDuration: number
   managerId: number | null
   managerName: string | null        // 매니저 이름 추가
-  matchedAt: string | null
   reservationStatus: string
   reservationCancelReason: string | null
   reservationMemo: string
@@ -109,18 +108,18 @@ export const updateReservationStatus = async (
 /**
  * 예약을 취소하는 API 함수
  * @param reservationId - 취소할 예약의 ID
- * @param reason - 취소 사유 (선택 사항)
+ * @param cancelReason - 취소 사유 (선택 사항)
  * @returns ReservationResponse - 업데이트된 예약 정보
  */
 export const cancelReservation = async (
   reservationId: number,
-  reason?: string,
+  cancelReason: string,
 ): Promise<ReservationResponse> => {
   return customFetch<ReservationResponse>(
     `https://api.antmen.site:9091/api/v1/customer/reservations/${reservationId}/cancel`,
     {
       method: 'POST',
-      body: JSON.stringify({ reason }),
+      body: JSON.stringify({ cancelReason }),
     },
   )
 }
