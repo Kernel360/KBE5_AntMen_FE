@@ -81,7 +81,6 @@ export const respondToMatching = async (
       )
     }
 
-    console.log('Matching Response Success')
   } catch (error) {
     if (error instanceof ApiError) {
       throw error

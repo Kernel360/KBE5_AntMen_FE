@@ -27,11 +27,8 @@ export const CustomerAuthGuard = ({ children }: CustomerAuthGuardProps) => {
 
   useEffect(() => {
     const tokenWithBearer = getCookie('auth-token');
-    console.log('auth-token 쿠키:', tokenWithBearer);
-
     // "Bearer ..." 접두사 제거
     const token = tokenWithBearer?.replace(/^Bearer\s/, '');
-    console.log('실제 JWT 토큰:', token);
 
     if (!token && !alerted.current) {
       alerted.current = true;
@@ -44,7 +41,6 @@ export const CustomerAuthGuard = ({ children }: CustomerAuthGuardProps) => {
     try {
       if (typeof token === 'string') {
         const decoded = jwtDecode<JwtPayload>(token);
-        console.log('디코딩된 JWT:', decoded);
         if (decoded.userRole !== 'CUSTOMER' && !alerted.current) {
           alerted.current = true;
           alert('로그인이 필요한 서비스입니다.');

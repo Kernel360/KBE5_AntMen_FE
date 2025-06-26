@@ -59,7 +59,6 @@ export default function PaymentPage({ params }: PaymentPageProps) {
         if (savedDataStr) {
           const savedData = JSON.parse(savedDataStr);
           setReservationInfo(savedData);
-          console.log('💰 예약 확인 페이지의 금액 정보 로드:', savedData.reservationAmount);
         }
 
         const token = Cookies.get('auth-token');

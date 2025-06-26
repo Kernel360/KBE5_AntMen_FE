@@ -21,14 +21,12 @@ export default function ReservationConfirmPage() {
         const savedDataStr = sessionStorage.getItem('currentReservation');
         
         if (!savedDataStr) {
-          console.log('예약 정보가 없습니다.');
           // 예약 폼으로 리다이렉트
           router.push('/reservation/form');
           return;
         }
 
         const savedData = JSON.parse(savedDataStr);
-        console.log('확인 페이지에서 로드된 예약 정보:', savedData);
 
         // 선택된 매니저들 처리
         if (savedData.selectedManagers && Array.isArray(savedData.selectedManagers)) {
@@ -93,8 +91,6 @@ export default function ReservationConfirmPage() {
       
       const newReservation = await createReservation(reservationRequest);
       
-      console.log('예약 생성 성공:', newReservation);
-
       // 예약 생성 후 결제 페이지로 이동 (세션 정리는 결제 완료 후)
       router.push(`/payment/${newReservation.reservationId}`);
     } catch (error) {

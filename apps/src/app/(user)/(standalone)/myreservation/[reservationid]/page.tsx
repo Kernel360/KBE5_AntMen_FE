@@ -14,7 +14,6 @@ interface PageProps {
 // --- 데이터 페칭 함수 ---
 async function getReservationDetail(id: string): Promise<ReservationHistory | null> {
   try {
-    console.log('ReservationDetailPage: params.reservationid =', id) // 실제 전달 값 확인
     // 실제 백엔드 API 주소로 변경
     const res = await customFetch(
       `https://api.antmen.site:9091/api/v1/customer/reservations/${id}/history`,
