@@ -8,7 +8,6 @@ export async function POST(request: NextRequest) {
         const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
 
         if (!KAKAO_REST_API_KEY) {
-            console.error('❌ 카카오 REST API 키가 설정되지 않았습니다.');
             return NextResponse.json(
                 { error: 'API key not found' },
                 { status: 500 }
@@ -16,7 +15,6 @@ export async function POST(request: NextRequest) {
         }
 
         const url = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`;
-        console.log('🔍 요청 URL:', url);
 
         const response = await fetch(url, {
             headers: {
