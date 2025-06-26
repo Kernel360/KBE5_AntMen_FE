@@ -115,6 +115,12 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
 
         return (
           <>
+          <button
+              onClick={() => onViewDetails?.(reservationId.toString())}
+              className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
+            >
+              상세보기
+            </button>
             {reservation.checkinAt ? (
               <button
                 onClick={() => onCheckOut?.(reservationId.toString())}
@@ -130,12 +136,6 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
                 Check-in
               </button>
             )}
-            <button
-              onClick={() => onViewDetails?.(reservationId.toString())}
-              className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
-            >
-              상세보기
-            </button>
           </>
         )
       }
@@ -144,16 +144,16 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
           return (
             <>
               <button
-                onClick={() => onWriteReview?.(reservationId.toString())}
-                className="flex-1 rounded-[22px] bg-[#4DD0E1] py-3 text-sm font-medium text-white hover:bg-[#26C6DA] transition-colors"
-              >
-                리뷰 작성
-              </button>
-              <button
                 onClick={() => onViewDetails?.(reservationId.toString())}
                 className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
               >
                 상세보기
+              </button>
+              <button
+                onClick={() => onWriteReview?.(reservationId.toString())}
+                className="flex-1 rounded-[22px] bg-[#4DD0E1] py-3 text-sm font-medium text-white hover:bg-[#26C6DA] transition-colors"
+              >
+                리뷰 작성
               </button>
             </>
           )
@@ -161,16 +161,16 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
         return (
           <>
             <button
-              disabled
-              className="flex-1 rounded-[22px] bg-[#B0BEC5] py-3 text-sm font-medium text-white cursor-not-allowed"
-            >
-              완료됨
-            </button>
-            <button
               onClick={() => onViewDetails?.(reservationId.toString())}
               className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
             >
               상세보기
+            </button>
+            <button
+              disabled
+              className="flex-1 rounded-[22px] bg-[#B0BEC5] py-3 text-sm font-medium text-white cursor-not-allowed"
+            >
+              완료됨
             </button>
           </>
         )
@@ -194,16 +194,16 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
         return (
           <>
             <button
-              onClick={() => onWriteReview(reservationId.toString())}
-              className="flex-1 rounded-[22px] bg-[#4DD0E1] py-3 text-sm font-medium text-white hover:bg-[#26C6DA] transition-colors"
-            >
-              리뷰 작성
-            </button>
-            <button
               onClick={() => onViewDetails?.(reservationId.toString())}
               className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
             >
               상세보기
+            </button>
+            <button
+              onClick={() => onWriteReview(reservationId.toString())}
+              className="flex-1 rounded-[22px] bg-[#4DD0E1] py-3 text-sm font-medium text-white hover:bg-[#26C6DA] transition-colors"
+            >
+              리뷰 작성
             </button>
           </>
         )
@@ -211,16 +211,16 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
         return (
           <>
             <button
-              disabled
-              className="flex-1 rounded-[22px] bg-[#B0BEC5] py-3 text-sm font-medium text-white cursor-not-allowed"
-            >
-              완료됨
-            </button>
-            <button
               onClick={() => onViewDetails?.(reservationId.toString())}
               className="flex-1 rounded-[22px] bg-white border border-[#E0E0E0] py-3 text-sm font-extrabold text-[#757575] hover:bg-[#FAFAFA] transition-colors"
             >
               상세보기
+            </button>
+            <button
+              disabled
+              className="flex-1 rounded-[22px] bg-[#B0BEC5] py-3 text-sm font-medium text-white cursor-not-allowed"
+            >
+              완료됨
             </button>
           </>
         )

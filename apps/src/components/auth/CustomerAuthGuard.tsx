@@ -2,11 +2,23 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode';
 
 interface CustomerAuthGuardProps {
   children: React.ReactNode;
+}
+
+interface JwtPayload {
+  userRole?: string;
+  // 필요한 경우 id 등 추가
+}
+
+function getCookie(name: string) {
+  if (typeof document === 'undefined') return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()!.split(';').shift()!;
+  return null;
 }
 
 export const CustomerAuthGuard = ({ children }: CustomerAuthGuardProps) => {
@@ -14,8 +26,13 @@ export const CustomerAuthGuard = ({ children }: CustomerAuthGuardProps) => {
   const alerted = useRef(false);
 
   useEffect(() => {
-    // 쿠키에서 JWT 토큰 확인
-    const token = Cookies.get('auth-token');
+    const tokenWithBearer = getCookie('auth-token');
+    console.log('auth-token 쿠키:', tokenWithBearer);
+
+    // "Bearer ..." 접두사 제거
+    const token = tokenWithBearer?.replace(/^Bearer\s/, '');
+    console.log('실제 JWT 토큰:', token);
+
     if (!token && !alerted.current) {
       alerted.current = true;
       alert('로그인이 필요한 서비스입니다.');
@@ -23,44 +40,27 @@ export const CustomerAuthGuard = ({ children }: CustomerAuthGuardProps) => {
       return;
     }
 
-    let userRole = null;
-    let userId = null;
-    if (token) {
-      try {
-        // Bearer 접두사 제거
-        const cleanToken = token.replace(/^Bearer\s*/i, '');
-        const decoded: any = jwtDecode(cleanToken);
-        userRole = decoded.userRole;
-        userId = decoded.sub;
-      } catch (e) {
-        if (!alerted.current) {
+    // JWT 디코딩하여 role 확인
+    try {
+      if (typeof token === 'string') {
+        const decoded = jwtDecode<JwtPayload>(token);
+        console.log('디코딩된 JWT:', decoded);
+        if (decoded.userRole !== 'CUSTOMER' && !alerted.current) {
           alerted.current = true;
-          alert('로그인 정보가 올바르지 않습니다. 다시 로그인 해주세요.');
+          alert('로그인이 필요한 서비스입니다.');
           router.push('/login');
+          return;
         }
-        return;
-      }
-    }
-
-    if (userRole !== 'CUSTOMER' && !alerted.current) {
-      alerted.current = true;
-      alert('잘못된 접근입니다.');
-      if (userRole === 'MANAGER') {
-        router.push('/manager');
       } else {
-        router.push('/');
+        throw new Error('토큰이 올바르지 않습니다.');
+      }
+    } catch (e) {
+      if (!alerted.current) {
+        alerted.current = true;
+        alert('로그인이 필요한 서비스입니다.');
+        router.push('/login');
       }
       return;
-    }
-
-    // customerId를 예약 정보에 추가 (localStorage 활용 시)
-    const pendingReservation = localStorage.getItem('pendingReservation');
-    if (pendingReservation && userId) {
-      const reservationData = JSON.parse(pendingReservation);
-      if (!reservationData.customerId) {
-        reservationData.customerId = userId;
-        localStorage.setItem('pendingReservation', JSON.stringify(reservationData));
-      }
     }
   }, [router]);
 

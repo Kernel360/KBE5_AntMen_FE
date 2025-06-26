@@ -3,96 +3,120 @@ name: 'CI/CD: Build & Deploy to EC2'
 on:
   push:
     branches: [develop]
-    # paths:
-    #   - 'apps/**'
-    #   - 'admin/**'
+    paths:
+      - 'apps/**'
+      - 'admin/**'
+      - '.github/workflows/**'
+      - 'docker-compose.yml'
+      - 'package.json'
+      - 'yarn.lock'
 
 permissions:
   id-token: write
   contents: read
 
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    env:
-      ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
-    strategy:
-      matrix:
-        include:
-          - name: users-app
-            dockerfile: apps/Dockerfile
-            context: .
-            image: users-app
-            repository: users-app
-          - name: admin-app
-            dockerfile: admin/Dockerfile
-            context: .
-            image: admin-app
-            repository: admin-app
+env:
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
 
+jobs:
+  build-apps:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install Yarn
-        run: npm install -g yarn
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Build apps
-        run: |
-          yarn workspace apps build || true
-          yarn workspace admin build || true
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Create ECR repository if not exists
-        run: |
-          aws ecr describe-repositories --repository-names ${{ matrix.repository }} || aws ecr create-repository --repository-name ${{ matrix.repository }}
-        env:
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
-        with:
-          registry: ${{ env.ECR_REGISTRY }}
 
-      - name: Build and Push Docker image
-        env:
-          ECR_REGISTRY: ${{ env.ECR_REGISTRY }}
+      - name: Create ECR repository if not exists
         run: |
-          docker build -f ${{ matrix.dockerfile }} -t $ECR_REGISTRY/${{ matrix.image }}:latest ${{ matrix.context }}
-          docker push $ECR_REGISTRY/${{ matrix.image }}:latest
+          aws ecr describe-repositories --repository-names users-app 2>/dev/null || \
+          aws ecr create-repository --repository-name users-app
 
-  deploy:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push users-app
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/Dockerfile
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/users-app:latest
+          cache-from: type=gha,scope=users-app
+          cache-to: type=gha,mode=max,scope=users-app
+          build-args: |
+            NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            NEXT_PUBLIC_GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
+            NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE=${{ secrets.GOOGLE_RESPONSE_TYPE }}
+            NEXT_PUBLIC_GOOGLE_SCOPE=${{ secrets.GOOGLE_SCOPE }}
+            NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.GOOGLE_AUTH_URL }}
+
+  build-admin:
     runs-on: ubuntu-latest
-    needs: build-and-push
-    strategy:
-      matrix:
-        include:
-          - image: users-app
-          - image: admin-app
-    env:
-      ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Create ECR repository if not exists
+        run: |
+          aws ecr describe-repositories --repository-names admin-app 2>/dev/null || \
+          aws ecr create-repository --repository-name admin-app
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push admin-app
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: admin/Dockerfile
+          push: true
+          tags: ${{ env.ECR_REGISTRY }}/admin-app:latest
+          cache-from: type=gha,scope=admin-app
+          cache-to: type=gha,mode=max,scope=admin-app
+
+  prepare-deploy:
+    runs-on: ubuntu-latest
+    needs: [build-apps, build-admin]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Clear client folder before upload
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Prepare deployment files
+        run: |
+          # .env 파일 생성
+          cat > .env << EOF
+          KAKAO_REST_API_KEY=${{ secrets.KAKAO_REST_API_KEY }}
+          ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+          NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
+          NODE_ENV=production
+          EOF
+
+      - name: Prepare EC2 deployment directory
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.EC2_PUBLIC_IP }}
@@ -100,21 +124,19 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
+            # 배포 디렉토리 정리 및 준비
             sudo rm -rf /home/ubuntu/apps/client
             mkdir -p /home/ubuntu/apps/client
             sudo chown -R ubuntu:ubuntu /home/ubuntu/apps/client
+            
+            # Docker 리소스 정리 (조건부)
+            DISK_USAGE=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
+            if [ $(date +%u) -eq 1 ] || [ $DISK_USAGE -gt 80 ]; then
+              echo "🧹 Docker 리소스 정리 중..."
+              docker system prune -af --volumes
+            fi
 
-      - name: Create .env file
-        run: |
-          echo "ECR_REGISTRY=${{ secrets.ECR_REGISTRY }}" > .env
-          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
-          echo "GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}" >> .env
-          echo "GOOGLE_RESPONSE_TYPE=${{ secrets.GOOGLE_RESPONSE_TYPE }}" >> .env
-          echo "GOOGLE_SCOPE=${{ secrets.GOOGLE_SCOPE }}" >> .env
-          echo "GOOGLE_AUTH_URL=${{ secrets.GOOGLE_AUTH_URL }}" >> .env
-          # 필요에 따라 아래에 추가 환경변수 계속 추가
-
-      - name: Copy docker-compose.yml and .env
+      - name: Copy deployment files
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.EC2_PUBLIC_IP }}
@@ -124,7 +146,28 @@ jobs:
           source: 'docker-compose.yml,.env'
           target: ~/apps/client
 
-      - name: SSH into EC2 and restart containers
+  deploy:
+    runs-on: ubuntu-latest
+    needs: prepare-deploy
+    strategy:
+      matrix:
+        include:
+          - image: users-app
+            service: users-app
+            port: 3000
+          - image: admin-app
+            service: admin-app
+            port: 3001
+      max-parallel: 1
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy and restart containers
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.EC2_PUBLIC_IP }}
@@ -134,34 +177,39 @@ jobs:
           script: |
             cd ~/apps/client
 
-            # .env 파일을 현재 쉘에 적용
-            set -a
-            source .env
-            set +a
+            # 환경변수 로드
+            set -a && source .env && set +a
 
-            echo "ECR_REGISTRY 값: $ECR_REGISTRY"
-            echo "GOOGLE_CLIENT_ID 값: $GOOGLE_CLIENT_ID"
-            echo "GOOGLE_REDIRECT_URI 값: $GOOGLE_REDIRECT_URI"
-            echo "GOOGLE_RESPONSE_TYPE 값: $GOOGLE_RESPONSE_TYPE"
-            echo "GOOGLE_SCOPE 값: $GOOGLE_SCOPE"
-            echo "GOOGLE_AUTH_URL 값: $GOOGLE_AUTH_URL"
+            echo "🚀 배포 시작: ${{ matrix.service }}"
 
-            echo "정리 전 디스크 사용량:"
-            df -h /
+            # ECR 로그인
+            aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
+            docker login --username AWS --password-stdin $ECR_REGISTRY
 
-            echo "미사용 리소스 정리 중..."
-            docker container prune -f
-            docker image prune -f
-            docker network prune -f
+            # 이미지 풀 및 컨테이너 재시작
+            echo "📦 이미지 풀링: ${{ matrix.image }}"
+            docker pull $ECR_REGISTRY/${{ matrix.image }}:latest
 
-            echo "정리 후 디스크 사용량:"
-            df -h /
+            echo "🔄 컨테이너 재시작: ${{ matrix.service }}"
+            docker compose down ${{ matrix.service }} 2>/dev/null || true
+            docker compose up -d ${{ matrix.service }}
 
-            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REGISTRY
+            # 배포 상태 확인
+            echo "✅ 배포 완료 확인:"
+            sleep 10
+            docker compose ps ${{ matrix.service }}
+            docker compose logs --tail=10 ${{ matrix.service }}
 
-            echo "Pulling image: ${{ matrix.image }}"
-            docker pull $ECR_REGISTRY/${{ matrix.image }}:latest || { echo "이미지 pull 실패"; exit 1; }
+            # 헬스체크
+            echo "🏥 헬스체크..."
+            for i in {1..3}; do
+              if curl -f -s http://localhost:${{ matrix.port }} > /dev/null; then
+                echo "✅ ${{ matrix.service }} 정상"
+                break
+              else
+                echo "⏳ 헬스체크 재시도 중... ($i/3)"
+                sleep 5
+              fi
+            done
 
-            echo "Stopping & restarting ${{ matrix.image }}"
-            docker compose down ${{ matrix.image }} || true
-            docker compose up -d ${{ matrix.image }}
+            echo "🎉 ${{ matrix.service }} 배포 완료!"

@@ -4,11 +4,11 @@ import { MorePageUI } from '@/features/more/ui/MorePageUI'
 import { useAuthStore } from '@/shared/stores/authStore'
 import { customerApi } from '@/entities/account/api/accountApi'
 import { useEffect, useState } from 'react'
-import type { UserProfile } from '@/entities/account/model/types'
+import type { UserProfile, CustomerProfile } from '@/entities/account/model/types'
 
 export default function MorePage() {
   const { user: authUser, userData } = useAuthStore()
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [userProfile, setUserProfile] = useState<CustomerProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function MorePage() {
     userEmail: userProfile?.userEmail || 'customer@test.com',
     userProfile: userProfile?.userProfile,
   }
-  
+
   if (isLoading) {
     return <div>로딩 중...</div>
   }

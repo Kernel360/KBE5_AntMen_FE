@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   BasicSignupForm,
@@ -21,6 +21,7 @@ const ManagerSignUpPage = () => {
   const router = useRouter()
   const [errors, setErrors] = useState<ValidationErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isIdValid, setIsIdValid] = useState(false)
 
   const { socialProfile, isSocialSignup, clearSocialProfile } =
     useSocialProfileStore()
@@ -38,7 +39,9 @@ const ManagerSignUpPage = () => {
 
   const [additionalData, setAdditionalData] = useState<ManagerAdditionalData>({
     address: '',
-    workArea: '',
+    addressDetail: '',
+    latitude: null,
+    longitude: null,
     workHours: {
       start: '09:00',
       end: '18:00',
@@ -52,20 +55,19 @@ const ManagerSignUpPage = () => {
       setBasicData((prev) => ({
         ...prev,
         email: socialProfile.email,
-        username: socialProfile.id, // 아이디도 이메일로 초기 설정
+        username: socialProfile.id,
       }))
     }
   }, [isSocialSignup, socialProfile])
 
-  const handleBasicChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  const handleBasicChange = useCallback((
+      e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target
     setBasicData((prev) => ({
       ...prev,
       [name]: value,
     }))
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev }
@@ -73,9 +75,9 @@ const ManagerSignUpPage = () => {
         return newErrors
       })
     }
-  }
+  }, [errors])
 
-  const handleProfileImageChange = (file: File | null) => {
+  const handleProfileImageChange = useCallback((file: File | null) => {
     setBasicData((prev) => ({
       ...prev,
       profileImage: file,
@@ -87,10 +89,10 @@ const ManagerSignUpPage = () => {
         return newErrors
       })
     }
-  }
+  }, [errors.profileImage])
 
-  const handleAdditionalChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  const handleAdditionalChange = useCallback((
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target
     setAdditionalData((prev) => ({
@@ -104,9 +106,9 @@ const ManagerSignUpPage = () => {
         return newErrors
       })
     }
-  }
+  }, [errors])
 
-  const handleWorkHoursChange = (type: 'start' | 'end', value: string) => {
+  const handleWorkHoursChange = useCallback((type: 'start' | 'end', value: string) => {
     setAdditionalData((prev) => ({
       ...prev,
       workHours: {
@@ -114,9 +116,60 @@ const ManagerSignUpPage = () => {
         [type]: value,
       },
     }))
-  }
+  }, [])
 
-  const validateForm = (): boolean => {
+  const handleAddressChange = useCallback((address: string) => {
+    setAdditionalData((prev) => ({
+      ...prev,
+      address,
+    }))
+    if (errors.address) {
+      setErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors.address
+        return newErrors
+      })
+    }
+  }, [errors.address])
+
+  const handleAddressDetailChange = useCallback((detail: string) => {
+    setAdditionalData((prev) => ({
+      ...prev,
+      addressDetail: detail,
+    }))
+    if (errors.addressDetail) {
+      setErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors.addressDetail
+        return newErrors
+      })
+    }
+  }, [errors.addressDetail])
+
+  // ✅ 수정된 좌표 변경 핸들러 - 위경도 분리
+  const handleCoordinatesChange = useCallback((latitude: number | null, longitude: number | null) => {
+    setAdditionalData((prev) => ({
+      ...prev,
+      latitude,
+      longitude,
+    }))
+  }, [])
+
+  const handleAddressSelect = useCallback(async (addressData: {
+    main: string;
+    detail: string;
+    addressName: string;
+    area: number;
+  }) => {
+    console.log('부모에서 주소 선택 확인:', addressData.main);
+  }, [])
+
+  const validateForm = useCallback((): boolean => {
+    // 소셜 로그인이 아닌 경우 아이디 중복 확인 상태 체크
+    if (!isSocialSignup && !isIdValid) {
+      return false
+    }
+
     const newErrors: ValidationErrors = {}
 
     // Basic data validation
@@ -136,24 +189,31 @@ const ManagerSignUpPage = () => {
 
     // Additional data validation
     if (!additionalData.address) newErrors.address = '주소를 입력해주세요'
-    if (!additionalData.workArea)
-      newErrors.workArea = '근무 가능 지역을 입력해주세요'
 
     // Identity files validation
     if (identityFiles.length === 0)
       newErrors.identityFiles = '최소 1개의 신원 확인 서류가 필요합니다'
 
     setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
 
-  const handleBack = () => {
-    clearSocialProfile() // 뒤로가기 시 스토어 초기화
+    // 필수 항목이 모두 채워지지 않은 경우
+    if (Object.keys(newErrors).length > 0) {
+      alert('모든 필수 항목을 입력해주세요')
+      return false
+    }
+
+    return Object.keys(newErrors).length === 0
+  }, [basicData, additionalData, identityFiles, isSocialSignup, isIdValid])
+
+  const handleBack = useCallback(() => {
+    clearSocialProfile()
     router.push('/signup')
-  }
+  }, [clearSocialProfile, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // 유효성 검사 활성화
 
     if (!validateForm()) {
       // Show error message
@@ -174,7 +234,7 @@ const ManagerSignUpPage = () => {
       formData.append('userName', basicData.name)
       formData.append('userTel', basicData.phone)
       formData.append('userEmail', basicData.email)
-      formData.append('userGender', basicData.gender.toUpperCase()) // 'male' -> 'MALE'
+      formData.append('userGender', basicData.gender.toUpperCase())
       formData.append('userBirth', basicData.birthDate)
 
       if (isSocialSignup && socialProfile) {
@@ -186,26 +246,94 @@ const ManagerSignUpPage = () => {
         formData.append('userProfile', basicData.profileImage)
       }
 
-      // Manager specific information
-      formData.append('managerAddress', additionalData.address)
-      formData.append('managerArea', additionalData.workArea)
+      // ✅ 주소만 깔끔하게 전송 (위경도 정보 제외)
+      const cleanAddress = additionalData.addressDetail
+          ? `${additionalData.address} ${additionalData.addressDetail}`.trim()
+          : additionalData.address
+
+      // 주소는 깔끔하게, 위경도는 별도 필드로 전송
+      formData.append('managerAddress', cleanAddress)
       formData.append(
-        'managerTime',
-        `${additionalData.workHours.start}-${additionalData.workHours.end}`,
+          'managerTime',
+          `${additionalData.workHours.start}-${additionalData.workHours.end}`,
       )
+
+      // ✅ 위경도는 별도 필드로만 전송
+      if (additionalData.latitude !== null) {
+        formData.append('managerLatitude', additionalData.latitude.toString())
+      }
+      if (additionalData.longitude !== null) {
+        formData.append('managerLongitude', additionalData.longitude.toString())
+      }
 
       // Identity verification files
       identityFiles.forEach((file) => {
         formData.append('managerFileUrls', file)
       })
 
+      // 개발용 로그 - 전송되는 데이터 확인
+      if (process.env.NODE_ENV === 'development') {
+        console.log('\n=== FormData 내용 ===');
+        formData.forEach((value, key) => {
+          // value의 자료형 확인
+          const valueType = typeof value;
+          const constructor = value.constructor.name;
+
+          if (value instanceof File) {
+            console.log(`📁 ${key}: [파일] ${value.name} (${(value.size/1024).toFixed(1)}KB) - ${value.type}`);
+            console.log(`   타입: ${valueType}, 생성자: ${constructor}`);
+          } else {
+            console.log(`📝 ${key}: ${value}`);
+            console.log(`   타입: ${valueType}, 생성자: ${constructor}`);
+          }
+        });
+      }
+
+      // API 호출
       const response = await fetch('https://api.antmen.site:9092/v1/manager/signup', {
         method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+        },
         body: formData,
+        credentials: 'include', // 세션 쿠키 포함
       })
 
+      // 응답 상태 확인
+      console.log('API 응답 상태:', response.status, response.statusText);
+
       if (!response.ok) {
-        throw new Error('회원가입 중 오류가 발생했습니다.')
+        let errorMessage = '회원가입 중 오류가 발생했습니다.';
+
+        try {
+          const errorData = await response.text();
+          console.error('서버 에러 응답:', errorData);
+
+          // 상태 코드별 에러 메시지
+          switch (response.status) {
+            case 400:
+              errorMessage = '입력 정보를 확인해주세요.';
+              break;
+            case 401:
+              errorMessage = '인증이 필요합니다.';
+              break;
+            case 403:
+              errorMessage = '권한이 없습니다.';
+              break;
+            case 409:
+              errorMessage = '이미 존재하는 사용자입니다.';
+              break;
+            case 500:
+              errorMessage = '서버 내부 오류가 발생했습니다.';
+              break;
+            default:
+              errorMessage = `서버 오류 (${response.status})`;
+          }
+        } catch (parseError) {
+          console.error('에러 응답 파싱 실패:', parseError);
+        }
+
+        throw new Error(`${errorMessage} (상태 코드: ${response.status})`);
       }
 
       const data = await response.json()
@@ -216,65 +344,110 @@ const ManagerSignUpPage = () => {
 
       // Redirect to pending page instead of login page
       router.push('/signup/manager/pending')
+
     } catch (error) {
       console.error('회원가입 실패:', error)
-      alert('회원가입 중 오류가 발생했습니다. 다시 시도해주세요.')
+
+      // 에러 타입별 처리
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        alert('네트워크 연결을 확인해주세요.');
+      } else if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert('알 수 없는 오류가 발생했습니다.');
+      }
     } finally {
       setIsSubmitting(false)
     }
   }
 
+// 추가: 전송 데이터 미리보기 함수 (개발용)
+  const previewSubmissionData = () => {
+    if (process.env.NODE_ENV === 'development') {
+      const cleanAddress = additionalData.addressDetail
+          ? `${additionalData.address} ${additionalData.addressDetail}`.trim()
+          : additionalData.address;
+
+      console.log('=== 전송 예정 데이터 미리보기 ===');
+      console.log('사용자 정보:', {
+        아이디: basicData.username,
+        이름: basicData.name,
+        이메일: basicData.email,
+        전화번호: basicData.phone,
+        성별: basicData.gender,
+        생년월일: basicData.birthDate
+      });
+
+      console.log('매니저 정보:', {
+        주소: cleanAddress,
+        위도: additionalData.latitude,
+        경도: additionalData.longitude,
+        근무시간: `${additionalData.workHours.start}-${additionalData.workHours.end}`
+      });
+
+      console.log('파일 정보:', {
+        프로필사진: basicData.profileImage?.name || '없음',
+        신원확인서류: identityFiles.map(f => f.name)
+      });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white flex justify-center">
-      <div className="w-[375px] px-4 pt-4 pb-8">
-        {/* Header */}
-        <div className="mb-8">
-          <button onClick={handleBack} className="p-2 text-2xl font-bold">
-            &larr; 매니저 회원가입
-          </button>
+      <div className="min-h-screen bg-white flex justify-center">
+        <div className="w-[375px] px-4 pt-4 pb-8">
+          {/* Header */}
+          <div className="mb-8">
+            <button onClick={handleBack} className="p-2 text-2xl font-bold">
+              &larr; 매니저 회원가입
+            </button>
+          </div>
+
+          {/* Main Content */}
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Basic Information */}
+            <BasicSignupForm
+                formData={basicData}
+                onChange={handleBasicChange}
+                onImageChange={handleProfileImageChange}
+                errors={errors}
+                isSocialSignup={isSocialSignup}
+                onIdValidationChange={setIsIdValid}
+            />
+
+            {/* Manager Additional Information */}
+            <ManagerAdditionalInfo
+                data={additionalData}
+                onChange={handleAdditionalChange}
+                onWorkHoursChange={handleWorkHoursChange}
+                onAddressChange={handleAddressChange}
+                onAddressDetailChange={handleAddressDetailChange}
+                onCoordinatesChange={handleCoordinatesChange} // ✅ 수정된 핸들러
+                onAddressSelect={handleAddressSelect}
+                errors={errors}
+            />
+
+            {/* File Upload Section */}
+            <FileUploadSection
+                files={identityFiles}
+                onFilesChange={setIdentityFiles}
+                error={errors.identityFiles}
+            />
+
+            {/* Submit Button */}
+            <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full h-[52px] bg-[#0fbcd6] text-white rounded-lg mt-8 text-base font-medium ${
+                    isSubmitting
+                        ? 'opacity-50 cursor-not-allowed'
+                        : 'hover:bg-[#0eaec5]'
+                }`}
+            >
+              {isSubmitting ? '처리중...' : '회원가입'}
+            </button>
+          </form>
         </div>
-
-        {/* Main Content */}
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Information */}
-          <BasicSignupForm
-            formData={basicData}
-            onChange={handleBasicChange}
-            onImageChange={handleProfileImageChange}
-            errors={errors}
-            isSocialSignup={isSocialSignup}
-          />
-
-          {/* Manager Additional Information */}
-          <ManagerAdditionalInfo
-            data={additionalData}
-            onChange={handleAdditionalChange}
-            onWorkHoursChange={handleWorkHoursChange}
-            errors={errors}
-          />
-
-          {/* File Upload Section */}
-          <FileUploadSection
-            files={identityFiles}
-            onFilesChange={setIdentityFiles}
-            error={errors.identityFiles}
-          />
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`w-full h-[52px] bg-[#0fbcd6] text-white rounded-lg mt-8 text-base font-medium ${
-              isSubmitting
-                ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-[#0eaec5]'
-            }`}
-          >
-            {isSubmitting ? '처리중...' : '회원가입'}
-          </button>
-        </form>
       </div>
-    </div>
   )
 }
 

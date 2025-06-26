@@ -18,7 +18,9 @@ interface HomeHeaderProps {
 }
 
 export function HomeHeader({
-  title = '제목입니다.',
+  title = '앤트워커로 매주 10시간을 절약해요',
+  subtitle,
+  buttonText = '예약하기',
   onButtonClick,
   buttonIcon,
   requireAuth = 'CUSTOMER',
@@ -90,18 +92,18 @@ export function HomeHeader({
           </div>
         </div>
 
-        <h1 className="text-2xl font-semibold mb-4 text-gray-900">
-          앤트워커로 매주
-          <br />
-          10시간을 절약해요
+        <h1 className="text-2xl font-semibold mb-2 text-gray-900">
+        {title}
         </h1>
-
+        {subtitle && (
+          <p className="text-base text-gray-800 mb-4">{subtitle}</p>
+        )}
         <button
-          onClick={handleRequireLogin}
+          onClick={onButtonClick ?? handleRequireLogin}
           className="w-full h-[58px] bg-white rounded-xl flex items-center mb-4 justify-center gap-2"
         >
-          <CalendarIcon className="w-[18px] h-[18px] text-black" />
-          <span className="font-semibold">예약하기</span>
+          {buttonIcon ?? <CalendarIcon className="w-[18px] h-[18px] text-black" />}
+          <span className="font-semibold">{buttonText}</span>
         </button>
       </div>
       <LoginRequiredModal

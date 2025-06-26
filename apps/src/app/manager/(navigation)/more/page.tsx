@@ -30,12 +30,12 @@ export default function MorePage() {
   // 로딩 중이거나 프로필 정보가 없을 경우 기본값 사용
   const user = {
     userName: userProfile?.userName || '관리자',
-    userPoint: userProfile?.customerPoint || 0,
+    userPoint: 0,
     userType: authUser?.userRole === 'MANAGER' ? 'Manager' : userData?.userType || 'User',
     userEmail: userProfile?.userEmail || 'manager@antmen.com',
     userProfile: userProfile?.userProfile,
   }
-  
+
   if (isLoading) {
     return <div>로딩 중...</div>
   }
