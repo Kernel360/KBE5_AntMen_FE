@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createReservation } from '@/shared/api/reservation';
-import { ReservationStorage } from '@/shared/lib/reservationStorage';
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
 import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';

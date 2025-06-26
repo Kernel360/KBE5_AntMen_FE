@@ -122,7 +122,7 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
               type="number"
               value={area === 0 ? '' : area}
               onChange={(e) => setArea(Number(e.target.value))}
-              placeholder="평수"
+              placeholder="평수 (숫자만 입력해주세요, 예: 50)"
               min={1}
               className="rounded-xl border border-gray-300 p-4 focus:outline-none focus:ring-2 focus:ring-[#00BCD4]"
             />
