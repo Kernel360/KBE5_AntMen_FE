@@ -114,36 +114,38 @@ export default function ReviewsPageClient() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="flex min-h-screen flex-col bg-white">
       <CommonHeader 
         title="리뷰 관리"
         showBackButton
       />
 
-      {/* 내용 */}
-      <div className="pt-[64px] p-5 pb-20 min-h-[calc(100vh-64px)] space-y-4">
-        {isLoading ? (
-          <div className="text-center py-20 text-slate-400">로딩 중...</div>
-        ) : error ? (
-          <div className="text-center py-20 text-red-500">{error}</div>
-        ) : reviews.length > 0 ? (
-          reviews.map(review => (
-            <ReviewCard
-              key={review.id}
-              review={review}
-              onEdit={id => {
-                const r = reviews.find(r => r.id === id);
-                if (r) handleOpenEditModal(r);
-              }}
-              onDelete={id => {
-                const r = reviews.find(r => r.id === id);
-                if (r) handleOpenDeleteModal(r);
-              }}
-            />
-          ))
-        ) : (
-          <EmptyState />
-        )}
+      <div className="flex-1 flex flex-col pt-[64px]">
+        {/* 내용 */}
+        <div className="p-5 space-y-4">
+          {isLoading ? (
+            <div className="text-center py-20 text-gray-400">로딩 중...</div>
+          ) : error ? (
+            <div className="text-center py-20 text-red-500">{error}</div>
+          ) : reviews.length > 0 ? (
+            reviews.map(review => (
+              <ReviewCard
+                key={review.id}
+                review={review}
+                onEdit={id => {
+                  const r = reviews.find(r => r.id === id);
+                  if (r) handleOpenEditModal(r);
+                }}
+                onDelete={id => {
+                  const r = reviews.find(r => r.id === id);
+                  if (r) handleOpenDeleteModal(r);
+                }}
+              />
+            ))
+          ) : (
+            <EmptyState />
+          )}
+        </div>
       </div>
 
       {/* 모달 렌더링 */}

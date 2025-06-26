@@ -158,28 +158,36 @@ export default function ManagerReviewsClient() {
 
       <div className="flex-1 flex flex-col pt-[64px]">
         {/* Tab Navigation */}
-        <nav className="flex sticky top-[64px] bg-white z-10">
-          <button
-            onClick={() => setActiveTab('received')}
-            className={`flex-1 py-3 text-center text-sm font-semibold ${
-              activeTab === 'received'
-                ? 'border-b-2 border-slate-800 text-slate-800'
-                : 'text-slate-400'
-            }`}
-          >
-            받은 리뷰
-          </button>
-          <button
-            onClick={() => setActiveTab('written')}
-            className={`flex-1 py-3 text-center text-sm font-semibold ${
-              activeTab === 'written'
-                ? 'border-b-2 border-slate-800 text-slate-800'
-                : 'text-slate-400'
-            }`}
-          >
-            작성한 리뷰
-          </button>
-        </nav>
+        <div className="sticky top-[64px] z-10 bg-white border-b border-gray-200">
+          <div className="grid grid-cols-2">
+            <button
+              onClick={() => setActiveTab('received')}
+              className={`relative py-3.5 text-sm font-medium transition-colors ${
+                activeTab === 'received' ? 'bg-primary/10' : ''
+              }`}
+            >
+              <span className={activeTab === 'received' ? 'text-primary' : 'text-gray-600'}>
+                받은 리뷰
+              </span>
+              {activeTab === 'received' && (
+                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('written')}
+              className={`relative py-3.5 text-sm font-medium transition-colors ${
+                activeTab === 'written' ? 'bg-primary/10' : ''
+              }`}
+            >
+              <span className={activeTab === 'written' ? 'text-primary' : 'text-gray-600'}>
+                작성한 리뷰
+              </span>
+              {activeTab === 'written' && (
+                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />
+              )}
+            </button>
+          </div>
+        </div>
 
         {/* 리뷰 통계 (받은 리뷰 탭 전용) */}
         {activeTab === 'received' && <ReviewStats reviews={receivedReviews} />}
