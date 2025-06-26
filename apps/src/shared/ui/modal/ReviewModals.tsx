@@ -101,7 +101,7 @@ export function EditReviewModal({
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-cyan-500 text-white rounded-md text-sm font-medium disabled:opacity-50"
+            className="px-4 py-2 bg-primary-500 text-white rounded-md text-sm font-medium disabled:opacity-50"
             disabled={isSubmitting}
           >
             {isSubmitting ? '저장 중...' : '저장'}

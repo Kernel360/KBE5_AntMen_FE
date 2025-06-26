@@ -35,7 +35,7 @@ export const TimeSelector = ({
             <p className="text-sm text-[#666666]">서비스 시간</p>
             {recommendedTime && (
               <div className="flex items-center">
-                <span className="text-xs text-primary font-medium">
+                <span className="text-xs text-primary-500 font-medium">
                   알고리즘 기반 &middot; {Math.floor(recommendedTime.area)}평 {Math.floor(recommendedTime.minutes / 60)}시간 추천
                 </span>
               </div>

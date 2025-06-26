@@ -259,7 +259,7 @@ const AddressPageUI = () => {
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 bg-cyan-500 text-white rounded-lg text-sm font-medium"
+              className="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium"
             >
               저장
             </button>
@@ -341,7 +341,7 @@ const AddressPageUI = () => {
         <div className="p-5">
           <button
             onClick={() => setAddModalOpen(true)}
-            className="w-full py-4 bg-cyan-500 text-white rounded-lg font-bold hover:bg-cyan-600 transition-colors"
+            className="w-full py-4 bg-primary-500 text-white rounded-lg font-bold hover:bg-primary-600 transition-colors"
           >
             + 새 주소 추가
           </button>
