@@ -162,10 +162,7 @@ export default function ReservationConfirmPage() {
                   <span className="text-slate-600">소요 시간</span>
                   <span className="font-medium">{reservationInfo.reservationDuration}시간</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">지역</span>
-                  <span className="font-medium">6</span>
-                </div>
+                
                 <div className="flex justify-between">
                   <span className="text-slate-600">예약 금액</span>
                   <span className="font-medium">{reservationInfo.reservationAmount?.toLocaleString()}원</span>

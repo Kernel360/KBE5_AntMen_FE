@@ -45,6 +45,7 @@ export default function PaymentPage({ params }: PaymentPageProps) {
   const router = useRouter();
   const [selectedMethod, setSelectedMethod] = useState('card');
   const [reservationData, setReservationData] = useState<any | null>(null);
+  const [reservationInfo, setReservationInfo] = useState<any | null>(null); // 예약 확인 페이지와 동일한 변수명 사용
   const [isLoading, setIsLoading] = useState(true);
   const [isPaying, setIsPaying] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -53,6 +54,14 @@ export default function PaymentPage({ params }: PaymentPageProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // 예약 확인 페이지와 동일한 방식으로 세션에서 예약 정보 가져오기
+        const savedDataStr = sessionStorage.getItem('currentReservation');
+        if (savedDataStr) {
+          const savedData = JSON.parse(savedDataStr);
+          setReservationInfo(savedData);
+          console.log('💰 예약 확인 페이지의 금액 정보 로드:', savedData.reservationAmount);
+        }
+
         const token = Cookies.get('auth-token');
         if (!token) throw new Error('로그인이 필요합니다.');
         let cleanToken = token.replace(/^Bearer\s+/i, '').replace(/\s+/g, '');
@@ -61,6 +70,7 @@ export default function PaymentPage({ params }: PaymentPageProps) {
         });
         if (!reservationResponse.ok) throw new Error('예약 정보를 불러오는데 실패했습니다.');
         const reservationData = await reservationResponse.json();
+        
         setReservationData(reservationData);
       } catch (error) {
         setError(error instanceof Error ? error.message : '데이터를 불러오는데 실패했습니다.');
@@ -82,7 +92,7 @@ export default function PaymentPage({ params }: PaymentPageProps) {
       await requestPayment({
         reservationId: Number(params.reservationId),
         payMethod: selectedMethod.toUpperCase(),
-        payAmount: reservationData?.reservationAmount || 0
+        payAmount: reservationInfo?.reservationAmount || reservationData?.reservationAmount || 0
       }, cleanToken);
       setMessage('결제가 성공적으로 완료되었습니다!');
       
@@ -127,10 +137,10 @@ export default function PaymentPage({ params }: PaymentPageProps) {
   }
 
   // 예약 정보가 없으면 렌더링 X
-  if (!reservationData) return null;
+  if (!reservationData && !reservationInfo) return null;
 
-  // 금액 포맷 함수
-  const formatCurrency = (amount: number) => `₩${amount?.toLocaleString()}`;
+  // // 금액 포맷 함수
+  // const formatCurrency = (amount: number) => `₩${amount?.toLocaleString()}`;
 
   return (
     <div className="min-h-screen bg-slate-50 flex justify-center">
@@ -150,10 +160,10 @@ export default function PaymentPage({ params }: PaymentPageProps) {
                 <span className="text-slate-600">서비스</span>
                 <span className="font-medium">{reservationData.categoryName}</span>
               </div>
-              <div className="flex items-center justify-between">
+              {/* <div className="flex items-center justify-between">
                 <span className="text-slate-600">예약 번호</span>
                 <span className="font-medium">#{reservationData.reservationId || params.reservationId}</span>
-              </div>
+              </div> */}
               <div className="flex items-center justify-between">
                 <span className="text-slate-600">예약 날짜</span>
                 <span className="font-medium">{reservationData.reservationDate || '-'}</span>
@@ -189,7 +199,7 @@ export default function PaymentPage({ params }: PaymentPageProps) {
               <div className="w-full h-px bg-slate-200 my-3"></div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-600 font-medium">총 결제 금액</span>
-                <span className="font-bold text-lg">{formatCurrency(reservationData.reservationAmount)}</span>
+                <span className="font-bold text-lg">{reservationInfo?.reservationAmount?.toLocaleString()}원</span>
               </div>
             </div>
           </div>
@@ -233,7 +243,7 @@ export default function PaymentPage({ params }: PaymentPageProps) {
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-slate-600">결제할 금액</span>
-              <span className="text-xl font-bold">{formatCurrency(reservationData.reservationAmount)}</span>
+              <span className="text-xl font-bold">{reservationInfo?.reservationAmount?.toLocaleString()}원</span>
             </div>
             <button
               onClick={handlePayment}
@@ -247,7 +257,7 @@ export default function PaymentPage({ params }: PaymentPageProps) {
                 </div>
               ) : (
                 <span>
-                  {formatCurrency(reservationData.reservationAmount)} 결제하기
+                  {reservationInfo?.reservationAmount?.toLocaleString()}원 결제하기
                 </span>
               )}
             </button>
