@@ -110,31 +110,35 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-white">
       <CommonHeader 
         title="계정 관리"
         showBackButton
       />
 
-      <main className="pt-20 pb-20">
-        <div className="space-y-6 p-5">
+      <main className="flex-1 flex flex-col pt-[64px]">
+        <div className="p-5 space-y-6">
+          {/* 프로필 이미지 */}
           <AccountProfile 
             profileImage={profileImage}
             userProfileUrl={userProfile.userProfile}
             onImageChange={handleImageChange}
           />
 
-          <AccountSettings 
-            userInfo={{
-              name: userProfile.userName,
-              phone: userProfile.userTel,
-              birthDate: userProfile.userBirth,
-              email: userProfile.userEmail,
-            }}
-            appNotification={appNotification}
-            onAppNotificationChange={setAppNotification}
-            onEditClick={() => setIsEditModalOpen(true)}
-          />
+          {/* 계정 설정 카드 */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <AccountSettings 
+              userInfo={{
+                name: userProfile.userName,
+                phone: userProfile.userTel,
+                birthDate: userProfile.userBirth,
+                email: userProfile.userEmail,
+              }}
+              appNotification={appNotification}
+              onAppNotificationChange={setAppNotification}
+              onEditClick={() => setIsEditModalOpen(true)}
+            />
+          </div>
         </div>
       </main>
 

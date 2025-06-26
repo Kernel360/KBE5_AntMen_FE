@@ -22,56 +22,66 @@ export const AccountSettings = ({
   onEditClick,
 }: AccountSettingsProps) => {
   return (
-    <>
+    <div className="space-y-6">
       {/* Personal Info Section */}
-      <div className="space-y-6">
-        <div className="flex justify-between items-center py-1">
-          <span className="text-black">이름</span>
-          <span className="text-[#00BCD4]">{userInfo.name}</span>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center py-2">
+          <span className="text-gray-600">이름</span>
+          <span className="text-gray-900 font-medium">{userInfo.name}</span>
         </div>
-        <div className="flex justify-between items-center py-1">
-          <span className="text-black">전화번호</span>
-          <span className="text-[#00BCD4]">{userInfo.phone}</span>
+        <div className="flex justify-between items-center py-2">
+          <span className="text-gray-600">전화번호</span>
+          <span className="text-gray-900 font-medium">{userInfo.phone}</span>
         </div>
-        <div className="flex justify-between items-center py-1">
-          <span className="text-black">생년월일</span>
-          <span className="text-[#00BCD4]">
+        <div className="flex justify-between items-center py-2">
+          <span className="text-gray-600">생년월일</span>
+          <span className="text-gray-900 font-medium">
             {userInfo.birthDate.replace(/-/g, '.')}
           </span>
         </div>
-        <div className="flex justify-between items-center py-1">
-          <span className="text-black">이메일</span>
-          <span className="text-[#00BCD4]">{userInfo.email}</span>
+        <div className="flex justify-between items-center py-2">
+          <span className="text-gray-600">이메일</span>
+          <span className="text-gray-900 font-medium">{userInfo.email}</span>
         </div>
       </div>
 
-      <hr className="border-[#F0F0F0] mt-2" />
+      <hr className="border-gray-100" />
 
       {/* Actions Section */}
-      <button
-        className="text-left py-2 text-black hover:text-[#00BCD4] transition-colors"
-        onClick={onEditClick}
-      >
-        정보 수정
-      </button>
-      <hr className="border-[#F0F0F0]" />
-      <button className="text-left py-2 text-black hover:text-[#00BCD4] transition-colors">
-        회원 탈퇴
-      </button>
-      <hr className="border-[#F0F0F0]" />
+      <div className="space-y-4">
+        <button
+          className="w-full text-left py-3 text-gray-900 hover:text-primary transition-colors flex items-center justify-between"
+          onClick={onEditClick}
+        >
+          <span>정보 수정</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </button>
+        <button 
+          className="w-full text-left py-3 text-gray-900 hover:text-primary transition-colors flex items-center justify-between"
+        >
+          <span>회원 탈퇴</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </button>
+      </div>
+
+      <hr className="border-gray-100" />
 
       {/* Notifications Section */}
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-black">앱 푸시 알림</span>
-            <Toggle enabled={appNotification} onChange={onAppNotificationChange} />
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <div>
+            <span className="text-gray-900">앱 푸시 알림</span>
+            <p className="text-sm text-gray-500 mt-1">
+              중요한 서비스 진행 소식을 알려드려요.
+            </p>
           </div>
-          <p className="text-xs text-[#999999]">
-            중요한 서비스 진행 소식을 알려드려요.
-          </p>
+          <Toggle enabled={appNotification} onChange={onAppNotificationChange} />
         </div>
       </div>
-    </>
+    </div>
   )
 } 

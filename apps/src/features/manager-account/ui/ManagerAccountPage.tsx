@@ -89,11 +89,11 @@ export const ManagerAccountPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="flex min-h-screen flex-col bg-white">
         <CommonHeader title="계정 관리" showBackButton />
-        <main className="pt-20 pb-20">
-          <div className="flex justify-center items-center h-[calc(100vh-160px)]">
-            <div className="text-slate-500">로딩 중...</div>
+        <main className="flex-1 flex flex-col pt-[64px]">
+          <div className="flex justify-center items-center h-full">
+            <div className="text-gray-400">로딩 중...</div>
           </div>
         </main>
       </div>
@@ -102,10 +102,10 @@ export const ManagerAccountPage = () => {
 
   if (error || !userProfile) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="flex min-h-screen flex-col bg-white">
         <CommonHeader title="계정 관리" showBackButton />
-        <main className="pt-20 pb-20">
-          <div className="flex justify-center items-center h-[calc(100vh-160px)]">
+        <main className="flex-1 flex flex-col pt-[64px]">
+          <div className="flex justify-center items-center h-full">
             <div className="text-red-500">{error || '프로필을 불러올 수 없습니다.'}</div>
           </div>
         </main>
@@ -114,31 +114,33 @@ export const ManagerAccountPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-white">
       <CommonHeader 
         title="계정 관리"
         showBackButton
       />
 
-      <main className="pt-20 pb-20">
-        <div className="space-y-6 p-5">
+      <main className="flex-1 flex flex-col pt-[64px]">
+        <div className="p-5 space-y-6">
           <AccountProfile 
             profileImage={profileImage}
             userProfileUrl={userProfile.userProfile}
             onImageChange={handleImageChange}
           />
 
-          <AccountSettings 
-            userInfo={{
-              name: userProfile.userName,
-              phone: userProfile.userTel,
-              birthDate: userProfile.userBirth,
-              email: userProfile.userEmail,
-            }}
-            appNotification={appNotification}
-            onAppNotificationChange={setAppNotification}
-            onEditClick={() => setIsEditModalOpen(true)}
-          />
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <AccountSettings 
+              userInfo={{
+                name: userProfile.userName,
+                phone: userProfile.userTel,
+                birthDate: userProfile.userBirth,
+                email: userProfile.userEmail,
+              }}
+              appNotification={appNotification}
+              onAppNotificationChange={setAppNotification}
+              onEditClick={() => setIsEditModalOpen(true)}
+            />
+          </div>
         </div>
       </main>
 
