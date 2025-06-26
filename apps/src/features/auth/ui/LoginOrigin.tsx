@@ -40,7 +40,7 @@ export function useLoginOrigin() {
   const { login: loginToStore } = useAuthStore()
 
   const login = async (data: LoginFormData) => {
-    console.log('Login attempt with:', data)
+    // console.log('Login attempt with:', data)
 
     // 이전 에러 메시지 초기화
     setLoginError(null)
@@ -100,7 +100,7 @@ export function useLoginOrigin() {
       }
 
       const result: LoginResponse = await response.json()
-      console.log('✅ 서버 응답:', result)
+      // console.log('✅ 서버 응답:', result)
       
       // 매니저 상태 로깅
       if (result.managerStatus) {
@@ -110,7 +110,7 @@ export function useLoginOrigin() {
       if (result.success && result.token) {
         // 1. JWT 토큰 디코딩
         const decodedToken = jwtDecode<JwtPayload>(result.token)
-        console.log('✅ 토큰 디코딩 결과:', decodedToken)
+        // console.log('✅ 토큰 디코딩 결과:', decodedToken)
 
         // 2. userRole 검증
         if (!isValidUserRole(decodedToken.userRole)) {
@@ -124,7 +124,7 @@ export function useLoginOrigin() {
           managerStatus: result.managerStatus || null, // 🆕 백엔드에서 직접 제공하는 매니저 상태
         }
         
-        console.log('👤 생성된 사용자 객체:', user)
+        // console.log('👤 생성된 사용자 객체:', user)
 
         // 4. Zustand 스토어에 로그인 정보 저장
         await loginToStore(user, result.token)
@@ -132,7 +132,7 @@ export function useLoginOrigin() {
 
         // 5. 쿠키에 토큰 저장 (7일 만료)
         const formattedToken = formatTokenForServer(result.token)
-        console.log('🍪 쿠키에 저장될 토큰:', formattedToken)
+        // console.log('🍪 쿠키에 저장될 토큰:', formattedToken)
 
         Cookies.set('auth-token', formattedToken, {
           expires: 7,

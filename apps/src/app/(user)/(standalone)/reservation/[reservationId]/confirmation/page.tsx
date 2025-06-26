@@ -7,7 +7,6 @@ import { useManagerSelection } from '@/features/manager-selection';
 import { ReservationStorage } from '@/shared/lib/reservationStorage';
 
 const Page = () => {
-  console.log('예약 완료 페이지 렌더링');
   
   const { clearSelection } = useManagerSelection();
 
@@ -15,31 +14,24 @@ const Page = () => {
   useEffect(() => {
     const cleanup = async () => {
       try {
-        console.log('예약 완료 페이지 - 데이터 정리 시작');
         
         // 매니저 선택 상태 초기화
         if (clearSelection) {
           clearSelection();
-          console.log('매니저 선택 상태 초기화 완료');
         }
         
         // 예약 정보 초기화
         try {
           ReservationStorage.clearPendingReservation();
-          console.log('ReservationStorage 정리 완료');
         } catch (storageError) {
-          console.warn('ReservationStorage 정리 실패:', storageError);
         }
         
         // 세션 정리
         try {
           sessionStorage.removeItem('currentReservation');
-          console.log('세션 정리 완료');
         } catch (sessionError) {
-          console.warn('세션 정리 실패:', sessionError);
         }
         
-        console.log('예약 완료 - 모든 데이터 정리 완료');
       } catch (error) {
         console.error('데이터 정리 중 오류:', error);
         // 에러가 발생해도 페이지는 정상적으로 표시되어야 함
@@ -89,10 +81,9 @@ const Page = () => {
         <div className="space-y-3">
           <button
             onClick={() => {
-              console.log('내 예약 확인하기 버튼 클릭됨');
               window.location.href = '/myreservation';
             }}
-            className="w-full py-3 px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 px-6 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-colors flex items-center justify-center gap-2"
           >
             <ClipboardDocumentListIcon className="w-4 h-4" />
             내 예약 확인하기
@@ -100,7 +91,6 @@ const Page = () => {
           
           <button
             onClick={() => {
-              console.log('홈으로 돌아가기 버튼 클릭됨');
               window.location.href = '/';
             }}
             className="w-full py-2.5 px-6 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
