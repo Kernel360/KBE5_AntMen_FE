@@ -121,7 +121,7 @@ export default function ReviewsPageClient() {
       />
 
       {/* 내용 */}
-      <div className="pt-0 p-5 pb-20 min-h-[calc(100vh-64px)] space-y-4">
+      <div className="pt-[64px] p-5 pb-20 min-h-[calc(100vh-64px)] space-y-4">
         {isLoading ? (
           <div className="text-center py-20 text-slate-400">로딩 중...</div>
         ) : error ? (

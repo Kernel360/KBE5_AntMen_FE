@@ -156,76 +156,78 @@ export default function ManagerReviewsClient() {
         showBackButton
       />
 
-      {/* Tab Navigation */}
-      <nav className="flex">
-        <button
-          onClick={() => setActiveTab('received')}
-          className={`flex-1 py-3 text-center text-sm font-semibold ${
-            activeTab === 'received'
-              ? 'border-b-2 border-slate-800 text-slate-800'
-              : 'text-slate-400'
-          }`}
-        >
-          받은 리뷰
-        </button>
-        <button
-          onClick={() => setActiveTab('written')}
-          className={`flex-1 py-3 text-center text-sm font-semibold ${
-            activeTab === 'written'
-              ? 'border-b-2 border-slate-800 text-slate-800'
-              : 'text-slate-400'
-          }`}
-        >
-          작성한 리뷰
-        </button>
-      </nav>
+      <div className="flex-1 flex flex-col pt-[64px]">
+        {/* Tab Navigation */}
+        <nav className="flex sticky top-[64px] bg-white z-10">
+          <button
+            onClick={() => setActiveTab('received')}
+            className={`flex-1 py-3 text-center text-sm font-semibold ${
+              activeTab === 'received'
+                ? 'border-b-2 border-slate-800 text-slate-800'
+                : 'text-slate-400'
+            }`}
+          >
+            받은 리뷰
+          </button>
+          <button
+            onClick={() => setActiveTab('written')}
+            className={`flex-1 py-3 text-center text-sm font-semibold ${
+              activeTab === 'written'
+                ? 'border-b-2 border-slate-800 text-slate-800'
+                : 'text-slate-400'
+            }`}
+          >
+            작성한 리뷰
+          </button>
+        </nav>
 
-      {/* 리뷰 통계 (받은 리뷰 탭 전용) */}
-      {activeTab === 'received' && <ReviewStats reviews={receivedReviews} />}
+        {/* 리뷰 통계 (받은 리뷰 탭 전용) */}
+        {activeTab === 'received' && <ReviewStats reviews={receivedReviews} />}
 
-      {/* Content */}
-      <div className="p-5 space-y-4">
-        {loading ? (
-          <div className="text-center py-20 text-slate-400">로딩 중...</div>
-        ) : error ? (
-          <div className="text-center py-20 text-red-500">{error}</div>
-        ) : (
-          <>
-            {activeTab === 'received' && (
-              receivedReviews.length > 0
-                ? receivedReviews.map(review => (
-                    <ReviewCard
-                      key={review.id}
-                      review={{
-                        ...review,
-                        customerName: maskName(review.customerName),
-                      }}
-                      showProfileType="customer"
-                    />
-                  ))
-                : <EmptyState tab="received" />
-            )}
-            {activeTab === 'written' && (
-              writtenReviews.length > 0
-                ? writtenReviews.map(review => (
-                    <ReviewCard
-                      key={review.id}
-                      review={review}
-                      showProfileType="customer"
-                      onEdit={id => {
-                        const r = writtenReviews.find(r => r.id === id);
-                        if (r) handleOpenEditModal(r);
-                      }}
-                      onDelete={id => {
-                        const r = writtenReviews.find(r => r.id === id);
-                        if (r) handleOpenDeleteModal(r);
-                      }}
-                    />
-                  ))
-                : <EmptyState tab="written" />
-            )}
-          </>
-        )}
+        {/* Content */}
+        <div className="p-5 space-y-4">
+          {loading ? (
+            <div className="text-center py-20 text-slate-400">로딩 중...</div>
+          ) : error ? (
+            <div className="text-center py-20 text-red-500">{error}</div>
+          ) : (
+            <>
+              {activeTab === 'received' && (
+                receivedReviews.length > 0
+                  ? receivedReviews.map(review => (
+                      <ReviewCard
+                        key={review.id}
+                        review={{
+                          ...review,
+                          customerName: maskName(review.customerName),
+                        }}
+                        showProfileType="customer"
+                      />
+                    ))
+                  : <EmptyState tab="received" />
+              )}
+              {activeTab === 'written' && (
+                writtenReviews.length > 0
+                  ? writtenReviews.map(review => (
+                      <ReviewCard
+                        key={review.id}
+                        review={review}
+                        showProfileType="customer"
+                        onEdit={id => {
+                          const r = writtenReviews.find(r => r.id === id);
+                          if (r) handleOpenEditModal(r);
+                        }}
+                        onDelete={id => {
+                          const r = writtenReviews.find(r => r.id === id);
+                          if (r) handleOpenDeleteModal(r);
+                        }}
+                      />
+                    ))
+                  : <EmptyState tab="written" />
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* 모달 렌더링 */}

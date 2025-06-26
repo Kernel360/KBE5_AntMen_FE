@@ -56,6 +56,26 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
     }
   }
 
+  const handleBoardsClick = () => {
+    if (authUser?.userRole === 'MANAGER') {
+      router.push('/manager/boards')
+    } else {
+      router.push('/boards')
+    }
+  }
+
+  const handlePaymentClick = () => {
+    router.push('/payment');
+  };
+
+  const handleInviteClick = () => {
+    router.push('/invite');
+  };
+
+  const handleEventsClick = () => {
+    router.push('/events');
+  };
+
   // 수요자용 메뉴 아이템
   const customerMenuItems = [
     {
@@ -71,7 +91,7 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
     {
       icon: <CheckCircleIcon className="w-6 h-6" />,
       label: '이용내역',
-      href: '/history'
+      href: '/myreservation'
     },
     {
       icon: <ChatBubbleBottomCenterTextIcon className="w-6 h-6" />,
@@ -110,7 +130,7 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
     {
       icon: <BanknotesIcon className="w-6 h-6" />,
       label: '정산내역',
-      href: '/manager/calculation',
+      href: '/manager/salary',
     },
     {
       icon: <ChatBubbleBottomCenterTextIcon className="w-6 h-6" />,
@@ -137,10 +157,10 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
   const menuItems = authUser?.userRole === 'MANAGER' ? managerMenuItems : customerMenuItems
 
   const topMenus = [
-    { icon: <CreditCardIcon className="w-6 h-6" />, label: '결제수단', href: '/payment' },
-    { icon: <GiftIcon className="w-6 h-6" />, label: '프로모션', href: '/promotions' },
-    { icon: <ShareIcon className="w-6 h-6" />, label: '친구초대', href: '/invite' },
-    { icon: <MegaphoneIcon className="w-6 h-6" />, label: '공지사항', href: '/notice' },
+    { icon: <CreditCardIcon className="w-6 h-6" />, label: '결제수단', onClick: handlePaymentClick },
+    { icon: <GiftIcon className="w-6 h-6" />, label: '프로모션', onClick: handleEventsClick },
+    { icon: <ShareIcon className="w-6 h-6" />, label: '친구초대', onClick: handleInviteClick },
+    { icon: <MegaphoneIcon className="w-6 h-6" />, label: '공지사항', onClick: handleBoardsClick },
   ]
 
   return (
@@ -181,7 +201,7 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
                   {authUser?.userRole === 'MANAGER' ? (
                     <li 
                       className="bg-white rounded-full px-4 py-1 text-sm font-medium text-gray-900 hover:cursor-pointer"
-                      onClick={() => router.push('/manager/calculation')}
+                      onClick={() => router.push('/manager/salary')}
                     >
                       정산내역
                     </li>
@@ -203,19 +223,19 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
           <section className="bg-gray-100 rounded-xl shadow-sm py-4 flex flex-col mb-5">
         <div className="container flex justify-between items-center px-4">
           {topMenus.map((menu) => (
-                <Link
+            <div
               key={menu.label}
-                  href={menu.href}
-              className="flex flex-1 flex-col items-center gap-1"
+              onClick={menu.onClick}
+              className="flex flex-1 flex-col items-center gap-1 cursor-pointer"
             >
-                  {menu.icon}
+              {menu.icon}
               <span className="text-xs text-gray-900 font-medium">
                 {menu.label}
               </span>
-                </Link>
-              ))}
             </div>
-          </section>
+          ))}
+        </div>
+      </section>
         </div>
 
         <section className="flex flex-col bg-white">

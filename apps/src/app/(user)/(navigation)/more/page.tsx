@@ -30,7 +30,7 @@ export default function MorePage() {
   const user = {
     userName: userProfile?.userName || '김고객',
     userPoint: userProfile?.customerPoint || 0,
-    userType: userData?.userType || 'Gold',
+    userType: userData?.userType || '',
     userEmail: userProfile?.userEmail || 'customer@test.com',
     userProfile: userProfile?.userProfile,
   }
