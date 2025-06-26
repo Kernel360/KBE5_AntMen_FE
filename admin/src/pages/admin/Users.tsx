@@ -99,14 +99,15 @@ export const Users: React.FC = () => {
   // 일반 회원/매니저 목록
   const { data: userResponse, isLoading } = useQuery({
     queryKey: ['users', searchTerm, activeTab],
-    queryFn: () =>
-      activeTab === 'WAITING_MANAGER'
-        ? userService.getWaitingManagers()
-        : userService.getUsers(
-            searchTerm,
-            undefined,
-            activeTab === 'CUSTOMER' ? 'CUSTOMER' : 'MANAGER',
-          ),
+    queryFn: () => {
+      if (activeTab === 'WAITING_MANAGER') {
+        return userService.getWaitingManagers();
+      } else if (activeTab === 'CUSTOMER') {
+        return userService.getCustomers(searchTerm);
+      } else {
+        return userService.getManagers(searchTerm);
+      }
+    },
   })
 
   // 매니저 승인/거절
@@ -130,15 +131,22 @@ export const Users: React.FC = () => {
     },
   })
 
-  const filteredUsers = (userResponse ?? []).filter((user: any) => {
-    const name = user.userName ?? ''
-    const email = user.userEmail ?? ''
-    const matchesSearch =
-      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      email.toLowerCase().includes(searchTerm.toLowerCase())
-    if (activeTab === 'WAITING_MANAGER') return matchesSearch
-    return matchesSearch && user.userRole === activeTab
-  })
+  const filteredUsers = (() => {
+    // API 응답이 페이지네이션 객체일 경우를 고려하여 배열 추출
+    const users = Array.isArray(userResponse) 
+      ? userResponse 
+      : (userResponse as any)?.content || (userResponse as any)?.data || [];
+    
+    return users.filter((user: any) => {
+      const name = user.userName ?? ''
+      const email = user.userEmail ?? ''
+      const matchesSearch =
+        name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        email.toLowerCase().includes(searchTerm.toLowerCase())
+      // 각 전용 API가 이미 역할별로 필터링된 데이터를 반환하므로 추가 필터링 불필요
+      return matchesSearch
+    });
+  })();
 
   if (isLoading) {
     return <div>로딩 중...</div>
