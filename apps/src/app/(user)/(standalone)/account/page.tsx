@@ -74,9 +74,6 @@ export default function AccountPage() {
         userTel: data.phone,
         userEmail: data.email,
         userBirth: data.birthDate,
-        userGender: GENDER_DISPLAY_MAP[userProfile.userGender as keyof typeof GENDER_DISPLAY_MAP] as UserGender,
-        userType: userProfile.userType,
-        userProfile: userProfile.userProfile,
       });
       setUserProfile(response)
       setIsEditModalOpen(false)

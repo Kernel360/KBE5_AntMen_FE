@@ -53,7 +53,8 @@ function ReviewStats({ reviews }: { reviews: { rating: number }[] }) {
 // 이름 마스킹 함수
 function maskName(name: string) {
   if (!name) return '';
-  return name[0] + '*'.repeat(name.length - 1);
+  if (name.length <= 2) return name;
+  return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
 }
 
 export default function ManagerReviewsClient() {
@@ -211,8 +212,6 @@ export default function ManagerReviewsClient() {
                       key={review.id}
                       review={review}
                       showProfileType="customer"
-                      serviceType={'serviceType' in review ? (review as any).serviceType : undefined}
-                      serviceDate={'serviceDate' in review ? (review as any).serviceDate : undefined}
                       onEdit={id => {
                         const r = writtenReviews.find(r => r.id === id);
                         if (r) handleOpenEditModal(r);
