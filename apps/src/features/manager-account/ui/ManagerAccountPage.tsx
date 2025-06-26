@@ -1,22 +1,18 @@
 'use client'
 
-import { Toggle } from '@/shared/ui/Toggle'
-import { ArrowLeft } from '@/shared/icons/ArrowLeft'
-import { EditProfileModal } from '@/shared/ui/modal/EditProfileModal'
-import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 import { AccountProfile, AccountSettings } from '@/features/account'
-import { customerApi } from '@/entities/account/api/accountApi'
-import type { CustomerProfile, UserGender } from '@/entities/account/model/types'
+import { EditProfileModal } from '@/shared/ui/modal/EditProfileModal'
+import { managerApi } from '@/entities/account/api/accountApi'
+import type { ManagerProfile, UserGender } from '@/entities/account/model/types'
 import { GENDER_DISPLAY_MAP } from '@/entities/account/model/types'
 
-export default function AccountPage() {
+export const ManagerAccountPage = () => {
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [appNotification, setAppNotification] = useState(true)
-  const [userProfile, setUserProfile] = useState<CustomerProfile | null>(null)
+  const [userProfile, setUserProfile] = useState<ManagerProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -24,7 +20,7 @@ export default function AccountPage() {
     const fetchProfile = async () => {
       try {
         setIsLoading(true)
-        const data = await customerApi.getProfile()
+        const data = await managerApi.getProfile()
         setUserProfile(data)
       } catch (err) {
         console.error('프로필 정보를 불러오는데 실패했습니다:', err)
@@ -42,7 +38,10 @@ export default function AccountPage() {
       const file = e.target.files[0];
       try {
         setProfileImage(file);
-        await customerApi.updateProfileImage(file);
+        await managerApi.updateProfile(
+          {},
+          { profileImage: file }
+        );
         
         if (userProfile) {
           setUserProfile({
@@ -69,14 +68,17 @@ export default function AccountPage() {
     if (!userProfile) return;
 
     try {
-      const response = await customerApi.updateProfile({
+      const response = await managerApi.updateProfile({
         userName: data.name,
         userTel: data.phone,
         userEmail: data.email,
         userBirth: data.birthDate,
         userGender: GENDER_DISPLAY_MAP[userProfile.userGender as keyof typeof GENDER_DISPLAY_MAP] as UserGender,
         userType: userProfile.userType,
-        userProfile: userProfile.userProfile,
+        managerAddress: userProfile.managerAddress,
+        managerLatitude: userProfile.managerLatitude,
+        managerLongitude: userProfile.managerLongitude,
+        managerTime: userProfile.managerTime,
       });
       setUserProfile(response)
       setIsEditModalOpen(false)
@@ -154,4 +156,4 @@ export default function AccountPage() {
       />
     </div>
   )
-}
+} 

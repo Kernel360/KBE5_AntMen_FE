@@ -26,13 +26,13 @@ export const ProfileSection = ({
               height={48}
             />
           ) : (
-            <Image
-              src="/icons/profile.png"
-              alt="Profile"
-              className="w-full h-full object-cover"
-              width={48}
-              height={48}
-            />
+          <Image
+            src="/icons/profile.png"
+            alt="Profile"
+            className="w-full h-full object-cover"
+            width={48}
+            height={48}
+          />
           )}
         </figure>
         <div className="flex flex-col  gap-1">

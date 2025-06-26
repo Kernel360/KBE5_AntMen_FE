@@ -1,6 +1,5 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import type { UserGender } from '@/entities/account/model/types';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -10,16 +9,12 @@ interface EditProfileModalProps {
     phone: string;
     birthDate: string;
     email: string;
-    gender: UserGender;
-    userProfile: string;
   };
   onSubmit: (data: {
     name: string;
     phone: string;
     birthDate: string;
     email: string;
-    gender: UserGender;
-    userProfile: string;
   }) => void;
 }
 
@@ -29,17 +24,16 @@ export const EditProfileModal = ({
   initialData,
   onSubmit,
 }: EditProfileModalProps) => {
+  const [formData, setFormData] = useState(initialData);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.target as HTMLFormElement);
-    onSubmit({
-      name: formData.get('name') as string,
-      phone: formData.get('phone') as string,
-      birthDate: formData.get('birthDate') as string,
-      email: formData.get('email') as string,
-      gender: initialData.gender,
-      userProfile: initialData.userProfile,
-    });
+    onSubmit(formData);
   };
 
   return (
@@ -84,7 +78,8 @@ export const EditProfileModal = ({
                     <input
                       type="text"
                       name="name"
-                      defaultValue={initialData.name}
+                      value={formData.name}
+                      onChange={handleChange}
                       className="w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none"
                       placeholder="이름을 입력해주세요"
                     />
@@ -97,7 +92,8 @@ export const EditProfileModal = ({
                     <input
                       type="tel"
                       name="phone"
-                      defaultValue={initialData.phone}
+                      value={formData.phone}
+                      onChange={handleChange}
                       className="w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none"
                       placeholder="전화번호를 입력해주세요"
                     />
@@ -110,7 +106,8 @@ export const EditProfileModal = ({
                     <input
                       type="date"
                       name="birthDate"
-                      defaultValue={initialData.birthDate}
+                      value={formData.birthDate}
+                      onChange={handleChange}
                       className="w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none"
                     />
                   </div>
@@ -122,7 +119,8 @@ export const EditProfileModal = ({
                     <input
                       type="email"
                       name="email"
-                      defaultValue={initialData.email}
+                      value={formData.email}
+                      onChange={handleChange}
                       className="w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none"
                       placeholder="이메일을 입력해주세요"
                     />
