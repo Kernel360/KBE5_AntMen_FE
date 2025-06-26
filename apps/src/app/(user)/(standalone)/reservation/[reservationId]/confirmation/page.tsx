@@ -11,7 +11,7 @@ const Page = () => {
   
   const { clearSelection } = useManagerSelection();
 
-  // 예약 완료 시 매니저 선택 상태 및 예약 정보 초기화
+  // 예약 완료 시 매니저 선택 상태 및 예약 정보 초기화 (한 번만 실행)
   useEffect(() => {
     const cleanup = async () => {
       try {
@@ -47,7 +47,7 @@ const Page = () => {
     };
     
     cleanup();
-  }, [clearSelection]);
+  }, []); // 빈 dependency array로 변경하여 컴포넌트 마운트 시 한 번만 실행
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">

@@ -74,11 +74,4 @@ export const userService = {
         return response.data;
     },
 
-    // // 대기 중인 매니저 목록 조회
-    // getPendingManagers: async (page = 0, size = 10): Promise<UserResponse> => {
-    //     const response = await userApi.get('/admin/users/pending-managers', {
-    //         params: { page, size }
-    //     });
-    //     return response.data;
-    // }
 }; 
