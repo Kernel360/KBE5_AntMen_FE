@@ -9,6 +9,8 @@ import type {
 } from '@/entities/reservation/model/types'
 import { respondToMatching } from '@/entities/matching/api/matchingAPi'
 import { RejectionModal } from '@/shared/ui/modal/RejectionModal'
+import CancellationModal from '@/shared/ui/modal/CancellationModal'
+import { cancelReservation } from '@/shared/api/reservation'
 import { CalendarIcon, ClockIcon, MapPinIcon, CurrencyDollarIcon, UserIcon, CheckCircleIcon, HomeIcon, StarIcon } from '@heroicons/react/24/outline'
 
 interface ReservationDetailPageClientProps {
@@ -278,7 +280,8 @@ const ManagerSection = ({ manager }: { manager?: any }) => {
                   <span className="text-xs font-bold text-gray-700">4.8</span>
                 </div>
                 <div className="bg-white/70 px-2 py-1 rounded-lg">
-                  <span className="text-xs font-semibold text-gray-700">리뷰 127개</span>
+                  <span className="text-xs font-semibold text-gray-700">리뷰 127개</span> {/* TODO: 예림님 여기에 리뷰 연동 부탁드려용~ */}
+                  <span className="text-xs font-semibold text-gray-700">평점 4.8</span> {/* TODO: 예림님 여기에 평점 연동 부탁드려용~ */}
                 </div>
               </div>
             </div>
@@ -337,6 +340,52 @@ const ActionSection = ({
         onSubmit={onReject}
         title="매칭 거절 사유"
         isProcessing={isProcessing}
+      />
+    </>
+  )
+}
+
+// 매칭 완료 후 취소 액션 섹션
+const CancelActionSection = ({
+  onCancel,
+  isProcessing,
+}: {
+  onCancel: (reason: string) => void
+  isProcessing: boolean
+}) => {
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
+
+  const handleCancel = (reason: string) => {
+    onCancel(reason)
+    setIsCancelModalOpen(false)
+  }
+
+  return (
+    <>
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile bg-white/95 backdrop-blur-xl border-t border-gray-200 p-4 shadow-2xl">
+        <button
+          onClick={() => setIsCancelModalOpen(true)}
+          disabled={isProcessing}
+          className="w-full bg-primary text-white rounded-xl py-3.5 px-4 font-semibold text-base disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+        >
+          {isProcessing ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>처리 중...</span>
+            </div>
+          ) : (
+            '예약 취소하기'
+          )}
+        </button>
+      </div>
+
+      {/* 취소 모달 */}
+      <CancellationModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={handleCancel}
+        title="예약 취소"
+        description="취소 사유를 선택해주세요"
       />
     </>
   )
@@ -411,6 +460,27 @@ export const ReservationDetailPageClient = ({
     }
   }
 
+  const handleCancelReservation = async (reason: string) => {
+    if (isProcessing || !reservation?.reservationId) return
+    setIsProcessing(true)
+    
+    try {
+      // cancelReservation API 호출
+      await cancelReservation(reservation.reservationId, reason)
+      
+      // 성공시 예약 상태를 CANCEL로 변경
+      setReservation((prev) =>
+        prev ? { ...prev, reservationStatus: 'CANCEL' } : null,
+      )
+      alert('예약이 성공적으로 취소되었습니다.')
+    } catch (error) {
+      console.error('Failed to cancel reservation:', error)
+      alert('예약 취소에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <CommonHeader 
@@ -418,17 +488,26 @@ export const ReservationDetailPageClient = ({
         showBackButton
       />
 
-      <main className="flex-grow pt-24 pb-20 px-4">
+      <main className="flex-grow pt-24 pb-24 px-4">
         <ReservationHeaderSection reservation={reservation} />
         <ServiceDetailsSection reservation={reservation} />
         <PaymentSection reservation={reservation} />
         <ManagerSection manager={reservation.matchings[0]?.manager} />
       </main>
       
+      {/* 매칭 대기중일 때: 수락/거절 버튼 */}
       {reservation.reservationStatus === 'WAITING' && (
         <ActionSection
           onAccept={handleAcceptMatching}
           onReject={handleRejectMatching}
+          isProcessing={isProcessing}
+        />
+      )}
+      
+      {/* 매칭 완료 후: 취소 버튼 */}
+      {reservation.reservationStatus === 'MATCHING' && (
+        <CancelActionSection
+          onCancel={handleCancelReservation}
           isProcessing={isProcessing}
         />
       )}
