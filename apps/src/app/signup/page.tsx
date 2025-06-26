@@ -85,7 +85,7 @@ export default function SignupPage() {
             </div>
           </button>
 
-          
+
         </div>
       </div>
     </div>

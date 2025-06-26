@@ -14,17 +14,18 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const response = await fetch(
-            `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`,
-            {
-                headers: {
-                    'Authorization': `KakaoAK ${KAKAO_REST_API_KEY}`,
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
+        const url = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`;
+
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `KakaoAK ${KAKAO_REST_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+        });
 
         if (!response.ok) {
+            const errorText = await response.text();
+
             return NextResponse.json(
                 { error: 'Kakao API request failed' },
                 { status: response.status }
@@ -32,10 +33,10 @@ export async function POST(request: NextRequest) {
         }
 
         const data = await response.json();
+        
         return NextResponse.json(data);
 
     } catch (error) {
-        console.error('Kakao API Error:', error);
         return NextResponse.json(
             { error: 'Failed to fetch coordinates' },
             { status: 500 }

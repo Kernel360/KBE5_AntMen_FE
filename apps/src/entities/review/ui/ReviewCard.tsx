@@ -28,26 +28,44 @@ export const ReviewCard = ({
   const name = showProfileType === 'manager' ? review.managerName : review.customerName
 
   return (
-    <div className="bg-gray-50 rounded-lg p-4">
-      <div className="mb-3">
-        <div className="flex items-center justify-between mb-1">
-          <span className="font-bold text-slate-800 text-lg">{name}</span>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            {profile && (
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100">
+                <img
+                  src={profile}
+                  alt={`${name} 프로필`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <div>
+              <span className="font-bold text-gray-900">{name}</span>
+              <div className="text-sm text-gray-500 mt-0.5">
+                {serviceType && serviceDate
+                  ? `${serviceType} · ${serviceDate}`
+                  : new Date(review.createdAt).toLocaleDateString('ko-KR')}
+              </div>
+            </div>
+          </div>
           <div className="flex items-center gap-2">
             <StaticStarRating rating={review.rating} />
             {(onEdit || onDelete) && (
               <div className="relative">
                 <button onClick={() => setMenuOpen(!menuOpen)} className="p-1">
-                  <EllipsisVerticalIcon className="w-5 h-5 text-slate-500" />
+                  <EllipsisVerticalIcon className="w-5 h-5 text-gray-400 hover:text-gray-600" />
                 </button>
                 {menuOpen && (
                   <div
-                    className="absolute right-0 mt-2 w-28 bg-white rounded-md shadow-lg z-10 border"
+                    className="absolute right-0 mt-2 w-28 bg-white rounded-lg shadow-lg z-10 border border-gray-100 overflow-hidden"
                     onMouseLeave={() => setMenuOpen(false)}
                   >
                     {onEdit && (
                       <button
                         onClick={() => { onEdit(review.id); setMenuOpen(false); }}
-                        className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-gray-100"
+                        className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                       >
                         수정
                       </button>
@@ -55,7 +73,7 @@ export const ReviewCard = ({
                     {onDelete && (
                       <button
                         onClick={() => { onDelete(review.id); setMenuOpen(false); }}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                        className="block w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
                       >
                         삭제
                       </button>
@@ -66,13 +84,8 @@ export const ReviewCard = ({
             )}
           </div>
         </div>
-        <div className="text-sm text-slate-500">
-          {serviceType && serviceDate
-            ? `${serviceType} · ${serviceDate}`
-            : new Date(review.createdAt).toLocaleDateString('ko-KR')}
-        </div>
       </div>
-      <p className="text-slate-700 text-sm leading-relaxed">{review.comment}</p>
+      <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">{review.comment}</p>
     </div>
   )
 } 

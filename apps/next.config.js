@@ -104,6 +104,15 @@ const nextConfig = {
 
     return config;
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.amazonaws.com',
+        pathname: '/**',
+      }
+    ],
+  },
 
   // API 프록시 설정 (기존 rewrites 설정 - 현재 주석 처리됨)
   // 개발 환경에서 사용하려면 주석 해제

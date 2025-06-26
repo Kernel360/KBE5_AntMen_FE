@@ -129,8 +129,9 @@ jobs:
             mkdir -p /home/ubuntu/apps/client
             sudo chown -R ubuntu:ubuntu /home/ubuntu/apps/client
             
-            # Docker 리소스 정리 (주간 1회 또는 디스크 사용량 80% 초과시)
-            if [ $(date +%u) -eq 1 ] || [ $(df / | tail -1 | awk '{print $5}' | sed 's/%//') -gt 80 ]; then
+            # Docker 리소스 정리 (조건부)
+            DISK_USAGE=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
+            if [ $(date +%u) -eq 1 ] || [ $DISK_USAGE -gt 80 ]; then
               echo "🧹 Docker 리소스 정리 중..."
               docker system prune -af --volumes
             fi
@@ -153,8 +154,10 @@ jobs:
         include:
           - image: users-app
             service: users-app
+            port: 3000
           - image: admin-app
             service: admin-app
+            port: 3001
       max-parallel: 1
 
     steps:
@@ -177,11 +180,7 @@ jobs:
             # 환경변수 로드
             set -a && source .env && set +a
 
-            # 로그 및 상태 출력
-            echo "🚀 Deploying ${{ matrix.service }}"
-            echo "📊 시스템 리소스 확인:"
-            df -h / | head -2
-            docker system df
+            echo "🚀 배포 시작: ${{ matrix.service }}"
 
             # ECR 로그인
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
@@ -199,15 +198,18 @@ jobs:
             echo "✅ 배포 완료 확인:"
             sleep 10
             docker compose ps ${{ matrix.service }}
-            docker compose logs --tail=20 ${{ matrix.service }}
+            docker compose logs --tail=10 ${{ matrix.service }}
 
-            # 간단한 헬스체크
-            if [ "${{ matrix.service }}" = "users-app" ]; then
-              echo "🏥 헬스체크: users-app"
-              curl -f http://localhost:3000 > /dev/null 2>&1 && echo "✅ users-app 정상" || echo "❌ users-app 비정상"
-            elif [ "${{ matrix.service }}" = "admin-app" ]; then
-              echo "🏥 헬스체크: admin-app"
-              curl -f http://localhost:3001 > /dev/null 2>&1 && echo "✅ admin-app 정상" || echo "❌ admin-app 비정상"
-            fi
+            # 헬스체크
+            echo "🏥 헬스체크..."
+            for i in {1..3}; do
+              if curl -f -s http://localhost:${{ matrix.port }} > /dev/null; then
+                echo "✅ ${{ matrix.service }} 정상"
+                break
+              else
+                echo "⏳ 헬스체크 재시도 중... ($i/3)"
+                sleep 5
+              fi
+            done
 
             echo "🎉 ${{ matrix.service }} 배포 완료!"
