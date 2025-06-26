@@ -13,6 +13,18 @@
   scrollbar-width: none;  /* Firefox */
 }
 
+/* 브라우저 자동완성 스타일을 완전히 무력화 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active ,
+input:-webkit-autofill:not(:focus) {
+  -webkit-box-shadow: 0 0 0 1000px #F9F9F9 inset !important;
+  -webkit-text-fill-color: #000000 !important;
+  background-color: #F9F9F9 !important;
+  transition: background-color 50000s ease-in-out 0s !important;
+}
+
 @layer base {
   @font-face {
     font-family: 'Apple SD Gothic Neo';
@@ -35,4 +47,4 @@
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
-} 
+}

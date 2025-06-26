@@ -34,6 +34,15 @@ const nextConfig = {
     // 이미지 크기 제한
     deviceSizes: [640, 750, 828, 1080, 1200],
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
+    // 외부 이미지 도메인 허용
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'antmen-bucket.s3.ap-northeast-2.amazonaws.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
 
   // 컴파일 최적화

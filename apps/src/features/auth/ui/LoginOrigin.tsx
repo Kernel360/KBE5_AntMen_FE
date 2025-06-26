@@ -62,14 +62,39 @@ export function useLoginOrigin() {
       if (!response.ok) {
         // 서버에서 내려주는 에러 메시지 추출 시도
         let errorMessage = '로그인에 실패했습니다.'
+        
         try {
           const errorBody = await response.json()
           if (errorBody && errorBody.message) {
             errorMessage = errorBody.message
           }
         } catch (e) {
-          // JSON 파싱 실패 시 기본 메시지 사용
+          // JSON 파싱 실패 시 상태 코드별 메시지 제공
+          console.log('에러 응답 JSON 파싱 실패, 상태 코드로 메시지 결정:', response.status)
         }
+
+        // 서버 메시지가 없거나 기본 메시지인 경우 상태 코드별 구체적 메시지 제공
+        if (!errorMessage || errorMessage === '로그인에 실패했습니다.') {
+          switch (response.status) {
+            case 400: case 401: case 403:
+              errorMessage = '아이디 또는 비밀번호를 확인해주세요.'
+              break
+            case 404:
+              errorMessage = '존재하지 않는 계정입니다.'
+              break
+            case 500:
+              errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+              break
+            case 502:
+            case 503:
+            case 504:
+              errorMessage = '서버 점검 중입니다. 잠시 후 다시 시도해주세요.'
+              break
+            default:
+              errorMessage = `로그인에 실패했습니다. (오류 코드: ${response.status})`
+          }
+        }
+        
         setLoginError(errorMessage)
         return { success: false, error: errorMessage }
       }

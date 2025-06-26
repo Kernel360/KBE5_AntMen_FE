@@ -16,7 +16,7 @@ const ManagerReapplySuccessPage = () => {
         {/* Main Content */}
         <div className="flex flex-col items-center justify-center min-h-screen space-y-6 pt-16">
           {/* Success Icon */}
-          <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center">
+          <div className="w-20 h-20 bg-primary-500 rounded-full flex items-center justify-center">
             <svg 
               className="w-10 h-10 text-white" 
               fill="none" 
@@ -41,7 +41,7 @@ const ManagerReapplySuccessPage = () => {
           <div className="space-y-4 text-center">
             <p className="text-gray-600 text-base leading-relaxed">
               수정해주신 정보와 서류를 재검토 중입니다.<br />
-              승인까지 <span className="font-semibold text-primary">1~3일</span> 정도 소요됩니다.
+              승인까지 <span className="font-semibold text-primary-600">1~3일</span> 정도 소요됩니다.
             </p>
             
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
@@ -67,7 +67,7 @@ const ManagerReapplySuccessPage = () => {
           <div className="w-full space-y-3 mt-8">
             <button
               onClick={handleGoToLogin}
-              className="w-full h-[52px] bg-primary text-white rounded-lg text-base font-medium hover:bg-primary/90 transition-colors"
+              className="w-full h-[52px] bg-primary-500 text-white rounded-lg text-base font-medium hover:bg-primary-600 transition-colors"
             >
               로그인 하러가기
             </button>
@@ -83,7 +83,7 @@ const ManagerReapplySuccessPage = () => {
           {/* Contact Info */}
           <div className="text-center text-sm text-gray-500 mt-6">
             <p>문의사항이 있으시면</p>
-            <p className="font-semibold text-primary">고객센터 1588-0000</p>
+            <p className="font-semibold text-primary-500">고객센터 1588-0000</p>
             <p>으로 연락해 주세요</p>
           </div>
         </div>

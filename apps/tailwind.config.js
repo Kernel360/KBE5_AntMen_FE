@@ -42,8 +42,8 @@ module.exports = {
           900: '#194aa6',
         },
         red: {
-          50: '#fee',
-          100: '#ffd4d6',
+          50: '#FEF2F2',
+          100: '#FEE2E2',
         },
         accent: {
           DEFAULT: '#F3F4F6',
@@ -52,7 +52,7 @@ module.exports = {
         },
         gray: {
           50: '#F9FAFB',
-          100: '#F8F9FD',
+          100: '#F3F4F6',
           200: '#E5E7EB',
           300: '#D1D5DB',
           400: '#9CA3AF',

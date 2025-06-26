@@ -365,7 +365,7 @@ const ManagerReapplyPage = () => {
           {user.rejectionReason && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
               <h3 className="font-semibold text-red-900 mb-2">❌ 거절 사유</h3>
-              <p className="text-sm text-red-700">{user.rejectionReason}</p>
+              <p className="text-sm text-red-700 whitespace-pre-wrap">{user.rejectionReason}</p>
             </div>
           )}
 
@@ -419,7 +419,7 @@ const ManagerReapplyPage = () => {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-primary text-white py-4 rounded-lg font-medium text-lg hover:bg-primary/90 transition-colors disabled:bg-gray-400"
+                className="w-full bg-primary-500 text-white py-4 rounded-lg font-medium text-lg hover:bg-primary-600 transition-colors disabled:bg-gray-400"
               >
                 {isSubmitting ? '재신청 중...' : '재신청하기'}
               </Button>

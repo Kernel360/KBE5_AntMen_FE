@@ -70,7 +70,7 @@ export const ManagerPendingScreen = ({ status = 'WAITING' }: ManagerPendingScree
         <div className="space-y-3">
           <Button
             onClick={handleGoToHome}
-            className="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            className="w-full bg-primary-500 text-white py-3 rounded-lg font-medium hover:bg-primary-600 transition-colors"
           >
             고객 홈으로 이동
           </Button>

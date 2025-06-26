@@ -66,7 +66,7 @@ export const ManagerApprovedScreen = ({
           <div className="w-full space-y-3 mt-8">
             <button
               onClick={onContinue}
-              className="w-full h-[52px] bg-primary text-white rounded-lg text-base font-medium hover:bg-primary/90 transition-colors"
+              className="w-full h-[52px] bg-primary-500 text-white rounded-lg text-base font-medium hover:bg-primary-600 transition-colors"
             >
               매니저 활동 시작하기 🚀
             </button>

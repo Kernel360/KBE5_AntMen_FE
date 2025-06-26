@@ -61,7 +61,7 @@ export const ManagerRejectedScreen = () => {
           <p>
             보완이 필요한 사항을 확인하신 후 
             <br />
-            <span className="font-semibold text-primary">재신청</span>하실 수 있습니다.
+            <span className="font-semibold text-primary-600">재신청</span>하실 수 있습니다.
           </p>
         </div>
 
@@ -69,7 +69,7 @@ export const ManagerRejectedScreen = () => {
         <div className="bg-red-50 rounded-lg p-4 mb-6 text-left">
           <h3 className="font-semibold text-red-900 mb-2">❌ 거절 사유</h3>
           {user?.rejectionReason ? (
-            <div className="text-sm text-red-700 leading-relaxed">
+            <div className="text-sm text-red-700 leading-relaxed whitespace-pre-wrap">
               {user.rejectionReason}
             </div>
           ) : (
@@ -86,7 +86,7 @@ export const ManagerRejectedScreen = () => {
         <div className="space-y-3">
           <Button
             onClick={() => router.push('/manager/reapply')}
-            className="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            className="w-full bg-primary-500 text-white py-3 rounded-lg font-medium hover:bg-primary-600 transition-colors"
           >
             재신청하기
           </Button>
@@ -94,7 +94,7 @@ export const ManagerRejectedScreen = () => {
           <Button
             onClick={handleGoToHome}
             variant="outline"
-            className="w-full border-primary text-primary py-3 rounded-lg font-medium hover:bg-primary/5 transition-colors"
+            className="w-full border-primary-500 text-primary-500 py-3 rounded-lg font-medium hover:bg-primary-200/50 transition-colors"
           >
             고객 홈으로 이동
           </Button>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/shared/stores/authStore'
 import { useSecureAuth } from '@/shared/hooks/useSecureAuth'
 import { ManagerPendingScreen } from './ManagerPendingScreen'
@@ -19,6 +20,9 @@ interface ManagerStatusGuardProps {
 export const ManagerStatusGuard = ({ children }: ManagerStatusGuardProps) => {
   // 🔄 Hydration 오류 방지: 클라이언트에서만 실행
   const [isMounted, setIsMounted] = useState(false)
+  
+  // 현재 경로 확인
+  const pathname = usePathname()
   
   useEffect(() => {
     setIsMounted(true)
@@ -163,6 +167,22 @@ export const ManagerStatusGuard = ({ children }: ManagerStatusGuardProps) => {
     )
   }
 
+  // 🚨 재신청 관련 페이지는 REJECTED 상태여도 접근 허용
+  const isReapplyRelatedPage = pathname?.includes('/reapply')
+  
+  console.log('🔍 ManagerStatusGuard 체크:', {
+    pathname,
+    isReapplyRelatedPage,
+    currentManagerStatus,
+    userId: user?.userId
+  })
+  
+  // 재신청 관련 페이지인 경우 상태 체크 우회 (재신청 폼 + 재신청 완료 페이지)
+  if (isReapplyRelatedPage) {
+    console.log('✅ 재신청 관련 페이지 접근 허용:', pathname)
+    return <>{children}</>
+  }
+  
   // 🔄 백엔드 상태를 화면 표시용 상태로 변환
   const displayStatus = currentManagerStatus ? mapManagerStatusToDisplay(currentManagerStatus) : 'PENDING'
   
