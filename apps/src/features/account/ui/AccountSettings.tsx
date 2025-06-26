@@ -9,6 +9,7 @@ interface AccountSettingsProps {
     phone: string
     birthDate: string
     email: string
+    address?: string
   }
   appNotification: boolean
   onAppNotificationChange: (value: boolean) => void
@@ -43,6 +44,12 @@ export const AccountSettings = ({
           <span className="text-gray-600">이메일</span>
           <span className="text-gray-900 font-medium">{userInfo.email}</span>
         </div>
+        {userInfo.address && (
+          <div className="flex justify-between items-start py-2">
+            <span className="text-gray-600 shrink-0">주소</span>
+            <span className="text-gray-900 font-medium text-right break-all max-w-[70%]">{userInfo.address}</span>
+          </div>
+        )}
       </div>
 
       <hr className="border-gray-100" />

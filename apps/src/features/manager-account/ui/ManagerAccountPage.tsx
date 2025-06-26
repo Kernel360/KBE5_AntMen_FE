@@ -7,6 +7,18 @@ import { EditProfileModal } from '@/shared/ui/modal/EditProfileModal'
 import { managerApi } from '@/entities/account/api/accountApi'
 import type { ManagerProfile, UserGender } from '@/entities/account/model/types'
 import { GENDER_DISPLAY_MAP } from '@/entities/account/model/types'
+import { ManagerAdditionalInfo } from '@/features/auth/signup/ui/ManagerAdditionalInfo'
+import { getCoordinatesFromAddress } from '@/utils/kakaoCoords'
+import dynamic from 'next/dynamic'
+
+// AddAddressModal을 동적으로 import
+const AddAddressModal = dynamic(
+  () => import('@/features/address/ui/AddAddressModal'),
+  {
+    ssr: false,
+    loading: () => <div className="animate-pulse bg-gray-200 h-96 rounded-lg">Loading...</div>
+  }
+);
 
 export const ManagerAccountPage = () => {
   const [profileImage, setProfileImage] = useState<File | null>(null)
@@ -64,28 +76,45 @@ export const ManagerAccountPage = () => {
     phone: string;
     birthDate: string;
     email: string;
+    address?: string;
+    addressDetail?: string;
+    latitude?: number | null;
+    longitude?: number | null;
   }) => {
     if (!userProfile) return;
 
     try {
+      // 주소와 상세주소 합치기
+      const fullAddress = data.address && data.addressDetail
+        ? `${data.address} ${data.addressDetail}`.trim()
+        : data.address || userProfile.managerAddress;
+
+      // 새로운 위도/경도가 있으면 사용하고, 없으면 기존 값 사용
+      const latitude = (data.latitude !== undefined && data.latitude !== null) 
+        ? data.latitude 
+        : userProfile.managerLatitude;
+      const longitude = (data.longitude !== undefined && data.longitude !== null)
+        ? data.longitude
+        : userProfile.managerLongitude;
+
       const response = await managerApi.updateProfile({
         userName: data.name,
         userTel: data.phone,
         userEmail: data.email,
         userBirth: data.birthDate,
-        managerAddress: userProfile.managerAddress,
-        managerLatitude: userProfile.managerLatitude,
-        managerLongitude: userProfile.managerLongitude,
+        managerAddress: fullAddress,
+        managerLatitude: latitude,
+        managerLongitude: longitude,
         managerTime: userProfile.managerTime,
-        userType: userProfile.userType
+        userType: userProfile.userType,
       });
-      setUserProfile(response)
-      setIsEditModalOpen(false)
+      setUserProfile(response);
+      setIsEditModalOpen(false);
     } catch (err) {
-      console.error('프로필 수정에 실패했습니다:', err)
-      alert('프로필 수정에 실패했습니다.')
+      console.error('프로필 수정에 실패했습니다:', err);
+      alert('프로필 수정에 실패했습니다.');
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -124,22 +153,25 @@ export const ManagerAccountPage = () => {
         <div className="p-5 space-y-6">
           <AccountProfile 
             profileImage={profileImage}
-            userProfileUrl={userProfile.userProfile}
+            userProfileUrl={userProfile?.userProfile}
             onImageChange={handleImageChange}
           />
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <AccountSettings 
-              userInfo={{
-                name: userProfile.userName,
-                phone: userProfile.userTel,
-                birthDate: userProfile.userBirth,
-                email: userProfile.userEmail,
-              }}
-              appNotification={appNotification}
-              onAppNotificationChange={setAppNotification}
-              onEditClick={() => setIsEditModalOpen(true)}
-            />
+            <div className="space-y-4">
+              <AccountSettings 
+                userInfo={{
+                  name: userProfile?.userName || '',
+                  phone: userProfile?.userTel || '',
+                  birthDate: userProfile?.userBirth || '',
+                  email: userProfile?.userEmail || '',
+                  address: userProfile?.managerAddress
+                }}
+                appNotification={appNotification}
+                onAppNotificationChange={setAppNotification}
+                onEditClick={() => setIsEditModalOpen(true)}
+              />
+            </div>
           </div>
         </div>
       </main>
@@ -148,11 +180,13 @@ export const ManagerAccountPage = () => {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         initialData={{
-          name: userProfile.userName,
-          phone: userProfile.userTel,
-          birthDate: userProfile.userBirth,
-          email: userProfile.userEmail,
+          name: userProfile?.userName || '',
+          phone: userProfile?.userTel || '',
+          birthDate: userProfile?.userBirth || '',
+          email: userProfile?.userEmail || '',
+          address: userProfile?.managerAddress
         }}
+        showAddressField={true}
         onSubmit={handleEditSubmit}
       />
     </div>
