@@ -16,7 +16,6 @@ export default function NotificationsPage() {
     const fetchNotifications = async () => {
       try {
         const data = await alertApi.getAlerts()
-        console.log('Fetched notifications:', data) // 디버깅용
         setNotifications(transformNotifications(data))
       } catch (error) {
         console.error('Failed to fetch notifications:', error)
