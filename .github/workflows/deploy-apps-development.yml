@@ -2,7 +2,7 @@ name: 'CI/CD: Build & Deploy to EC2 (ULTRA FAST - 1min Target)'
 
 on:
   push:
-    branches: [develop, feature/#154-multi-arch-support]
+    branches: [develop]
     paths:
       - 'apps/**'
       - 'admin/**'
@@ -189,8 +189,8 @@ jobs:
       - name: Prepare EC2 deployment directory
         uses: appleboy/ssh-action@v0.1.6
         with:
-          host: 54.180.126.213
-          username: ec2-user
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
@@ -213,8 +213,8 @@ jobs:
       - name: Copy deployment files
         uses: appleboy/scp-action@v0.1.4
         with:
-          host: 54.180.126.213
-          username: ec2-user
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           source: 'docker-compose.yml,.env'
@@ -247,8 +247,8 @@ jobs:
       - name: Deploy ARM64 containers (Ultra Fast)
         uses: appleboy/ssh-action@v0.1.6
         with:
-          host: 54.180.126.213
-          username: ec2-user
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
