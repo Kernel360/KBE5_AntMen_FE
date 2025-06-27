@@ -30,13 +30,13 @@ export const NotificationCard = ({
     switch (type) {
       case 'reservation':
         return (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0fbcd6] bg-opacity-10">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary bg-opacity-10">
             <svg
               width="20"
               height="20"
               viewBox="0 0 20 20"
               fill="none"
-              className="text-[#0fbcd6]"
+              className="text-primary"
             >
               <path
                 d="M2.5 4.16667H17.5V17.3333H2.5V4.16667Z"
@@ -188,7 +188,7 @@ export const NotificationCard = ({
             {title}
           </h3>
           {!isRead && (
-            <div className="flex-shrink-0 w-2 h-2 bg-[#0fbcd6] rounded-full ml-2 mt-1" />
+            <div className="flex-shrink-0 w-2 h-2 bg-primary rounded-full ml-2 mt-1" />
           )}
         </div>
 

@@ -25,11 +25,11 @@ import { ManagerDetailModal } from "../../components/modals/ManagerDetailModal";
 const getStatusBadge = (status: string) => {
   switch (status) {
     case 'WAITING':
-      return <Badge className="bg-blue-100 text-blue-800">신규</Badge>;
+      return <Badge className="bg-blue-100 text-blue-800 whitespace-nowrap">신규</Badge>;
     case 'REAPPLY':
-      return <Badge className="bg-orange-100 text-orange-800">재신청</Badge>;
+      return <Badge className="bg-orange-100 text-orange-800 whitespace-nowrap">재신청</Badge>;
     default:
-      return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
+      return <Badge className="bg-gray-100 text-gray-800 whitespace-nowrap">{status}</Badge>;
   }
 };
 
@@ -60,10 +60,13 @@ export const UsersWaiting: React.FC = () => {
 
   // 상세 정보가 로드되면 상태 업데이트
   useEffect(() => {
-    if (managerDetailData) {
-      setManagerDetail(managerDetailData);
+    if (managerDetailData && selectedUserId) {
+      setManagerDetail({
+        ...managerDetailData,
+        userId: selectedUserId
+      });
     }
-  }, [managerDetailData]);
+  }, [managerDetailData, selectedUserId]);
 
   const filteredUsers = (userResponse ?? []).filter((user: any) => {
     const name = user.userName ?? '';

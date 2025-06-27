@@ -3,7 +3,7 @@ import Link from 'next/link'
 import React from 'react'
 
 interface MenuItemProps {
-  icon: string
+  icon: string | React.ReactElement
   label: string
   href?: string
   onClick?: () => void
@@ -15,6 +15,23 @@ export const MenuItem = ({
   href = '#',
   onClick,
 }: MenuItemProps) => {
+  const renderIcon = () => {
+    if (typeof icon === 'string') {
+      return (
+        <Image
+          src={icon}
+          alt={label + ' 아이콘'}
+          className="w-6 h-6 flex items-center justify-center text-gray-800"
+          width={24}
+          height={24}
+        />
+      )
+    }
+    return React.cloneElement(icon, {
+      className: 'w-6 h-6 text-gray-800'
+    })
+  }
+
   if (onClick) {
     return (
       <button
@@ -23,13 +40,7 @@ export const MenuItem = ({
       >
         <li className="flex justify-between items-center w-full hover:bg-gray-100 px-4 py-4">
           <div className="flex items-center gap-4">
-            <Image
-              src={icon}
-              alt={label + ' 아이콘'}
-              className="w-6 h-6 flex items-center justify-center text-gray-800"
-              width={24}
-              height={24}
-            />
+            {renderIcon()}
             <span className="text-black text-base font-medium">{label}</span>
           </div>
           <svg
@@ -57,13 +68,7 @@ export const MenuItem = ({
     <Link href={href} className="flex justify-between items-center w-full">
       <li className="flex justify-between items-center w-full hover:bg-gray-100 px-4 py-4">
         <div className="flex items-center gap-4">
-          <Image
-            src={icon}
-            alt={label + ' 아이콘'}
-            className="w-6 h-6 flex items-center justify-center text-gray-800"
-            width={24}
-            height={24}
-          />
+          {renderIcon()}
           <span className="text-black text-base font-medium">{label}</span>
         </div>
         <svg

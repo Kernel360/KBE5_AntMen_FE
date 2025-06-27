@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { User } from './types';
 
-const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
-// const API_BASE_URL = 'http://localhost:9093/api/v1';
+// const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
+const API_BASE_URL = 'http://localhost:9093/api/v1';
 
 const userApi = axios.create({
     baseURL: API_BASE_URL,
@@ -12,10 +12,30 @@ const userApi = axios.create({
 });
 
 export const userService = {
-    // 회원 목록 조회
-    getUsers: async (name?: string, userId?: number, role?: string): Promise<User[]> => {
-        const response = await userApi.get('/admin/users', {
-            params: { name, userId, role }
+    // 고객 목록 조회 (전용 API)
+    getCustomers: async (name?: string, userId?: number, sortBy?: string, page = 0, size = 20): Promise<any> => {
+        const response = await userApi.get('/admin/users/customers', {
+            params: { 
+                name, 
+                userId, 
+                sortBy,
+                page,
+                size
+            }
+        });
+        return response.data;
+    },
+
+    // 매니저 목록 조회 (전용 API)
+    getManagers: async (name?: string, userId?: number, sortBy?: string, page = 0, size = 20): Promise<any> => {
+        const response = await userApi.get('/admin/users/managers', {
+            params: { 
+                name, 
+                userId, 
+                sortBy,
+                page,
+                size
+            }
         });
         return response.data;
     },
@@ -45,7 +65,10 @@ export const userService = {
 
     // 매니저 거절
     rejectManager: async (userId: number, reason: string): Promise<void> => {
-        await userApi.post(`/admin/users/${userId}/reject`, { reason });
+        console.log('rejectManager 호출:', { userId, reason });
+        await userApi.post(`/admin/users/${userId}/reject`, null, {
+            params: { reason }
+        });
     },
 
     // // 사용자 생성
@@ -71,11 +94,4 @@ export const userService = {
         return response.data;
     },
 
-    // // 대기 중인 매니저 목록 조회
-    // getPendingManagers: async (page = 0, size = 10): Promise<UserResponse> => {
-    //     const response = await userApi.get('/admin/users/pending-managers', {
-    //         params: { page, size }
-    //     });
-    //     return response.data;
-    // }
 }; 

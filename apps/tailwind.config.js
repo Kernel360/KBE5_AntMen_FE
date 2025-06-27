@@ -13,10 +13,19 @@ module.exports = {
       },
       colors: {
         primary: {
-          DEFAULT: '#9CDAFB',
+          200: '#BAEAFD',     // 밝은 배경, 호버
+          DEFAULT: '#9CDAFB', // 기본 색상 (현재)
+          500: '#5EBAF7',     // 중간 톤 (버튼)
+          600: '#3FA9F5',     // 진한 버튼, 링크
+          700: '#2B8FDB',     // 더 진한 색상 (활성)
+          800: '#1F6BA8',     // 진한 텍스트, 아이콘
+          900: '#164B75',     // 가장 진한 색상 (제목)
         },
         secondary: {
           DEFAULT: '#F3F4F6',
+        },
+        tertiary: {
+          DEFAULT: '#F4E4BC',
         },
         dark: 'rgba(2, 9, 19, 0.91)',
         white: '#fff',
@@ -33,8 +42,8 @@ module.exports = {
           900: '#194aa6',
         },
         red: {
-          50: '#fee',
-          100: '#ffd4d6',
+          50: '#FEF2F2',
+          100: '#FEE2E2',
         },
         accent: {
           DEFAULT: '#F3F4F6',
@@ -43,7 +52,7 @@ module.exports = {
         },
         gray: {
           50: '#F9FAFB',
-          100: '#F8F9FD',
+          100: '#F3F4F6',
           200: '#E5E7EB',
           300: '#D1D5DB',
           400: '#9CA3AF',
@@ -53,6 +62,13 @@ module.exports = {
           800: '#1F2937',
           900: '#111827',
         },
+        warm: '#FFE5D9' ,
+        lavender: '#D4C5E8',
+        beige: {
+          light: '#F0E6D2',
+          dark: '#C8B99C',
+        },
+        sage: '#A8B5A0' 
       },
       keyframes: {
         'slide-up': {

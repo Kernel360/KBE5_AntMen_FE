@@ -40,12 +40,20 @@ export const UsersCustomer: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [blacklistReason, setBlacklistReason] = useState('');
+  const [showBlacklistForm, setShowBlacklistForm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  
   const { data: userResponse, isLoading } = useQuery({
-    queryKey: ['users', searchTerm, 'CUSTOMER'],
-    queryFn: () => userService.getUsers(searchTerm, undefined, 'CUSTOMER'),
+    queryKey: ['customers', searchTerm, currentPage],
+    queryFn: () => userService.getCustomers(searchTerm, undefined, undefined, currentPage),
   });
 
-  const filteredUsers = (userResponse ?? []).filter((user: any) => {
+  // API 응답에서 페이지네이션 정보와 데이터 추출
+  const users = userResponse?.content || [];
+  const totalPages = userResponse?.totalPages || 0;
+  const totalElements = userResponse?.totalElements || 0;
+
+  const filteredUsers = users.filter((user: any) => {
     const name = user.userName ?? '';
     const email = user.userEmail ?? '';
     return (
@@ -84,56 +92,324 @@ export const UsersCustomer: React.FC = () => {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>수요자 목록 ({filteredUsers.length}명)</CardTitle>
+          <CardTitle>수요자 목록 ({totalElements}명)</CardTitle>
           <CardDescription>등록된 수요자(고객) 회원의 정보와 상태를 확인할 수 있습니다.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>이름</TableHead>
-                <TableHead>이메일</TableHead>
-                <TableHead>전화번호</TableHead>
-                <TableHead>가입일</TableHead>
-                <TableHead>마지막 접속일</TableHead>
-                <TableHead>마지막 예약신청일</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user: any) => (
-                <TableRow key={user.userId} className="cursor-pointer hover:bg-gray-50" onClick={() => { setSelectedUser(user); setShowDetail(true); }}>
-                  <TableCell>{user.userName}</TableCell>
-                  <TableCell>{user.userEmail}</TableCell>
-                  <TableCell>{user.userPhone ?? '-'}</TableCell>
-                  <TableCell>{user.userCreatedAt?.slice(0, 10)}</TableCell>
-                  <TableCell>{user.lastLoginAt?.slice(0, 10) ?? '-'}</TableCell>
-                  <TableCell>{user.lastReservationAt?.slice(0, 10) ?? '-'}</TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[15%] min-w-[80px]">이름</TableHead>
+                  <TableHead className="w-[25%] min-w-[150px]">이메일</TableHead>
+                  <TableHead className="w-[15%] min-w-[100px]">전화번호</TableHead>
+                  <TableHead className="w-[15%] min-w-[80px]">가입일</TableHead>
+                  <TableHead className="w-[15%] min-w-[100px]">마지막 접속일</TableHead>
+                  <TableHead className="w-[15%] min-w-[120px]">마지막 예약신청일</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user: any) => (
+                  <TableRow key={user.userId} className="cursor-pointer hover:bg-gray-50" onClick={() => { setSelectedUser(user); setShowDetail(true); }}>
+                    <TableCell className="w-[15%] min-w-[80px] truncate">{user.userName}</TableCell>
+                    <TableCell className="w-[25%] min-w-[150px] truncate">{user.userEmail}</TableCell>
+                    <TableCell className="w-[15%] min-w-[100px] truncate">{user.userTel ?? '-'}</TableCell>
+                    <TableCell className="w-[15%] min-w-[80px] truncate">{user.userCreatedDate?.slice(0, 10)}</TableCell>
+                    <TableCell className="w-[15%] min-w-[100px] truncate">{user.lastLoginDate?.slice(0, 10) ?? '-'}</TableCell>
+                    <TableCell className="w-[15%] min-w-[120px] truncate">{user.lastReservationDate?.slice(0, 10) ?? '-'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          
+          {/* 페이지네이션 */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center mt-6">
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                  disabled={currentPage === 0}
+                  className="h-8 px-3 text-sm disabled:opacity-50"
+                >
+                  이전
+                </Button>
+                
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageNum = Math.max(0, Math.min(totalPages - 5, currentPage - 2)) + i;
+                    const isActive = currentPage === pageNum;
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`h-8 w-8 p-0 text-sm ${
+                          isActive
+                            ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum + 1}
+                      </Button>
+                    );
+                  })}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                  disabled={currentPage >= totalPages - 1}
+                  className="h-8 px-3 text-sm disabled:opacity-50"
+                >
+                  다음
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
       {/* 상세정보 모달 */}
       <Dialog open={showDetail} onOpenChange={setShowDetail}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>수요자 상세 정보</DialogTitle>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="space-y-2">
-              <div><span className="font-semibold">이름:</span> {selectedUser.userName}</div>
-              <div><span className="font-semibold">이메일:</span> {selectedUser.userEmail}</div>
-              <div><span className="font-semibold">전화번호:</span> {selectedUser.userPhone ?? '-'}</div>
-              <div><span className="font-semibold">가입일:</span> {selectedUser.userCreatedAt?.slice(0, 10)}</div>
-              <div><span className="font-semibold">마지막 접속일:</span> {selectedUser.lastLoginAt?.slice(0, 10) ?? '-'}</div>
-              <div><span className="font-semibold">마지막 예약신청일:</span> {selectedUser.lastReservationAt?.slice(0, 10) ?? '-'}</div>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 [&>button]:hidden bg-white">
+          <DialogHeader className="px-6 py-4 bg-white flex-shrink-0 space-y-0 border-b border-gray-200">
+            <div className="flex justify-between items-center">
+              <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2 m-0 p-0">
+                <div className="w-1.5 h-6 bg-blue-500 rounded-full"></div>
+                수요자 상세 정보
+              </DialogTitle>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowBlacklistForm(!showBlacklistForm)}
+                  className="h-8 px-3 text-sm bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+                >
+                  블랙리스트 설정
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowDetail(false)}
+                  className="h-7 w-7 p-0 rounded-full hover:bg-gray-100"
+                >
+                  ✕
+                </Button>
+              </div>
             </div>
-          )}
-          <div className="mt-6 space-y-2">
-            <div className="font-semibold">블랙리스트 사유</div>
-            <Input value={blacklistReason} onChange={e => setBlacklistReason(e.target.value)} placeholder="사유를 입력하세요" />
-            <Button className="bg-red-600 hover:bg-red-700 text-white mt-2">블랙리스트 설정</Button>
+            
+            {/* 블랙리스트 폼 */}
+            {showBlacklistForm && (
+              <div className="mt-4 pt-4 space-y-3">
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-700 mb-2">블랙리스트 사유</label>
+                  <Input 
+                    value={blacklistReason} 
+                    onChange={e => setBlacklistReason(e.target.value)} 
+                    placeholder="블랙리스트 처리 사유를 입력하세요"
+                    className="bg-white"
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setShowBlacklistForm(false);
+                      setBlacklistReason('');
+                    }}
+                    className="px-4"
+                  >
+                    취소
+                  </Button>
+                  <Button 
+                    size="sm"
+                    className="bg-red-600 hover:bg-red-700 text-white px-4"
+                    disabled={!blacklistReason.trim()}
+                  >
+                    완료
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {selectedUser && (
+              <div className="space-y-6 px-6 pt-0 pb-8">
+                {/* 기본 정보 섹션 */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <div className="w-1.5 h-6 bg-blue-400 rounded-full"></div>
+                    기본 정보
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-500">이름</label>
+                        <span className="text-base text-gray-900 font-medium">{selectedUser.userName}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-500">이메일</label>
+                        <span className="text-base text-gray-900">{selectedUser.userEmail}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-500">전화번호</label>
+                        <span className="text-base text-gray-900">{selectedUser.userTel ?? '-'}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <label className="text-sm font-medium text-gray-500">가입일</label>
+                        <span className="text-base text-gray-900">{selectedUser.userCreatedDate?.slice(0, 10)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 활동 정보 섹션 */}
+                <div className="bg-green-50 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <div className="w-1.5 h-6 bg-green-400 rounded-full"></div>
+                    활동 정보
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-500">마지막 접속일</label>
+                      <span className="text-base text-gray-900">{selectedUser.lastLoginDate?.slice(0, 10) ?? '접속 기록 없음'}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-gray-500">마지막 예약신청일</label>
+                      <span className="text-base text-gray-900">{selectedUser.lastReservationDate?.slice(0, 10) ?? '예약 기록 없음'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 예약 통계 섹션 */}
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <div className="w-1.5 h-6 bg-blue-400 rounded-full"></div>
+                    예약 통계 (전체 기간)
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <div className="bg-white rounded-lg p-3 text-center">
+                      <div className="text-xl font-bold text-blue-600">24건</div>
+                      <div className="text-xs text-gray-500">총 신청</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 text-center">
+                      <div className="text-xl font-bold text-green-600">18건</div>
+                      <div className="text-xs text-gray-500">진행 완료</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 text-center">
+                      <div className="text-xl font-bold text-orange-600">2건</div>
+                      <div className="text-xs text-gray-500">진행 예정</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 text-center">
+                      <div className="text-xl font-bold text-red-600">3건</div>
+                      <div className="text-xs text-gray-500">환불 신청</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 text-center">
+                      <div className="text-xl font-bold text-gray-600">1건</div>
+                      <div className="text-xs text-gray-500">자동 취소</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white rounded-lg p-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-500">성공률</span>
+                        <span className="text-lg font-bold text-green-600">75%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '75%' }}></div>
+                      </div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-500">평균 만족도</span>
+                        <span className="text-lg font-bold text-yellow-600">4.2/5</span>
+                      </div>
+                      <div className="flex mt-2">
+                        {[1,2,3,4,5].map(star => (
+                          <span key={star} className={`text-lg ${star <= 4 ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 리뷰 정보 */}
+                <div className="bg-yellow-50 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                      <div className="w-1.5 h-6 bg-yellow-400 rounded-full"></div>
+                      리뷰 정보
+                    </h3>
+                    <Button variant="outline" size="sm" onClick={() => {/* 전체 리뷰 모달 */}}>
+                      전체보기
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* 작성한 리뷰 */}
+                    <div className="bg-white rounded-lg p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="font-medium text-gray-700">작성한 리뷰</h4>
+                        <span className="text-sm text-gray-500">총 12개</span>
+                      </div>
+                      <div className="space-y-2">
+                        {[
+                          { manager: '김매니저', rating: 5, comment: '정말 깔끔하게 잘해주셨어요!' },
+                          { manager: '이매니저', rating: 4, comment: '시간 약속 잘 지키시고 친절하세요' }
+                        ].map((review, idx) => (
+                          <div key={idx} className="p-2 bg-gray-50 rounded text-sm">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-medium">{review.manager}</span>
+                              <div className="flex">
+                                {[1,2,3,4,5].map(star => (
+                                  <span key={star} className={`text-xs ${star <= review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                                ))}
+                              </div>
+                            </div>
+                            <p className="text-gray-600 text-xs">{review.comment}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* 받은 리뷰 */}
+                    <div className="bg-white rounded-lg p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="font-medium text-gray-700">받은 리뷰</h4>
+                        <span className="text-sm text-gray-500">총 8개</span>
+                      </div>
+                      <div className="space-y-2">
+                        {[
+                          { manager: '박매니저', rating: 4, comment: '약속 시간 잘 지키시는 고객님이에요' },
+                          { manager: '최매니저', rating: 5, comment: '친절하고 배려 깊으신 분입니다' }
+                        ].map((review, idx) => (
+                          <div key={idx} className="p-2 bg-gray-50 rounded text-sm">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="font-medium">{review.manager}</span>
+                              <div className="flex">
+                                {[1,2,3,4,5].map(star => (
+                                  <span key={star} className={`text-xs ${star <= review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                                ))}
+                              </div>
+                            </div>
+                            <p className="text-gray-600 text-xs">{review.comment}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

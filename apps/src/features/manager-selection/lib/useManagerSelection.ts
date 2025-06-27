@@ -56,11 +56,9 @@ export const useManagerSelection = ({ strategy = 'block-on-max' }: UseManagerSel
           }
           
           setSelectedManagers(managerIds);
-          console.log('👥 매니저 선택 정보 로드:', managerIds);
         }
         setIsLoaded(true);
       } catch (error) {
-        console.error('매니저 선택 정보 로드 실패:', error);
         setSelectedManagers([]);
         setIsLoaded(true);
       }
@@ -106,13 +104,11 @@ export const useManagerSelection = ({ strategy = 'block-on-max' }: UseManagerSel
         };
         
         sessionStorage.setItem('currentReservation', JSON.stringify(updatedReservation));
-        console.log('📱 매니저 선택 실시간 저장:', newSelection);
       }
     } catch (error) {
       console.error('매니저 선택 저장 실패:', error);
     }
     
-    console.log('매니저 선택 변경:', newSelection);
   };
 
   const clearSelection = () => {
@@ -131,10 +127,8 @@ export const useManagerSelection = ({ strategy = 'block-on-max' }: UseManagerSel
         sessionStorage.setItem('currentReservation', JSON.stringify(updatedReservation));
       }
     } catch (error) {
-      console.error('매니저 선택 초기화 중 세션 정리 실패:', error);
     }
     
-    console.log('매니저 선택 초기화');
   };
 
   return {

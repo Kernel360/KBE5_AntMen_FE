@@ -28,7 +28,7 @@ export default function Home() {
   return (
     <div className="bg-white">
       <HomeHeader
-        title="앤트워커로 달라지는 일상"
+        title="앤트워크로 달라지는 일상"
         subtitle="바쁜 일상에서 효율적으로 청소하세요"
         buttonText="예약하기"
         onButtonClick={() => router.push('/reservation')}

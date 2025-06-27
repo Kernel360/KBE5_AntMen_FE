@@ -18,7 +18,7 @@ interface HomeHeaderProps {
 }
 
 export function HomeHeader({
-  title = '앤트워커로 매주 10시간을 절약해요',
+  title = '앤트워크로 매주 10시간을 절약해요',
   subtitle,
   buttonText = '예약하기',
   onButtonClick,

@@ -4,6 +4,76 @@ import React, { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { getCoordinatesFromAddress } from "@/utils/kakaoCoords";
 
+// 시간 옵션 생성 함수
+const generateTimeOptions = () => {
+  const options = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 30) {
+      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      options.push({ value: timeString, label: timeString });
+    }
+  }
+  return options;
+};
+
+const timeOptions = generateTimeOptions();
+
+// 커스텀 시간 선택기 컴포넌트
+const TimeSelector: React.FC<{
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  error?: boolean;
+}> = ({ value, onChange, placeholder, error }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleSelect = (timeValue: string) => {
+    onChange(timeValue);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base text-left focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between ${
+          error ? 'border-2 border-red-500' : ''
+        }`}
+      >
+        <span className={value ? 'text-gray-900' : 'text-gray-500'}>
+          {value || placeholder}
+        </span>
+        <svg 
+          className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          {timeOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => handleSelect(option.value)}
+              className={`w-full px-4 py-2 text-left hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${
+                value === option.value ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-900'
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // 동적 임포트로 모달 최적화
 const AddAddressModal = dynamic(
     () => import('@/features/address/ui/AddAddressModal'),
@@ -193,26 +263,24 @@ export const ManagerAdditionalInfo: React.FC<ManagerAdditionalInfoProps> = ({
             <label className="block text-base font-medium">
               근무 가능 시간 <span className="text-red-500">*</span>
             </label>
-            <div className="flex items-center gap-2">
-              <input
-                  type="time"
+            <div className="flex items-center gap-3">
+              <div className="w-[calc(50%-0.75rem)]">
+                <TimeSelector
                   value={data.workHours.start}
-                  onChange={(e) => onWorkHoursChange('start', e.target.value)}
-                  className={`flex-1 h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.workHours ? 'border-2 border-red-500' : ''
-                  }`}
-                  aria-label="근무 시작 시간"
-              />
-              <span className="text-gray-400">~</span>
-              <input
-                  type="time"
+                  onChange={(value) => onWorkHoursChange('start', value)}
+                  placeholder="시작 시간"
+                  error={!!errors.workHours}
+                />
+              </div>
+              <span className="text-gray-400 text-xl font-medium">~</span>
+              <div className="w-[calc(50%-0.75rem)]">
+                <TimeSelector
                   value={data.workHours.end}
-                  onChange={(e) => onWorkHoursChange('end', e.target.value)}
-                  className={`flex-1 h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.workHours ? 'border-2 border-red-500' : ''
-                  }`}
-                  aria-label="근무 종료 시간"
-              />
+                  onChange={(value) => onWorkHoursChange('end', value)}
+                  placeholder="종료 시간"
+                  error={!!errors.workHours}
+                />
+              </div>
             </div>
             {errors.workHours && (
                 <span className="text-red-500 text-sm" role="alert">

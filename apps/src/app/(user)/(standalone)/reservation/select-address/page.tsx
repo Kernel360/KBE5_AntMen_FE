@@ -76,7 +76,7 @@ export default function SelectAddressPage() {
                 <button
                   key={address.addressId}
                   onClick={() => setSelectedAddressId(address.addressId)}
-                  className={`w-full text-left p-5 border rounded-lg shadow-sm bg-white flex justify-between items-center transition-all ${isSelected ? 'border-cyan-500 ring-2 ring-cyan-500 bg-cyan-50' : 'hover:bg-gray-50'}`}
+                  className={`w-full text-left p-5 border rounded-lg shadow-sm bg-white flex justify-between items-center transition-all ${isSelected ? 'border-primary ring-2 ring-primary bg-white' : 'hover:bg-gray-200'}`}
                 >
                   <div>
                     <h2 className="text-lg font-bold text-slate-800">{address.addressName} ({address.addressArea}평)</h2>
@@ -84,7 +84,7 @@ export default function SelectAddressPage() {
                     <p className="text-sm text-slate-600">{address.addressDetail}</p>
                   </div>
                   {isSelected && (
-                    <span className="ml-4 px-3 py-1 bg-cyan-500 text-white rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0">선택됨</span>
+                    <span className="ml-4 px-3 py-1 bg-primary-500 text-white rounded-lg text-sm font-medium whitespace-nowrap flex-shrink-0">선택됨</span>
                   )}
                 </button>
               );
@@ -95,7 +95,7 @@ export default function SelectAddressPage() {
               <p>등록된 주소 정보가 없습니다.</p>
               <button 
                 onClick={() => setAddModalOpen(true)}
-                className="mt-4 inline-block px-6 py-2 bg-cyan-500 text-white rounded-lg font-semibold"
+                className="mt-4 inline-block px-6 py-2 bg-primary-500 text-white rounded-lg font-semibold hover:bg-primary-600 transition-colors"
               >
                 + 새 주소 추가하기
               </button>
@@ -116,7 +116,7 @@ export default function SelectAddressPage() {
         <button
           onClick={handleNext}
           disabled={!selectedAddressId || loading}
-          className="w-full py-4 bg-cyan-500 text-white rounded-lg font-bold text-lg hover:bg-cyan-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          className="w-full py-4 bg-primary-500 text-white rounded-lg font-bold text-lg hover:bg-primary-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
         >
           다음
         </button>
