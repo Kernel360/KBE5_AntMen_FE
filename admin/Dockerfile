@@ -1,5 +1,5 @@
-# admin/Dockerfile - 30초 이내 빌드 최적화
-# 🚀 ULTRA FAST ADMIN VERSION - 목표: 30초 이내
+# admin/Dockerfile - 패키지 의존성 수정
+# 🚀 ULTRA FAST ADMIN VERSION - @antmen/ui 문제 해결
 
 FROM --platform=$BUILDPLATFORM node:20.11-alpine AS builder
 ARG TARGETPLATFORM
@@ -10,15 +10,16 @@ RUN apk add --no-cache libc6-compat python3 make g++ curl
 
 WORKDIR /app
 
-# 캐시 친화적 복사 (package.json만 먼저)
+# 🔧 1. ROOT 패키지 파일들 먼저 복사
 COPY package.json yarn.lock ./
-COPY admin/package.json ./admin/
 
-# 🚀 워크스페이스 최적화 (더미 생성으로 에러 방지)
-RUN mkdir -p apps packages/ui && \
-    echo '{"name": "apps", "private": true, "version": "1.0.0"}' > apps/package.json && \
-    echo '{"name": "@repo/ui", "version": "0.0.0", "main": "index.js"}' > packages/ui/package.json && \
-    echo 'module.exports = {};' > packages/ui/index.js
+# 🔧 2. 모든 워크스페이스 package.json 복사
+COPY admin/package.json ./admin/
+COPY apps/package.json ./apps/
+COPY packages/ui/package.json ./packages/ui/ 2>/dev/null || echo '{"name": "@antmen/ui", "version": "0.0.0"}' > ./packages/ui/package.json
+
+# 🔧 3. @antmen/ui 소스 코드 복사 (의존성 해결을 위해 먼저)
+COPY packages/ui/ ./packages/ui/ 2>/dev/null || mkdir -p ./packages/ui
 
 # 🚀 병렬 설치 최적화 (메모리 8GB, 동시성 16)
 ENV NODE_OPTIONS="--max-old-space-size=8192" \
@@ -26,14 +27,13 @@ ENV NODE_OPTIONS="--max-old-space-size=8192" \
     PYTHON=/usr/bin/python3 \
     YARN_NETWORK_TIMEOUT=180000
 
+# 🔧 ARM64 yarn 최적화 (prefer-offline 제거 - 의존성 문제 해결)
 RUN yarn config set network-concurrency 16 && \
     yarn config set network-timeout 180000 && \
-    yarn config set prefer-offline true && \
-    yarn install --frozen-lockfile --prefer-offline
+    yarn install --frozen-lockfile
 
-# 소스 복사 (필요한 것만)
+# 🔧 4. 나머지 소스 코드 복사
 COPY admin/ ./admin/
-RUN if [ -d "./packages/ui" ]; then COPY packages/ui/ ./packages/ui/; fi
 
 # 🚀 빠른 빌드 (소스맵 비활성화, 병렬 처리)
 WORKDIR /app/admin
