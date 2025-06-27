@@ -1,72 +1,66 @@
-# 최종 최적화된 admin React 앱 Dockerfile
-# 외부 nginx 사용, 컨테이너는 정적 파일만 서빙
+# admin/Dockerfile - 30초 이내 빌드 최적화
+# 🚀 ULTRA FAST ADMIN VERSION - 목표: 30초 이내
 
-# 빌드 단계
 FROM --platform=$BUILDPLATFORM node:20.11-alpine AS builder
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
-# 🚀 ARM64 최적화 - Canvas 빌드를 위한 도구 설치
-RUN apk add --no-cache \
-    libc6-compat \
-    python3 \
-    make \
-    g++
+# 모든 도구 한번에 설치 (Canvas 빌드 포함)
+RUN apk add --no-cache libc6-compat python3 make g++ curl
 
 WORKDIR /app
 
-# 1. package.json 파일들 복사 (최적 캐싱)
+# 캐시 친화적 복사 (package.json만 먼저)
 COPY package.json yarn.lock ./
 COPY admin/package.json ./admin/
-COPY packages/ui/package.json ./packages/ui/
 
-# 2. apps workspace 더미 생성 (워크스페이스 오류 방지)
-RUN mkdir -p apps && \
-    echo '{"name": "apps", "private": true, "version": "1.0.0"}' > apps/package.json
+# 🚀 워크스페이스 최적화 (더미 생성으로 에러 방지)
+RUN mkdir -p apps packages/ui && \
+    echo '{"name": "apps", "private": true, "version": "1.0.0"}' > apps/package.json && \
+    echo '{"name": "@repo/ui", "version": "0.0.0", "main": "index.js"}' > packages/ui/package.json && \
+    echo 'module.exports = {};' > packages/ui/index.js
 
-# 3. 🎯 ARM64 최적화된 환경변수 설정
-ENV PYTHON=/usr/bin/python3
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-ENV npm_config_build_from_source=true
+# 🚀 병렬 설치 최적화 (메모리 8GB, 동시성 16)
+ENV NODE_OPTIONS="--max-old-space-size=8192" \
+    npm_config_build_from_source=true \
+    PYTHON=/usr/bin/python3 \
+    YARN_NETWORK_TIMEOUT=180000
 
-# 🚀 ARM64 yarn 최적화
-RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-        yarn config set network-timeout 600000 && \
-        yarn config set network-concurrency 8; \
-    fi
+RUN yarn config set network-concurrency 16 && \
+    yarn config set network-timeout 180000 && \
+    yarn config set prefer-offline true && \
+    yarn install --frozen-lockfile --prefer-offline
 
-# 4. 의존성 설치 (프로덕션 최적화)
-RUN yarn install --frozen-lockfile --network-timeout 300000
-
-# 5. 소스 코드 복사 (필요한 것만)
+# 소스 복사 (필요한 것만)
 COPY admin/ ./admin/
-COPY packages/ui/ ./packages/ui/
+RUN if [ -d "./packages/ui" ]; then COPY packages/ui/ ./packages/ui/; fi
 
-# 6. 빌드 실행
+# 🚀 빠른 빌드 (소스맵 비활성화, 병렬 처리)
 WORKDIR /app/admin
-ENV NODE_ENV=production
-ENV GENERATE_SOURCEMAP=false
-ENV CI=false
-ENV SKIP_PREFLIGHT_CHECK=true
+ENV NODE_ENV=production \
+    GENERATE_SOURCEMAP=false \
+    CI=false \
+    SKIP_PREFLIGHT_CHECK=true \
+    FAST_REFRESH=false
 
 RUN yarn build
 
-# 프로덕션 단계 - serve 사용 (외부 nginx와 연동)
+# 런타임 (초경량화)
 FROM node:20.11-alpine AS runner
 
-# serve 패키지 전역 설치
+# 한번에 설치 (serve + curl + 사용자)
 RUN npm install -g serve@14 && \
+    apk add --no-cache curl && \
     addgroup -g 1001 -S nodejs && \
     adduser -S react -u 1001
 
 USER react
-
 WORKDIR /app
 
-# 빌드된 파일만 복사
+# 빌드 결과만 복사
 COPY --from=builder --chown=react:nodejs /app/admin/build ./build
 
 EXPOSE 3001
 
-# serve로 정적 파일 서빙 (외부 nginx가 프록시)
+# serve로 정적 파일 서빙
 CMD ["serve", "-s", "build", "-l", "3001", "--no-clipboard", "--single"]

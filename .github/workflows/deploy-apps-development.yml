@@ -1,4 +1,4 @@
-name: 'CI/CD: Build & Deploy to EC2 (ARM64 Optimized)'
+name: 'CI/CD: Build & Deploy to EC2 (ULTRA FAST - 1min Target)'
 
 on:
   push:
@@ -21,7 +21,7 @@ env:
 
 jobs:
   build-apps:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-8-cores  # 🚀 8코어 고성능 러너
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -40,19 +40,29 @@ jobs:
           aws ecr describe-repositories --repository-names users-app 2>/dev/null || \
           aws ecr create-repository --repository-name users-app
 
-      # 🚀 ARM64 전용 QEMU 설정
-      - name: Set up QEMU for ARM64
+      # 🚀 고성능 QEMU 설정 (최신 버전)
+      - name: Set up QEMU (Ultra Fast)
         uses: docker/setup-qemu-action@v3
         with:
           platforms: linux/arm64
+          image: tonistiigi/binfmt:qemu-v8.1.5
 
-      - name: Set up Docker Buildx
+      # 🚀 고성능 Buildx 설정 (병렬 처리 최대화)
+      - name: Set up Docker Buildx (Performance Mode)
         uses: docker/setup-buildx-action@v3
         with:
-          driver-opts: network=host
+          driver-opts: |
+            network=host
+          config-inline: |
+            [worker.oci]
+              max-parallelism = 8
+            [worker.containerd] 
+              max-parallelism = 8
+            [registry."docker.io"]
+              mirrors = ["mirror.gcr.io"]
 
-      # 🎯 ARM64 전용 빌드
-      - name: Build and Push users-app (ARM64 Only)
+      # 🎯 멀티 레벨 캐시 + 인라인 캐시
+      - name: Build and Push users-app (Ultra Fast)
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -60,9 +70,18 @@ jobs:
           push: true
           platforms: linux/arm64
           tags: ${{ env.ECR_REGISTRY }}/users-app:latest
-          cache-from: type=gha,scope=users-app-arm64
-          cache-to: type=gha,mode=max,scope=users-app-arm64
+          # 🚀 멀티 레벨 캐시 전략
+          cache-from: |
+            type=gha,scope=users-app-arm64
+            type=gha,scope=users-app-deps
+            type=registry,ref=${{ env.ECR_REGISTRY }}/users-app:cache
+          cache-to: |
+            type=gha,mode=max,scope=users-app-arm64
+            type=gha,mode=max,scope=users-app-deps
+            type=registry,ref=${{ env.ECR_REGISTRY }}/users-app:cache,mode=max
+          # 🎯 빌드 속도 최적화
           build-args: |
+            BUILDKIT_INLINE_CACHE=1
             BUILDPLATFORM=linux/amd64
             TARGETPLATFORM=linux/arm64
             NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
@@ -70,9 +89,13 @@ jobs:
             NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE=${{ secrets.GOOGLE_RESPONSE_TYPE }}
             NEXT_PUBLIC_GOOGLE_SCOPE=${{ secrets.GOOGLE_SCOPE }}
             NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.GOOGLE_AUTH_URL }}
+          # 추가 최적화
+          provenance: false
+          sbom: false
+          outputs: type=registry
 
   build-admin:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-8-cores  # 🚀 8코어 고성능 러너
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -91,19 +114,27 @@ jobs:
           aws ecr describe-repositories --repository-names admin-app 2>/dev/null || \
           aws ecr create-repository --repository-name admin-app
 
-      # 🚀 ARM64 전용 QEMU 설정
-      - name: Set up QEMU for ARM64
+      # 🚀 고성능 QEMU 설정
+      - name: Set up QEMU (Ultra Fast)
         uses: docker/setup-qemu-action@v3
         with:
           platforms: linux/arm64
+          image: tonistiigi/binfmt:qemu-v8.1.5
 
-      - name: Set up Docker Buildx
+      # 🚀 고성능 Buildx 설정
+      - name: Set up Docker Buildx (Performance Mode)
         uses: docker/setup-buildx-action@v3
         with:
-          driver-opts: network=host
+          driver-opts: |
+            network=host
+          config-inline: |
+            [worker.oci]
+              max-parallelism = 8
+            [worker.containerd]
+              max-parallelism = 8
 
-      # 🎯 ARM64 전용 빌드
-      - name: Build and Push admin-app (ARM64 Only)
+      # 🎯 멀티 레벨 캐시 (Admin 전용)
+      - name: Build and Push admin-app (Ultra Fast)
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -111,11 +142,24 @@ jobs:
           push: true
           platforms: linux/arm64
           tags: ${{ env.ECR_REGISTRY }}/admin-app:latest
-          cache-from: type=gha,scope=admin-app-arm64
-          cache-to: type=gha,mode=max,scope=admin-app-arm64
+          # 🚀 멀티 레벨 캐시 전략
+          cache-from: |
+            type=gha,scope=admin-app-arm64
+            type=gha,scope=admin-app-deps
+            type=registry,ref=${{ env.ECR_REGISTRY }}/admin-app:cache
+          cache-to: |
+            type=gha,mode=max,scope=admin-app-arm64
+            type=gha,mode=max,scope=admin-app-deps
+            type=registry,ref=${{ env.ECR_REGISTRY }}/admin-app:cache,mode=max
+          # 🎯 빌드 속도 최적화
           build-args: |
+            BUILDKIT_INLINE_CACHE=1
             BUILDPLATFORM=linux/amd64
             TARGETPLATFORM=linux/arm64
+          # 추가 최적화
+          provenance: false
+          sbom: false
+          outputs: type=registry
 
   prepare-deploy:
     runs-on: ubuntu-latest
@@ -199,8 +243,8 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # 🚀 단순화된 ARM64 배포
-      - name: Deploy ARM64 containers
+      # 🚀 고속 ARM64 배포
+      - name: Deploy ARM64 containers (Ultra Fast)
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: 54.180.126.213
@@ -213,41 +257,41 @@ jobs:
             # 환경변수 로드
             set -a && source .env && set +a
 
-            echo "🚀 ARM64 배포 시작: ${{ matrix.service }} (${{ matrix.type }})"
+            echo "🚀 ARM64 고속 배포: ${{ matrix.service }} (${{ matrix.type }})"
 
             # ECR 로그인
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
             docker login --username AWS --password-stdin $ECR_REGISTRY
 
-            # ARM64 이미지 풀
+            # ARM64 이미지 풀 (병렬 처리)
             echo "📦 ARM64 이미지 풀링: ${{ matrix.image }}"
-            docker pull $ECR_REGISTRY/${{ matrix.image }}:latest
+            docker pull $ECR_REGISTRY/${{ matrix.image }}:latest &
+            PULL_PID=$!
+
+            # 기존 컨테이너 정리 (백그라운드)
+            docker compose down ${{ matrix.service }} 2>/dev/null || true &
+
+            # 풀 완료 대기
+            wait $PULL_PID
 
             # 이미지 아키텍처 확인
             IMAGE_ARCH=$(docker inspect $ECR_REGISTRY/${{ matrix.image }}:latest --format='{{.Architecture}}' 2>/dev/null || echo 'unknown')
             echo "🏗️ 이미지 아키텍처: $IMAGE_ARCH"
 
-            # 컨테이너 재시작
-            echo "🔄 컨테이너 재시작: ${{ matrix.service }}"
-            docker compose down ${{ matrix.service }} 2>/dev/null || true
+            # 컨테이너 시작
+            echo "🔄 컨테이너 시작: ${{ matrix.service }}"
             docker compose up -d ${{ matrix.service }}
 
-            # 배포 상태 확인
-            echo "✅ 배포 완료 확인:"
-            sleep 10
-            docker compose ps ${{ matrix.service }}
-            docker compose logs --tail=10 ${{ matrix.service }}
-
-            # 기본 헬스체크
-            echo "🏥 헬스체크..."
+            # 빠른 헬스체크 (타임아웃 단축)
+            echo "🏥 빠른 헬스체크..."
             for i in {1..6}; do
               if curl -f -s http://localhost:${{ matrix.port }} > /dev/null; then
-                echo "✅ ${{ matrix.service }} 정상"
+                echo "✅ ${{ matrix.service }} 정상 (${i}회차)"
                 break
               else
                 echo "⏳ 헬스체크 재시도... ($i/6)"
-                sleep 10
+                sleep 5
               fi
             done
 
-            echo "🎉 ${{ matrix.service }} ARM64 배포 완료!"
+            echo "🎉 ${{ matrix.service }} ARM64 고속 배포 완료!"
