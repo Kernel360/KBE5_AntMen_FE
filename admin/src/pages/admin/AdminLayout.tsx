@@ -12,7 +12,8 @@ import {
     Menu,
     X,
     BarChart2,
-    GitBranch
+    GitBranch,
+    Settings
 } from 'lucide-react';
 
 interface MenuItem {
@@ -88,6 +89,12 @@ const menuItems: MenuItem[] = [
         ]
     },
     {
+        id: 'service',
+        label: '서비스 관리',
+        path: '/admin/service',
+        icon: Settings
+    },
+    {
         id: 'matching',
         label: '매칭관리',
         path: '/admin/matching',
@@ -149,6 +156,12 @@ export const AdminLayout: React.FC = () => {
     };
 
     const handleMenuClick = (item: MenuItem) => {
+        // 서비스 관리 메뉴는 준비중
+        if (item.id === 'service') {
+            alert('서비스 관리 기능은 준비 중입니다.');
+            return;
+        }
+        
         if (item.subItems) {
             setExpandedMenu(expandedMenu === item.id ? null : item.id);
             if (item.subItems.length > 0) {
