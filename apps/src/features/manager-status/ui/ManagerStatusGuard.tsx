@@ -8,7 +8,6 @@ import { ManagerPendingScreen } from './ManagerPendingScreen'
 import { ManagerRejectedScreen } from './ManagerRejectedScreen'
 import { ManagerApprovedScreen } from './ManagerApprovedScreen'
 import { UnauthorizedAccessScreen } from './UnauthorizedAccessScreen'
-import { ManagerStatus } from '@/entities/manager/types'
 import { mapManagerStatusToDisplay } from '@/entities/manager/lib/statusMapper'
 import { getManagerRejectionReason } from '@/shared/api/manager'
 import { validateAuthConsistency, handleAuthTampering } from '@/shared/lib/auth-validator'
@@ -33,10 +32,39 @@ export const ManagerStatusGuard = ({ children }: ManagerStatusGuardProps) => {
   // 🔄 기존 호환성: localStorage 기반 (점진적 마이그레이션)
   const { user, updateRejectionReason } = useAuthStore()
   
-  // 매니저 상태는 로그인 시 받은 상태만 사용 (추가 API 호출 불필요)
-  const [hasSeenApprovalNotification, setHasSeenApprovalNotification] = useState(false)
+  // 🎯 승인 알림 관리: 세션 기반 + 시간 기반
+  const [hasSeenApprovalNotificationInSession, setHasSeenApprovalNotificationInSession] = useState(false)
 
+  // 🔄 새로고침 시에도 승인 알림 확인 상태 유지
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user?.userId) {
+      const storageKey = `approval-notification-seen-${user.userId}`
+      const hasSeenInStorage = localStorage.getItem(storageKey) === 'true'
+      setHasSeenApprovalNotificationInSession(hasSeenInStorage)
+    }
+  }, [user?.userId])
 
+  const [isLoading, setIsLoading] = useState(true)
+  const [showApprovalNotification, setShowApprovalNotification] = useState(false)
+  
+  // 현재 매니저 상태 (로그인 시 받은 상태 사용)
+  const currentManagerStatus = user?.managerStatus
+
+  // 🕒 승인 알림 표시 여부를 결정하는 함수
+  const shouldShowApprovalNotification = (managerStatus: string | null | undefined) => {
+    // 승인 상태가 아니면 알림 표시 안함
+    if (managerStatus !== 'APPROVED') {
+      return false
+    }
+
+    // 현재 세션에서 이미 확인했으면 표시 안함
+    if (hasSeenApprovalNotificationInSession) {
+      return false
+    }
+
+    console.log('🎉 승인 알림 표시 - 사용자 ID:', user?.userId)
+    return true
+  }
 
   // 🛡️ 보안 검증: JWT vs localStorage 일관성 확인
   useEffect(() => {
@@ -60,12 +88,6 @@ export const ManagerStatusGuard = ({ children }: ManagerStatusGuardProps) => {
     }
   }, [secureUser, user])
   
-  const [isLoading, setIsLoading] = useState(true)
-  const [showApprovalNotification, setShowApprovalNotification] = useState(false)
-  
-  // 현재 매니저 상태 (로그인 시 받은 상태 사용)
-  const currentManagerStatus = user?.managerStatus
-
   // 거절 사유 조회 (거절 상태인 경우에만)
   useEffect(() => {
     const loadRejectionReason = async () => {
@@ -93,19 +115,22 @@ export const ManagerStatusGuard = ({ children }: ManagerStatusGuardProps) => {
     loadRejectionReason()
   }, [user?.userId, user?.userRole, user?.managerStatus, updateRejectionReason])
 
-  // 승인 완료 알림 표시 여부 확인
+  // 승인 완료 알림 표시 여부 확인 (시간 기반)
   useEffect(() => {
     if (!isLoading && currentManagerStatus === 'APPROVED') {
-      // 직접 상태 체크하여 알림 표시 여부 결정 (승인 완료이고 아직 알림을 보지 않았다면)
-      if (!hasSeenApprovalNotification) {
-        setShowApprovalNotification(true)
-      }
+      // 시간 기반으로 승인 알림 표시 여부 결정
+      const shouldShow = shouldShowApprovalNotification(currentManagerStatus)
+      setShowApprovalNotification(shouldShow)
     }
-  }, [isLoading, currentManagerStatus, hasSeenApprovalNotification])
+  }, [isLoading, currentManagerStatus, hasSeenApprovalNotificationInSession])
 
-  // 승인 완료 알림 확인 처리 (localStorage 저장 제거)
+  // 승인 완료 알림 확인 처리 (세션에서만 기록)
   const handleApprovalNotificationContinue = () => {
-    setHasSeenApprovalNotification(true)
+    if (user?.userId) {
+      const storageKey = `approval-notification-seen-${user.userId}`
+      localStorage.setItem(storageKey, 'true')
+    }
+    setHasSeenApprovalNotificationInSession(true)
     setShowApprovalNotification(false)
   }
 
