@@ -2,9 +2,11 @@
 # 외부 nginx 사용, 컨테이너는 정적 파일만 서빙
 
 # 빌드 단계
-FROM node:20.11-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:20.11-alpine AS builder
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
 
-# Canvas 빌드를 위한 최소 도구만 설치
+# 🚀 ARM64 최적화 - Canvas 빌드를 위한 도구 설치
 RUN apk add --no-cache \
     libc6-compat \
     python3 \
@@ -22,10 +24,16 @@ COPY packages/ui/package.json ./packages/ui/
 RUN mkdir -p apps && \
     echo '{"name": "apps", "private": true, "version": "1.0.0"}' > apps/package.json
 
-# 3. Canvas 관련 환경변수 설정 (빌드 최적화)
+# 3. 🎯 ARM64 최적화된 환경변수 설정
 ENV PYTHON=/usr/bin/python3
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV npm_config_build_from_source=true
+
+# 🚀 ARM64 yarn 최적화
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+        yarn config set network-timeout 600000 && \
+        yarn config set network-concurrency 8; \
+    fi
 
 # 4. 의존성 설치 (프로덕션 최적화)
 RUN yarn install --frozen-lockfile --network-timeout 300000

@@ -1,17 +1,31 @@
 # 1. Dependencies 설치 단계
-FROM node:20.11-alpine AS deps
-RUN apk add --no-cache libc6-compat
+FROM --platform=$BUILDPLATFORM node:20.11-alpine AS deps
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+
+# 🚀 ARM64 크로스 컴파일 최적화
+RUN apk add --no-cache libc6-compat && \
+    if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+        apk add --no-cache python3 make g++; \
+    fi
+
 WORKDIR /app
 
 # package.json과 lock 파일만 먼저 복사 (캐시 최적화)
 COPY package.json yarn.lock* ./
 COPY apps/package.json ./apps/
 
-# 프로덕션 의존성만 설치
-RUN yarn workspace apps install --production --frozen-lockfile
+# 🎯 ARM64 최적화된 yarn 설정
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+        yarn config set network-timeout 600000; \
+    fi && \
+    yarn workspace apps install --production --frozen-lockfile
 
 # 2. 빌더 단계
-FROM node:20.11-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:20.11-alpine AS builder
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+
 WORKDIR /app
 
 # 빌드 시점 환경변수
@@ -27,12 +41,23 @@ ENV NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE=$NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE
 ENV NEXT_PUBLIC_GOOGLE_SCOPE=$NEXT_PUBLIC_GOOGLE_SCOPE
 ENV NEXT_PUBLIC_GOOGLE_AUTH_URL=$NEXT_PUBLIC_GOOGLE_AUTH_URL
 
+# 🚀 Node.js 메모리 최적화
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+# ARM64 빌드 최적화
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+        apk add --no-cache python3 make g++; \
+    fi
+
 # 패키지 파일들 복사
 COPY package.json yarn.lock* ./
 COPY apps/package.json ./apps/
 
-# 모든 의존성 설치 (devDependencies 포함)
-RUN yarn workspace apps install --frozen-lockfile
+# 🎯 ARM64 최적화된 설치
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+        yarn config set network-timeout 600000; \
+    fi && \
+    yarn workspace apps install --frozen-lockfile
 
 # 소스코드 복사
 COPY apps/ ./apps/
