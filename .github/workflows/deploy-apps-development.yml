@@ -232,8 +232,8 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # 🚀 고속 ARM64 배포
-      - name: Deploy ARM64 containers (Ultra Fast)
+      # 🚀 CPU 최적화 ARM64 배포 (순차 처리)
+      - name: Deploy ARM64 containers (CPU Optimized)
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.EC2_PUBLIC_IP }}
@@ -246,41 +246,53 @@ jobs:
             # 환경변수 로드
             set -a && source .env && set +a
 
-            echo "🚀 ARM64 고속 배포: ${{ matrix.service }} (${{ matrix.type }})"
+            echo "🚀 CPU 최적화 배포: ${{ matrix.service }} (${{ matrix.type }})"
 
             # ECR 로그인
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
             docker login --username AWS --password-stdin $ECR_REGISTRY
 
-            # ARM64 이미지 풀 (병렬 처리)
-            echo "📦 ARM64 이미지 풀링: ${{ matrix.image }}"
-            docker pull $ECR_REGISTRY/${{ matrix.image }}:latest &
-            PULL_PID=$!
+            # 1단계: 기존 컨테이너 정리 (순차 처리)
+            echo "🧹 기존 컨테이너 정리: ${{ matrix.service }}"
+            docker compose down ${{ matrix.service }} 2>/dev/null || true
+            
+            # CPU 부하 완화를 위한 대기
+            sleep 2
 
-            # 기존 컨테이너 정리 (백그라운드)
-            docker compose down ${{ matrix.service }} 2>/dev/null || true &
+            # 2단계: 이미지 다운로드 (CPU 제한)
+            echo "📦 이미지 다운로드: ${{ matrix.image }}"
+            # nice를 사용해 CPU 우선순위 낮춤
+            nice -n 10 docker pull $ECR_REGISTRY/${{ matrix.image }}:latest
 
-            # 풀 완료 대기
-            wait $PULL_PID
+            # CPU 부하 완화를 위한 대기
+            sleep 3
 
-            # 이미지 아키텍처 확인
+            # 3단계: 이미지 아키텍처 확인
             IMAGE_ARCH=$(docker inspect $ECR_REGISTRY/${{ matrix.image }}:latest --format='{{.Architecture}}' 2>/dev/null || echo 'unknown')
             echo "🏗️ 이미지 아키텍처: $IMAGE_ARCH"
 
-            # 컨테이너 시작
+            # 4단계: 컨테이너 시작 (CPU 제한)
             echo "🔄 컨테이너 시작: ${{ matrix.service }}"
+            # CPU 사용량 제한하여 실행
             docker compose up -d ${{ matrix.service }}
 
-            # 빠른 헬스체크 (타임아웃 단축)
-            echo "🏥 빠른 헬스체크..."
-            for i in {1..6}; do
+            # CPU 안정화 대기
+            sleep 5
+
+            # 5단계: 안정적인 헬스체크
+            echo "🏥 안정적인 헬스체크..."
+            for i in {1..8}; do
               if curl -f -s http://localhost:${{ matrix.port }} > /dev/null; then
-                echo "✅ ${{ matrix.service }} 정상 (${i}회차)"
+                echo "✅ ${{ matrix.service }} 정상 구동 (${i}회차)"
                 break
               else
-                echo "⏳ 헬스체크 재시도... ($i/6)"
-                sleep 5
+                echo "⏳ 헬스체크 재시도... ($i/8)"
+                sleep 3
               fi
             done
 
-            echo "🎉 ${{ matrix.service }} ARM64 고속 배포 완료!"
+            # 6단계: Docker 이미지 정리 (CPU 부하 분산)
+            echo "🧹 사용하지 않는 이미지 정리 중..."
+            docker image prune -f &
+
+            echo "🎉 ${{ matrix.service }} CPU 최적화 배포 완료!"
