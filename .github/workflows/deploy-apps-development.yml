@@ -21,7 +21,8 @@ env:
 
 jobs:
   build-apps:
-    runs-on: ubuntu-latest-8-cores  # 🚀 8코어 고성능 러너
+    #runs-on: ubuntu-latest-8-cores  # 🚀 8코어 고성능 러너
+    runs-on: ubuntu-latest-8  # 🚀 8코어 고성능 러너
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
