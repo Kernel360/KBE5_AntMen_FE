@@ -295,3 +295,5 @@ jobs:
             done
 
             echo "🎉 ${{ matrix.service }} ARM64 고속 배포 완료!"
+            
+            echo "🎉 push test"
