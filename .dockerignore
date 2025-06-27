@@ -1,4 +1,4 @@
-# 공통 .dockerignore (admin + apps 모두 사용)
+dockerignore# 공통 .dockerignore (admin + apps 모두 사용)
 
 # Node.js 관련
 node_modules/
@@ -80,6 +80,10 @@ cypress.json
 .git/
 .gitignore
 
+# 🆕 Multi-arch 빌드 관련 추가
+.buildx-cache/
+docker-compose.override.yml
+
 # README 등 문서 (선택적)
 # README.md
 # *.md
@@ -91,3 +95,7 @@ yarn.lock.bak
 # 사용하지 않는 에셋들
 public/mockups/
 public/dev-assets/
+
+# 🆕 Docker 개발 관련
+Dockerfile.dev
+docker-compose.dev.yml

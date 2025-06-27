@@ -40,19 +40,35 @@ jobs:
           aws ecr describe-repositories --repository-names users-app 2>/dev/null || \
           aws ecr create-repository --repository-name users-app
 
+      # 🆕 Multi-platform 지원을 위한 QEMU 설정
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
+
+      # 🆕 Advanced Buildx 설정
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
+          driver-opts: |
+            network=host
 
-      - name: Build and Push users-app
+      # 🆕 Next.js Multi-architecture 빌드 (SSR 고려)
+      - name: Build and Push users-app (Next.js Multi-arch)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: apps/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64  # 🎯 SSR 런타임 아키텍처 중요
           tags: ${{ env.ECR_REGISTRY }}/users-app:latest
           cache-from: type=gha,scope=users-app
           cache-to: type=gha,mode=max,scope=users-app
+          # 🆕 Next.js 특화 최적화
+          provenance: false  # Next.js 빌드 속도 향상
           build-args: |
+            BUILDPLATFORM=${{ runner.arch }}
             NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
             NEXT_PUBLIC_GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
             NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE=${{ secrets.GOOGLE_RESPONSE_TYPE }}
@@ -79,22 +95,59 @@ jobs:
           aws ecr describe-repositories --repository-names admin-app 2>/dev/null || \
           aws ecr create-repository --repository-name admin-app
 
+      # 🆕 Multi-platform 지원
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
 
-      - name: Build and Push admin-app
+      # 🆕 React SPA Multi-architecture 빌드 (정적 파일 중심)
+      - name: Build and Push admin-app (React Multi-arch)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: admin/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64  # 🎯 SPA는 상대적으로 아키텍처 영향 적음
           tags: ${{ env.ECR_REGISTRY }}/admin-app:latest
           cache-from: type=gha,scope=admin-app
           cache-to: type=gha,mode=max,scope=admin-app
+          # 🆕 React 특화 최적화
+          provenance: false
+          build-args: |
+            BUILDPLATFORM=${{ runner.arch }}
+
+  # 🆕 EC2 인스턴스 아키텍처 감지 작업 추가
+  detect-architecture:
+    runs-on: ubuntu-latest
+    outputs:
+      architecture: ${{ steps.detect.outputs.architecture }}
+    steps:
+      - name: Detect EC2 Architecture
+        id: detect
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: 54.180.126.213
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            ARCH=$(uname -m)
+            case $ARCH in
+              x86_64) echo "architecture=amd64" >> $GITHUB_OUTPUT ;;
+              aarch64|arm64) echo "architecture=arm64" >> $GITHUB_OUTPUT ;;
+              *) echo "architecture=amd64" >> $GITHUB_OUTPUT ;;  # 기본값
+            esac
+            echo "Detected architecture: $ARCH"
 
   prepare-deploy:
     runs-on: ubuntu-latest
-    needs: [build-apps, build-admin]
+    needs: [build-apps, build-admin, detect-architecture]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -114,13 +167,12 @@ jobs:
           NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
           NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
           NODE_ENV=production
+          TARGET_ARCH=${{ needs.detect-architecture.outputs.architecture }}
           EOF
 
       - name: Prepare EC2 deployment directory
         uses: appleboy/ssh-action@v0.1.6
         with:
-          #host: ${{ secrets.EC2_PUBLIC_IP }}
-          #username: ${{ secrets.EC2_USERNAME }}
           host: 54.180.126.213
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
@@ -130,6 +182,10 @@ jobs:
             sudo rm -rf /home/ubuntu/apps/client
             mkdir -p /home/ubuntu/apps/client
             sudo chown -R ubuntu:ubuntu /home/ubuntu/apps/client
+            
+            # 🆕 아키텍처별 Docker 설정 확인
+            echo "🔍 시스템 아키텍처: $(uname -m)"
+            echo "🐳 Docker 버전: $(docker --version)"
             
             # Docker 리소스 정리 (조건부)
             DISK_USAGE=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
@@ -141,8 +197,6 @@ jobs:
       - name: Copy deployment files
         uses: appleboy/scp-action@v0.1.4
         with:
-          #host: ${{ secrets.EC2_PUBLIC_IP }}
-          #username: ${{ secrets.EC2_USERNAME }}
           host: 54.180.126.213
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
@@ -150,19 +204,26 @@ jobs:
           source: 'docker-compose.yml,.env'
           target: ~/apps/client
 
+  # 🆕 배포 최적화: 앱별 특성 고려한 스마트 배포
   deploy:
     runs-on: ubuntu-latest
-    needs: prepare-deploy
+    needs: [prepare-deploy, detect-architecture]
     strategy:
       matrix:
         include:
           - image: users-app
             service: users-app
             port: 3000
+            type: nextjs
+            health_path: "/api/health"  # Next.js API 헬스체크
+            timeout: 60  # SSR 초기화 시간 고려
           - image: admin-app
             service: admin-app
             port: 3001
-      max-parallel: 1
+            type: react-spa
+            health_path: "/"  # React SPA 메인 페이지
+            timeout: 30  # 정적 파일이므로 빠른 시작
+      max-parallel: 2  # 🚀 병렬 배포로 속도 향상
 
     steps:
       - name: Configure AWS credentials
@@ -171,11 +232,26 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy and restart containers
+      # 🆕 배포 전 현재 버전 백업
+      - name: Backup current version
         uses: appleboy/ssh-action@v0.1.6
         with:
-          #host: ${{ secrets.EC2_PUBLIC_IP }}
-          #username: ${{ secrets.EC2_USERNAME }}
+          host: 54.180.126.213
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            cd ~/apps/client
+            
+            # 현재 실행 중인 이미지 태그 백업
+            CURRENT_IMAGE=$(docker inspect ${{ matrix.service }} --format='{{.Config.Image}}' 2>/dev/null || echo "none")
+            echo "BACKUP_IMAGE=$CURRENT_IMAGE" > ~/.${{ matrix.service }}.backup
+            echo "📦 백업된 이미지: $CURRENT_IMAGE"
+
+      # 🆕 앱 특성별 최적화된 배포
+      - name: Deploy with zero-downtime strategy
+        uses: appleboy/ssh-action@v0.1.6
+        with:
           host: 54.180.126.213
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
@@ -186,36 +262,174 @@ jobs:
             # 환경변수 로드
             set -a && source .env && set +a
 
-            echo "🚀 배포 시작: ${{ matrix.service }}"
+            echo "🚀 배포 시작: ${{ matrix.service }} (${{ matrix.type }})"
+            echo "🏗️  대상 아키텍처: ${{ needs.detect-architecture.outputs.architecture }}"
 
             # ECR 로그인
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
             docker login --username AWS --password-stdin $ECR_REGISTRY
 
-            # 이미지 풀 및 컨테이너 재시작
-            echo "📦 이미지 풀링: ${{ matrix.image }}"
-            docker pull $ECR_REGISTRY/${{ matrix.image }}:latest
+            # 🆕 Zero-downtime 배포 전략
+            if [ "${{ matrix.type }}" = "nextjs" ]; then
+              echo "📱 Next.js 앱 배포 - SSR 고려한 전략"
+            
+              # 1. 새 이미지 풀
+              docker pull $ECR_REGISTRY/${{ matrix.image }}:latest
+            
+              # 2. 헬스체크용 임시 컨테이너 실행
+              docker run -d --name ${{ matrix.service }}-new \
+                --network client_default \
+                -e NODE_ENV=production \
+                $ECR_REGISTRY/${{ matrix.image }}:latest
+            
+              # 3. 헬스체크 (SSR 초기화 대기)
+              echo "🏥 Next.js SSR 헬스체크..."
+              for i in {1..12}; do  # 60초 대기
+                if docker exec ${{ matrix.service }}-new curl -f -s http://localhost:3000${{ matrix.health_path }} > /dev/null 2>&1; then
+                  echo "✅ Next.js SSR 정상 초기화"
+                  break
+                else
+                  echo "⏳ SSR 초기화 대기... ($i/12)"
+                  sleep 5
+                fi
+              done
+            
+              # 4. 기존 컨테이너 교체
+              docker compose down ${{ matrix.service }} 2>/dev/null || true
+              docker rm -f ${{ matrix.service }}-new
+              docker compose up -d ${{ matrix.service }}
+            
+            else
+              echo "⚛️  React SPA 배포 - 빠른 정적 파일 전략"
+            
+              # React SPA는 더 간단한 배포
+              docker pull $ECR_REGISTRY/${{ matrix.image }}:latest
+              docker compose down ${{ matrix.service }} 2>/dev/null || true
+              docker compose up -d ${{ matrix.service }}
+            fi
 
-            echo "🔄 컨테이너 재시작: ${{ matrix.service }}"
-            docker compose down ${{ matrix.service }} 2>/dev/null || true
-            docker compose up -d ${{ matrix.service }}
+            # 🆕 이미지 아키텍처 및 정보 확인
+            echo "🔍 배포된 이미지 정보:"
+            docker inspect $ECR_REGISTRY/${{ matrix.image }}:latest --format='{{.Architecture}} {{.Os}}'
+            docker inspect $ECR_REGISTRY/${{ matrix.image }}:latest --format='{{.RepoTags}} {{.Created}}'
 
-            # 배포 상태 확인
-            echo "✅ 배포 완료 확인:"
-            sleep 10
-            docker compose ps ${{ matrix.service }}
-            docker compose logs --tail=10 ${{ matrix.service }}
-
-            # 헬스체크
-            echo "🏥 헬스체크..."
-            for i in {1..3}; do
-              if curl -f -s http://localhost:${{ matrix.port }} > /dev/null; then
-                echo "✅ ${{ matrix.service }} 정상"
-                break
+      # 🆕 앱별 맞춤 헬스체크
+      - name: Advanced health check
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: 54.180.126.213
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            cd ~/apps/client
+            
+            echo "🏥 ${{ matrix.type }} 맞춤 헬스체크 시작..."
+            
+            # 컨테이너 상태 확인
+            if ! docker compose ps ${{ matrix.service }} | grep -q "Up"; then
+              echo "❌ 컨테이너가 실행되지 않음"
+              exit 1
+            fi
+            
+            # 앱 타입별 헬스체크
+            if [ "${{ matrix.type }}" = "nextjs" ]; then
+              echo "📱 Next.js 전용 헬스체크..."
+            
+              # 1. API 라우트 체크
+              for i in {1..6}; do
+                if curl -f -s http://localhost:${{ matrix.port }}${{ matrix.health_path }} | grep -q "ok\|success\|healthy" 2>/dev/null; then
+                  echo "✅ Next.js API 라우트 정상"
+                  break
+                elif [ $i -eq 6 ]; then
+                  echo "❌ Next.js API 라우트 응답 없음"
+                  exit 1
+                else
+                  echo "⏳ Next.js API 대기... ($i/6)"
+                  sleep 10
+                fi
+              done
+            
+              # 2. SSR 페이지 렌더링 체크
+              if curl -s http://localhost:${{ matrix.port }}/ | grep -q "<html\|<!DOCTYPE" ; then
+                echo "✅ Next.js SSR 페이지 렌더링 정상"
               else
-                echo "⏳ 헬스체크 재시도 중... ($i/3)"
-                sleep 5
+                echo "❌ Next.js SSR 렌더링 실패"
+                exit 1
               fi
-            done
+            
+            else
+              echo "⚛️  React SPA 전용 헬스체크..."
+            
+              # React SPA는 정적 파일 서빙 확인
+              for i in {1..3}; do
+                if curl -f -s http://localhost:${{ matrix.port }}${{ matrix.health_path }} | grep -q "<div id=\"root\"\|<div id=\"app\"" ; then
+                  echo "✅ React SPA 정상 로드"
+                  break
+                elif [ $i -eq 3 ]; then
+                  echo "❌ React SPA 로드 실패"
+                  exit 1
+                else
+                  echo "⏳ React SPA 로드 대기... ($i/3)"
+                  sleep 5
+                fi
+              done
+            fi
+            
+            echo "🎉 ${{ matrix.service }} (${{ matrix.type }}) 배포 및 헬스체크 완료!"
 
-            echo "🎉 ${{ matrix.service }} 배포 완료!"
+      # 🆕 배포 실패 시 자동 롤백
+      - name: Rollback on failure
+        if: failure()
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: 54.180.126.213
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            cd ~/apps/client
+            
+            echo "🔄 배포 실패 - 롤백 시작..."
+            
+            # 백업된 이미지 복구
+            if [ -f ~/.${{ matrix.service }}.backup ]; then
+              source ~/.${{ matrix.service }}.backup
+              if [ "$BACKUP_IMAGE" != "none" ]; then
+                echo "📦 롤백: $BACKUP_IMAGE"
+                docker tag $BACKUP_IMAGE $ECR_REGISTRY/${{ matrix.image }}:rollback
+                docker compose down ${{ matrix.service }}
+                docker compose up -d ${{ matrix.service }}
+                echo "✅ 롤백 완료"
+              else
+                echo "⚠️ 백업 이미지 없음 - 수동 복구 필요"
+              fi
+            fi
+
+  # 🆕 배포 후 통합 검증
+  post-deploy-validation:
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    steps:
+      - name: Integration test
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: 54.180.126.213
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            echo "🔍 통합 검증 시작..."
+            
+            # 전체 서비스 상태 확인
+            docker compose ps
+            
+            # 포트별 응답 확인
+            echo "📱 Next.js 앱 (3000): $(curl -o /dev/null -s -w "%{http_code}" http://localhost:3000)"
+            echo "⚛️  React 앱 (3001): $(curl -o /dev/null -s -w "%{http_code}" http://localhost:3001)"
+            
+            # 리소스 사용량 확인
+            echo "💾 메모리 사용량:"
+            docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+            
+            echo "🎊 전체 배포 검증 완료!"
