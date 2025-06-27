@@ -1,3 +1,4 @@
+# 🎯 최적화된 CI/CD (캐시 병목 해결)
 name: 'CI/CD: Build & Deploy to EC2 (ULTRA FAST - 1min Target)'
 
 on:
@@ -40,14 +41,13 @@ jobs:
           aws ecr describe-repositories --repository-names users-app 2>/dev/null || \
           aws ecr create-repository --repository-name users-app
 
-      # 🚀 고성능 QEMU 설정 (최신 버전)
+      # 🚀 고성능 QEMU 설정
       - name: Set up QEMU (Ultra Fast)
         uses: docker/setup-qemu-action@v3
         with:
           platforms: linux/arm64
-          image: tonistiigi/binfmt:qemu-v8.1.5
 
-      # 🚀 고성능 Buildx 설정 (병렬 처리 최대화)
+      # 🚀 고성능 Buildx 설정
       - name: Set up Docker Buildx (Performance Mode)
         uses: docker/setup-buildx-action@v3
         with:
@@ -55,13 +55,11 @@ jobs:
             network=host
           config-inline: |
             [worker.oci]
-              max-parallelism = 8
+              max-parallelism = 4
             [worker.containerd] 
-              max-parallelism = 8
-            [registry."docker.io"]
-              mirrors = ["mirror.gcr.io"]
+              max-parallelism = 4
 
-      # 🎯 멀티 레벨 캐시 + 인라인 캐시
+      # 🎯 경량 캐시 전략 (병목 해결)
       - name: Build and Push users-app (Ultra Fast)
         uses: docker/build-push-action@v5
         with:
@@ -70,15 +68,11 @@ jobs:
           push: true
           platforms: linux/arm64
           tags: ${{ env.ECR_REGISTRY }}/users-app:latest
-          # 🚀 멀티 레벨 캐시 전략
+          # 🚀 경량 캐시 전략 (속도 우선)
           cache-from: |
-            type=gha,scope=users-app-arm64
-            type=gha,scope=users-app-deps
-            type=registry,ref=${{ env.ECR_REGISTRY }}/users-app:cache
+            type=gha,scope=users-app
           cache-to: |
-            type=gha,mode=max,scope=users-app-arm64
-            type=gha,mode=max,scope=users-app-deps
-            type=registry,ref=${{ env.ECR_REGISTRY }}/users-app:cache,mode=max
+            type=gha,mode=min,scope=users-app
           # 🎯 빌드 속도 최적화
           build-args: |
             BUILDKIT_INLINE_CACHE=1
@@ -119,7 +113,6 @@ jobs:
         uses: docker/setup-qemu-action@v3
         with:
           platforms: linux/arm64
-          image: tonistiigi/binfmt:qemu-v8.1.5
 
       # 🚀 고성능 Buildx 설정
       - name: Set up Docker Buildx (Performance Mode)
@@ -129,11 +122,11 @@ jobs:
             network=host
           config-inline: |
             [worker.oci]
-              max-parallelism = 8
+              max-parallelism = 4
             [worker.containerd]
-              max-parallelism = 8
+              max-parallelism = 4
 
-      # 🎯 멀티 레벨 캐시 (Admin 전용)
+      # 🎯 경량 캐시 전략 (Admin 전용)
       - name: Build and Push admin-app (Ultra Fast)
         uses: docker/build-push-action@v5
         with:
@@ -142,15 +135,11 @@ jobs:
           push: true
           platforms: linux/arm64
           tags: ${{ env.ECR_REGISTRY }}/admin-app:latest
-          # 🚀 멀티 레벨 캐시 전략
+          # 🚀 경량 캐시 전략 (병목 해결)
           cache-from: |
-            type=gha,scope=admin-app-arm64
-            type=gha,scope=admin-app-deps
-            type=registry,ref=${{ env.ECR_REGISTRY }}/admin-app:cache
+            type=gha,scope=admin-app
           cache-to: |
-            type=gha,mode=max,scope=admin-app-arm64
-            type=gha,mode=max,scope=admin-app-deps
-            type=registry,ref=${{ env.ECR_REGISTRY }}/admin-app:cache,mode=max
+            type=gha,mode=min,scope=admin-app
           # 🎯 빌드 속도 최적화
           build-args: |
             BUILDKIT_INLINE_CACHE=1
@@ -295,5 +284,3 @@ jobs:
             done
 
             echo "🎉 ${{ matrix.service }} ARM64 고속 배포 완료!"
-            
-            echo "🎉 push test"
