@@ -13,6 +13,7 @@ interface TimeSelectorProps {
   calculateEndTime: (startTime: string, duration: number) => string;
   recommendedTime: RecommendedTime | null;
   showTimeWarning: boolean;
+  isRecommendedTimeLoading?: boolean;
 }
 
 export const TimeSelector = ({
@@ -25,6 +26,7 @@ export const TimeSelector = ({
   calculateEndTime,
   recommendedTime,
   showTimeWarning,
+  isRecommendedTimeLoading = false,
 }: TimeSelectorProps) => {
   return (
     <div className="mb-8">
@@ -33,10 +35,17 @@ export const TimeSelector = ({
         <div>
           <div className="flex items-center gap-2 mb-1.5 pl-2">
             <p className="text-sm text-[#666666]">서비스 시간</p>
-            {recommendedTime && (
+            {isRecommendedTimeLoading && (
+              <div className="flex items-center">
+                <span className="text-xs text-gray-400 font-medium">
+                  추천 시간 로딩 중...
+                </span>
+              </div>
+            )}
+            {!isRecommendedTimeLoading && recommendedTime && (
               <div className="flex items-center">
                 <span className="text-xs text-primary-500 font-medium">
-                  알고리즘 기반 &middot; {Math.floor(recommendedTime.area)}평 {Math.floor(recommendedTime.minutes / 60)}시간 추천
+                  알고리즘 기반 &middot; {recommendedTime.area}평 {recommendedTime.time}시간 추천
                 </span>
               </div>
             )}
@@ -44,7 +53,7 @@ export const TimeSelector = ({
           {showTimeWarning && recommendedTime && (
             <div className="mb-2 pl-2">
               <p className="text-xs text-[#FF4444]">
-                {Math.floor(recommendedTime.area)}평 기준 {Math.ceil(recommendedTime.minutes / 60)}시간이 추천됩니다.
+                {recommendedTime.area}평 기준 {recommendedTime.time}시간이 추천됩니다.
               </p>
             </div>
           )}

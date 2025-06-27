@@ -239,7 +239,7 @@ const AddressPageUI = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                평수
+                평수 (숫자만 입력해주세요)
               </label>
               <input
                 type="number"

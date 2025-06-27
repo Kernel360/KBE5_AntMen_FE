@@ -181,7 +181,6 @@ export const ManagerReservationsClient = ({
   }
 
   const handleCheckIn = async (id: string) => {
-    console.log('Check-in for reservation:', id)
     const rawToken =
       document.cookie
         .split('; ')
@@ -217,7 +216,6 @@ export const ManagerReservationsClient = ({
   }
 
   const handleCheckOut = (id: string) => {
-    console.log('Check-out for reservation:', id)
     setCheckoutModal({
       isOpen: true,
       reservationId: Number(id),
@@ -297,8 +295,6 @@ export const ManagerReservationsClient = ({
   }
 
   const handleCancel = (id: string) => {
-    // 매니저의 경우 예약 취소가 아닌 업무 포기/변경 요청
-    console.log('업무 포기/변경 요청:', id)
     // TODO: 매니저용 취소/변경 로직 구현
   }
 

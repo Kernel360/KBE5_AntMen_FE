@@ -1,33 +1,13 @@
 'use client'
-import { Suspense } from 'react'
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import type { ReservationHistory } from '@/entities/reservation/model/types'
 import { ReservationDetailPageClient } from '@/app/(user)/(standalone)/myreservation/[reservationid]/ReservationDetailPageClient'
-import { notFound } from 'next/navigation'
 import { customFetch } from '@/shared/api/base'
 
 interface PageProps {
   params: {
     reservationid: string
-  }
-}
-
-// --- 데이터 페칭 함수 ---
-async function getReservationDetail(id: string): Promise<ReservationHistory | null> {
-  try {
-    console.log('ReservationDetailPage: params.reservationid =', id) // 실제 전달 값 확인
-    // 실제 백엔드 API 주소로 변경
-    const res = await customFetch(
-      `https://api.antmen.site:9091/api/v1/customer/reservations/${id}/history`,
-      {
-        cache: 'no-store', // 항상 최신 데이터를 가져옴
-      },
-    )
-
-    return res as ReservationHistory
-  } catch (error) {
-    console.error('Failed to fetch reservation detail:', error)
-    // 에러 발생 시에도 null 반환
-    return null
   }
 }
 
@@ -85,16 +65,52 @@ function PageSkeleton() {
   )
 }
 
-export default async function ReservationDetailPage({ params }: PageProps) {
-  const reservationDetail = await getReservationDetail(params.reservationid)
+export default function ReservationDetailPage() {
+  const params = useParams()
+  const reservationId = params?.reservationid as string
+  const [reservation, setReservation] = useState<ReservationHistory | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  if (!reservationDetail) {
-    notFound()
+  useEffect(() => {
+    const fetchReservation = async () => {
+      if (!reservationId) return
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await customFetch<ReservationHistory>(
+          `https://api.antmen.site:9091/api/v1/customer/reservations/${reservationId}/history`
+        )
+        setReservation(res)
+      } catch (error) {
+        console.error('Failed to fetch reservation detail:', error)
+        setError('예약 정보를 불러오지 못했습니다.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchReservation()
+  }, [reservationId])
+
+  if (loading) {
+    return <PageSkeleton />
   }
 
-  return (
-    <Suspense fallback={<PageSkeleton />}>
-      <ReservationDetailPageClient initialReservation={reservationDetail} />
-    </Suspense>
-  )
+  if (error || !reservation) {
+    return (
+      <div className="flex flex-col min-h-screen bg-gray-50">
+        <div className="flex-grow flex items-center justify-center pt-24">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gray-200 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">😕</span>
+            </div>
+            <h3 className="text-lg font-bold text-gray-700 mb-1">예약 정보를 찾을 수 없어요</h3>
+            <p className="text-sm text-gray-500">잠시 후 다시 시도해주세요</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return <ReservationDetailPageClient initialReservation={reservation} />
 } 

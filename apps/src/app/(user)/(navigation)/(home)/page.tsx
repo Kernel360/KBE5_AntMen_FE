@@ -16,7 +16,6 @@ export default function Home() {
     const clearReservationData = async () => {
       try {
         await ReservationStorage.clearPendingReservation()
-        console.log('🏠 홈 페이지 접근 시 예약 정보 정리 완료')
       } catch (error) {
         console.error('홈 페이지에서 예약 정보 정리 실패:', error)
       }

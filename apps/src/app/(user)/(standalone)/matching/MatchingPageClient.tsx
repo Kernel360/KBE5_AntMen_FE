@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { MatchingHeader, ManagerList, BottomSection } from '@/widgets/manager'
 import { useManagerSelection } from '@/features/manager-selection'
-import { ReservationStorage } from '@/shared/lib/reservationStorage'
 import type { Manager } from '@/widgets/manager/model/manager'
 
 // 매니저 매칭 알고리즘 함수 (추후 확장 가능)
@@ -25,13 +24,11 @@ export default function MatchingPageClient() {
         // 세션에서 예약 정보 가져오기 (탭별로 분리)
         const reservationInfoStr = sessionStorage.getItem('currentReservation')
         if (!reservationInfoStr) {
-          console.log('저장된 예약 정보가 없습니다.')
           setIsLoading(false)
           return
         }
 
         const reservationInfo = JSON.parse(reservationInfoStr)
-        console.log('클라이언트에서 읽은 예약 정보:', reservationInfo)
 
         // 매니저 목록 가져오기
         const response = await fetch(
@@ -58,7 +55,6 @@ export default function MatchingPageClient() {
         }
 
         const data = await response.json()
-        console.log('서버에서 받은 매니저 데이터:', data)
 
         // 데이터 구조 변환
         const formattedManagers: Manager[] = Array.isArray(data)
@@ -83,8 +79,6 @@ export default function MatchingPageClient() {
               reviews: [],
             }))
           : []
-
-        console.log('변환된 매니저 데이터:', formattedManagers)
 
         // 매니저 데이터를 예약 정보에 추가하여 세션에 저장
         const updatedReservationInfo = {

@@ -16,8 +16,6 @@ export const requestPayment = async (paymentData: PaymentRequestDto, token: stri
       throw new Error('결제 수단(payMethod)은 필수입니다.');
     }
 
-    console.log('Payment Request Data:', paymentData);
-
     const response = await fetch(`${PAYMENT_API_URL}/request`, {
       method: 'POST',
       headers: {
@@ -42,7 +40,6 @@ export const requestPayment = async (paymentData: PaymentRequestDto, token: stri
     }
 
     const result = await response.json();
-    console.log('Payment Request Success:', result);
     return result;
   } catch (error) {
     console.error('Payment request error:', error);
@@ -70,7 +67,6 @@ export const getPaymentInfo = async (paymentId: number, token: string): Promise<
     }
 
     const result = await response.json();
-    console.log('Get Payment Info Success:', result);
     return result;
   } catch (error) {
     console.error('Get payment info error:', error);
