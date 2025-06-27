@@ -22,8 +22,11 @@ RUN mkdir -p apps packages/ui && \
 
 # 🔧 4. packages/ui 처리 (존재하면 복사, 없으면 더미 생성)
 RUN mkdir -p packages/ui
-COPY packages/ui/package.json ./packages/ui/package.json 2>/dev/null || true
-RUN if [ ! -f ./packages/ui/package.json ]; then \
+
+# packages/ui/package.json 조건부 복사
+RUN if [ -f packages/ui/package.json ]; then \
+        cp packages/ui/package.json ./packages/ui/package.json; \
+    else \
         echo '{"name": "@antmen/ui", "version": "0.0.0", "main": "index.js"}' > ./packages/ui/package.json && \
         echo 'module.exports = {};' > ./packages/ui/index.js; \
     fi
@@ -40,7 +43,10 @@ RUN yarn config set network-concurrency 16 && \
     yarn install --frozen-lockfile
 
 # 🔧 5. 소스 코드 복사 (packages/ui가 있다면)
-COPY packages/ui/ ./packages/ui/ 2>/dev/null || true
+RUN if [ -d packages/ui ] && [ "$(ls -A packages/ui)" ]; then \
+        cp -r packages/ui/* ./packages/ui/ 2>/dev/null || true; \
+    fi
+
 COPY admin/ ./admin/
 
 # 🚀 빠른 빌드 (소스맵 비활성화, 병렬 처리)
