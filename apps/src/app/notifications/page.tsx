@@ -27,47 +27,38 @@ export default function NotificationsPage() {
     fetchNotifications()
   }, [])
 
-  if (isLoading) {
-    return (
-      <main className="min-h-screen bg-white flex flex-col">
-        <CommonHeader title="알림" showBackButton />
-        <div className="flex-1 pt-[64px] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-        </div>
-      </main>
-    )
-  }
-
-  if (error) {
-    return (
-      <main className="min-h-screen bg-white flex flex-col">
-        <CommonHeader title="알림" showBackButton />
-        <div className="flex-1 pt-[64px] flex items-center justify-center text-red-500">
-          {error}
-        </div>
-      </main>
-    )
-  }
-
   return (
-    <main className="min-h-screen bg-white flex flex-col">
+    <main className="flex min-h-screen flex-col bg-white">
       <CommonHeader title="알림" showBackButton />
-      <div className="flex-1 pt-[64px]">
-        <NotificationList 
-          notifications={notifications}
-          onRead={async (id) => {
-            try {
-              await alertApi.markAsRead(id)
-              setNotifications(prev =>
-                prev.map(n =>
-                  n.id === id ? { ...n, isRead: true } : n
-                )
-              )
-            } catch (error) {
-              console.error('Failed to mark notification as read:', error)
-            }
-          }}
-        />
+      
+      <div className="flex-1 flex flex-col">
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        ) : error ? (
+          <div className="flex-1 flex items-center justify-center text-red-500">
+            {error}
+          </div>
+        ) : (
+          <div className="flex-1">
+            <NotificationList 
+              notifications={notifications}
+              onRead={async (id) => {
+                try {
+                  await alertApi.markAsRead(id)
+                  setNotifications(prev =>
+                    prev.map(n =>
+                      n.id === id ? { ...n, isRead: true } : n
+                    )
+                  )
+                } catch (error) {
+                  console.error('Failed to mark notification as read:', error)
+                }
+              }}
+            />
+          </div>
+        )}
       </div>
     </main>
   )

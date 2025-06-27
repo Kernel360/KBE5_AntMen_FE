@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { NotificationCard } from './ui/NotificationCard';
 import type { Notification } from '@/entities/notification';
+import { alertApi } from '@/shared/api/alert';
 
 interface NotificationListProps {
   notifications: Notification[]
@@ -17,19 +18,48 @@ export function NotificationList({
   // 읽지 않은 알림 개수
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  // 읽음 처리 등 이벤트 핸들러 필요시 여기에 추가
+  // 전체 읽음 처리 핸들러
+  const handleMarkAllAsRead = async () => {
+    try {
+      await alertApi.markAllAsRead();
+      setNotifications(prev =>
+        prev.map(notification => ({
+          ...notification,
+          isRead: true
+        }))
+      );
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
+  };
 
   return (
-    <div className="flex-1">
-      {/* 상위에서 unreadCount로 빨간 점+숫자 표시 가능 */}
+    <div className="flex-1 pt-[64px]">
       {notifications.length > 0 ? (
-        notifications.map((notification) => (
-          <NotificationCard
-            key={notification.id}
-            notification={notification}
-            onRead={onRead}
-          />
-        ))
+        <div>
+          <div className="sticky top-[64px] z-10 bg-white flex justify-between items-center p-4 border-b border-gray-100">
+            <h2 className="text-lg font-bold">
+              알림 {unreadCount > 0 && `(${unreadCount})`}
+            </h2>
+            {unreadCount > 0 && (
+              <button
+                onClick={handleMarkAllAsRead}
+                className="text-sm text-blue-500 hover:text-blue-700"
+              >
+                모두 읽음
+              </button>
+            )}
+          </div>
+          <div>
+            {notifications.map((notification) => (
+              <NotificationCard
+                key={notification.id}
+                notification={notification}
+                onRead={onRead}
+              />
+            ))}
+          </div>
+        </div>
       ) : (
         <div className="flex h-[400px] flex-col items-center justify-center gap-6 p-6">
           <div className="relative h-[80px] w-[80px]">
