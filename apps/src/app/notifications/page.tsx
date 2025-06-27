@@ -5,6 +5,7 @@ import { NotificationList } from '@/features/notification/NotificationList'
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 import { alertApi } from '@/shared/api/alert'
 import type { Notification } from '@/entities/notification'
+import { transformNotifications } from '@/entities/notification/lib/transform'
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -15,7 +16,8 @@ export default function NotificationsPage() {
     const fetchNotifications = async () => {
       try {
         const data = await alertApi.getAlerts()
-        setNotifications(data)
+        console.log('Fetched notifications:', data) // 디버깅용
+        setNotifications(transformNotifications(data))
       } catch (error) {
         console.error('Failed to fetch notifications:', error)
         setError('알림을 불러오는데 실패했습니다.')

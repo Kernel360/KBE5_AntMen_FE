@@ -1,6 +1,6 @@
 import { customFetch } from './base'
 
-const API_URL = 'http://localhost:9090/api/v1'
+const BASE_URL = 'http://localhost:9090/api/v1/common/alerts'
 
 export interface Alert {
   alertId: number
@@ -23,23 +23,22 @@ const transformToNotification = (alert: Alert) => ({
 
 export const alertApi = {
   // 알림 목록 조회
-  getAlerts: async () => {
-    const alerts = await customFetch<Alert[]>(`${API_URL}/common/alerts`)
-    return alerts.map(transformToNotification)
-  },
+  getAlerts: () => 
+    customFetch<Alert[]>(`${BASE_URL}`),
 
-  // 단일 알림 읽음 처리
-  markAsRead: async (alertId: string) => {
-    await customFetch<void>(`${API_URL}/common/alerts/${alertId}/read`, {
-      method: 'PATCH'
-    })
-  },
+  // 단일 알림 조회
+  getAlert: (alertId: string) =>
+    customFetch<Alert>(`${BASE_URL}/${alertId}`),
 
-  // 전체 알림 읽음 처리
-  markAllAsRead: async () => {
-    const alerts = await customFetch<Alert[]>(`${API_URL}/common/alerts`, {
-      method: 'PATCH'
-    })
-    return alerts.map(transformToNotification)
-  }
+  // 알림 읽음 처리
+  markAsRead: (alertId: string) =>
+    customFetch(`${BASE_URL}/${alertId}/read`, {
+      method: 'PATCH',
+    }),
+
+  // 모든 알림 읽음 처리
+  markAllAsRead: () =>
+    customFetch(`${BASE_URL}`, {
+      method: 'PATCH',
+    }),
 } 

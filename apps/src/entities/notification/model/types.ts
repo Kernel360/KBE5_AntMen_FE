@@ -1,11 +1,9 @@
 export interface Notification {
   id: string;
-  title: string;
-  message: string;
-  type: NotificationType;
+  content: string;
+  redirectUrl: string | null;
   isRead: boolean;
   createdAt: string;
-  relatedId?: string; // 예약 ID, 이벤트 ID 등
 }
 
 export type NotificationType = 
@@ -18,4 +16,13 @@ export type NotificationType =
 export interface NotificationCounts {
   total: number;
   unread: number;
+}
+
+// API 응답 타입 (Alert 타입과 동일)
+export interface NotificationResponse {
+  alertId: number;
+  alertContent: string;
+  redirectUrl: string;
+  createdAt: string;
+  read: boolean;
 } 
