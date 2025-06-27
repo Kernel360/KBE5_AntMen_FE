@@ -21,8 +21,7 @@ env:
 
 jobs:
   build-apps:
-    #runs-on: ubuntu-latest-8-cores  # 🚀 8코어 고성능 러너
-    runs-on: ubuntu-latest-8  # 🚀 8코어 고성능 러너
+    runs-on: ubuntu-latest-4-cores  # 🚀 8코어 고성능 러너
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -96,7 +95,7 @@ jobs:
           outputs: type=registry
 
   build-admin:
-    runs-on: ubuntu-latest-8-cores  # 🚀 8코어 고성능 러너
+    runs-on: ubuntu-latest-4-cores  # 🚀 8코어 고성능 러너
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -296,4 +295,3 @@ jobs:
             done
 
             echo "🎉 ${{ matrix.service }} ARM64 고속 배포 완료!"
-            echo "배포 테스트 1"
