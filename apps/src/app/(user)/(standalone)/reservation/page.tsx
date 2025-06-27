@@ -123,7 +123,8 @@ function ReservationPage() {
             key={category.categoryId}
             categoryId={category.categoryId}
             title={category.categoryName}
-            description={[`시간당 ${category.categoryPrice.toLocaleString()}원 (기본 ${category.categoryTime}시간)`]}
+            description={[`기본 ${category.categoryPrice.toLocaleString()}원 (2시간)`,
+              `• 추가시간당 20,000원`]}
             className="h-auto"
           />
         ))}
