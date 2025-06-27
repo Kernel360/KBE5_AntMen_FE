@@ -137,4 +137,34 @@ export const getReservationComment = async (
       },
     },
   )
+}
+
+export const getRecommendDuration = async (
+  addressId: number,
+  token?: string,
+): Promise<number> => {
+  try {
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers.Authorization = token;
+    }
+
+    const data = await customFetch<number>(
+      `https://api.antmen.site:9091/recommend-duration?address_id=${addressId}`,
+      {
+        headers,
+        cache: 'no-store',
+      }
+    );
+    return data;
+  } catch (error: any) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(
+      '추천 기간을 가져오는데 실패했습니다',
+      500,
+      'Internal Server Error'
+    );
+  }
 } 

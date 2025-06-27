@@ -38,9 +38,6 @@ export default function ManagerDetailPage() {
         
         const data = await response.json()
 
-        // 콘솔에 찍는 코드: API에서 받아온 원본 데이터
-        console.log('API 응답 데이터:', data) // 콘솔에 찍는 코드
-
         // 목업 characteristics 추가
         const mockCharacteristics = [
           { id: '1', label: '친절해요', type: 'kind' },
@@ -57,10 +54,6 @@ export default function ManagerDetailPage() {
           introduction: data.introduction || '안녕하세요! 성실하고 친절한 매니저입니다.',
           reviews: data.reviews || [],
         }
-
-        // 콘솔에 찍는 코드: setManager에 들어가는 최종 값
-        console.log('setManager에 들어가는 값:', managerWithMock) // 콘솔에 찍는 코드
-
         setManager(managerWithMock)
         setIsLoading(false)
       } catch (error) {
