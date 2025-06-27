@@ -1,93 +1,161 @@
-# 공통 .dockerignore (admin + apps 모두 사용)
+# .dockerignore - 1분 이내 빌드 최적화
+# 🚀 ULTRA FAST VERSION - 불필요한 파일 완전 제거
 
-# Node.js 관련
+# Node.js 관련 (용량 큰 폴더들)
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
-# 빌드 결과물
-# Next.js 관련
+# 빌드 결과물 (재빌드되므로 제외)
 .next/
 out/
-# React 관련
 build/
 dist/
+.cache/
+.parcel-cache/
+.turbo/
 
-# 환경 설정 (보안)
+# 환경 설정 (보안상 제외)
 .env*
 !.env.example
 
-# 테스트 관련
+# 테스트 관련 (빌드에 불필요)
 coverage/
 __tests__/
 *.test.*
 *.spec.*
 .nyc_output/
+jest.config.*
+cypress/
+cypress.json
+e2e/
+playwright.config.*
 
-# TypeScript 관련
+# TypeScript 관련 (빌드 시 재생성)
 *.tsbuildinfo
 next-env.d.ts
 
-# 캐시 및 임시
-.cache/
-.parcel-cache/
-tmp/
-temp/
-
-# 로그 파일들
-*.log
-logs/
-
-# IDE 설정
+# 개발 도구 (용량 큰 설정들)
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# OS 파일들
+# OS 파일들 (불필요)
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 *.pem
 
-# 개발 도구 설정
-.eslintrc*
-.prettierrc*
-jest.config.*
-
-# 소스맵 (프로덕션 제외)
-**/*.map
-
-# Vercel (Next.js)
-.vercel/
-
-# 백업 및 임시 파일들
-*.bak
-*.backup
-*.tmp
-*.temp
-
-# 개발 전용 폴더들
-docs/
-examples/
-stories/
-playground/
-scratch/
-
-# E2E 테스트 (Cypress 등)
-cypress/
-cypress.json
-
-# Git 관련
+# Git 관련 (불필요)
 .git/
 .gitignore
+.gitattributes
+.gitmodules
 
-# README 등 문서 (선택적)
-# README.md
-# *.md
+# 문서 및 설명 (빌드에 불필요)
+README.md
+CHANGELOG.md
+LICENSE
+*.md
+docs/
+documentation/
+
+# 개발 전용 설정들
+.eslintrc*
+.prettierrc*
+.stylelintrc*
+.editorconfig
+.nvmrc
+.node-version
 
 # 패키지 관리자 백업
 package-lock.json.bak
 yarn.lock.bak
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
 
-# 사용하지 않는 에셋들
-public/mockups/
-public/dev-assets/
+# 로그 및 임시 파일들
+*.log
+logs/
+tmp/
+temp/
+.tmp/
+
+# 소스맵 (프로덕션에서 제외)
+**/*.map
+
+# Storybook (개발 전용)
+.storybook/
+storybook-static/
+stories/
+
+# 예제 및 데모 (불필요)
+examples/
+demo/
+playground/
+scratch/
+
+# 모니터링 및 분석 (빌드에 불필요)
+.lighthouseci/
+.nyc_output/
+
+# 클라우드 설정 (불필요)
+.vercel/
+.netlify/
+.firebase/
+
+# 백업 파일들
+*.backup
+*.bak
+*.orig
+
+# IDE 특정 파일들
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+.idea/workspace.xml
+.idea/tasks.xml
+
+# 개발 서버 관련
+.next/
+.nuxt/
+.output/
+.nitro/
+
+# 패키지 관리자 특정 파일들
+.pnpm-store/
+.rush/
+
+# 기타 개발 도구들
+.husky/
+.commitlintrc*
+.renovaterc*
+.github/
+!.github/workflows/
+
+# 큰 미디어 파일들 (필요한 것만 public에)
+*.mov
+*.mp4
+*.avi
+*.mkv
+*.wmv
+*.flv
+
+# 개발 전용 이미지들
+mockups/
+wireframes/
+design-assets/
+
+# 벤더 폴더들
+vendor/
+third-party/
