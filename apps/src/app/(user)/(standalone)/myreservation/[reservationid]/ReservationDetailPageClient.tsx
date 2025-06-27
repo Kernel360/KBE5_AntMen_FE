@@ -128,8 +128,8 @@ const ReservationHeaderSection = ({ reservation }: { reservation: ReservationHis
       <div className="grid grid-cols-1 gap-3">
         <div className="bg-gray-100 rounded-xl p-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <CalendarIcon className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <CalendarIcon className="w-4 h-4 text-blue-600" />
             </div>
             <div>
               <p className="text-xs font-medium text-gray-600">예약일</p>
@@ -140,8 +140,8 @@ const ReservationHeaderSection = ({ reservation }: { reservation: ReservationHis
         
         <div className="bg-gray-100 rounded-xl p-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <ClockIcon className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <ClockIcon className="w-4 h-4 text-blue-600" />
             </div>
             <div>
               <p className="text-xs font-medium text-gray-600">예약 시간</p>
@@ -165,9 +165,9 @@ const ServiceDetailsSection = ({ reservation }: { reservation: ReservationHistor
         <h3 className="text-lg font-bold text-gray-900">서비스 상세 정보</h3>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-3">
         {/* 서비스 정보 통합 */}
-        <div className="bg-gray-50 rounded-xl p-4 space-y-4">
+        <div className="bg-gray-50 rounded-xl p-4 space-y-3">
           {/* 주소 정보 */}
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -193,17 +193,26 @@ const ServiceDetailsSection = ({ reservation }: { reservation: ReservationHistor
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                <HomeIcon className="w-4 h-4 text-orange-600" />
+
+          </div>
+        </div>
+        
+        {/* 수요자 메모 */}
+        {reservation.reservationMemo && (
+          <div className="bg-gray-50 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-600" />
               </div>
-              <div>
-                <p className="text-xs font-semibold text-gray-600">서비스 유형</p>
-                <p className="text-sm font-bold text-gray-900">정기 청소</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-gray-600 mb-2">고객 특이사항</p>
+                <p className="text-sm text-gray-900 leading-relaxed">
+                  {reservation.reservationMemo}
+                </p>
               </div>
             </div>
           </div>
-        </div>
+        )}
         
         {/* 선택 옵션 */}
         <div className="bg-blue-50 rounded-xl p-4">
@@ -333,7 +342,7 @@ const ManagerSection = ({ matchings }: { matchings?: any[] }) => {
           <UserIcon className="w-4 h-4 text-indigo-600" />
         </div>
         <h3 className="text-lg font-bold text-gray-900">
-          매칭 도우미 {hasMatchings && `(${matchings.length}명)`}
+          매칭 매니저 {hasMatchings && `(${matchings.length}명)`}
         </h3>
       </div>
       
@@ -650,8 +659,8 @@ export const ReservationDetailPageClient = ({
           <ServiceCompletionSection comment={reservationComment} />
         )}
         <ServiceDetailsSection reservation={reservation} />
-        <PaymentSection reservation={reservation} />
         <ManagerSection matchings={reservation.matchings} />
+        <PaymentSection reservation={reservation} />
       </main>
       
       {/* 매칭 대기중일 때: 수락/거절 버튼 */}
