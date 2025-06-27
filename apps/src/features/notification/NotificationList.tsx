@@ -3,7 +3,15 @@ import { useState } from 'react';
 import { NotificationCard } from './ui/NotificationCard';
 import type { Notification } from '@/entities/notification';
 
-export function NotificationList({ notifications: initialNotifications }: { notifications: Notification[] }) {
+interface NotificationListProps {
+  notifications: Notification[]
+  onRead?: (id: string) => Promise<void>
+}
+
+export function NotificationList({ 
+  notifications: initialNotifications,
+  onRead
+}: NotificationListProps) {
   const [notifications, setNotifications] = useState(initialNotifications);
 
   // 읽지 않은 알림 개수
@@ -19,6 +27,7 @@ export function NotificationList({ notifications: initialNotifications }: { noti
           <NotificationCard
             key={notification.id}
             notification={notification}
+            onRead={onRead}
           />
         ))
       ) : (
