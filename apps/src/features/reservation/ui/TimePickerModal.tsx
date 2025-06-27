@@ -98,11 +98,11 @@ export const TimePickerModal = ({
                   onClick={() => onTimeChange(false)}
                   className={`w-12 h-12 rounded-full flex items-center justify-center transition-all
                     ${
-                      selectedHours <= standardHours
+                      selectedHours <= 2
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white border-2 border-primary-500 text-primary-500 active:bg-white'
                     }`}
-                  disabled={selectedHours <= standardHours}
+                  disabled={selectedHours <= 2}
                 >
                   <svg 
                     width="16" 
@@ -124,7 +124,7 @@ export const TimePickerModal = ({
                     {selectedHours}시간
                   </p>
                   <p className="text-xs text-gray-500 mt-2">
-                    최소 {standardHours}시간, 
+                    최소 2시간, 
                     최대 {12}시간
                   </p>
                 </div>
@@ -160,7 +160,7 @@ export const TimePickerModal = ({
                 <div className="flex flex-col gap-2 mb-4">
                   <div className="flex justify-between items-center">
                     <p className="text-sm text-gray-600">
-                      기본 요금 ({standardHours}시간)
+                      기본 요금 (2시간)
                     </p>
                     <p className="text-base font-medium text-gray-800">
                       {basePrice.toLocaleString()}원
@@ -179,12 +179,7 @@ export const TimePickerModal = ({
                       총 서비스 시간
                     </span>
                     <span className="text-xl font-bold text-gray-800">
-                      {calculatePrice(
-                        selectedHours,
-                        basePrice,
-                        pricePerHour,
-                        standardHours,
-                      ).toLocaleString()}
+                      {(basePrice + Math.max(0, selectedHours - standardHours) * pricePerHour).toLocaleString()}
                       원
                     </span>
                   </div>
