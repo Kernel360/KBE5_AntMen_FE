@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Cookies from 'js-cookie'
 import { useSocialProfileStore } from '@/shared/stores/socialProfileStore'
 import { useAuthStore } from '@/shared/stores/authStore'
+import { useSecureAuth } from '@/shared/hooks/useSecureAuth'
 import { jwtDecode } from 'jwt-decode'
 
 interface JwtPayload {
@@ -87,7 +88,7 @@ export function LoginGateway() {
           }
 
           // 3. Zustand 스토어에 로그인 정보 저장
-          loginToStore(user, result.token)
+          await loginToStore(user, result.token)
 
           // 4. 쿠키에 토큰 저장 (7일 만료)
           Cookies.set('auth-token', formatTokenForServer(result.token), {

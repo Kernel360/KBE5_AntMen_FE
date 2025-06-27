@@ -68,7 +68,7 @@ export function SignUp() {
               }
             })}
             placeholder="아이디를 입력하세요"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0fbcd6] text-gray-700"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-700"
           />
           {errors.id && (
             <p className="text-red-500 text-sm mt-1">{errors.id.message}</p>
@@ -87,7 +87,7 @@ export function SignUp() {
               }
             })}
             placeholder="비밀번호를 입력하세요"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0fbcd6] text-gray-700"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-700"
           />
           {errors.password && (
             <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
@@ -103,7 +103,7 @@ export function SignUp() {
               validate: value => value === password || '비밀번호가 일치하지 않습니다'
             })}
             placeholder="비밀번호를 다시 입력하세요"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0fbcd6] text-gray-700"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-700"
           />
           {errors.passwordConfirm && (
             <p className="text-red-500 text-sm mt-1">{errors.passwordConfirm.message}</p>
@@ -122,7 +122,7 @@ export function SignUp() {
               }
             })}
             placeholder="전화번호를 입력하세요"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0fbcd6] text-gray-700"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-700"
           />
           {errors.phoneNumber && (
             <p className="text-red-500 text-sm mt-1">{errors.phoneNumber.message}</p>
@@ -141,7 +141,7 @@ export function SignUp() {
               }
             })}
             placeholder="이메일을 입력하세요"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0fbcd6] text-gray-700"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-700"
           />
           {errors.email && (
             <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
@@ -154,7 +154,7 @@ export function SignUp() {
             {...register('gender', {
               required: '성별을 선택해주세요'
             })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0fbcd6] text-gray-700"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-700"
           >
             <option value="">성별을 선택하세요</option>
             <option value="M">남성</option>
@@ -168,7 +168,7 @@ export function SignUp() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3 bg-[#0fbcd6] text-white rounded-lg hover:bg-[#0ca8c0] transition-colors disabled:opacity-50">
+          className="w-full py-3 bg-primary text-white rounded-lg hover:bg-[#0ca8c0] transition-colors disabled:opacity-50">
           가입하기
         </button>
       </form>
@@ -192,7 +192,7 @@ export function SignUp() {
 
         <div className="text-center text-gray-500">
           <span>이미 계정이 있으신가요? </span>
-          <Link href="/login" className="text-[#0fbcd6] hover:underline">
+          <Link href="/login" className="text-primary hover:underline">
             로그인
           </Link>
         </div>

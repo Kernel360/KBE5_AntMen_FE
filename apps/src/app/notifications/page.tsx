@@ -21,11 +21,11 @@ export default async function NotificationsPage() {
   const notifications = await fetchAlerts()
 
   return (
-    <>
-      <div className="flex items-center justify-between">
-        <CommonHeader title="알림" showBackButton />
+    <main className="min-h-screen bg-white flex flex-col">
+      <CommonHeader title="알림" showBackButton />
+      <div className="flex-1 pt-[64px]">
+        <NotificationList notifications={notifications} />
       </div>
-      <NotificationList notifications={notifications} />
-    </>
+    </main>
   )
 }

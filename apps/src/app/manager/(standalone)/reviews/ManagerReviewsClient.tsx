@@ -53,7 +53,8 @@ function ReviewStats({ reviews }: { reviews: { rating: number }[] }) {
 // 이름 마스킹 함수
 function maskName(name: string) {
   if (!name) return '';
-  return name[0] + '*'.repeat(name.length - 1);
+  if (name.length <= 2) return name;
+  return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
 }
 
 export default function ManagerReviewsClient() {
@@ -155,78 +156,86 @@ export default function ManagerReviewsClient() {
         showBackButton
       />
 
-      {/* Tab Navigation */}
-      <nav className="flex">
-        <button
-          onClick={() => setActiveTab('received')}
-          className={`flex-1 py-3 text-center text-sm font-semibold ${
-            activeTab === 'received'
-              ? 'border-b-2 border-slate-800 text-slate-800'
-              : 'text-slate-400'
-          }`}
-        >
-          받은 리뷰
-        </button>
-        <button
-          onClick={() => setActiveTab('written')}
-          className={`flex-1 py-3 text-center text-sm font-semibold ${
-            activeTab === 'written'
-              ? 'border-b-2 border-slate-800 text-slate-800'
-              : 'text-slate-400'
-          }`}
-        >
-          작성한 리뷰
-        </button>
-      </nav>
+      <div className="flex-1 flex flex-col pt-[64px]">
+        {/* Tab Navigation */}
+        <div className="sticky top-[64px] z-10 bg-white border-b border-gray-200">
+          <div className="grid grid-cols-2">
+            <button
+              onClick={() => setActiveTab('received')}
+              className={`relative py-3.5 text-sm font-medium transition-colors ${
+                activeTab === 'received' ? 'bg-primary/10' : ''
+              }`}
+            >
+              <span className={activeTab === 'received' ? 'text-primary' : 'text-gray-600'}>
+                받은 리뷰
+              </span>
+              {activeTab === 'received' && (
+                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('written')}
+              className={`relative py-3.5 text-sm font-medium transition-colors ${
+                activeTab === 'written' ? 'bg-primary/10' : ''
+              }`}
+            >
+              <span className={activeTab === 'written' ? 'text-primary' : 'text-gray-600'}>
+                작성한 리뷰
+              </span>
+              {activeTab === 'written' && (
+                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />
+              )}
+            </button>
+          </div>
+        </div>
 
-      {/* 리뷰 통계 (받은 리뷰 탭 전용) */}
-      {activeTab === 'received' && <ReviewStats reviews={receivedReviews} />}
+        {/* 리뷰 통계 (받은 리뷰 탭 전용) */}
+        {activeTab === 'received' && <ReviewStats reviews={receivedReviews} />}
 
-      {/* Content */}
-      <div className="p-5 space-y-4">
-        {loading ? (
-          <div className="text-center py-20 text-slate-400">로딩 중...</div>
-        ) : error ? (
-          <div className="text-center py-20 text-red-500">{error}</div>
-        ) : (
-          <>
-            {activeTab === 'received' && (
-              receivedReviews.length > 0
-                ? receivedReviews.map(review => (
-                    <ReviewCard
-                      key={review.id}
-                      review={{
-                        ...review,
-                        customerName: maskName(review.customerName),
-                      }}
-                      showProfileType="customer"
-                    />
-                  ))
-                : <EmptyState tab="received" />
-            )}
-            {activeTab === 'written' && (
-              writtenReviews.length > 0
-                ? writtenReviews.map(review => (
-                    <ReviewCard
-                      key={review.id}
-                      review={review}
-                      showProfileType="customer"
-                      serviceType={'serviceType' in review ? (review as any).serviceType : undefined}
-                      serviceDate={'serviceDate' in review ? (review as any).serviceDate : undefined}
-                      onEdit={id => {
-                        const r = writtenReviews.find(r => r.id === id);
-                        if (r) handleOpenEditModal(r);
-                      }}
-                      onDelete={id => {
-                        const r = writtenReviews.find(r => r.id === id);
-                        if (r) handleOpenDeleteModal(r);
-                      }}
-                    />
-                  ))
-                : <EmptyState tab="written" />
-            )}
-          </>
-        )}
+        {/* Content */}
+        <div className="p-5 space-y-4">
+          {loading ? (
+            <div className="text-center py-20 text-slate-400">로딩 중...</div>
+          ) : error ? (
+            <div className="text-center py-20 text-red-500">{error}</div>
+          ) : (
+            <>
+              {activeTab === 'received' && (
+                receivedReviews.length > 0
+                  ? receivedReviews.map(review => (
+                      <ReviewCard
+                        key={review.id}
+                        review={{
+                          ...review,
+                          customerName: maskName(review.customerName),
+                        }}
+                        showProfileType="customer"
+                      />
+                    ))
+                  : <EmptyState tab="received" />
+              )}
+              {activeTab === 'written' && (
+                writtenReviews.length > 0
+                  ? writtenReviews.map(review => (
+                      <ReviewCard
+                        key={review.id}
+                        review={review}
+                        showProfileType="customer"
+                        onEdit={id => {
+                          const r = writtenReviews.find(r => r.id === id);
+                          if (r) handleOpenEditModal(r);
+                        }}
+                        onDelete={id => {
+                          const r = writtenReviews.find(r => r.id === id);
+                          if (r) handleOpenDeleteModal(r);
+                        }}
+                      />
+                    ))
+                  : <EmptyState tab="written" />
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* 모달 렌더링 */}

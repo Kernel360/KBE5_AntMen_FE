@@ -17,13 +17,13 @@ export const CategoryTabs = ({ categories, selectedCategory, onSelectCategory }:
               onClick={() => onSelectCategory(category.id)}
               className={`py-3 whitespace-nowrap relative ${
                 category.id === selectedCategory
-                  ? 'text-[#0fbcd6] font-bold'
+                  ? 'text-primary font-bold'
                   : 'text-[#666666]'
               }`}
             >
               {category.name}
               {category.id === selectedCategory && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0fbcd6]" />
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
               )}
             </button>
           ))}

@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { navConfig } from './navConfig'
 import type { UserRole, NavItemConfig } from './types'
 import { useAuthStore } from '@/shared/stores/authStore'
+import { useSecureAuth } from '@/shared/hooks/useSecureAuth'
 import { useState } from 'react'
 import LoginRequiredModal from '@/shared/ui/modal/LoginRequiredModal'
 
@@ -36,7 +37,7 @@ const NavItem = ({
           height={24}
           className="w-6 h-6"
         />
-        {badgeCount && badgeCount > 0 && (
+        {typeof badgeCount === 'number' && badgeCount > 0 && (
           <div className="absolute top-0 right-0 min-w-[16px] h-[16px] bg-red-500 rounded-full flex items-center justify-center z-10 shadow-md">
             <span className="text-xs text-white font-medium leading-none px-0.5">
               {badgeCount > 99 ? '99+' : badgeCount}
@@ -56,9 +57,15 @@ const NavItem = ({
 export const BottomNavigation = ({ userRole }: BottomNavigationProps) => {
   const pathname = usePathname()
   const router = useRouter()
+  // 🛡️ 보안 강화: JWT 기반 인증 상태 (최우선)
+  const { isLoggedIn: secureIsLoggedIn, isLoading } = useSecureAuth()
+  // 🔄 기존 호환성: localStorage 기반 (매칭 요청 수용)
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn)
   const matchingRequestCount = useAuthStore((state) => state.matchingRequestCount)
   const [modalOpen, setModalOpen] = useState(false)
+  
+  // JWT 기반 로그인 상태 우선 사용
+  const actualIsLoggedIn = isLoading ? false : secureIsLoggedIn
   // MANAGER만 별도, 나머지는 모두 CUSTOMER로 처리
   const bottomNav =
     userRole === 'MANAGER' ? navConfig['MANAGER'] : navConfig['CUSTOMER']
@@ -80,7 +87,7 @@ export const BottomNavigation = ({ userRole }: BottomNavigationProps) => {
                 {...item}
                 isActive={pathname === item.href}
                 onClick={() => {
-                  if (!isLoggedIn) setModalOpen(true)
+                  if (!actualIsLoggedIn) setModalOpen(true)
                   else {
                     router.push(item.href)
                   }

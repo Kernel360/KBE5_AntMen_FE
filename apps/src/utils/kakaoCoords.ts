@@ -54,73 +54,6 @@ export const getCoordinatesFromAddress = async (
     address: string
 ): Promise<Coordinates | null> => {
     try {
-        /*
-        const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
-
-        // 더 상세한 환경변수 체크
-        if (!KAKAO_REST_API_KEY) {
-            console.error('❌ 카카오 REST API 키가 설정되지 않았습니다.');
-            console.error('환경변수 KAKAO_REST_API_KEY를 확인하세요.');
-            return null;
-        }
-
-        if (KAKAO_REST_API_KEY.length < 10) {
-            console.error('❌ 카카오 API 키가 너무 짧습니다. 올바른 키인지 확인하세요.');
-            return null;
-        }
-
-        const url = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`;
-
-
-
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Authorization': `KakaoAK ${KAKAO_REST_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-        });
-
-
-
-        if (!response.ok) {
-            if (response.status === 401) {
-                console.error('❌ 401 인증 오류 - API 키를 확인하세요');
-                console.error('- API 키가 올바른지 확인');
-                console.error('- 카카오 개발자 콘솔에서 도메인 설정 확인');
-                console.error('- Web 플랫폼이 등록되어 있는지 확인');
-            } else if (response.status === 403) {
-                console.error('❌ 403 권한 오류 - 도메인 설정을 확인하세요');
-            } else if (response.status === 429) {
-                console.error('❌ 429 요청 한도 초과');
-            }
-
-            // 에러 응답 내용도 확인
-            const errorText = await response.text();
-            console.error('에러 응답 내용:', errorText);
-
-            throw new Error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`);
-        }
-
-        const data: AddressToCoordResponse = await response.json();
-
-        if (!data.documents || !Array.isArray(data.documents) || data.documents.length === 0) {
-            console.warn('⚠️ 주소 검색 결과가 없습니다:', address);
-            return null;
-        }
-
-        const firstResult = data.documents[0];
-        const lat = parseFloat(firstResult.y);
-        const lng = parseFloat(firstResult.x);
-
-        if (isNaN(lat) || isNaN(lng)) {
-            console.error('❌ 유효하지 않은 좌표 데이터:', firstResult);
-            return null;
-        }
-
-        return { lat, lng };
-
-         */
 
         const response = await fetch('/api/kakao-coords', {
             method: 'POST',
@@ -129,6 +62,8 @@ export const getCoordinatesFromAddress = async (
             },
             body: JSON.stringify({ address }),
         });
+
+        console.log('🔍 API 요청:');
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -143,6 +78,8 @@ export const getCoordinatesFromAddress = async (
         const firstResult = data.documents[0];
         const lat = parseFloat(firstResult.y);
         const lng = parseFloat(firstResult.x);
+
+        console.log('✅ 변환된 좌표:', { lat, lng });
 
         return { lat, lng };
 

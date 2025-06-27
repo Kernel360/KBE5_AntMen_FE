@@ -13,6 +13,7 @@ export interface BasicSignupFormData {
   gender: string
   birthDate: string
   profileImage: File | null
+  existingProfileImageUrl?: string // 기존 프로필 이미지 URL (재신청용)
 }
 
 interface BasicSignupFormProps {
@@ -24,6 +25,8 @@ interface BasicSignupFormProps {
   }
   isSocialSignup?: boolean
   onIdValidationChange: (isValid: boolean) => void
+  showUsernameField?: boolean
+  showPasswordField?: boolean
 }
 
 export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
@@ -33,7 +36,10 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
   errors = {},
   isSocialSignup = false,
   onIdValidationChange,
+  showUsernameField = true,
+  showPasswordField = true,
 }) => {
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       onImageChange(e.target.files[0])
@@ -57,6 +63,14 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
               width={96}
               height={96}
             />
+          ) : formData.existingProfileImageUrl ? (
+            <Image
+              src={formData.existingProfileImageUrl}
+              alt="Current profile"
+              className="w-full h-full object-cover"
+              width={96}
+              height={96}
+            />
           ) : (
             <span className="text-gray-400 text-4xl">+</span>
           )}
@@ -71,44 +85,42 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
         />
         <label
           htmlFor="profileImage"
-          className="text-[#0fbcd6] text-sm cursor-pointer"
+          className="text-primary-700 text-sm cursor-pointer"
         >
-          프로필 사진 업로드
+          {formData.existingProfileImageUrl ? '프로필 사진 변경' : '프로필 사진 업로드'}
         </label>
         {errors.profileImage && (
           <span className="text-red-500 text-sm">{errors.profileImage}</span>
         )}
       </div>
 
-      {!isSocialSignup && (
-        <>
-          {/* Username */}
-          <LoginIdInput
-            value={formData.username}
-            onChange={onChange}
-            error={errors.username}
-            disabled={isSocialSignup}
-            onValidationChange={onIdValidationChange}
-          />
+      {!isSocialSignup && showUsernameField && (
+        <LoginIdInput
+          value={formData.username}
+          onChange={onChange}
+          error={errors.username}
+          disabled={isSocialSignup}
+          onValidationChange={onIdValidationChange}
+        />
+      )}
 
-          {/* Password */}
-          <div className="space-y-2">
-            <label className="block text-base font-medium">비밀번호</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={onChange}
-              className={`w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none ${
-                errors.password ? 'border-2 border-red-500' : ''
-              }`}
-              placeholder="비밀번호를 입력해주세요"
-            />
-            {errors.password && (
-              <span className="text-red-500 text-sm">{errors.password}</span>
-            )}
-          </div>
-        </>
+      {!isSocialSignup && showPasswordField && (
+        <div className="space-y-2">
+          <label className="block text-base font-medium">비밀번호</label>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={onChange}
+            className={`w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none ${
+              errors.password ? 'border-2 border-red-500' : ''
+            }`}
+            placeholder="비밀번호를 입력해주세요"
+          />
+          {errors.password && (
+            <span className="text-red-500 text-sm">{errors.password}</span>
+          )}
+        </div>
       )}
 
       {/* Name */}
@@ -177,9 +189,12 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
               value="M"
               checked={formData.gender === 'M'}
               onChange={onChange}
-              className={`w-5 h-5 text-[#00D1FF] bg-[#F9F9F9] border-gray-300 focus:ring-[#00D1FF] ${
+              className={`w-5 h-5 bg-white border-gray-300 ${
                 errors.gender ? 'border-2 border-red-500' : ''
               }`}
+              style={{
+                accentColor: '#000000'
+              }}
             />
             <span className="text-base">남성</span>
           </label>
@@ -190,9 +205,12 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
               value="W"
               checked={formData.gender === 'W'}
               onChange={onChange}
-              className={`w-5 h-5 text-[#00D1FF] bg-[#F9F9F9] border-gray-300 focus:ring-[#00D1FF] ${
+              className={`w-5 h-5 bg-white border-gray-300 ${
                 errors.gender ? 'border-2 border-red-500' : ''
               }`}
+              style={{
+                accentColor: '#000000'
+              }}
             />
             <span className="text-base">여성</span>
           </label>

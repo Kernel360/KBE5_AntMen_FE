@@ -4,164 +4,153 @@ import { Toggle } from '@/shared/ui/Toggle'
 import { ArrowLeft } from '@/shared/icons/ArrowLeft'
 import { EditProfileModal } from '@/shared/ui/modal/EditProfileModal'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
+import { AccountProfile, AccountSettings } from '@/features/account'
+import { customerApi } from '@/entities/account/api/accountApi'
+import type { CustomerProfile, UserGender } from '@/entities/account/model/types'
+import { GENDER_DISPLAY_MAP } from '@/entities/account/model/types'
 
 export default function AccountPage() {
-  const [eventNotification, setEventNotification] = useState(false)
-  const [appNotification, setAppNotification] = useState(true)
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [userInfo, setUserInfo] = useState({
-    name: '홍길동',
-    phone: '010-1111-2222',
-    birthDate: '2025-06-05',
-    email: 'test@gmail.com',
-  })
+  const [appNotification, setAppNotification] = useState(true)
+  const [userProfile, setUserProfile] = useState<CustomerProfile | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setIsLoading(true)
+        const data = await customerApi.getProfile()
+        setUserProfile(data)
+      } catch (err) {
+        console.error('프로필 정보를 불러오는데 실패했습니다:', err)
+        setError('프로필 정보를 불러오는데 실패했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [])
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setProfileImage(e.target.files[0])
+      const file = e.target.files[0];
+      try {
+        setProfileImage(file);
+        await customerApi.updateProfileImage(file);
+        
+        if (userProfile) {
+          setUserProfile({
+            ...userProfile,
+            userProfile: URL.createObjectURL(file)
+          });
+        }
+        
+        setProfileImage(null);
+      } catch (err) {
+        console.error('프로필 이미지 업로드 실패:', err);
+        alert('프로필 이미지 업로드에 실패했습니다.');
+        setProfileImage(null);
+      }
     }
   }
 
-  const handleEditSubmit = (data: {
-    name: string
-    phone: string
-    birthDate: string
-    email: string
+  const handleEditSubmit = async (data: {
+    name: string;
+    phone: string;
+    birthDate: string;
+    email: string;
   }) => {
-    setUserInfo(data)
-    setIsEditModalOpen(false)
+    if (!userProfile) return;
+
+    try {
+      const response = await customerApi.updateProfile({
+        userName: data.name,
+        userTel: data.phone,
+        userEmail: data.email,
+        userBirth: data.birthDate,
+      });
+      setUserProfile(response)
+      setIsEditModalOpen(false)
+    } catch (err) {
+      console.error('프로필 수정에 실패했습니다:', err)
+      alert('프로필 수정에 실패했습니다.')
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <CommonHeader title="계정 관리" showBackButton />
+        <main className="pt-20 pb-20">
+          <div className="flex justify-center items-center h-[calc(100vh-160px)]">
+            <div className="text-slate-500">로딩 중...</div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (error || !userProfile) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <CommonHeader title="계정 관리" showBackButton />
+        <main className="pt-20 pb-20">
+          <div className="flex justify-center items-center h-[calc(100vh-160px)]">
+            <div className="text-red-500">{error || '프로필을 불러올 수 없습니다.'}</div>
+          </div>
+        </main>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-white">
       <CommonHeader 
         title="계정 관리"
         showBackButton
       />
 
-      {/* Content */}
-      <main className="p-4 flex flex-col gap-y-4">
-        {/* Profile Image Upload */}
-        <div className="flex flex-col items-center mb-6">
-          <label
-            htmlFor="profileImage"
-            className="cursor-pointer group relative"
-          >
-            <div className="w-24 h-24 bg-[#F9F9F9] rounded-full flex items-center justify-center overflow-hidden">
-              {profileImage ? (
-                <>
-                  <Image
-                    width={96}
-                    height={96}
-                    src={URL.createObjectURL(profileImage)}
-                    alt="Profile preview"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm">수정하기</span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <span className="text-gray-400 text-4xl">+</span>
-                  <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm">추가하기</span>
-                  </div>
-                </>
-              )}
-            </div>
-            <input
-              type="file"
-              id="profileImage"
-              name="profileImage"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
+      <main className="flex-1 flex flex-col pt-[64px]">
+        <div className="p-5 space-y-6">
+          {/* 프로필 이미지 */}
+          <AccountProfile 
+            profileImage={profileImage}
+            userProfileUrl={userProfile.userProfile}
+            onImageChange={handleImageChange}
+          />
+
+          {/* 계정 설정 카드 */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <AccountSettings 
+              userInfo={{
+                name: userProfile.userName,
+                phone: userProfile.userTel,
+                birthDate: userProfile.userBirth,
+                email: userProfile.userEmail,
+              }}
+              appNotification={appNotification}
+              onAppNotificationChange={setAppNotification}
+              onEditClick={() => setIsEditModalOpen(true)}
             />
-          </label>
-        </div>
-
-        {/* Personal Info Section */}
-        <div className="space-y-6">
-          <div className="flex justify-between items-center py-1">
-            <span className="text-black">이름</span>
-            <span className="text-[#00BCD4]">{userInfo.name}</span>
-          </div>
-          <div className="flex justify-between items-center py-1">
-            <span className="text-black">전화번호</span>
-            <span className="text-[#00BCD4]">{userInfo.phone}</span>
-          </div>
-          <div className="flex justify-between items-center py-1">
-            <span className="text-black">생년월일</span>
-            <span className="text-[#00BCD4]">
-              {userInfo.birthDate.replace(/-/g, '.')}
-            </span>
-          </div>
-          <div className="flex justify-between items-center py-1">
-            <span className="text-black">이메일</span>
-            <span className="text-[#00BCD4]">{userInfo.email}</span>
-          </div>
-        </div>
-
-        <hr className="border-[#F0F0F0] mt-2" />
-
-        {/* Actions Section */}
-        <button
-          className="text-left py-2 text-black hover:text-[#00BCD4] transition-colors"
-          onClick={() => setIsEditModalOpen(true)}
-        >
-          정보 수정
-        </button>
-        <hr className="border-[#F0F0F0]" />
-        <button className="text-left py-2 text-black hover:text-[#00BCD4] transition-colors">
-          로그아웃
-        </button>
-        <hr className="border-[#F0F0F0]" />
-        <button className="text-left py-2 text-black hover:text-[#00BCD4] transition-colors">
-          탈퇴
-        </button>
-        <hr className="border-[#F0F0F0]" />
-
-        {/* Notifications Section */}
-        <div className="space-y-6 pb-6">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-black">이벤트 소식 알림</span>
-              <Toggle
-                enabled={eventNotification}
-                onChange={setEventNotification}
-              />
-            </div>
-            <p className="text-xs text-[#999999]">
-              카카오톡, SMS, 앱푸시를 통해 이벤트 소식을 알려드립니다.
-            </p>
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-black">앱 푸시 알림</span>
-              <Toggle enabled={appNotification} onChange={setAppNotification} />
-            </div>
-            <p className="text-xs text-[#999999]">
-              중요한 서비스 진행 소식을 알려드려요.
-            </p>
           </div>
         </div>
       </main>
 
-      {/* Home Indicator */}
-      <div className="flex justify-center">
-        <div className="w-[134px] h-[5px] bg-black rounded"></div>
-      </div>
-
-      {/* Edit Profile Modal */}
       <EditProfileModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        initialData={userInfo}
+        initialData={{
+          name: userProfile.userName,
+          phone: userProfile.userTel,
+          birthDate: userProfile.userBirth,
+          email: userProfile.userEmail,
+        }}
         onSubmit={handleEditSubmit}
       />
     </div>

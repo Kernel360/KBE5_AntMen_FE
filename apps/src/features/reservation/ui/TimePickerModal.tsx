@@ -71,7 +71,7 @@ export const TimePickerModal = ({
                 취소
               </button>
               <h3 className="text-lg font-bold">서비스 시간</h3>
-              <button className="text-cyan-500 font-medium" onClick={onClose}>
+              <button className="text-primary-600 font-medium" onClick={onClose}>
                 확인
               </button>
             </div>
@@ -79,7 +79,7 @@ export const TimePickerModal = ({
             {/* Content */}
             <div className="p-4">
               {recommendedTime && (
-                <div className="mb-6 bg-cyan-50 text-cyan-800 p-4 rounded-xl">
+                <div className="mb-6 bg-primary-200/50 text-primary-700 p-4 rounded-xl">
                   <div className="mb-2">
                     <span className="text-sm font-semibold">
                       💡 사용자 맞춤 알고리즘 기반
@@ -96,15 +96,28 @@ export const TimePickerModal = ({
               <div className="flex justify-center items-center gap-6 mb-6">
                 <button
                   onClick={() => onTimeChange(false)}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl font-bold transition-all
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all
                     ${
                       selectedHours <= standardHours
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white border-2 border-cyan-500 text-cyan-500 active:bg-cyan-50'
+                        : 'bg-white border-2 border-primary-500 text-primary-500 active:bg-white'
                     }`}
                   disabled={selectedHours <= standardHours}
                 >
-                  -
+                  <svg 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 16 16" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path 
+                      d="M3 8h10" 
+                      stroke="currentColor" 
+                      strokeWidth="3" 
+                      strokeLinecap="round"
+                    />
+                  </svg>
                 </button>
                 <div className="text-center min-w-[80px]">
                   <p className="text-3xl font-bold text-gray-800">
@@ -117,15 +130,28 @@ export const TimePickerModal = ({
                 </div>
                 <button
                   onClick={() => onTimeChange(true)}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl font-bold transition-all
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all
                     ${
                       selectedHours >= 12
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white border-2 border-cyan-500 text-cyan-500 active:bg-cyan-50'
+                        : 'bg-white border-2 border-primary-500 text-primary-500 active:bg-white'
                     }`}
                   disabled={selectedHours >= 12}
                 >
-                  +
+                  <svg 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 16 16" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path 
+                      d="M8 3v10M3 8h10" 
+                      stroke="currentColor" 
+                      strokeWidth="3" 
+                      strokeLinecap="round"
+                    />
+                  </svg>
                 </button>
               </div>
 

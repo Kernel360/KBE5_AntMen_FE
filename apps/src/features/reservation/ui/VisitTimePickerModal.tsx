@@ -61,7 +61,7 @@ export const VisitTimePickerModal = ({
                 취소
               </button>
               <h3 className="text-lg font-bold">방문 시간 선택</h3>
-              <button className="text-cyan-500 font-medium" onClick={onClose}>
+              <button className="text-primary-600 font-medium" onClick={onClose}>
                 확인
               </button>
             </div>
@@ -80,7 +80,7 @@ export const VisitTimePickerModal = ({
                       className={`py-3 rounded-lg text-center text-sm font-medium transition-colors
                         ${
                           selectedVisitTime === time
-                            ? 'bg-cyan-500 text-white shadow'
+                            ? 'bg-primary-500 text-white shadow'
                             : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                         }`}
                     >

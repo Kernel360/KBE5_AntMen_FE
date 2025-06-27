@@ -259,7 +259,7 @@ const AddressPageUI = () => {
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 bg-cyan-500 text-white rounded-lg text-sm font-medium"
+              className="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium"
             >
               저장
             </button>
@@ -307,42 +307,46 @@ const AddressPageUI = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 max-w-[390px] mx-auto relative">
       <CommonHeader 
         title="주소 관리"
         showBackButton
       />
 
       {/* 내용 */}
-      <main className="pt-0 px-5 pb-20 min-h-[calc(100vh-64px-80px)]">
-        <div className="space-y-4 pt-5">
-          {addresses.length > 0 ? (
-            addresses.map((address) => (
-              <AddressInfoBlock
-                key={address.addressId}
-                address={address}
-                onEdit={handleOpenEditModal}
-                onDelete={handleOpenDeleteModal}
-              />
-            ))
-          ) : (
-            <div className="text-center py-20 text-slate-500">
-              <p>등록된 주소 정보가 없습니다.</p>
-              <p>새 주소를 추가해주세요.</p>
-            </div>
-          )}
+      <main className="pt-[64px] pb-[88px]">
+        <div className="px-5">
+          <div className="space-y-4 mt-5">
+            {addresses.length > 0 ? (
+              addresses.map((address) => (
+                <AddressInfoBlock
+                  key={address.addressId}
+                  address={address}
+                  onEdit={handleOpenEditModal}
+                  onDelete={handleOpenDeleteModal}
+                />
+              ))
+            ) : (
+              <div className="text-center py-20 text-slate-500">
+                <p>등록된 주소 정보가 없습니다.</p>
+                <p>새 주소를 추가해주세요.</p>
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
       {/* 새 주소 추가 버튼 */}
-      <footer className="fixed bottom-[64px] left-0 right-0 p-5 bg-white border-t">
-        <button
-          onClick={() => setAddModalOpen(true)}
-          className="w-full py-4 bg-cyan-500 text-white rounded-lg font-bold hover:bg-cyan-600 transition-colors"
-        >
-          + 새 주소 추가
-        </button>
-      </footer>
+      <div className="absolute bottom-0 left-0 right-0 bg-white border-t">
+        <div className="p-5">
+          <button
+            onClick={() => setAddModalOpen(true)}
+            className="w-full py-4 bg-primary-500 text-white rounded-lg font-bold hover:bg-primary-600 transition-colors"
+          >
+            + 새 주소 추가
+          </button>
+        </div>
+      </div>
 
       {/* 모달 렌더링 */}
       <AddAddressModal

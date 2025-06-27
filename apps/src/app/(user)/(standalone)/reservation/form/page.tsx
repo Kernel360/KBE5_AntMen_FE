@@ -148,7 +148,7 @@ const ReservationForm = ({
           <div className="mb-8">
             <h2 className="text-lg font-bold mb-4">요청사항</h2>
             <textarea
-              className="w-full h-28 p-4 bg-gray-100 rounded-xl text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-shadow"
+              className="w-full h-28 p-4 bg-gray-100 rounded-xl text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow"
               placeholder="특별히 신경 써주길 바라는 점이나 요청사항을 입력해주세요. (선택사항)"
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
@@ -201,8 +201,8 @@ const ReservationForm = ({
             <button
               onClick={handleNext}
               disabled={!isFormValid || isSubmitting}
-              className={`w-36 h-12 rounded-xl font-bold text-base active:scale-95 transition-all shadow-lg hover:shadow-cyan-500/30
-                ${isFormValid && !isSubmitting ? 'bg-primary text-[#222]' : 'bg-gray-400 text-white cursor-not-allowed'}
+              className={`w-36 h-12 rounded-xl font-bold text-base active:scale-95 transition-all shadow-lg
+                ${isFormValid && !isSubmitting ? 'bg-primary hover:bg-primary-500 text-[#222]' : 'bg-gray-400 text-white cursor-not-allowed'}
               `}
             >
               {isSubmitting ? '처리 중...' : '매니저 찾기'}

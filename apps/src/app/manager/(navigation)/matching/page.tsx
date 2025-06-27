@@ -217,7 +217,7 @@ const ManagerMatchingPage = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 h-9 rounded-2xl text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'bg-[#E8F0FE] text-[#0fbcd6]'
+                  ? 'bg-[#E8F0FE] text-primary'
                   : 'border border-gray-300 text-gray-600 hover:bg-gray-50'
               }`}
             >
