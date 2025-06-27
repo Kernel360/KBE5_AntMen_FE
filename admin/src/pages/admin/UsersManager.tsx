@@ -15,31 +15,47 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../componen
 
 export const UsersManager: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [actualSearchTerm, setActualSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('userId'); // 기본값: userId 오름차순
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [blacklistReason, setBlacklistReason] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
   
-  const { data: userResponse, isLoading } = useQuery({
-    queryKey: ['managers', searchTerm, currentPage],
-    queryFn: () => userService.getManagers(searchTerm, undefined, undefined, currentPage),
+  const { data: userResponse, isLoading, isFetching } = useQuery({
+    queryKey: ['managers', actualSearchTerm, sortBy, currentPage],
+    queryFn: () => userService.getManagers(actualSearchTerm, sortBy, currentPage),
+    enabled: isInitialized, // 초기화 후에만 실행
+    placeholderData: (previousData) => previousData, // 이전 데이터 유지로 깜빡임 방지
   });
+
+  // 검색 실행 함수
+  const handleSearch = () => {
+    setActualSearchTerm(searchTerm);
+    setCurrentPage(0);
+  };
+
+  // 엔터키 처리
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  // 페이지 로드 시 초기 데이터 로드
+  React.useEffect(() => {
+    setActualSearchTerm(''); // 빈 문자열로 전체 조회
+    setCurrentPage(0); // 페이지 초기화
+    setIsInitialized(true); // 초기화 완료
+  }, []);
 
   // API 응답에서 페이지네이션 정보와 데이터 추출
   const users = userResponse?.content || [];
   const totalPages = userResponse?.totalPages || 0;
   const totalElements = userResponse?.totalElements || 0;
 
-  const filteredUsers = users.filter((user: any) => {
-    const name = user.userName ?? '';
-    const email = user.userEmail ?? '';
-    return (
-      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-
-  if (isLoading) return <div>로딩 중...</div>;
+  if (isLoading && !userResponse) return <div>로딩 중...</div>;
 
   return (
     <div className="space-y-6">
@@ -57,19 +73,34 @@ export const UsersManager: React.FC = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="이름 또는 이메일로 검색..."
+                  placeholder="이름 또는 이메일로 검색... (엔터키로 검색)"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   className="pl-10"
                 />
               </div>
+            </div>
+            <div className="md:w-36">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full h-10 px-3 pr-8 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0xIDFMNiA2TDExIDEiIHN0cm9rZT0iIzZCNzI4MCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K')] bg-no-repeat bg-[right_8px_center]"
+              >
+                <option value="userId">기본</option>
+                <option value="userCreatedDate">최근 가입순</option>
+                <option value="lastWorkDate">최근 근무순</option>
+              </select>
             </div>
           </div>
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>매니저 목록 ({totalElements}명)</CardTitle>
+          <CardTitle>
+            매니저 목록 ({totalElements}명)
+            {isFetching && <span className="ml-2 text-sm text-blue-500 animate-pulse">•</span>}
+          </CardTitle>
           <CardDescription>등록된 매니저 회원의 정보와 상태를 확인할 수 있습니다.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -77,23 +108,21 @@ export const UsersManager: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[120px]">이름</TableHead>
-                  <TableHead className="w-[200px]">이메일</TableHead>
-                  <TableHead className="w-[120px]">전화번호</TableHead>
-                  <TableHead className="w-[120px]">가입승인일</TableHead>
-                  <TableHead className="w-[120px]">마지막 접속일</TableHead>
-                  <TableHead className="w-[120px]">마지막 근무일</TableHead>
+                  <TableHead className="w-[20%] min-w-[100px]">이름</TableHead>
+                  <TableHead className="w-[30%] min-w-[180px]">이메일</TableHead>
+                  <TableHead className="w-[20%] min-w-[120px]">전화번호</TableHead>
+                  <TableHead className="w-[15%] min-w-[100px]">가입승인일</TableHead>
+                  <TableHead className="w-[15%] min-w-[120px] leading-tight">마지막 근무일</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user: any) => (
+                {users.map((user: any) => (
                   <TableRow key={user.userId} className="cursor-pointer hover:bg-gray-50" onClick={() => { setSelectedUser(user); setShowDetail(true); }}>
-                    <TableCell className="w-[120px] truncate">{user.userName}</TableCell>
-                    <TableCell className="w-[200px] truncate">{user.userEmail}</TableCell>
-                    <TableCell className="w-[120px]">{user.userTel ?? '-'}</TableCell>
-                    <TableCell className="w-[120px]">{user.approvedAt?.slice(0, 10) ?? user.userCreatedDate?.slice(0, 10) ?? '-'}</TableCell>
-                    <TableCell className="w-[120px]">{user.lastLoginDate?.slice(0, 10) ?? '-'}</TableCell>
-                    <TableCell className="w-[120px]">{user.lastWorkDate?.slice(0, 10) ?? '-'}</TableCell>
+                    <TableCell className="w-[20%] min-w-[100px] truncate">{user.userName}</TableCell>
+                    <TableCell className="w-[30%] min-w-[180px] truncate">{user.userEmail}</TableCell>
+                    <TableCell className="w-[20%] min-w-[120px] truncate">{user.userTel ?? '-'}</TableCell>
+                    <TableCell className="w-[15%] min-w-[100px] truncate">{user.approvedAt?.slice(0, 10) ?? user.userCreatedDate?.slice(0, 10) ?? '-'}</TableCell>
+                    <TableCell className="w-[15%] min-w-[120px] truncate">{user.lastWorkDate?.slice(0, 10) ?? '-'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -199,24 +228,6 @@ export const UsersManager: React.FC = () => {
                         <label className="text-sm font-medium text-gray-500">가입승인일</label>
                         <span className="text-base text-gray-900">{selectedUser.approvedAt?.slice(0, 10) ?? selectedUser.userCreatedDate?.slice(0, 10) ?? '-'}</span>
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 활동 정보 섹션 */}
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <div className="w-1.5 h-6 bg-blue-400 rounded-full"></div>
-                    활동 정보
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex flex-col">
-                      <label className="text-sm font-medium text-gray-500">마지막 접속일</label>
-                      <span className="text-base text-gray-900">{selectedUser.lastLoginDate?.slice(0, 10) ?? '접속 기록 없음'}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <label className="text-sm font-medium text-gray-500">마지막 근무일</label>
-                      <span className="text-base text-gray-900">{selectedUser.lastWorkDate?.slice(0, 10) ?? '근무 기록 없음'}</span>
                     </div>
                   </div>
                 </div>
