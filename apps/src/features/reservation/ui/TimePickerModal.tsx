@@ -86,8 +86,8 @@ export const TimePickerModal = ({
                     </span>
                   </div>
                   <p className="text-sm break-keep">
-                    고객님의 공간({Math.floor(recommendedTime.area)}평)에 
-                    최적화된 청소 시간은 {Math.floor(recommendedTime.minutes / 60)}시간입니다. 
+                    고객님의 공간({recommendedTime.area}평)에 
+                    최적화된 청소 시간은 {recommendedTime.time}시간입니다. 
                     실제 현장 상황에 따라 추가 시간이 필요할 수 있습니다.
                   </p>
                 </div>
@@ -190,7 +190,7 @@ export const TimePickerModal = ({
                   </div>
                   {showTimeWarning && recommendedTime && (
                     <p className="text-xs text-red-500 mt-2 text-right break-keep">
-                      * 추천 시간({Math.ceil(recommendedTime.minutes / 60)}
+                      * 추천 시간({recommendedTime.time}
                       시간)보다 부족할 수 있어요.
                     </p>
                   )}

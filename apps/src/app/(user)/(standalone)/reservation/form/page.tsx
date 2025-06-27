@@ -86,6 +86,7 @@ const ReservationForm = ({
     handleResetTime,
     visitTimeSlots,
     isSubmitting,
+    isRecommendedTimeLoading,
   } = useReservationForm({ initialCategory, initialOptions, addressId })
 
   // 임시저장 기능 제거됨 - 관련 코드 삭제
@@ -132,6 +133,7 @@ const ReservationForm = ({
             calculateEndTime={calculateEndTime}
             recommendedTime={recommendedTime}
             showTimeWarning={showTimeWarning}
+            isRecommendedTimeLoading={isRecommendedTimeLoading}
           />
 
           <AdditionalOptions
