@@ -109,7 +109,7 @@ const ReservationForm = ({
           <h2 className="text-lg font-bold">{initialCategory.categoryName}</h2>
           <p className="text-sm text-gray-600">
             기본 금액 {initialCategory.categoryPrice.toLocaleString()}원 
-            (기본 시간 {initialCategory.categoryTime}시간)
+            • 추가시간 시간당 20,000원
           </p>
         </div>
 

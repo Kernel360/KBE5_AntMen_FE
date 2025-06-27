@@ -18,7 +18,7 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
   const [warningMessage, setWarningMessage] = useState('');
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [isVisitTimeModalOpen, setIsVisitTimeModalOpen] = useState(false);
-  const [selectedHours, setSelectedHours] = useState(initialCategory.categoryTime);
+  const [selectedHours, setSelectedHours] = useState(2); // 기본 시간 2시간 고정
   const [selectedVisitTime, setSelectedVisitTime] = useState<string | null>(null);
   const [selectedCategoryOptions, setSelectedCategoryOptions] = useState<number[]>([]);
   const [memo, setMemo] = useState('');
@@ -104,7 +104,12 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
     return total + (option?.coTime || 0);
   }, 0);
 
-  const baseServicePrice = calculatePrice(selectedHours, initialCategory.categoryPrice, initialCategory.categoryPrice, initialCategory.categoryTime);
+  // 백엔드 로직과 동일하게 수정
+  // 총가격 = categoryPrice + (선택시간 - 2) * 20000 + 옵션가격
+  const HOURLY_AMOUNT = 20000; // 시간당 가격 고정
+  const BASE_DURATION = 2; // 기본 시간 고정
+  const additionalHours = Math.max(0, selectedHours - BASE_DURATION);
+  const baseServicePrice = initialCategory.categoryPrice + (additionalHours * HOURLY_AMOUNT);
   const totalPrice = baseServicePrice + totalOptionsPrice;
   const totalDuration = selectedHours * 60 + totalOptionsTime;
 
@@ -114,7 +119,7 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
   const handleTimeChange = (increment: boolean) => {
     setSelectedHours(prev => {
       const newHours = increment ? prev + 1 : prev - 1;
-      if (newHours < initialCategory.categoryTime || newHours > 12) return prev;
+      if (newHours < BASE_DURATION || newHours > 12) return prev;
       
       if (recommendedTime && newHours < recommendedTime.time) {
         setShowTimeWarning(true);
@@ -163,7 +168,7 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
       reservationDuration: selectedHours,
       reservationMemo: memo,
       reservationAmount: totalPrice,
-      additionalDuration: selectedHours - initialCategory.categoryTime,
+      additionalDuration: selectedHours - BASE_DURATION,
       optionIds: selectedCategoryOptions,
     };
 
@@ -213,15 +218,15 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
     isOptionsLoading: false,
     optionsError: null,
     
-    standardHours: initialCategory.categoryTime,
+    standardHours: BASE_DURATION, // 기본 시간 2시간 고정
     basePrice: initialCategory.categoryPrice,
-    pricePerHour: initialCategory.categoryPrice,
+    pricePerHour: HOURLY_AMOUNT, // 시간당 가격 20,000원 고정
     
     totalPrice: totalPrice,
     
     handleTimeChange,
     handleNext,
-    handleResetTime: () => setSelectedHours(initialCategory.categoryTime),
+    handleResetTime: () => setSelectedHours(BASE_DURATION),
     visitTimeSlots,
     isSubmitting,
     isLoading,
