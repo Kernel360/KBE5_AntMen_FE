@@ -105,3 +105,23 @@ export interface PageableResponse<T> {
 }
 
 export type PaginatedMatchingResponse = PageableResponse<ReservationHistoryDto>
+
+// 추천 매니저 리스트 조회 API 관련 타입들
+export interface MatchingRequestDto {
+  reservationDate: string        // 예약 날짜 (YYYY-MM-DD)
+  reservationTime: string        // 예약 시작 시간 (HH:mm)
+  reservationDuration: number    // 예약 소요 시간 (시간 단위)
+  addressId: number              // 고객 주소 ID
+}
+
+export interface MatchingManagerListResponseDto {
+  managerId: number
+  managerName: string
+  managerGender: string
+  managerAge: number
+  managerComment: string
+  managerRating: number
+  managerImage: string
+}
+
+export type SortType = 'distance' | 'recent'
