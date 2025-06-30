@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useAdmin } from '../../lib/useAdmin';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import {
@@ -13,7 +14,10 @@ import {
     X,
     BarChart2,
     GitBranch,
-    Settings
+    Settings,
+    ChevronDown,
+    Lock,
+    User
 } from 'lucide-react';
 
 interface MenuItem {
@@ -148,8 +152,25 @@ const menuItems: MenuItem[] = [
 export const AdminLayout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { logout } = useAdmin();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
+    const [showUserMenu, setShowUserMenu] = useState(false);
+    const userMenuRef = useRef<HTMLDivElement>(null);
+
+    // 드롭다운 외부 클릭 시 닫기
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+                setShowUserMenu(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const isActive = (path: string) => {
         return location.pathname === path;
@@ -178,9 +199,14 @@ export const AdminLayout: React.FC = () => {
         navigate(path);
     };
 
-    const handleLogout = () => {
-        // 로그아웃 로직 구현
-        navigate('/admin/login');
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/admin/login', { replace: true });
+        } catch (error) {
+            // 실패해도 로그인 페이지로 이동
+            navigate('/admin/login', { replace: true });
+        }
     };
 
     return (
@@ -273,16 +299,48 @@ export const AdminLayout: React.FC = () => {
                             })}
                         </nav>
 
-                        {/* Logout Button */}
-                        <div className="p-4 border-t">
-                            <Button
-                                variant="ghost"
-                                className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
-                                onClick={handleLogout}
-                            >
-                                <LogOut className="mr-3 h-5 w-5" />
-                                로그아웃
-                            </Button>
+                        {/* Admin Menu */}
+                        <div className="p-4 border-t space-y-1">
+                            <div className="relative" ref={userMenuRef}>
+                                <Button
+                                    variant="ghost"
+                                    className="w-full justify-between text-gray-700 hover:bg-gray-100"
+                                    onClick={() => setShowUserMenu(!showUserMenu)}
+                                >
+                                    <div className="flex items-center">
+                                        <User className="mr-3 h-5 w-5" />
+                                        관리자
+                                    </div>
+                                    <ChevronDown className={`h-4 w-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                                </Button>
+                                
+                                {showUserMenu && (
+                                    <div className="mt-1 space-y-1">
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full justify-start text-gray-600 hover:bg-gray-100 pl-12"
+                                            onClick={() => {
+                                                setShowUserMenu(false);
+                                                navigate('/admin/password');
+                                            }}
+                                        >
+                                            <Lock className="mr-3 h-4 w-4" />
+                                            비밀번호 변경
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700 pl-12"
+                                            onClick={() => {
+                                                setShowUserMenu(false);
+                                                handleLogout();
+                                            }}
+                                        >
+                                            <LogOut className="mr-3 h-4 w-4" />
+                                            로그아웃
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
