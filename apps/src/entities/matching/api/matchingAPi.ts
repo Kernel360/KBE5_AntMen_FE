@@ -8,8 +8,8 @@ import {
   SortType,
 } from '../model/types'
 
-const BASE_URL = 'http://localhost:9092/v1/manager'
-const MATCHING_API_URL = 'http://localhost:9091/api/v1/matchings'
+const BASE_URL = 'https://api.antmen.site:9092/v1/manager'
+const MATCHING_API_URL = 'https://api.antmen.site:9091/api/v1/matchings'
 
 class ApiError extends Error {
   constructor(
@@ -116,7 +116,7 @@ export const getRecommendedManagers = async (
     })
     
     const response = await fetch(
-      `${MATCHING_API_URL}/matching?${queryParams}`,
+      `${MATCHING_API_URL}?${queryParams}`,
       {
         method: 'POST',
         headers: {
