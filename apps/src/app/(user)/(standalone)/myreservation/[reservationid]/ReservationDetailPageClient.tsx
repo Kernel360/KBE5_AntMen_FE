@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 import type {
@@ -9,7 +9,11 @@ import type {
 } from '@/entities/reservation/model/types'
 import { respondToMatching } from '@/entities/matching/api/matchingAPi'
 import { RejectionModal } from '@/shared/ui/modal/RejectionModal'
-import { CalendarIcon, ClockIcon, MapPinIcon, CurrencyDollarIcon, UserIcon, CheckCircleIcon, HomeIcon, StarIcon } from '@heroicons/react/24/outline'
+import CancellationModal from '@/shared/ui/modal/CancellationModal'
+import { cancelReservation } from '@/shared/api/reservation'
+import { getReservationComment, type ReservationComment } from '@/entities/reservation/api/reservationApi'
+import { CalendarIcon, ClockIcon, MapPinIcon, CurrencyDollarIcon, UserIcon, CheckCircleIcon, HomeIcon, StarIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline'
+import { getAuthToken } from '@/features/auth/lib/auth'
 
 interface ReservationDetailPageClientProps {
   initialReservation: ReservationHistory | null
@@ -21,7 +25,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     switch (status?.toUpperCase()) {
       case 'WAITING':
         return { 
-          bg: 'bg-gradient-to-r from-amber-100 to-yellow-100', 
+          bg: 'bg-amber-100', 
           text: 'text-amber-800', 
           border: 'border-amber-200',
           label: '매칭 대기중',
@@ -29,7 +33,7 @@ const StatusBadge = ({ status }: { status: string }) => {
         }
       case 'MATCHING':
         return { 
-          bg: 'bg-gradient-to-r from-blue-100 to-indigo-100', 
+          bg: 'bg-blue-100', 
           text: 'text-blue-800', 
           border: 'border-blue-200',
           label: '매칭 완료',
@@ -37,7 +41,7 @@ const StatusBadge = ({ status }: { status: string }) => {
         }
       case 'SCHEDULED':
         return { 
-          bg: 'bg-gradient-to-r from-green-100 to-emerald-100', 
+          bg: 'bg-green-100', 
           text: 'text-green-800', 
           border: 'border-green-200',
           label: '예약 확정',
@@ -45,7 +49,7 @@ const StatusBadge = ({ status }: { status: string }) => {
         }
       case 'DONE':
         return { 
-          bg: 'bg-gradient-to-r from-purple-100 to-pink-100', 
+          bg: 'bg-purple-100', 
           text: 'text-purple-800', 
           border: 'border-purple-200',
           label: '완료',
@@ -53,7 +57,7 @@ const StatusBadge = ({ status }: { status: string }) => {
         }
       case 'CANCEL':
         return { 
-          bg: 'bg-gradient-to-r from-red-100 to-rose-100', 
+          bg: 'bg-red-100', 
           text: 'text-red-800', 
           border: 'border-red-200',
           label: '취소됨',
@@ -61,7 +65,7 @@ const StatusBadge = ({ status }: { status: string }) => {
         }
       default:
         return { 
-          bg: 'bg-gradient-to-r from-gray-100 to-slate-100', 
+          bg: 'bg-gray-100', 
           text: 'text-gray-800', 
           border: 'border-gray-200',
           label: status,
@@ -104,27 +108,28 @@ const InfoItem = ({ icon, label, value, highlight = false }: {
 const ReservationHeaderSection = ({ reservation }: { reservation: ReservationHistory }) => {
   return (
     <div className="bg-white rounded-2xl p-5 mb-4 shadow-md border border-gray-100">
-      {/* 예약 번호와 상태 */}
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <p className="text-xs font-medium text-gray-500 mb-1">예약 번호</p>
-          <h1 className="text-xl font-bold text-gray-900">#{reservation.reservationId}</h1>
-        </div>
-        <StatusBadge status={reservation.reservationStatus} />
-      </div>
-      
-      {/* 서비스 타입 */}
+      {/* 서비스 타입과 상태 표시 */}
       <div className="mb-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-1">{reservation.categoryName}</h2>
-        <p className="text-sm text-gray-600">전문 청소 서비스</p>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <p className="text-xs font-medium text-gray-500 mb-1">예약 카테고리</p>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-gray-900">{reservation.categoryName}</h2>
+              <span className="text-xs text-gray-500">#{reservation.reservationId}</span>
+            </div>
+          </div>
+          <div className="flex-shrink-0">
+            <StatusBadge status={reservation.reservationStatus} />
+          </div>
+        </div>
       </div>
-      
+
       {/* 날짜와 시간 정보 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="bg-gradient-to-br from-primary/5 to-blue-50 rounded-xl p-4 border border-primary/10">
+      <div className="grid grid-cols-1 gap-3">
+        <div className="bg-gray-100 rounded-xl p-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-              <CalendarIcon className="w-4 h-4 text-primary" />
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <CalendarIcon className="w-4 h-4 text-blue-600" />
             </div>
             <div>
               <p className="text-xs font-medium text-gray-600">예약일</p>
@@ -133,10 +138,10 @@ const ReservationHeaderSection = ({ reservation }: { reservation: ReservationHis
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100">
+        <div className="bg-gray-100 rounded-xl p-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-              <ClockIcon className="w-4 h-4 text-indigo-600" />
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <ClockIcon className="w-4 h-4 text-blue-600" />
             </div>
             <div>
               <p className="text-xs font-medium text-gray-600">예약 시간</p>
@@ -160,9 +165,10 @@ const ServiceDetailsSection = ({ reservation }: { reservation: ReservationHistor
         <h3 className="text-lg font-bold text-gray-900">서비스 상세 정보</h3>
       </div>
       
-      <div className="space-y-4">
-        {/* 주소 정보 */}
-        <div className="bg-gray-50 rounded-xl p-4">
+      <div className="space-y-3">
+        {/* 서비스 정보 통합 */}
+        <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+          {/* 주소 정보 */}
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
               <MapPinIcon className="w-4 h-4 text-blue-600" />
@@ -174,30 +180,39 @@ const ServiceDetailsSection = ({ reservation }: { reservation: ReservationHistor
               </p>
             </div>
           </div>
+          
+          {/* 기타 서비스 정보들 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <ClockIcon className="w-4 h-4 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-600">예상 소요시간</p>
+                <p className="text-sm font-bold text-gray-900">{reservation.totalDuration}시간</p>
+              </div>
+            </div>
+            
+
+          </div>
         </div>
         
-        {/* 기타 서비스 정보들 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-              <ClockIcon className="w-4 h-4 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-gray-600">예상 소요시간</p>
-              <p className="text-sm font-bold text-gray-900">{reservation.totalDuration}시간</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-              <HomeIcon className="w-4 h-4 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-gray-600">서비스 유형</p>
-              <p className="text-sm font-bold text-gray-900">정기 청소</p>
+        {/* 수요자 메모 */}
+        {reservation.reservationMemo && (
+          <div className="bg-gray-50 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-gray-600 mb-2">고객 특이사항</p>
+                <p className="text-sm text-gray-900 leading-relaxed">
+                  {reservation.reservationMemo}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
         
         {/* 선택 옵션 */}
         <div className="bg-blue-50 rounded-xl p-4">
@@ -227,15 +242,15 @@ const ServiceDetailsSection = ({ reservation }: { reservation: ReservationHistor
 // 결제 정보 섹션
 const PaymentSection = ({ reservation }: { reservation: ReservationHistory }) => {
   return (
-    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 mb-4 shadow-md border border-green-100">
+    <div className="bg-green-50 rounded-2xl p-5 mb-4 shadow-md border border-green-200">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center">
-          <CurrencyDollarIcon className="w-4 h-4 text-green-600" />
+        <div className="w-6 h-6 bg-green-500 rounded-lg flex items-center justify-center">
+          <CurrencyDollarIcon className="w-4 h-4 text-white" />
         </div>
         <h3 className="text-lg font-bold text-gray-900">결제 정보</h3>
       </div>
       
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4">
+      <div className="bg-white rounded-xl p-4 border border-green-100">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-semibold text-gray-700 mb-0.5">총 결제 금액</p>
@@ -252,37 +267,163 @@ const PaymentSection = ({ reservation }: { reservation: ReservationHistory }) =>
   )
 }
 
+// 서비스 완료 정보 섹션
+const ServiceCompletionSection = ({ comment }: { comment: ReservationComment }) => {
+  return (
+    <div className="bg-white rounded-2xl p-5 mb-4 shadow-md border border-gray-100">
+      <div className="flex items-center gap-2 mb-5">
+        <div className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center">
+          <ChatBubbleLeftRightIcon className="w-4 h-4 text-green-600" />
+        </div>
+        <h3 className="text-lg font-bold text-gray-900">서비스 완료 정보</h3>
+      </div>
+      
+      <div className="space-y-4">
+        {/* 체크인/체크아웃 시간 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-blue-50 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <ClockIcon className="w-4 h-4 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-600">체크인 시간</p>
+                <p className="text-sm font-bold text-gray-900">
+                  {comment.checkinAt ? new Date(comment.checkinAt).toLocaleString('ko-KR') : '기록 없음'}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-purple-50 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                <ClockIcon className="w-4 h-4 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-600">체크아웃 시간</p>
+                <p className="text-sm font-bold text-gray-900">
+                  {comment.checkoutAt ? new Date(comment.checkoutAt).toLocaleString('ko-KR') : '기록 없음'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* 서비스 코멘트 */}
+        {comment.comment && (
+          <div className="bg-gray-50 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                <ChatBubbleLeftRightIcon className="w-4 h-4 text-gray-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-gray-600 mb-2">매니저가 전달한 서비스 코멘트</p>
+                <p className="text-sm text-gray-900 leading-relaxed">
+                  {comment.comment}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // 매니저 정보 섹션
-const ManagerSection = ({ manager }: { manager?: any }) => {
+const ManagerSection = ({ matchings }: { matchings?: any[] }) => {
+  const hasMatchings = matchings && matchings.length > 0
+
   return (
     <div className="bg-white rounded-2xl p-5 mb-4 shadow-md border border-gray-100">
       <div className="flex items-center gap-2 mb-5">
         <div className="w-6 h-6 bg-indigo-100 rounded-lg flex items-center justify-center">
           <UserIcon className="w-4 h-4 text-indigo-600" />
         </div>
-        <h3 className="text-lg font-bold text-gray-900">매칭 도우미</h3>
+        <h3 className="text-lg font-bold text-gray-900">
+          매칭 매니저 {hasMatchings && `(${matchings.length}명)`}
+        </h3>
       </div>
       
-      {manager ? (
-        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-200 to-purple-200 rounded-xl flex items-center justify-center">
-              <UserIcon className="w-6 h-6 text-indigo-700" />
-            </div>
-            <div className="flex-1">
-              <h4 className="text-base font-bold text-gray-900 mb-1">{manager.name}</h4>
-              <p className="text-sm text-gray-600 mb-2">{manager.gender} · {manager.age}세</p>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 bg-white/70 px-2 py-1 rounded-lg">
-                  <StarIcon className="w-3 h-3 text-yellow-500 fill-current" />
-                  <span className="text-xs font-bold text-gray-700">4.8</span>
-                </div>
-                <div className="bg-white/70 px-2 py-1 rounded-lg">
-                  <span className="text-xs font-semibold text-gray-700">리뷰 127개</span>
+      {hasMatchings ? (
+        <div className="space-y-3">
+          {matchings.map((matching, index) => {
+            const manager = matching.manager
+            const isRequested = matching.isRequested
+            const isAccepted = matching.isAccepted
+            const priority = matching.priority
+            
+            return (
+              <div 
+                key={matching.matchingId} 
+                className={`rounded-xl p-4 border-2 ${
+                  isRequested 
+                    ? 'bg-blue-50 border-blue-200' 
+                    : 'bg-gray-50 border-gray-200'
+                }`}
+              >
+                                 {/* 우선순위 배지 */}
+                 <div className="flex items-center justify-between mb-3">
+                   <div className="flex items-center gap-2">
+                     <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
+                       priority === 1 
+                         ? 'bg-yellow-100 text-yellow-800' 
+                         : priority === 2 
+                         ? 'bg-blue-100 text-blue-800'
+                         : 'bg-gray-100 text-gray-800'
+                     }`}>
+                       {priority === 1 ? '1순위' : priority === 2 ? '2순위' : `${priority}순위`}
+                     </span>
+                     {isRequested && (
+                       <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-lg text-xs font-bold">
+                         매칭 요청됨
+                       </span>
+                     )}
+                     {matching.isFinal === true && (
+                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded-lg text-xs font-bold">
+                        최종 매칭
+                       </span>
+                     )}
+                     {matching.isFinal === false && (
+                       <span className="bg-red-100 text-red-800 px-2 py-1 rounded-lg text-xs font-bold">
+                         매칭 거절
+                       </span>
+                     )}
+                   </div>
+                 </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-indigo-200 rounded-xl flex items-center justify-center overflow-hidden">
+                    {manager.profileImage ? (
+                      <img 
+                        src={manager.profileImage} 
+                        alt={manager.name}
+                        className="w-full h-full object-cover"
+                      />
+                                          ) : (
+                      <UserIcon className="w-6 h-6 text-indigo-700" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-base font-bold text-gray-900 mb-1">{manager.name}</h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      {manager.gender} · {manager.age >= 0 ? `${manager.age}세` : '나이 정보 없음'}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 bg-white/70 px-2 py-1 rounded-lg">
+                        <StarIcon className="w-3 h-3 text-yellow-500 fill-current" />
+                        <span className="text-xs font-bold text-gray-700">4.8</span>
+                      </div>
+                      <div className="bg-white/70 px-2 py-1 rounded-lg">
+                        <span className="text-xs font-semibold text-gray-700">리뷰 127개</span> {/* TODO: 예림님 여기에 리뷰 연동 부탁드려용~ */}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            )
+          })}
         </div>
       ) : (
         <div className="text-center py-8">
@@ -324,7 +465,7 @@ const ActionSection = ({
           <button
             onClick={onAccept}
             disabled={isProcessing}
-            className="flex-2 bg-gradient-to-r from-primary via-blue-500 to-indigo-500 hover:from-primary/90 hover:via-blue-500/90 hover:to-indigo-500/90 text-white rounded-xl py-3 px-4 font-semibold text-sm disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+            className="flex-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl py-3 px-4 font-semibold text-sm disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
           >
             {isProcessing ? '처리중...' : '✨ 매칭 수락하기'}
           </button>
@@ -342,15 +483,87 @@ const ActionSection = ({
   )
 }
 
+// 매칭 완료 후 취소 액션 섹션
+const CancelActionSection = ({
+  onCancel,
+  isProcessing,
+}: {
+  onCancel: (reason: string) => void
+  isProcessing: boolean
+}) => {
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false)
+
+  const handleCancel = (reason: string) => {
+    onCancel(reason)
+    setIsCancelModalOpen(false)
+  }
+
+  return (
+    <>
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile bg-white/95 backdrop-blur-xl border-t border-gray-200 p-4 shadow-2xl">
+        <button
+          onClick={() => setIsCancelModalOpen(true)}
+          disabled={isProcessing}
+          className="w-full bg-primary text-white rounded-xl py-3.5 px-4 font-semibold text-base disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+        >
+          {isProcessing ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>처리 중...</span>
+            </div>
+          ) : (
+            '예약 취소하기'
+          )}
+        </button>
+      </div>
+
+      {/* 취소 모달 */}
+      <CancellationModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={handleCancel}
+        title="예약 취소"
+        description="취소 사유를 선택해주세요"
+      />
+    </>
+  )
+}
+
 // 메인 컴포넌트
 export const ReservationDetailPageClient = ({
   initialReservation,
 }: ReservationDetailPageClientProps) => {
   const router = useRouter()
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
   const [reservation, setReservation] = useState<ReservationHistory | null>(
     initialReservation,
   )
   const [isProcessing, setIsProcessing] = useState(false)
+  const [reservationComment, setReservationComment] = useState<ReservationComment | null>(null)
+
+  // 예약 상태가 DONE일 때 코멘트 정보 가져오기
+  useEffect(() => {
+    const fetchReservationComment = async () => {
+      if (reservation?.reservationStatus === 'DONE' && reservation?.reservationId) {
+        try {
+          // TODO: 실제 토큰을 여기에 추가해야 합니다
+          const token = getAuthToken()
+          if (!token) {
+            setError('인증 정보가 없습니다. 다시 로그인 해주세요.')
+            setLoading(false)
+            return
+          }
+          const comment = await getReservationComment(reservation.reservationId, token)
+          setReservationComment(comment)
+        } catch (error) {
+          console.error('Failed to fetch reservation comment:', error)
+        }
+      }
+    }
+
+    fetchReservationComment()
+  }, [reservation?.reservationStatus, reservation?.reservationId])
 
   if (!reservation) {
     return (
@@ -411,6 +624,27 @@ export const ReservationDetailPageClient = ({
     }
   }
 
+  const handleCancelReservation = async (reason: string) => {
+    if (isProcessing || !reservation?.reservationId) return
+    setIsProcessing(true)
+    
+    try {
+      // cancelReservation API 호출
+      await cancelReservation(reservation.reservationId, reason)
+      
+      // 성공시 예약 상태를 CANCEL로 변경
+      setReservation((prev) =>
+        prev ? { ...prev, reservationStatus: 'CANCEL' } : null,
+      )
+      alert('예약이 성공적으로 취소되었습니다.')
+    } catch (error) {
+      console.error('Failed to cancel reservation:', error)
+      alert('예약 취소에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <CommonHeader 
@@ -418,17 +652,30 @@ export const ReservationDetailPageClient = ({
         showBackButton
       />
 
-      <main className="flex-grow pt-24 pb-20 px-4">
+      <main className="flex-grow pt-24 pb-24 px-4">
         <ReservationHeaderSection reservation={reservation} />
+        {/* 서비스 완료시에만 코멘트 섹션 표시 */}
+        {reservation.reservationStatus === 'DONE' && reservationComment && (
+          <ServiceCompletionSection comment={reservationComment} />
+        )}
         <ServiceDetailsSection reservation={reservation} />
+        <ManagerSection matchings={reservation.matchings} />
         <PaymentSection reservation={reservation} />
-        <ManagerSection manager={reservation.matchings[0]?.manager} />
       </main>
       
+      {/* 매칭 대기중일 때: 수락/거절 버튼 */}
       {reservation.reservationStatus === 'WAITING' && (
         <ActionSection
           onAccept={handleAcceptMatching}
           onReject={handleRejectMatching}
+          isProcessing={isProcessing}
+        />
+      )}
+      
+      {/* 매칭 완료 후: 취소 버튼 */}
+      {reservation.reservationStatus === 'MATCHING' && (
+        <CancelActionSection
+          onCancel={handleCancelReservation}
           isProcessing={isProcessing}
         />
       )}

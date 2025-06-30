@@ -8,7 +8,6 @@ import React, { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { calculateEndTime } from '@/shared/lib/utils'
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
-import { ReservationStorage } from '@/shared/lib/reservationStorage'
 import {
   DateSelector,
   TimeSelector,
@@ -46,10 +45,6 @@ const ReservationForm = ({
           if (existingReservation && existingReservation.categoryId !== initialCategory.categoryId) {
             // 다른 카테고리의 예약 정보가 있으면 정리
             sessionStorage.removeItem('currentReservation')
-            console.log('🔄 다른 카테고리 예약 시작으로 기존 예약 정보 정리:', {
-              기존: existingReservation.categoryName,
-              신규: initialCategory.categoryName
-            })
           }
         }
       } catch (error) {
@@ -91,6 +86,7 @@ const ReservationForm = ({
     handleResetTime,
     visitTimeSlots,
     isSubmitting,
+    isRecommendedTimeLoading,
   } = useReservationForm({ initialCategory, initialOptions, addressId })
 
   // 임시저장 기능 제거됨 - 관련 코드 삭제
@@ -112,8 +108,8 @@ const ReservationForm = ({
         <div className="px-4 py-3 bg-gray-50 border-b pt-20">
           <h2 className="text-lg font-bold">{initialCategory.categoryName}</h2>
           <p className="text-sm text-gray-600">
-            시간당 {initialCategory.categoryPrice.toLocaleString()}원 (기본{' '}
-            {initialCategory.categoryTime}시간)
+            기본 금액 {initialCategory.categoryPrice.toLocaleString()}원 
+            • 추가시간 시간당 20,000원
           </p>
         </div>
 
@@ -137,6 +133,7 @@ const ReservationForm = ({
             calculateEndTime={calculateEndTime}
             recommendedTime={recommendedTime}
             showTimeWarning={showTimeWarning}
+            isRecommendedTimeLoading={isRecommendedTimeLoading}
           />
 
           <AdditionalOptions

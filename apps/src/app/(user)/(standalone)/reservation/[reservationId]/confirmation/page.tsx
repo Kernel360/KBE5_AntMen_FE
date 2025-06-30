@@ -1,20 +1,16 @@
 'use client'
 
-import Link from 'next/link';
 import { useEffect } from 'react';
 import { CheckCircleIcon, HomeIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/solid';
 import { useManagerSelection } from '@/features/manager-selection';
 import { ReservationStorage } from '@/shared/lib/reservationStorage';
 
 const Page = () => {
-  
   const { clearSelection } = useManagerSelection();
-
-  // 예약 완료 시 매니저 선택 상태 및 예약 정보 초기화 (한 번만 실행)
+  // 예약 완료 시 매니저 선택 상태 및 예약 정보 초기화
   useEffect(() => {
     const cleanup = async () => {
       try {
-        
         // 매니저 선택 상태 초기화
         if (clearSelection) {
           clearSelection();
@@ -24,22 +20,22 @@ const Page = () => {
         try {
           ReservationStorage.clearPendingReservation();
         } catch (storageError) {
+          console.warn('ReservationStorage 정리 실패:', storageError);
         }
         
         // 세션 정리
         try {
           sessionStorage.removeItem('currentReservation');
         } catch (sessionError) {
+          console.warn('세션 정리 실패:', sessionError);
         }
-        
       } catch (error) {
         console.error('데이터 정리 중 오류:', error);
         // 에러가 발생해도 페이지는 정상적으로 표시되어야 함
       }
     };
     
-    cleanup();
-  }, []); // 빈 dependency array로 변경하여 컴포넌트 마운트 시 한 번만 실행
+    cleanup();}, [clearSelection]);
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
@@ -83,7 +79,7 @@ const Page = () => {
             onClick={() => {
               window.location.href = '/myreservation';
             }}
-            className="w-full py-3 px-6 bg-primary-500 text-white font-semibold rounded-xl hover:bg-primary-600 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
           >
             <ClipboardDocumentListIcon className="w-4 h-4" />
             내 예약 확인하기
