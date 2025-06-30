@@ -3,6 +3,8 @@ export interface CustomerAddressRequest {
   addressAddr: string;
   addressDetail: string;
   addressArea: number;
+  customerLatitude?: number;
+  customerLongitude?: number;
 }
 
 export interface CustomerAddressResponse {
@@ -11,6 +13,8 @@ export interface CustomerAddressResponse {
   addressAddr: string;
   addressDetail: string;
   addressArea: number;
+  customerLatitude?: number;
+  customerLongitude?: number;
 }
 
 // 쿠키에서 값 읽는 함수 (최상위에 선언)
@@ -41,6 +45,10 @@ export const createAddress = async (
 ): Promise<CustomerAddressResponse> => {
   const token = getCookie('auth-token');
   const decodedToken = token ? decodeURIComponent(token) : null;
+
+  // ✅ 디버깅: 전송 데이터 확인
+  console.log('주소 등록 데이터 (위경도 포함):', data);
+
   const res = await fetch('https://api.antmen.site:9091/customers/address', {
     method: 'POST',
     credentials: 'include',
