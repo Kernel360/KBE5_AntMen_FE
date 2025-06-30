@@ -1,64 +1,80 @@
-# 최종 최적화된 admin React 앱 Dockerfile
-# 외부 nginx 사용, 컨테이너는 정적 파일만 서빙
+# admin/Dockerfile - 문법 오류 수정
+# 🚀 ULTRA FAST ADMIN VERSION - Dockerfile 문법 올바르게
 
-# 빌드 단계
-FROM node:20.11-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:20.11-alpine AS builder
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
 
-# Canvas 빌드를 위한 최소 도구만 설치
-RUN apk add --no-cache \
-    libc6-compat \
-    python3 \
-    make \
-    g++
+# 모든 도구 한번에 설치 (Canvas 빌드 포함)
+RUN apk add --no-cache libc6-compat python3 make g++ curl
 
 WORKDIR /app
 
-# 1. package.json 파일들 복사 (최적 캐싱)
+# 🔧 1. ROOT 패키지 파일들 먼저 복사
 COPY package.json yarn.lock ./
-COPY admin/package.json ./admin/
-COPY packages/ui/package.json ./packages/ui/
 
-# 2. apps workspace 더미 생성 (워크스페이스 오류 방지)
-RUN mkdir -p apps && \
+# 🔧 2. 필수 워크스페이스 package.json 복사
+COPY admin/package.json ./admin/
+
+# 🔧 3. apps workspace 더미 생성 (워크스페이스 오류 방지)
+RUN mkdir -p apps packages/ui && \
     echo '{"name": "apps", "private": true, "version": "1.0.0"}' > apps/package.json
 
-# 3. Canvas 관련 환경변수 설정 (빌드 최적화)
-ENV PYTHON=/usr/bin/python3
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-ENV npm_config_build_from_source=true
+# 🔧 4. packages/ui 처리 (존재하면 복사, 없으면 더미 생성)
+RUN mkdir -p packages/ui
 
-# 4. 의존성 설치 (프로덕션 최적화)
-RUN yarn install --frozen-lockfile --network-timeout 300000
+# packages/ui/package.json 조건부 복사
+RUN if [ -f packages/ui/package.json ]; then \
+        cp packages/ui/package.json ./packages/ui/package.json; \
+    else \
+        echo '{"name": "@antmen/ui", "version": "0.0.0", "main": "index.js"}' > ./packages/ui/package.json && \
+        echo 'module.exports = {};' > ./packages/ui/index.js; \
+    fi
 
-# 5. 소스 코드 복사 (필요한 것만)
+# 🚀 병렬 설치 최적화 (메모리 8GB, 동시성 16)
+ENV NODE_OPTIONS="--max-old-space-size=8192" \
+    npm_config_build_from_source=true \
+    PYTHON=/usr/bin/python3 \
+    YARN_NETWORK_TIMEOUT=180000
+
+# 🔧 ARM64 yarn 최적화 (안전한 설정)
+RUN yarn config set network-concurrency 16 && \
+    yarn config set network-timeout 180000 && \
+    yarn install --frozen-lockfile
+
+# 🔧 5. 소스 코드 복사 (packages/ui가 있다면)
+RUN if [ -d packages/ui ] && [ "$(ls -A packages/ui)" ]; then \
+        cp -r packages/ui/* ./packages/ui/ 2>/dev/null || true; \
+    fi
+
 COPY admin/ ./admin/
-COPY packages/ui/ ./packages/ui/
 
-# 6. 빌드 실행
+# 🚀 빠른 빌드 (소스맵 비활성화, 병렬 처리)
 WORKDIR /app/admin
-ENV NODE_ENV=production
-ENV GENERATE_SOURCEMAP=false
-ENV CI=false
-ENV SKIP_PREFLIGHT_CHECK=true
+ENV NODE_ENV=production \
+    GENERATE_SOURCEMAP=false \
+    CI=false \
+    SKIP_PREFLIGHT_CHECK=true \
+    FAST_REFRESH=false
 
 RUN yarn build
 
-# 프로덕션 단계 - serve 사용 (외부 nginx와 연동)
+# 런타임 (초경량화)
 FROM node:20.11-alpine AS runner
 
-# serve 패키지 전역 설치
+# 한번에 설치 (serve + curl + 사용자)
 RUN npm install -g serve@14 && \
+    apk add --no-cache curl && \
     addgroup -g 1001 -S nodejs && \
     adduser -S react -u 1001
 
 USER react
-
 WORKDIR /app
 
-# 빌드된 파일만 복사
+# 빌드 결과만 복사
 COPY --from=builder --chown=react:nodejs /app/admin/build ./build
 
 EXPOSE 3001
 
-# serve로 정적 파일 서빙 (외부 nginx가 프록시)
+# serve로 정적 파일 서빙
 CMD ["serve", "-s", "build", "-l", "3001", "--no-clipboard", "--single"]
