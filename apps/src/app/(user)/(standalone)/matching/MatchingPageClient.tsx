@@ -8,7 +8,6 @@ import type { Manager } from '@/widgets/manager/model/manager'
 
 // 매니저 매칭 알고리즘 함수 (추후 확장 가능)
 function getMatchedManagers(managers: Manager[], count: number = 5): Manager[] {
-  // TODO: 추후 알고리즘 적용 (예: 적합도, 거리, 평점 등)
   
   // return managers.slice(0, count)
   return managers // 임시: 전체 매니저 반환 (테스트용)
