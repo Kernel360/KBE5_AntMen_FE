@@ -32,4 +32,12 @@ export interface AdminChangePasswordRequest {
 
 export interface Admin {
     id: number;
+}
+
+export interface BoardRequestDto {
+    boardTitle: string;
+    boardContent: string;
+    boardIsPinned: boolean;
+    boardReservatedAt?: string; // ISO string format
+    boardType: string; // 'customer-notice' | 'manager-notice'
 } 

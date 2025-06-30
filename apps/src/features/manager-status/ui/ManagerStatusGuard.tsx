@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/shared/stores/authStore'
 import { useSecureAuth } from '@/shared/hooks/useSecureAuth'
@@ -19,122 +19,100 @@ interface ManagerStatusGuardProps {
 export const ManagerStatusGuard = ({ children }: ManagerStatusGuardProps) => {
   // 🔄 Hydration 오류 방지: 클라이언트에서만 실행
   const [isMounted, setIsMounted] = useState(false)
-  
-  // 현재 경로 확인
   const pathname = usePathname()
-  
+
   useEffect(() => {
     setIsMounted(true)
   }, [])
-  
+
+  // zustand selector로 필요한 값만 구독
+  const userId = useAuthStore(state => state.user?.userId)
+  const userRole = useAuthStore(state => state.user?.userRole)
+  const managerStatus = useAuthStore(state => state.user?.managerStatus)
+  const updateRejectionReason = useAuthStore(state => state.updateRejectionReason)
+
   // 🛡️ 보안 강화: JWT 기반 인증 (조작 불가능)
   const { user: secureUser, isManager, isLoading: authLoading } = useSecureAuth()
-  // 🔄 기존 호환성: localStorage 기반 (점진적 마이그레이션)
-  const { user, updateRejectionReason } = useAuthStore()
-  
-  // 🎯 승인 알림 관리: 세션 기반 + 시간 기반
-  const [hasSeenApprovalNotificationInSession, setHasSeenApprovalNotificationInSession] = useState(false)
 
-  // 🔄 새로고침 시에도 승인 알림 확인 상태 유지
+  // 승인 알림 관리: 세션 + localStorage 기반
+  const [hasSeenApprovalNotificationInSession, setHasSeenApprovalNotificationInSession] = useState(false)
   useEffect(() => {
-    if (typeof window !== 'undefined' && user?.userId) {
-      const storageKey = `approval-notification-seen-${user.userId}`
+    if (typeof window !== 'undefined' && userId) {
+      const storageKey = `approval-notification-seen-${userId}`
       const hasSeenInStorage = localStorage.getItem(storageKey) === 'true'
       setHasSeenApprovalNotificationInSession(hasSeenInStorage)
     }
-  }, [user?.userId])
+  }, [userId])
 
   const [isLoading, setIsLoading] = useState(true)
   const [showApprovalNotification, setShowApprovalNotification] = useState(false)
-  
-  // 현재 매니저 상태 (로그인 시 받은 상태 사용)
-  const currentManagerStatus = user?.managerStatus
 
-  // 🕒 승인 알림 표시 여부를 결정하는 함수
-  const shouldShowApprovalNotification = (managerStatus: string | null | undefined) => {
-    // 승인 상태가 아니면 알림 표시 안함
-    if (managerStatus !== 'APPROVED') {
-      return false
-    }
-
-    // 현재 세션에서 이미 확인했으면 표시 안함
-    if (hasSeenApprovalNotificationInSession) {
-      return false
-    }
-
-    console.log('🎉 승인 알림 표시 - 사용자 ID:', user?.userId)
+  // 🕒 승인 알림 표시 여부를 결정하는 함수 (useCallback으로 최적화)
+  const shouldShowApprovalNotification = useCallback((managerStatus: string | null | undefined) => {
+    if (managerStatus !== 'APPROVED') return false
+    if (hasSeenApprovalNotificationInSession) return false
     return true
-  }
+  }, [hasSeenApprovalNotificationInSession])
 
   // 🛡️ 보안 검증: JWT vs localStorage 일관성 확인
   useEffect(() => {
-    if (typeof window !== 'undefined' && secureUser && user) {
-      // JWT와 localStorage 정보 비교
-      if (secureUser.userId !== user.userId || secureUser.userRole !== user.userRole) {
-        console.error('🚨 인증 정보 조작 감지!', {
-          jwt: { userId: secureUser.userId, userRole: secureUser.userRole },
-          localStorage: { userId: user.userId, userRole: user.userRole }
-        })
+    if (typeof window !== 'undefined' && secureUser && userId && userRole) {
+      if (secureUser.userId !== userId || secureUser.userRole !== userRole) {
         handleAuthTampering()
         return
       }
-
-      // 추가 JWT 검증
       const validation = validateAuthConsistency()
       if (!validation.isValid && validation.error?.includes('일치하지 않습니다')) {
         handleAuthTampering()
         return
       }
     }
-  }, [secureUser, user])
-  
+  }, [secureUser?.userId, secureUser?.userRole, userId, userRole])
+
   // 거절 사유 조회 (거절 상태인 경우에만)
   useEffect(() => {
     const loadRejectionReason = async () => {
-      if (!user?.userId || user.userRole !== 'MANAGER') {
+      if (!userId || userRole !== 'MANAGER') {
         setIsLoading(false)
         return
       }
-
-      // 거절 상태인 경우에만 거절 사유 조회
-      if (user.managerStatus === 'REJECTED') {
+      if (managerStatus === 'REJECTED') {
         try {
-          console.log('🔍 거절 사유 조회 시작...')
-          const rejectionReason = await getManagerRejectionReason(user.userId)
+          const rejectionReason = await getManagerRejectionReason(userId)
           if (rejectionReason) {
             updateRejectionReason(rejectionReason)
           }
-        } catch (error) {
-          console.error('거절 사유 조회 실패:', error)
-        }
+        } catch {}
       }
-
       setIsLoading(false)
     }
-
     loadRejectionReason()
-  }, [user?.userId, user?.userRole, user?.managerStatus, updateRejectionReason])
+  }, [userId, userRole, managerStatus, updateRejectionReason])
 
   // 승인 완료 알림 표시 여부 확인 (시간 기반)
   useEffect(() => {
-    if (!isLoading && currentManagerStatus === 'APPROVED') {
-      // 시간 기반으로 승인 알림 표시 여부 결정
-      const shouldShow = shouldShowApprovalNotification(currentManagerStatus)
+    if (!isLoading && managerStatus === 'APPROVED') {
+      const shouldShow = shouldShowApprovalNotification(managerStatus)
       setShowApprovalNotification(shouldShow)
     }
-  }, [isLoading, currentManagerStatus, hasSeenApprovalNotificationInSession])
+  }, [isLoading, managerStatus, shouldShowApprovalNotification])
 
   // 승인 완료 알림 확인 처리 (세션에서만 기록)
   const handleApprovalNotificationContinue = () => {
-    if (user?.userId) {
-      const storageKey = `approval-notification-seen-${user.userId}`
+    if (userId) {
+      const storageKey = `approval-notification-seen-${userId}`
       localStorage.setItem(storageKey, 'true')
     }
     setHasSeenApprovalNotificationInSession(true)
     setShowApprovalNotification(false)
   }
 
-  // 🔄 서버사이드 렌더링 중에는 로딩 표시
+  // 렌더링 추적용 로그 (1회만)
+  useEffect(() => {
+    console.log('[ManagerStatusGuard] 렌더링됨');
+  }, []);
+
+  // SSR 중에는 로딩 표시
   if (!isMounted) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -146,7 +124,6 @@ export const ManagerStatusGuard = ({ children }: ManagerStatusGuardProps) => {
     )
   }
 
-  // 🛡️ 1차 보안 체크: JWT 기반 권한 확인 (최우선)
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -158,19 +135,14 @@ export const ManagerStatusGuard = ({ children }: ManagerStatusGuardProps) => {
     )
   }
 
-  // JWT에서 추출한 정보로 권한 체크 - 조작 불가능!
   if (!secureUser || !isManager) {
-    console.warn('🚨 JWT 기반 매니저 권한 체크 실패')
     return <UnauthorizedAccessScreen />
   }
 
-  // 🔄 2차 체크: localStorage 호환성 (점진적 마이그레이션)
-  if (!user || user.userRole !== 'MANAGER') {
-    console.warn('🚨 localStorage 기반 매니저 권한 체크 실패')
+  if (!userId || userRole !== 'MANAGER') {
     return <UnauthorizedAccessScreen />
   }
 
-  // 로딩 중
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -182,7 +154,6 @@ export const ManagerStatusGuard = ({ children }: ManagerStatusGuardProps) => {
     )
   }
 
-  // 승인 완료 알림 표시 (1회만)
   if (showApprovalNotification) {
     return (
       <ManagerApprovedScreen
@@ -194,40 +165,21 @@ export const ManagerStatusGuard = ({ children }: ManagerStatusGuardProps) => {
 
   // 🚨 재신청 관련 페이지는 REJECTED 상태여도 접근 허용
   const isReapplyRelatedPage = pathname?.includes('/reapply')
-  
-  console.log('🔍 ManagerStatusGuard 체크:', {
-    pathname,
-    isReapplyRelatedPage,
-    currentManagerStatus,
-    userId: user?.userId
-  })
-  
-  // 재신청 관련 페이지인 경우 상태 체크 우회 (재신청 폼 + 재신청 완료 페이지)
   if (isReapplyRelatedPage) {
-    console.log('✅ 재신청 관련 페이지 접근 허용:', pathname)
     return <>{children}</>
   }
-  
-  // 🔄 백엔드 상태를 화면 표시용 상태로 변환
-  const displayStatus = currentManagerStatus ? mapManagerStatusToDisplay(currentManagerStatus) : 'PENDING'
-  
-  // 매니저 상태별 화면 표시 (백엔드 상태 직접 사용)
-  switch (currentManagerStatus) {
+
+  // 매니저 상태별 화면 표시
+  switch (managerStatus) {
     case 'WAITING':
       return <ManagerPendingScreen status="WAITING" />
-    
     case 'REAPPLY':
       return <ManagerPendingScreen status="REAPPLY" />
-    
     case 'REJECTED':
       return <ManagerRejectedScreen />
-    
     case 'APPROVED':
-      // 승인 완료되었고 알림도 본 상태 - 정상 서비스 이용
       return <>{children}</>
-    
     default:
-      // 매니저인데 상태가 없는 경우 - 승인 대기로 처리
       return <ManagerPendingScreen status="WAITING" />
   }
 }
