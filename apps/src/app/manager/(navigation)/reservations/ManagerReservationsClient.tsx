@@ -429,7 +429,7 @@ export const ManagerReservationsClient = ({
               {activeTab === 'scheduled' && (
                 <button
                   onClick={handleNewWork}
-                  className="rounded-lg bg-blue-500 px-6 py-3 text-white hover:bg-blue-600"
+                  className="rounded-lg bg-primary-500 px-6 py-3 text-white hover:bg-primary-600"
                 >
                   새 업무 찾기
                 </button>

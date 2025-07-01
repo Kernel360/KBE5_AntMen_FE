@@ -252,7 +252,7 @@ export const EditProfileModal = ({
             </button>
             <button
               type="submit"
-              className="flex-1 h-[52px] bg-[#0fbcd6] text-white rounded-lg"
+              className="flex-1 h-[52px] bg-primary-500 text-white rounded-lg"
             >
               저장
             </button>

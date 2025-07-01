@@ -151,7 +151,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
               </button>
               <button
                 onClick={() => onWriteReview?.(reservationId.toString())}
-                className="flex-1 rounded-[22px] bg-[#4DD0E1] py-3 text-sm font-medium text-white hover:bg-[#26C6DA] transition-colors"
+                className="flex-1 rounded-[22px] bg-primary-500 py-3 text-sm font-medium text-white hover:bg-primary-600 transition-colors"
               >
                 리뷰 작성
               </button>
