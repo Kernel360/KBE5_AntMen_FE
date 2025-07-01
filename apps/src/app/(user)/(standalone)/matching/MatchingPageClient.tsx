@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react'
 import { MatchingHeader, ManagerList, BottomSection } from '@/widgets/manager'
 import { useManagerSelection } from '@/features/manager-selection'
+import { getRecommendedManagers, type MatchingRequestDto } from '@/entities/matching'
 import type { Manager } from '@/widgets/manager/model/manager'
 
 // 매니저 매칭 알고리즘 함수 (추후 확장 가능)
 function getMatchedManagers(managers: Manager[], count: number = 5): Manager[] {
-  // TODO: 추후 알고리즘 적용 (예: 적합도, 거리, 평점 등)
   
   // return managers.slice(0, count)
   return managers // 임시: 전체 매니저 반환 (테스트용)
@@ -30,47 +30,32 @@ export default function MatchingPageClient() {
 
         const reservationInfo = JSON.parse(reservationInfoStr)
 
-        // 매니저 목록 가져오기
-        const response = await fetch(
-          'https://api.antmen.site:9091/api/v1/matchings',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
-            },
-            body: JSON.stringify({
-              reservationDate: reservationInfo.reservationDate,
-              reservationTime: reservationInfo.reservationTime,
-              reservationDuration: reservationInfo.reservationDuration,
-              location: {
-                district: reservationInfo.addressId,
-              },
-            }),
-          },
-        )
-
-        if (!response.ok) {
-          throw new Error(`매니저 조회 실패: ${response.status}`)
+        // 매니저 목록 가져오기 - 알고리즘 API 함수 사용
+        const matchingRequest: MatchingRequestDto = {
+          reservationDate: reservationInfo.reservationDate,
+          reservationTime: reservationInfo.reservationTime,
+          reservationDuration: reservationInfo.reservationDuration,
+          addressId: reservationInfo.addressId,
         }
 
-        const data = await response.json()
+        const data = await getRecommendedManagers(
+          matchingRequest,
+          true,        // useDistanceFilter
+          'distance'   // sortType
+        )
 
-        // 데이터 구조 변환
+        // 데이터 구조 변환 - MatchingManagerListResponseDto에서 Manager로 변환
         const formattedManagers: Manager[] = Array.isArray(data)
           ? data.map((manager) => ({
               id: manager.managerId?.toString() || '',
               name: manager.managerName || '',
               gender: manager.managerGender || '미지정',
               age: manager.managerAge || 0,
-              rating: manager.rating || 0,
-              description:
-                manager.description || '성실하고 친절한 서비스를 제공합니다.',
-              profileImage: manager.managerName ? manager.managerName[0] : '매',
-              reviewCount: manager.reviewCount || 0,
-              introduction:
-                manager.introduction ||
-                '안녕하세요! 성실하고 친절한 매니저입니다.',
+              rating: manager.managerRating || 0,
+              description: manager.managerComment || '성실하고 친절한 서비스를 제공합니다.',
+              profileImage: manager.managerImage || (manager.managerName ? manager.managerName[0] : '매'),
+              reviewCount: 0, // API 응답에 없음, 기본값 사용
+              introduction: manager.managerComment || '안녕하세요! 성실하고 친절한 매니저입니다.',
               characteristics: [
                 { id: '1', label: '친절해요', type: 'kind' as const },
                 { id: '2', label: '시간 엄수', type: 'punctual' as const },
