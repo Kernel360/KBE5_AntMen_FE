@@ -99,7 +99,7 @@ class BoardService {
       'Content-Type': 'application/json',
     };
 
-    const url = `http://localhost:9090/api/v1/board/${id}`;
+    const url = `https://api.antmen.site:9090/api/v1/board/${id}`;
     console.log('📤 게시글 상세 요청 (인증 없음):', {
       url,
       boardId: id,
@@ -188,7 +188,7 @@ class BoardService {
 
     // 백엔드 boardType으로 변환
     const backendBoardType = this.getBoardTypeParam(boardType, userRole);
-    const url = `http://localhost:9090/api/v1/board/${backendBoardType}/list?${params.toString()}`;
+    const url = `https://api.antmen.site:9090/api/v1/board/${backendBoardType}/list?${params.toString()}`;
     console.log('📤 게시글 목록 요청:', { 
       frontendBoardType: boardType, 
       backendBoardType, 
@@ -270,7 +270,7 @@ class BoardService {
 
     console.log('📤 고객 게시글 요청:', { headers, requestData });
 
-    const response = await fetch('http://localhost:9090/api/v1/board/customer', {
+    const response = await fetch('https://api.antmen.site:9090/api/v1/board/customer', {
       method: 'POST',
       headers,
       body: JSON.stringify(requestData)
@@ -309,7 +309,7 @@ class BoardService {
 
     console.log('📤 매니저 게시글 요청:', { headers, requestData });
 
-    const response = await fetch('http://localhost:9090/api/v1/board/manager', {
+    const response = await fetch('https://api.antmen.site:9090/api/v1/board/manager', {
       method: 'POST',
       headers,
       body: JSON.stringify(requestData)
