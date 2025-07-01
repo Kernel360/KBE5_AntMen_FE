@@ -1,5 +1,6 @@
 export { AdminLayout } from './AdminLayout';
 export { AdminLogin } from './AdminLogin';
+export { AdminPassword } from './AdminPassword';
 export { Dashboard } from './Dashboard';
 export { UsersCustomer } from './UsersCustomer';
 export { UsersManager } from './UsersManager';
