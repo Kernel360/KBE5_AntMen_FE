@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { BoardTabs } from '@/widgets/post/BoardTabs';
 import { PostList } from '@/widgets/post/PostList';
 import { BoardHeader } from '@/widgets/post/BoardHeader';
@@ -11,47 +11,51 @@ import { SortOption } from '@/shared/types/board';
 
 export default function ManagerBoardsPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'공지사항' | '업무 문의'>('공지사항');
   const [searchQuery , setSearchQuery] = useState('');
   const [isSortModalOpen, setIsSortModalOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<SortOption>('latest');
 
-  // 초기 로드 시 localStorage에서 저장된 탭 정보 불러오기
-  useEffect(() => {
-    const savedTab = localStorage.getItem('managerBoardActiveTab');
-    if (savedTab === '공지사항' || savedTab === '업무 문의') {
-      setActiveTab(savedTab);
-    }
-  }, []);
+  // URL 쿼리와 매핑
+  const tabMap = useMemo(() => ({ n: '공지사항', w: '업무 문의' }), []);
+  const tabCode = searchParams?.get('t');
+  const expectedTab = tabMap[tabCode as 'n' | 'w'] ?? '공지사항';
 
-  // URL 파라미터에서 이전 탭 정보를 확인하고 적용
+  // 탭 초기화 (URL 파라미터 우선, 없으면 localStorage, 그것도 없으면 기본값)
   useEffect(() => {
-    const tabCode = searchParams?.get('t');
     if (tabCode) {
-      const tabMap: Record<string, '공지사항' | '업무 문의'> = {
-        'n': '공지사항',
-        'w': '업무 문의'
-      };
-      const tab = tabMap[tabCode];
+      const tab = tabMap[tabCode as 'n' | 'w'];
       if (tab) {
-        setActiveTab(tab);
+        setActiveTab(tab as '공지사항' | '업무 문의');
+        localStorage.setItem('managerBoardActiveTab', tab);
+        return;
       }
     }
-  }, [searchParams]);
+    const savedTab = localStorage.getItem('managerBoardActiveTab');
+    if (savedTab === '공지사항' || savedTab === '업무 문의') {
+      setActiveTab(savedTab as '공지사항' | '업무 문의');
+    }
+  }, [searchParams, tabCode, tabMap]);
 
-  // 탭이 변경될 때마다 로컬 스토리지에 저장
   useEffect(() => {
     localStorage.setItem('managerBoardActiveTab', activeTab);
   }, [activeTab]);
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
-    // TODO: 검색 로직 구현
   };
 
   const handleSortChange = (sort: SortOption) => {
     setSelectedSort(sort);
-    // TODO: 정렬 로직 구현
+  };
+
+  const handleTabChange = (tab: '공지사항' | '서비스 문의' | '업무 문의') => {
+    if (tab === '공지사항' || tab === '업무 문의') {
+      setActiveTab(tab);
+      const tabCode = tab === '공지사항' ? 'n' : 'w';
+      router.replace(`/manager/boards?t=${tabCode}`);
+    }
   };
 
   return (
@@ -66,14 +70,19 @@ export default function ManagerBoardsPage() {
           <BoardTabs
             userRole="manager"
             activeTab={activeTab}
-            onTabChange={(tab) => setActiveTab(tab as typeof activeTab)}
+            onTabChange={handleTabChange}
           />
         </div>
         <div className="mx-auto w-full max-w-[430px]">
-          <PostList 
-            userRole="manager"
-            boardType={activeTab}
-          />
+          {/* PostList를 activeTab이 expectedTab과 일치할 때만 렌더링 */}
+          {activeTab === expectedTab ? (
+            <PostList 
+              userRole="manager"
+              boardType={activeTab}
+            />
+          ) : (
+            <div className="h-40 flex items-center justify-center text-gray-400">로딩 중...</div>
+          )}
         </div>
       </div>
       <BoardSortModal
@@ -85,4 +94,4 @@ export default function ManagerBoardsPage() {
       />
     </main>
   );
-} 
+}

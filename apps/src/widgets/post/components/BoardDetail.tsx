@@ -5,12 +5,12 @@ import { Comments } from './Comments'
 import { formatDate } from '@/shared/utils/date'
 import {
   boardService,
-  type BoardDetail as BoardDetailType,
+  type BoardDetailResponse,
 } from '../api/boardService'
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 
 interface BoardDetailProps {
-  initialData: BoardDetailType
+  initialData: BoardDetailResponse
   boardType: string
 }
 
@@ -21,9 +21,9 @@ export const BoardDetail = ({ initialData, boardType }: BoardDetailProps) => {
   const handleSubmitComment = async (content: string) => {
     setIsSubmitting(true)
     try {
-      await boardService.createComment(String(post.id), content)
+      await boardService.createComment(String(post.boardId), content)
       // TODO: 댓글 작성 후 데이터 갱신
-      // const updatedPost = await boardService.getBoardDetail(String(post.id));
+      // const updatedPost = await boardService.getBoardDetail(String(post.boardId));
       // setPost(updatedPost);
     } finally {
       setIsSubmitting(false)
@@ -44,30 +44,19 @@ export const BoardDetail = ({ initialData, boardType }: BoardDetailProps) => {
         <div className="bg-white shadow-sm">
           <div className="px-4 py-5">
             <h1 className="text-xl font-bold mb-2 text-accent-foreground">
-              {post.title}
+              {post.boardTitle}
             </h1>
             <div className="flex items-center text-sm text-accent-foreground/70 pb-4">
               <span className="font-medium text-primary/80">
-                {post.author.name}
+                {post.userName}
               </span>
               <span className="mx-2 text-accent/30">|</span>
               <span>{formatDate(post.createdAt)}</span>
-              {post.status && (
-                <span
-                  className={`ml-2 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    post.status === '답변완료'
-                      ? 'bg-primary/10 text-primary'
-                      : 'bg-accent/10 text-accent-foreground/70'
-                  }`}
-                >
-                  {post.status}
-                </span>
-              )}
             </div>
             <div className="h-[1px] bg-gray-200" />
             <div className="px-2 pt-4 pb-1">
-              <p className="text-accent-foreground whitespace-pre-wrap break-words leading-relaxed">
-                {post.content}
+              <p className="text-accent-foreground whitespace-pre-wrap break-words leading-relaxed min-h-[4.5rem]">
+                {post.boardContent}
               </p>
             </div>
           </div>
@@ -84,6 +73,9 @@ export const BoardDetail = ({ initialData, boardType }: BoardDetailProps) => {
           />
         </div>
       </div>
+
+      {/* 네비게이션 바 높이만큼 하단 여백 */}
+      <div className="h-20" />
     </div>
   )
 }

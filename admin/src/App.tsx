@@ -3,6 +3,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AdminLayout } from './pages/admin/AdminLayout';
 import { AdminLogin } from './pages/admin/AdminLogin';
+import { AdminPassword } from './pages/admin/AdminPassword';
+import { AuthGuard } from './components/AuthGuard';
 import { Dashboard } from './pages/admin/Dashboard';
 import { UsersCustomer } from './pages/admin/UsersCustomer';
 import { UsersManager } from './pages/admin/UsersManager';
@@ -38,8 +40,17 @@ function App() {
         <div className="App">
           <Routes>
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="/admin" element={<AdminLayout />}>
+            <Route path="/admin/password" element={
+              <AuthGuard>
+                <AdminPassword />
+              </AuthGuard>
+            } />
+            <Route path="/" element={<Navigate to="/admin/login" replace />} />
+            <Route path="/admin" element={
+              <AuthGuard>
+                <AdminLayout />
+              </AuthGuard>
+            }>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="users/customer" element={<UsersCustomer />} />
@@ -61,7 +72,7 @@ function App() {
               <Route path="finance/refund" element={<FinanceRefund />} />
               <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
             </Route>
-            <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/admin/login" replace />} />
           </Routes>
         </div>
       </Router>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -14,17 +14,18 @@ import {
     CheckCircle,
     Loader2
 } from 'lucide-react';
-import { setCookie, ADMIN_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE } from '../../lib/cookie';
+import { setCookie, getCookie, ADMIN_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE } from '../../lib/cookie';
+import { adminService } from '../../api/adminService';
 
 interface LoginForm {
-    email: string;
+    loginId: string;
     password: string;
 }
 
 export const AdminLogin: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [form, setForm] = useState<LoginForm>({ email: '', password: '' });
+    const [form, setForm] = useState<LoginForm>({ loginId: '', password: '' });
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -32,6 +33,20 @@ export const AdminLogin: React.FC = () => {
 
     // 이전에 접근하려던 페이지 정보
     const from = (location.state as any)?.from?.pathname || '/admin/dashboard';
+
+    // 이미 로그인된 사용자인지 확인
+    useEffect(() => {
+        let token = getCookie(ADMIN_TOKEN_COOKIE);
+        if (!token) {
+            token = localStorage.getItem('adminToken');
+        }
+        const user = localStorage.getItem('adminUser');
+        
+        if (token && user) {
+            // 이미 로그인된 상태라면 대시보드로 이동
+            navigate('/admin/dashboard', { replace: true });
+        }
+    }, [navigate]);
 
     const handleInputChange = (field: keyof LoginForm, value: string) => {
         setForm(prev => ({ ...prev, [field]: value }));
@@ -43,13 +58,8 @@ export const AdminLogin: React.FC = () => {
         e.preventDefault();
 
         // 유효성 검사
-        if (!form.email || !form.password) {
-            setError('이메일과 비밀번호를 모두 입력해주세요.');
-            return;
-        }
-
-        if (!form.email.includes('@')) {
-            setError('유효한 이메일 주소를 입력해주세요.');
+        if (!form.loginId || !form.password) {
+            setError('로그인 아이디와 비밀번호를 모두 입력해주세요.');
             return;
         }
 
@@ -57,48 +67,46 @@ export const AdminLogin: React.FC = () => {
         setError(null);
 
         try {
-            // 실제 API 호출을 시뮬레이션
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            // 실제 API 호출
+            const loginResponse = await adminService.login({
+                userLoginId: form.loginId,
+                userPassword: form.password
+            });
 
-            // 데모용 로그인 (실제로는 API 호출)
-            if (form.email === 'admin@company.com' && form.password === 'admin123') {
-                setSuccess(true);
+            setSuccess(true);
 
-                // 토큰을 쿠키에 저장 (보안 설정 포함)
-                const accessToken = 'demo-access-token-12345';
-                const refreshToken = 'demo-refresh-token-67890';
+            // 쿠키와 localStorage 둘 다 저장
+            setCookie(ADMIN_TOKEN_COOKIE, loginResponse.accessToken, 1, {
+                secure: false,
+                sameSite: 'lax',
+                path: '/'
+            });
+            localStorage.setItem('adminToken', loginResponse.accessToken);
 
-                // 액세스 토큰 (1일 만료)
-                setCookie(ADMIN_TOKEN_COOKIE, accessToken, 1, {
-                    secure: process.env.NODE_ENV === 'production', // HTTPS에서만 전송
-                    sameSite: 'strict', // CSRF 공격 방지
-                    path: '/'
-                });
+            // 관리자 정보는 localStorage에 저장 (로그인 ID 사용)
+            localStorage.setItem('adminUser', JSON.stringify({
+                id: 1, // 임시 ID
+                loginId: form.loginId,
+                initialPassword: loginResponse.initialPassword
+            }));
 
-                // 리프레시 토큰 (7일 만료, HttpOnly는 JS에서 설정 불가하므로 서버에서 설정 필요)
-                setCookie(ADMIN_REFRESH_TOKEN_COOKIE, refreshToken, 7, {
-                    secure: process.env.NODE_ENV === 'production',
-                    sameSite: 'strict',
-                    path: '/'
-                });
+            // 성공 메시지 표시 후 대시보드로 이동
+            setTimeout(() => {
+                navigate('/admin/dashboard');
+            }, 3000);
 
-                // 사용자 정보는 localStorage에 저장 (민감하지 않은 정보만)
-                localStorage.setItem('adminUser', JSON.stringify({
-                    email: form.email,
-                    name: '관리자',
-                    role: 'admin'
-                }));
-
-                // 잠시 성공 메시지 표시 후 대시보드로 이동
-                setTimeout(() => {
-                    navigate(from, { replace: true });
-                }, 1000);
-
+        } catch (error: any) {
+            
+            // API 응답에서 오는 구체적인 에러 메시지 처리
+            if (error.response?.status === 401) {
+                setError('로그인 아이디 또는 비밀번호가 올바르지 않습니다.');
+            } else if (error.response?.status === 403) {
+                setError('관리자 권한이 없습니다.');
+            } else if (error.response?.data?.message) {
+                setError(error.response.data.message);
             } else {
-                setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+                setError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
             }
-        } catch (error) {
-            setError('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
         } finally {
             setIsLoading(false);
         }
@@ -110,14 +118,19 @@ export const AdminLogin: React.FC = () => {
 
     if (success) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-                <Card className="w-full max-w-md">
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                <Card className="w-full max-w-md shadow-lg">
                     <CardContent className="flex flex-col items-center justify-center p-8">
                         <div className="rounded-full bg-green-100 p-3 mb-4">
                             <CheckCircle className="h-8 w-8 text-green-600" />
                         </div>
                         <h2 className="text-xl font-semibold text-gray-900 mb-2">로그인 성공!</h2>
-                        <p className="text-gray-600 text-center">관리자 대시보드로 이동 중입니다...</p>
+                        <p className="text-gray-600 text-center mb-4">관리자 대시보드로 이동 중입니다...</p>
+                        <div className="flex space-x-1">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -125,7 +138,7 @@ export const AdminLogin: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
             <div className="w-full max-w-md space-y-6">
                 {/* 헤더 */}
                 <div className="text-center space-y-2">
@@ -137,7 +150,7 @@ export const AdminLogin: React.FC = () => {
                 </div>
 
                 {/* 로그인 폼 */}
-                <Card>
+                <Card className="shadow-lg">
                     <CardHeader>
                         <CardTitle className="text-xl text-center">로그인</CardTitle>
                         <CardDescription className="text-center">
@@ -146,17 +159,17 @@ export const AdminLogin: React.FC = () => {
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            {/* 이메일 입력 */}
+                            {/* 로그인 아이디 입력 */}
                             <div className="space-y-2">
-                                <Label htmlFor="email">이메일</Label>
+                                <Label htmlFor="loginId">로그인 아이디</Label>
                                 <div className="relative">
                                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                                     <Input
-                                        id="email"
-                                        type="email"
-                                        placeholder="admin@company.com"
-                                        value={form.email}
-                                        onChange={(e) => handleInputChange('email', e.target.value)}
+                                        id="loginId"
+                                        type="text"
+                                        placeholder="로그인 아이디를 입력하세요"
+                                        value={form.loginId}
+                                        onChange={(e) => handleInputChange('loginId', e.target.value)}
                                         className="pl-10"
                                         disabled={isLoading}
                                     />
@@ -199,7 +212,7 @@ export const AdminLogin: React.FC = () => {
                             {/* 로그인 버튼 */}
                             <Button
                                 type="submit"
-                                className="w-full"
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
@@ -225,8 +238,8 @@ export const AdminLogin: React.FC = () => {
                             <div className="space-y-1">
                                 <h4 className="text-sm font-medium text-blue-900">데모 계정 정보</h4>
                                 <div className="space-y-1 text-sm text-blue-700">
-                                    <p><strong>이메일:</strong> admin@company.com</p>
-                                    <p><strong>비밀번호:</strong> admin123</p>
+                                    <p><strong>로그인 아이디:</strong> admin</p>
+                                    <p><strong>비밀번호:</strong> admin4885</p>
                                 </div>
                             </div>
                         </div>

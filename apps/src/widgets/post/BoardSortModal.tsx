@@ -37,10 +37,10 @@ export const BoardSortModal = ({
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/25 z-40" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/25 z-[100]" onClick={onClose} />
 
       {/* Modal */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile] bg-white rounded-t-2xl z-50">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile bg-white rounded-t-2xl z-[101]">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
           <h3 className="text-lg font-bold text-gray-900">정렬</h3>
