@@ -30,12 +30,15 @@ export function HomeHeader({
   const [loginModalOpen, setLoginModalOpen] = useState(false)
   const { unreadCount, refreshUnreadCount } = useAlerts()
   const [prevAuthState, setPrevAuthState] = useState<string | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   // 인증 상태 변경 감지
   useEffect(() => {
     const checkAuthChange = () => {
       const authResult = checkUserAuth()
       const currentAuth = authResult.isAuthenticated ? authResult.userRole : null
+
+      setIsAuthenticated(authResult.isAuthenticated)
 
       // 인증 상태가 변경되었을 때
       if (currentAuth !== prevAuthState) {
@@ -114,7 +117,7 @@ export function HomeHeader({
               aria-label="알림 보기"
             >
               <BellIcon className="w-6 h-6 text-white" />
-              {unreadCount > 0 && (
+              {isAuthenticated && unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
