@@ -26,7 +26,7 @@ export interface CategoryOption {
 }
 
 export interface RecommendedTime {
-  minutes: number;
+  time: number;
   area: number;
 }
 

@@ -3,12 +3,13 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useDaumPostcode } from "@/shared/hooks";
+import { getCoordinatesFromAddress } from "@/utils/kakaoCoords";
 
 interface AddAddressModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddAddress: (address: { main: string; detail: string; addressName: string; area: number }) => void;
-  onAddressSelect?: (address: { main: string; detail: string; addressName: string; area: number }) => void;
+  onAddAddress: (address: { main: string; detail: string; addressName: string; area: number; customerLatitude?: number; customerLongitude?: number; }) => void;
+  onAddressSelect?: (address: { main: string; detail: string; addressName: string; area: number; customerLatitude?: number; customerLongitude?: number; }) => void;
 }
 
 const AddAddressModal: React.FC<AddAddressModalProps> = ({
@@ -22,8 +23,10 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
   const [detailAddress, setDetailAddress] = useState("");
   const [addressName, setAddressName] = useState("");
   const [area, setArea] = useState(0);
+  const [coordinates, setCoordinates] = useState<{customerLatitude?: number, customerLongitude?: number}>({});
 
-  const handleComplete = (data: any) => {
+
+  const handleComplete = async (data: any) => {
     let fullAddress = data.address;
     let extraAddress = "";
 
@@ -38,12 +41,33 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
       fullAddress += extraAddress !== "" ? ` (${extraAddress})` : "";
     }
 
+    // ✅ 위경도 정보 추출 (기존 getCoordinatesFromAddress 함수 활용)
+    try {
+      const coords = await getCoordinatesFromAddress(fullAddress);
+
+      if (coords) {
+        const customerLatitude = coords.lat;
+        const customerLongitude = coords.lng;
+
+        setCoordinates({ customerLatitude, customerLongitude });
+        console.log('추출된 좌표:', { customerLatitude, customerLongitude });
+      } else {
+        console.warn('좌표 변환 실패:', fullAddress);
+        setCoordinates({});
+      }
+    } catch (error) {
+      console.error('좌표 변환 중 오류:', error);
+      setCoordinates({});
+    }
+
     if (onAddressSelect) {
       onAddressSelect({
         main: fullAddress,
         detail: "", // 상세주소는 빈 값
         addressName: data.buildingName || "선택된 주소",
-        area: 0 // 기본값
+        area: 0, // 기본값
+        customerLatitude: coordinates.customerLatitude,
+        customerLongitude: coordinates.customerLongitude
       });
       //onClose();
       return; // 여기서 함수 종료하여 기존 폼으로 넘어가지 않음
@@ -57,11 +81,16 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
 
   const handleAddClick = () => {
     if (selectedAddress && detailAddress && addressName && area > 0) {
-      onAddAddress({ main: selectedAddress, detail: detailAddress, addressName, area });
+      onAddAddress({
+        main: selectedAddress,
+        detail: detailAddress, addressName, area,
+        customerLatitude: coordinates.customerLatitude,
+        customerLongitude: coordinates.customerLongitude});
       setSelectedAddress("");
       setDetailAddress("");
       setAddressName("");
       setArea(0);
+      setCoordinates({});
         onClose();
     } else {
       alert("모든 정보를 입력해주세요.");
@@ -104,6 +133,14 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
           <div className="flex flex-col gap-4 px-5 pb-5">
             <h1 className="font-inter text-2xl font-bold text-[#333333]">상세 주소 및 정보를 입력해주세요</h1>
             <div className="rounded-xl bg-[#F5F5F5] p-4">{selectedAddress}</div>
+
+            {/* ✅ 개발 환경에서만 좌표 정보 표시 */}
+            {process.env.NODE_ENV === 'development' && coordinates.customerLatitude && (
+                <div className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
+                  📍 위도: {coordinates.customerLatitude}, 경도: {coordinates.customerLongitude}
+                </div>
+            )}
+
             <input
               type="text"
               value={detailAddress}
@@ -122,7 +159,7 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
               type="number"
               value={area === 0 ? '' : area}
               onChange={(e) => setArea(Number(e.target.value))}
-              placeholder="평수"
+              placeholder="평수 (숫자만 입력해주세요, 예: 50)"
               min={1}
               className="rounded-xl border border-gray-300 p-4 focus:outline-none focus:ring-2 focus:ring-[#00BCD4]"
             />

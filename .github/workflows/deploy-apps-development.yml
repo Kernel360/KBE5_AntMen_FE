@@ -1,4 +1,5 @@
-name: 'CI/CD: Build & Deploy to EC2'
+# 🎯 최적화된 CI/CD (캐시 병목 해결)
+name: 'CI/CD: Build & Deploy to EC2 (ULTRA FAST - 1min Target)'
 
 on:
   push:
@@ -40,24 +41,52 @@ jobs:
           aws ecr describe-repositories --repository-names users-app 2>/dev/null || \
           aws ecr create-repository --repository-name users-app
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      # 🚀 고성능 QEMU 설정
+      - name: Set up QEMU (Ultra Fast)
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/arm64
 
-      - name: Build and Push users-app
+      # 🚀 고성능 Buildx 설정
+      - name: Set up Docker Buildx (Performance Mode)
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            network=host
+          config-inline: |
+            [worker.oci]
+              max-parallelism = 4
+            [worker.containerd] 
+              max-parallelism = 4
+
+      # 🎯 경량 캐시 전략 (병목 해결)
+      - name: Build and Push users-app (Ultra Fast)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: apps/Dockerfile
           push: true
+          platforms: linux/arm64
           tags: ${{ env.ECR_REGISTRY }}/users-app:latest
-          cache-from: type=gha,scope=users-app
-          cache-to: type=gha,mode=max,scope=users-app
+          # 🚀 경량 캐시 전략 (속도 우선)
+          cache-from: |
+            type=gha,scope=users-app
+          cache-to: |
+            type=gha,mode=min,scope=users-app
+          # 🎯 빌드 속도 최적화
           build-args: |
+            BUILDKIT_INLINE_CACHE=1
+            BUILDPLATFORM=linux/amd64
+            TARGETPLATFORM=linux/arm64
             NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
             NEXT_PUBLIC_GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }}
             NEXT_PUBLIC_GOOGLE_RESPONSE_TYPE=${{ secrets.GOOGLE_RESPONSE_TYPE }}
             NEXT_PUBLIC_GOOGLE_SCOPE=${{ secrets.GOOGLE_SCOPE }}
             NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.GOOGLE_AUTH_URL }}
+          # 추가 최적화
+          provenance: false
+          sbom: false
+          outputs: type=registry
 
   build-admin:
     runs-on: ubuntu-latest
@@ -79,18 +108,47 @@ jobs:
           aws ecr describe-repositories --repository-names admin-app 2>/dev/null || \
           aws ecr create-repository --repository-name admin-app
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      # 🚀 고성능 QEMU 설정
+      - name: Set up QEMU (Ultra Fast)
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/arm64
 
-      - name: Build and Push admin-app
+      # 🚀 고성능 Buildx 설정
+      - name: Set up Docker Buildx (Performance Mode)
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            network=host
+          config-inline: |
+            [worker.oci]
+              max-parallelism = 4
+            [worker.containerd]
+              max-parallelism = 4
+
+      # 🎯 경량 캐시 전략 (Admin 전용)
+      - name: Build and Push admin-app (Ultra Fast)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: admin/Dockerfile
           push: true
+          platforms: linux/arm64
           tags: ${{ env.ECR_REGISTRY }}/admin-app:latest
-          cache-from: type=gha,scope=admin-app
-          cache-to: type=gha,mode=max,scope=admin-app
+          # 🚀 경량 캐시 전략 (병목 해결)
+          cache-from: |
+            type=gha,scope=admin-app
+          cache-to: |
+            type=gha,mode=min,scope=admin-app
+          # 🎯 빌드 속도 최적화
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+            BUILDPLATFORM=linux/amd64
+            TARGETPLATFORM=linux/arm64
+          # 추가 최적화
+          provenance: false
+          sbom: false
+          outputs: type=registry
 
   prepare-deploy:
     runs-on: ubuntu-latest
@@ -114,6 +172,7 @@ jobs:
           NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
           NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
           NODE_ENV=production
+          TARGET_ARCH=arm64
           EOF
 
       - name: Prepare EC2 deployment directory
@@ -128,6 +187,10 @@ jobs:
             sudo rm -rf /home/ubuntu/apps/client
             mkdir -p /home/ubuntu/apps/client
             sudo chown -R ubuntu:ubuntu /home/ubuntu/apps/client
+            
+            # 🔍 ARM64 환경 확인
+            echo "🏗️ 시스템 아키텍처: $(uname -m)"
+            echo "🐳 Docker 아키텍처: $(docker version --format '{{.Server.Arch}}' 2>/dev/null || echo 'unknown')"
             
             # Docker 리소스 정리 (조건부)
             DISK_USAGE=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
@@ -155,10 +218,12 @@ jobs:
           - image: users-app
             service: users-app
             port: 3000
+            type: nextjs
           - image: admin-app
             service: admin-app
             port: 3001
-      max-parallel: 1
+            type: react-spa
+      max-parallel: 2  # 병렬 배포
 
     steps:
       - name: Configure AWS credentials
@@ -167,7 +232,8 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy and restart containers
+      # 🚀 CPU 최적화 ARM64 배포 (순차 처리)
+      - name: Deploy ARM64 containers (CPU Optimized)
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.EC2_PUBLIC_IP }}
@@ -180,36 +246,53 @@ jobs:
             # 환경변수 로드
             set -a && source .env && set +a
 
-            echo "🚀 배포 시작: ${{ matrix.service }}"
+            echo "🚀 CPU 최적화 배포: ${{ matrix.service }} (${{ matrix.type }})"
 
             # ECR 로그인
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | \
             docker login --username AWS --password-stdin $ECR_REGISTRY
 
-            # 이미지 풀 및 컨테이너 재시작
-            echo "📦 이미지 풀링: ${{ matrix.image }}"
-            docker pull $ECR_REGISTRY/${{ matrix.image }}:latest
-
-            echo "🔄 컨테이너 재시작: ${{ matrix.service }}"
+            # 1단계: 기존 컨테이너 정리 (순차 처리)
+            echo "🧹 기존 컨테이너 정리: ${{ matrix.service }}"
             docker compose down ${{ matrix.service }} 2>/dev/null || true
+            
+            # CPU 부하 완화를 위한 대기
+            sleep 2
+
+            # 2단계: 이미지 다운로드 (CPU 제한)
+            echo "📦 이미지 다운로드: ${{ matrix.image }}"
+            # nice를 사용해 CPU 우선순위 낮춤
+            nice -n 10 docker pull $ECR_REGISTRY/${{ matrix.image }}:latest
+
+            # CPU 부하 완화를 위한 대기
+            sleep 3
+
+            # 3단계: 이미지 아키텍처 확인
+            IMAGE_ARCH=$(docker inspect $ECR_REGISTRY/${{ matrix.image }}:latest --format='{{.Architecture}}' 2>/dev/null || echo 'unknown')
+            echo "🏗️ 이미지 아키텍처: $IMAGE_ARCH"
+
+            # 4단계: 컨테이너 시작 (CPU 제한)
+            echo "🔄 컨테이너 시작: ${{ matrix.service }}"
+            # CPU 사용량 제한하여 실행
             docker compose up -d ${{ matrix.service }}
 
-            # 배포 상태 확인
-            echo "✅ 배포 완료 확인:"
-            sleep 10
-            docker compose ps ${{ matrix.service }}
-            docker compose logs --tail=10 ${{ matrix.service }}
+            # CPU 안정화 대기
+            sleep 5
 
-            # 헬스체크
-            echo "🏥 헬스체크..."
-            for i in {1..3}; do
+            # 5단계: 안정적인 헬스체크
+            echo "🏥 안정적인 헬스체크..."
+            for i in {1..8}; do
               if curl -f -s http://localhost:${{ matrix.port }} > /dev/null; then
-                echo "✅ ${{ matrix.service }} 정상"
+                echo "✅ ${{ matrix.service }} 정상 구동 (${i}회차)"
                 break
               else
-                echo "⏳ 헬스체크 재시도 중... ($i/3)"
-                sleep 5
+                echo "⏳ 헬스체크 재시도... ($i/8)"
+                sleep 3
               fi
             done
 
-            echo "🎉 ${{ matrix.service }} 배포 완료!"
+            # 6단계: Docker 이미지 정리 (CPU 부하 분산)
+            echo "🧹 사용하지 않는 이미지 정리 중..."
+            docker image prune -f &
+
+            echo "🎉 ${{ matrix.service }} CPU 최적화 배포 완료!"

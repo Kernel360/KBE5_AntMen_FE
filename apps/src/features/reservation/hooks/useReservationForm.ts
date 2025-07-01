@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import dayjs, { Dayjs } from 'dayjs';
 import { Category, CategoryOption } from '@/shared/api/category';
 import { calculatePrice } from '@/shared/lib/utils';
-import { ReservationStorage } from '@/shared/lib/reservationStorage';
+import { getRecommendDuration } from '@/entities/reservation/api/reservationApi';
+import { fetchAddresses } from '@/shared/api/address';
 
 export const useReservationForm = ({ initialCategory, initialOptions, addressId }: { initialCategory: Category; initialOptions: CategoryOption[]; addressId: number }) => {
   const router = useRouter();
@@ -17,11 +18,11 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
   const [warningMessage, setWarningMessage] = useState('');
   const [isTimeModalOpen, setIsTimeModalOpen] = useState(false);
   const [isVisitTimeModalOpen, setIsVisitTimeModalOpen] = useState(false);
-  const [selectedHours, setSelectedHours] = useState(initialCategory.categoryTime);
+  const [selectedHours, setSelectedHours] = useState(2); // 기본 시간 2시간 고정
   const [selectedVisitTime, setSelectedVisitTime] = useState<string | null>(null);
   const [selectedCategoryOptions, setSelectedCategoryOptions] = useState<number[]>([]);
   const [memo, setMemo] = useState('');
-  const [recommendedTime, setRecommendedTime] = useState({ minutes: 240, area: 50 });
+  const [recommendedTime, setRecommendedTime] = useState<{ time: number; area: number } | null>(null);
   const [showTimeWarning, setShowTimeWarning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +44,6 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
               if (saved.reservationDuration) setSelectedHours(saved.reservationDuration);
               if (Array.isArray(saved.optionIds)) setSelectedCategoryOptions(saved.optionIds);
               if (saved.reservationMemo) setMemo(saved.reservationMemo);
-              console.log('✏️ 수정 모드: 기존 예약 정보 로드됨');
             }
           }
         } catch (e) {
@@ -54,6 +54,44 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
 
     loadSavedData();
   }, [initialCategory.categoryId]);
+
+  // 추천 시간 및 주소 정보 API 호출
+  useEffect(() => {
+    const fetchRecommendedTimeAndAddress = async () => {
+      try {
+        setIsLoading(true);
+        
+        // 병렬로 API 호출
+        const [recommendedHours, addresses] = await Promise.all([
+          getRecommendDuration(addressId),
+          fetchAddresses()
+        ]);
+        
+        // 현재 addressId에 해당하는 주소 정보 찾기
+        const currentAddress = addresses.find(addr => addr.addressId === addressId);
+        const addressArea = currentAddress?.addressArea || 50; // 기본값 50평
+        
+        // 백엔드에서 받은 시간 정보를 그대로 사용 (분 단위 변환 X)
+        setRecommendedTime({
+          time: recommendedHours,
+          area: addressArea
+        });
+      } catch (error) {
+        console.error('추천 시간 및 주소 정보 조회 실패:', error);
+        // 오류 시 기본값 설정
+        setRecommendedTime({
+          time: 4, 
+          area: 50
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (addressId) {
+      fetchRecommendedTimeAndAddress();
+    }
+  }, [addressId]);
 
   // Computed Values
   const totalOptionsPrice = selectedCategoryOptions.reduce((total, optionId) => {
@@ -66,7 +104,12 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
     return total + (option?.coTime || 0);
   }, 0);
 
-  const baseServicePrice = calculatePrice(selectedHours, initialCategory.categoryPrice, initialCategory.categoryPrice, initialCategory.categoryTime);
+  // 백엔드 로직과 동일하게 수정
+  // 총가격 = categoryPrice + (선택시간 - 2) * 20000 + 옵션가격
+  const HOURLY_AMOUNT = 20000; // 시간당 가격 고정
+  const BASE_DURATION = 2; // 기본 시간 고정
+  const additionalHours = Math.max(0, selectedHours - BASE_DURATION);
+  const baseServicePrice = initialCategory.categoryPrice + (additionalHours * HOURLY_AMOUNT);
   const totalPrice = baseServicePrice + totalOptionsPrice;
   const totalDuration = selectedHours * 60 + totalOptionsTime;
 
@@ -76,9 +119,9 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
   const handleTimeChange = (increment: boolean) => {
     setSelectedHours(prev => {
       const newHours = increment ? prev + 1 : prev - 1;
-      if (newHours < initialCategory.categoryTime || newHours > 8) return prev;
+      if (newHours < BASE_DURATION || newHours > 12) return prev;
       
-      if (recommendedTime && newHours < Math.ceil(recommendedTime.minutes / 60)) {
+      if (recommendedTime && newHours < recommendedTime.time) {
         setShowTimeWarning(true);
       } else {
         setShowTimeWarning(false);
@@ -86,8 +129,6 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
       return newHours;
     });
   };
-  console.log('selectedVisitTime', selectedVisitTime);
-  console.log('typeof selectedVisitTime:', typeof selectedVisitTime);
   
   const handleNext = async () => {
     if (!selectedDate || !selectedVisitTime || !initialCategory.categoryId) {
@@ -127,14 +168,13 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
       reservationDuration: selectedHours,
       reservationMemo: memo,
       reservationAmount: totalPrice,
-      additionalDuration: selectedHours - initialCategory.categoryTime,
+      additionalDuration: selectedHours - BASE_DURATION,
       optionIds: selectedCategoryOptions,
     };
 
     try {
       // localStorage 저장 대신 sessionStorage에 임시 저장 (탭별로 분리)
       sessionStorage.setItem('currentReservation', JSON.stringify(reservationDetails));
-      console.log('📝 예약 정보 세션에 저장:', reservationDetails);
 
       // 매칭 페이지로 이동
       router.push('/matching');
@@ -178,18 +218,19 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
     isOptionsLoading: false,
     optionsError: null,
     
-    standardHours: initialCategory.categoryTime,
+    standardHours: BASE_DURATION, // 기본 시간 2시간 고정
     basePrice: initialCategory.categoryPrice,
-    pricePerHour: initialCategory.categoryPrice,
+    pricePerHour: HOURLY_AMOUNT, // 시간당 가격 20,000원 고정
     
     totalPrice: totalPrice,
     
     handleTimeChange,
     handleNext,
-    handleResetTime: () => setSelectedHours(initialCategory.categoryTime),
+    handleResetTime: () => setSelectedHours(BASE_DURATION),
     visitTimeSlots,
     isSubmitting,
     isLoading,
     error,
+    isRecommendedTimeLoading: isLoading && !recommendedTime,
   };
 }; 

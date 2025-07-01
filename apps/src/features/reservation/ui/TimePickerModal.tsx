@@ -86,10 +86,9 @@ export const TimePickerModal = ({
                     </span>
                   </div>
                   <p className="text-sm break-keep">
-                    고객님의 공간({Math.floor(recommendedTime.area)}평)에
-                    최적화된 청소 시간은{' '}
-                    {Math.floor(recommendedTime.minutes / 60)}시간입니다. 실제
-                    현장 상황에 따라 추가 시간이 필요할 수 있습니다.
+                    고객님의 공간({recommendedTime.area}평)에 
+                    최적화된 청소 시간은 {recommendedTime.time}시간입니다. 
+                    실제 현장 상황에 따라 추가 시간이 필요할 수 있습니다.
                   </p>
                 </div>
               )}
@@ -99,11 +98,11 @@ export const TimePickerModal = ({
                   onClick={() => onTimeChange(false)}
                   className={`w-12 h-12 rounded-full flex items-center justify-center transition-all
                     ${
-                      selectedHours <= standardHours
+                      selectedHours <= 2
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white border-2 border-primary-500 text-primary-500 active:bg-white'
                     }`}
-                  disabled={selectedHours <= standardHours}
+                  disabled={selectedHours <= 2}
                 >
                   <svg 
                     width="16" 
@@ -124,19 +123,20 @@ export const TimePickerModal = ({
                   <p className="text-3xl font-bold text-gray-800">
                     {selectedHours}시간
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    기본 {standardHours}시간
+                  <p className="text-xs text-gray-500 mt-2">
+                    최소 2시간, 
+                    최대 {12}시간
                   </p>
                 </div>
                 <button
                   onClick={() => onTimeChange(true)}
                   className={`w-12 h-12 rounded-full flex items-center justify-center transition-all
                     ${
-                      selectedHours >= 8
+                      selectedHours >= 12
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white border-2 border-primary-500 text-primary-500 active:bg-white'
                     }`}
-                  disabled={selectedHours >= 8}
+                  disabled={selectedHours >= 12}
                 >
                   <svg 
                     width="16" 
@@ -160,7 +160,7 @@ export const TimePickerModal = ({
                 <div className="flex flex-col gap-2 mb-4">
                   <div className="flex justify-between items-center">
                     <p className="text-sm text-gray-600">
-                      기본 요금 ({standardHours}시간)
+                      기본 요금 (2시간)
                     </p>
                     <p className="text-base font-medium text-gray-800">
                       {basePrice.toLocaleString()}원
@@ -179,18 +179,13 @@ export const TimePickerModal = ({
                       총 서비스 시간
                     </span>
                     <span className="text-xl font-bold text-gray-800">
-                      {calculatePrice(
-                        selectedHours,
-                        basePrice,
-                        pricePerHour,
-                        standardHours,
-                      ).toLocaleString()}
+                      {(basePrice + Math.max(0, selectedHours - standardHours) * pricePerHour).toLocaleString()}
                       원
                     </span>
                   </div>
                   {showTimeWarning && recommendedTime && (
                     <p className="text-xs text-red-500 mt-2 text-right break-keep">
-                      * 추천 시간({Math.ceil(recommendedTime.minutes / 60)}
+                      * 추천 시간({recommendedTime.time}
                       시간)보다 부족할 수 있어요.
                     </p>
                   )}

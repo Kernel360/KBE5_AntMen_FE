@@ -91,11 +91,11 @@ export default function MatchingResultPage({
     setIsRejectionModalOpen(false)
     if (option === 'cancel') {
       // 예약 취소 처리
-      router.push('/reservation/cancel')
-    } else {
-      // 재매칭 - 매니저 리스트 페이지로 이동
-      router.push(`/reservation/${params.reservationId}/matching/managers`)
-    }
+      router.push('/reservation/cancel')}
+    // } else {
+    //   // 재매칭 - 매니저 리스트 페이지로 이동
+    //   router.push(`/reservation/${params.reservationId}/matching/managers`)
+    // }
   }
 
   return (

@@ -1,5 +1,5 @@
 // 매칭 거절 시 표시되는 모달 컴포넌트: 예약 취소 또는 다시 매칭 선택 가능
-
+// TODO : 선영 거절 모달 컴포넌트니까 나중에 매칭 로직 붙으면 사용할지말지 결정
 'use client';
 
 interface RejectionModalProps {

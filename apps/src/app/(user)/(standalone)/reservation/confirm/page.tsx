@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createReservation } from '@/shared/api/reservation';
-import { ReservationStorage } from '@/shared/lib/reservationStorage';
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
 import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
@@ -22,14 +21,12 @@ export default function ReservationConfirmPage() {
         const savedDataStr = sessionStorage.getItem('currentReservation');
         
         if (!savedDataStr) {
-          console.log('예약 정보가 없습니다.');
           // 예약 폼으로 리다이렉트
           router.push('/reservation/form');
           return;
         }
 
         const savedData = JSON.parse(savedDataStr);
-        console.log('확인 페이지에서 로드된 예약 정보:', savedData);
 
         // 선택된 매니저들 처리
         if (savedData.selectedManagers && Array.isArray(savedData.selectedManagers)) {
@@ -94,8 +91,6 @@ export default function ReservationConfirmPage() {
       
       const newReservation = await createReservation(reservationRequest);
       
-      console.log('예약 생성 성공:', newReservation);
-
       // 예약 생성 후 결제 페이지로 이동 (세션 정리는 결제 완료 후)
       router.push(`/payment/${newReservation.reservationId}`);
     } catch (error) {
@@ -162,10 +157,7 @@ export default function ReservationConfirmPage() {
                   <span className="text-slate-600">소요 시간</span>
                   <span className="font-medium">{reservationInfo.reservationDuration}시간</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">지역</span>
-                  <span className="font-medium">6</span>
-                </div>
+                
                 <div className="flex justify-between">
                   <span className="text-slate-600">예약 금액</span>
                   <span className="font-medium">{reservationInfo.reservationAmount?.toLocaleString()}원</span>

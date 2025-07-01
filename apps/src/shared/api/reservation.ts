@@ -1,7 +1,18 @@
 import { customFetch } from './base'
-import { Category, CategoryOption } from './category'
-import type { ReservationRequest } from '.'
-
+export interface ReservationRequest {
+  customerId: number;
+  categoryId: number;
+  addressId: number;
+  reservationCreatedAt: string;  // "YYYY-MM-DD HH:mm:ss" 형식
+  reservationDate: string;  // "YYYY-MM-DD" 형식
+  reservationTime: string;  // "HH:mm:ss" 형식
+  reservationDuration: number;
+  reservationMemo?: string;
+  reservationAmount: number;
+  additionalDuration: number;
+  optionIds: number[];
+  managerIds: number[];  // 선택한 매니저 ID 리스트
+}
 // Swagger의 ReservationResponseDto를 기반으로 타입을 정의합니다.
 export interface ReservationResponse {
   reservationId: number
@@ -11,10 +22,9 @@ export interface ReservationResponse {
   reservationTime: string // LocalTime이 string으로 변환되었다고 가정
   categoryId: number
   categoryName: string
-  recommendDuration: number
   reservationDuration: number
   managerId: number | null
-  matchedAt: string | null
+  managerName: string | null        // 매니저 이름 추가
   reservationStatus: string
   reservationCancelReason: string | null
   reservationMemo: string
@@ -22,6 +32,7 @@ export interface ReservationResponse {
   optionIds: number[]
   optionNames: string[]
   hasReview: boolean
+  checkinAt: string | null          // 체크인 시간 추가
 }
 
 /**
@@ -97,18 +108,18 @@ export const updateReservationStatus = async (
 /**
  * 예약을 취소하는 API 함수
  * @param reservationId - 취소할 예약의 ID
- * @param reason - 취소 사유 (선택 사항)
+ * @param cancelReason - 취소 사유 (선택 사항)
  * @returns ReservationResponse - 업데이트된 예약 정보
  */
 export const cancelReservation = async (
   reservationId: number,
-  reason?: string,
+  cancelReason: string,
 ): Promise<ReservationResponse> => {
   return customFetch<ReservationResponse>(
     `https://api.antmen.site:9091/api/v1/customer/reservations/${reservationId}/cancel`,
     {
       method: 'POST',
-      body: JSON.stringify({ reason }),
+      body: JSON.stringify({ cancelReason }),
     },
   )
 }
