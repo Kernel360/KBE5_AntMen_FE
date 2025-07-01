@@ -9,4 +9,15 @@ export type {
   MatchingDto,
   PageableResponse,
   PaginatedMatchingResponse,
+  MatchingRequestDto,
+  MatchingManagerListResponseDto,
+  SortType,
 } from './model/types'
+
+export {
+  getMatchingRequests,
+  acceptMatchingRequest,
+  rejectMatchingRequest,
+  respondToMatching,
+  getRecommendedManagers,
+} from './api/matchingAPi'
