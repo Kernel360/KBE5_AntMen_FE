@@ -4,6 +4,7 @@ import Script from 'next/script'
 import './globals.css'
 import { Providers } from './providers'
 import { AuthDebugInitializer } from '@/components/AuthDebugInitializer'
+import { AlertProvider } from '@/features/alerts/ui/AlertProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,16 +22,18 @@ export default function RootLayout({
     <html lang="ko">
       <body className={inter.className}>
         <Providers>
-          <AuthDebugInitializer />
-          <main
-            className={`w-full max-w-mobile mx-auto min-h-screen bg-white relative overflow-x-hidden`}
-          >
-            {children}
-          </main>
-          <Script
-            src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
-            strategy="lazyOnload"
-          />
+          <AlertProvider>
+            <AuthDebugInitializer />
+            <main
+              className={`w-full max-w-mobile mx-auto min-h-screen bg-white relative overflow-x-hidden`}
+            >
+              {children}
+            </main>
+            <Script
+              src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
+              strategy="lazyOnload"
+            />
+          </AlertProvider>
         </Providers>
       </body>
     </html>

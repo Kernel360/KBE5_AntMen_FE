@@ -42,13 +42,17 @@ export default function SelectAddressPage() {
     router.push(`/reservation/form?categoryId=${categoryId}&addressId=${selectedAddressId}`);
   };
 
-  const handleAddAddress = async (address: { main: string; detail: string; addressName: string; area: number }) => {
+  const handleAddAddress = async (address: {
+    main: string; detail: string; addressName: string;
+    area: number; customerLatitude?: number; customerLongitude?: number; }) => {
     try {
       await createAddress({
         addressName: address.addressName,
         addressAddr: address.main,
         addressDetail: address.detail,
         addressArea: address.area,
+        customerLatitude: address.customerLatitude,
+        customerLongitude: address.customerLongitude,
       });
       await getAddresses(); // 주소 목록 새로고침
       setAddModalOpen(false);
