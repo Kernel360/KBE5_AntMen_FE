@@ -6,11 +6,13 @@ import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 import { alertApi } from '@/shared/api/alert'
 import type { Notification } from '@/entities/notification'
 import { transformNotifications } from '@/entities/notification/lib/transform'
+import { useAlerts } from '@/features/alerts/ui/AlertProvider'
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { refreshUnreadCount } = useAlerts()
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -53,6 +55,7 @@ export default function NotificationsPage() {
                       n.id === id ? { ...n, isRead: true } : n
                     )
                   )
+                  await refreshUnreadCount()
                 } catch (error) {
                   console.error('Failed to mark notification as read:', error)
                 }

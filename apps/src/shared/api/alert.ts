@@ -26,6 +26,12 @@ export const alertApi = {
   getAlerts: () => 
     customFetch<Alert[]>(`${BASE_URL}`),
 
+  // 읽지 않은 알림 개수 조회
+  getUnreadCount: async (): Promise<number> => {
+    const alerts = await alertApi.getAlerts()
+    return alerts.filter(alert => !alert.read).length
+  },
+
   // 단일 알림 조회
   getAlert: (alertId: string) =>
     customFetch<Alert>(`${BASE_URL}/${alertId}`),
