@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Textarea } from '../../components/ui/textarea';
@@ -27,6 +27,8 @@ import {
     Eye,
     Megaphone
 } from 'lucide-react';
+import { adminService } from '../../api/adminService';
+import { BoardRequestDto } from '../../api/types';
 
 interface CustomerTicket {
     id: number;
@@ -60,7 +62,7 @@ interface Notice {
     updatedAt: string;
     isImportant: boolean;
     viewCount: number;
-    category: 'general' | 'system' | 'event' | 'maintenance';
+    category: 'notice' | 'faq';
 }
 
 const sampleTickets: CustomerTicket[] = [
@@ -89,40 +91,15 @@ const sampleTickets: CustomerTicket[] = [
     }
 ];
 
-const sampleNotices: Notice[] = [
-    {
-        id: 1,
-        title: '시스템 점검 안내',
-        content: '2025년 6월 10일 새벽 2시부터 4시까지 시스템 점검이 예정되어 있습니다. 점검 시간 동안 서비스 이용이 제한될 수 있습니다.',
-        author: '시스템관리자',
-        createdAt: '2025-06-05 10:00',
-        updatedAt: '2025-06-05 10:00',
-        isImportant: true,
-        viewCount: 1250,
-        category: 'maintenance'
-    },
-    {
-        id: 2,
-        title: '새로운 기능 업데이트 안내',
-        content: '더 나은 서비스 제공을 위해 새로운 기능이 추가되었습니다. 자세한 내용은 앱 내 공지사항을 확인해주세요.',
-        author: '개발팀',
-        createdAt: '2025-06-03 15:30',
-        updatedAt: '2025-06-03 15:30',
-        isImportant: false,
-        viewCount: 890,
-        category: 'system'
-    }
-];
+
 
 const getCategoryBadge = (category: string) => {
     const categories = {
-        general: { label: '일반', color: 'bg-gray-100 text-gray-800' },
-        system: { label: '시스템', color: 'bg-blue-100 text-blue-800' },
-        event: { label: '이벤트', color: 'bg-green-100 text-green-800' },
-        maintenance: { label: '점검', color: 'bg-orange-100 text-orange-800' }
+        notice: { label: '공지사항', color: 'bg-blue-100 text-blue-800' },
+        faq: { label: 'FAQ', color: 'bg-yellow-100 text-yellow-800' }
     };
 
-    const cat = categories[category as keyof typeof categories] || categories.general;
+    const cat = categories[category as keyof typeof categories] || categories.notice;
     return <Badge className={cat.color}>{cat.label}</Badge>;
 };
 
@@ -157,19 +134,50 @@ const getStatusBadge = (status: string) => {
 
 export const CustomerSupport: React.FC = () => {
     const [tickets, setTickets] = useState<CustomerTicket[]>(sampleTickets);
-    const [notices, setNotices] = useState<Notice[]>(sampleNotices);
+    const [notices, setNotices] = useState<Notice[]>([]);
     const [selectedTicket, setSelectedTicket] = useState<CustomerTicket | null>(null);
     const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
     const [replyContent, setReplyContent] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [priorityFilter, setPriorityFilter] = useState<string>('all');
     const [isWritingNotice, setIsWritingNotice] = useState(false);
-    const [newNotice, setNewNotice] = useState({
-        title: '',
-        content: '',
-        category: 'general' as const,
-        isImportant: false
+    const [newNotice, setNewNotice] = useState<{
+        boardTitle: string;
+        boardContent: string;
+        boardIsPinned: boolean;
+        boardReservatedAt: string;
+        category: 'notice' | 'faq';
+    }>({
+        boardTitle: '',
+        boardContent: '',
+        boardIsPinned: false,
+        boardReservatedAt: '',
+        category: 'notice'
     });
+    const [isReserved, setIsReserved] = useState(false);
+
+    // 공지사항 목록 로드
+    const loadNotices = async () => {
+        try {
+            const customerNotices = await adminService.getNotices('customer-notice');
+            const customerFaqs = await adminService.getNotices('customer');
+            
+            // 두 목록을 합치고 카테고리 정보 추가
+            const allNotices = [
+                ...customerNotices.map((notice: any) => ({ ...notice, category: 'notice' })),
+                ...customerFaqs.map((faq: any) => ({ ...faq, category: 'faq' }))
+            ];
+            
+            setNotices(allNotices);
+        } catch (error) {
+            console.error('공지사항 로드 실패:', error);
+        }
+    };
+
+    // 컴포넌트 마운트 시 공지사항 목록 로드
+    useEffect(() => {
+        loadNotices();
+    }, []);
 
     const filteredTickets = tickets.filter(ticket => {
         const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
@@ -217,30 +225,68 @@ export const CustomerSupport: React.FC = () => {
         setReplyContent('');
     };
 
-    const handleCreateNotice = () => {
-        if (!newNotice.title.trim() || !newNotice.content.trim()) return;
+    const handleCreateNotice = async () => {
+        if (!newNotice.boardTitle.trim() || !newNotice.boardContent.trim()) return;
 
-        const notice: Notice = {
-            id: notices.length + 1,
-            title: newNotice.title,
-            content: newNotice.content,
-            author: '관리자',
-            createdAt: new Date().toLocaleString('ko-KR'),
-            updatedAt: new Date().toLocaleString('ko-KR'),
-            isImportant: newNotice.isImportant,
-            viewCount: 0,
-            category: newNotice.category
-        };
+        try {
+            // 카테고리에 따라 boardType 결정
+            const getBoardType = (category: string) => {
+                switch (category) {
+                    case 'faq':
+                        return 'customer';
+                    case 'notice':
+                        return 'customer-notice';
+                    default:
+                        return 'customer-notice';
+                }
+            };
 
-        setNotices([notice, ...notices]);
-        setNewNotice({ title: '', content: '', category: 'general', isImportant: false });
-        setIsWritingNotice(false);
+            const requestData: BoardRequestDto = {
+                boardTitle: newNotice.boardTitle,
+                boardContent: newNotice.boardContent,
+                boardIsPinned: newNotice.boardIsPinned,
+                boardReservatedAt: isReserved && newNotice.boardReservatedAt ? newNotice.boardReservatedAt : undefined,
+                boardType: getBoardType(newNotice.category)
+            };
+
+            await adminService.createNotice(requestData);
+            
+            // 성공시 공지사항 목록 다시 로드
+            await loadNotices();
+            setNewNotice({ boardTitle: '', boardContent: '', boardIsPinned: false, boardReservatedAt: '', category: 'notice' });
+            setIsReserved(false);
+            setIsWritingNotice(false);
+            alert('공지사항이 성공적으로 등록되었습니다.');
+        } catch (error: any) {
+            console.error('공지사항 등록 실패:', error);
+            if (error.response?.status === 401) {
+                alert('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            } else {
+                alert('공지사항 등록에 실패했습니다.');
+            }
+        }
     };
 
-    const handleDeleteNotice = (noticeId: number) => {
-        setNotices(notices.filter(notice => notice.id !== noticeId));
-        if (selectedNotice && selectedNotice.id === noticeId) {
+    const handleDeleteNotice = async (noticeId: number) => {
+        if (!selectedNotice) return;
+
+        try {
+            // 카테고리에 따라 boardType 결정
+            const boardType = selectedNotice.category === 'faq' ? 'customer' : 'customer-notice';
+            
+            await adminService.deleteNotice(boardType, noticeId);
+            
+            // 성공시 공지사항 목록 다시 로드
+            await loadNotices();
             setSelectedNotice(null);
+            alert('공지사항이 성공적으로 삭제되었습니다.');
+        } catch (error: any) {
+            console.error('공지사항 삭제 실패:', error);
+            if (error.response?.status === 401) {
+                alert('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            } else {
+                alert('공지사항 삭제에 실패했습니다.');
+            }
         }
     };
 
@@ -300,34 +346,66 @@ export const CustomerSupport: React.FC = () => {
                                     <Label htmlFor="notice-title">제목</Label>
                                     <Input
                                         id="notice-title"
-                                        value={newNotice.title}
-                                        onChange={(e) => setNewNotice({ ...newNotice, title: e.target.value })}
-                                        placeholder="공지 제목을 입력하세요"
+                                        value={newNotice.boardTitle}
+                                        onChange={(e) => {
+                                            let newTitle = e.target.value;
+                                            
+                                            // FAQ 카테고리일 때 [FAQ] 프리픽스 자동 처리
+                                            if (newNotice.category === 'faq') {
+                                                // 사용자가 [FAQ]를 지우려고 하는 경우 방지
+                                                if (!newTitle.startsWith('[FAQ]') && newTitle.length > 0) {
+                                                    newTitle = '[FAQ] ' + newTitle;
+                                                } else if (newTitle === '' || newTitle === '[FAQ]') {
+                                                    newTitle = '[FAQ] ';
+                                                }
+                                            }
+                                            
+                                            setNewNotice({ ...newNotice, boardTitle: newTitle });
+                                        }}
+                                        placeholder={newNotice.category === 'faq' ? '[FAQ] 제목을 입력하세요' : '공지 제목을 입력하세요'}
                                     />
                                 </div>
                                 <div>
                                     <Label htmlFor="notice-category">카테고리</Label>
-                                    <Select
+                                    <select
+                                        id="notice-category"
                                         value={newNotice.category}
-                                        onValueChange={(value: any) => setNewNotice({ ...newNotice, category: value })}
+                                        onChange={(e) => {
+                                            const newCategory = e.target.value as 'notice' | 'faq';
+                                            let newTitle = newNotice.boardTitle;
+                                            
+                                            // [FAQ] 프리픽스 처리
+                                            if (newCategory === 'faq') {
+                                                // FAQ 선택 시: [FAQ] 추가 (중복 방지)
+                                                if (!newTitle.startsWith('[FAQ]')) {
+                                                    newTitle = '[FAQ] ' + newTitle;
+                                                }
+                                            } else {
+                                                // 다른 카테고리 선택 시: [FAQ] 제거
+                                                if (newTitle.startsWith('[FAQ] ')) {
+                                                    newTitle = newTitle.substring(6);
+                                                }
+                                            }
+                                            
+                                            setNewNotice({ 
+                                                ...newNotice, 
+                                                category: newCategory,
+                                                boardTitle: newTitle,
+                                                boardIsPinned: newCategory === 'faq' ? true : newNotice.boardIsPinned
+                                            });
+                                        }}
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="general">일반</SelectItem>
-                                            <SelectItem value="system">시스템</SelectItem>
-                                            <SelectItem value="event">이벤트</SelectItem>
-                                            <SelectItem value="maintenance">점검</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                        <option value="notice">공지사항</option>
+                                        <option value="faq">FAQ</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <Label htmlFor="notice-content">내용</Label>
                                     <Textarea
                                         id="notice-content"
-                                        value={newNotice.content}
-                                        onChange={(e) => setNewNotice({ ...newNotice, content: e.target.value })}
+                                        value={newNotice.boardContent}
+                                        onChange={(e) => setNewNotice({ ...newNotice, boardContent: e.target.value })}
                                         placeholder="공지 내용을 입력하세요"
                                         rows={6}
                                     />
@@ -335,24 +413,54 @@ export const CustomerSupport: React.FC = () => {
                                 <div className="flex items-center space-x-2">
                                     <input
                                         type="checkbox"
-                                        id="important"
-                                        checked={newNotice.isImportant}
-                                        onChange={(e) => setNewNotice({ ...newNotice, isImportant: e.target.checked })}
+                                        id="pinned"
+                                        checked={newNotice.boardIsPinned}
+                                        onChange={(e) => setNewNotice({ ...newNotice, boardIsPinned: e.target.checked })}
+                                        disabled={newNotice.category === 'faq'}
                                         className="w-4 h-4"
                                     />
-                                    <Label htmlFor="important">중요 공지로 설정</Label>
+                                    <Label htmlFor="pinned" className={newNotice.category === 'faq' ? 'text-gray-500' : ''}>
+                                        고정 공지로 설정 {newNotice.category === 'faq' && '(FAQ는 자동 고정)'}
+                                    </Label>
                                 </div>
-                                <div className="flex gap-2">
-                                    <Button onClick={handleCreateNotice} className="flex-1">
+                                <div className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        id="reserved"
+                                        checked={isReserved}
+                                        onChange={(e) => setIsReserved(e.target.checked)}
+                                        className="w-4 h-4"
+                                    />
+                                    <Label htmlFor="reserved">예약 게시글로 설정</Label>
+                                </div>
+                                {isReserved && (
+                                    <div>
+                                        <Label htmlFor="reserved-date">예약 게시 시간</Label>
+                                        <Input
+                                            id="reserved-date"
+                                            type="datetime-local"
+                                            value={newNotice.boardReservatedAt}
+                                            onChange={(e) => setNewNotice({ ...newNotice, boardReservatedAt: e.target.value })}
+                                            className="mt-1 w-fit max-w-xs"
+                                        />
+                                    </div>
+                                )}
+                                <div className="flex gap-3 pt-2">
+                                    <Button 
+                                        onClick={handleCreateNotice} 
+                                        className="flex-1 bg-blue-600 hover:bg-blue-700 border-2 border-blue-600 hover:border-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition-all duration-200"
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" />
                                         공지 등록
                                     </Button>
                                     <Button
                                         variant="outline"
                                         onClick={() => {
                                             setIsWritingNotice(false);
-                                            setNewNotice({ title: '', content: '', category: 'general', isImportant: false });
+                                            setNewNotice({ boardTitle: '', boardContent: '', boardIsPinned: false, boardReservatedAt: '', category: 'notice' });
+                                            setIsReserved(false);
                                         }}
-                                        className="flex-1"
+                                        className="flex-1 border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-800 font-semibold py-2.5 px-4 rounded-lg transition-all duration-200"
                                     >
                                         취소
                                     </Button>

@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { User } from './types';
 
-// const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
-const API_BASE_URL = 'http://localhost:9093/api/v1';
+const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
+// const API_BASE_URL = 'http://localhost:9093/api/v1';
 
 const userApi = axios.create({
     baseURL: API_BASE_URL,
@@ -13,11 +13,10 @@ const userApi = axios.create({
 
 export const userService = {
     // 고객 목록 조회 (전용 API)
-    getCustomers: async (name?: string, userId?: number, sortBy?: string, page = 0, size = 20): Promise<any> => {
+    getCustomers: async (name?: string, sortBy?: string, page = 0, size = 20): Promise<any> => {
         const response = await userApi.get('/admin/users/customers', {
             params: { 
-                name, 
-                userId, 
+                name,  
                 sortBy,
                 page,
                 size
@@ -27,11 +26,10 @@ export const userService = {
     },
 
     // 매니저 목록 조회 (전용 API)
-    getManagers: async (name?: string, userId?: number, sortBy?: string, page = 0, size = 20): Promise<any> => {
+    getManagers: async (name?: string, sortBy?: string, page = 0, size = 20): Promise<any> => {
         const response = await userApi.get('/admin/users/managers', {
             params: { 
-                name, 
-                userId, 
+                name,  
                 sortBy,
                 page,
                 size
@@ -47,8 +45,14 @@ export const userService = {
     },
 
     // 승인 대기 중인 매니저 목록 조회
-    getWaitingManagers: async (): Promise<any[]> => {
-        const response = await userApi.get('/admin/users/waiting-managers');
+    getWaitingManagers: async (name?: string, page = 0, size = 20): Promise<any[]> => {
+        const response = await userApi.get('/admin/users/waiting-managers', {
+            params: {
+                name,
+                page,
+                size
+            }
+        });
         return response.data;
     },
 

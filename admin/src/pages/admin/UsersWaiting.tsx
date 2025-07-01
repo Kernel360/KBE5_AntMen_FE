@@ -40,16 +40,40 @@ const formatDateTime = (dateString: string) => {
 
 export const UsersWaiting: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [actualSearchTerm, setActualSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [managerDetail, setManagerDetail] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(0);
   const queryClient = useQueryClient();
 
   // 목록 조회
-  const { data: userResponse, isLoading } = useQuery({
-    queryKey: ['waiting-managers'],
-    queryFn: userService.getWaitingManagers,
+  const { data: userResponse, isLoading, isFetching } = useQuery({
+    queryKey: ['waiting-managers', actualSearchTerm, currentPage],
+    queryFn: () => userService.getWaitingManagers(actualSearchTerm, currentPage),
+    enabled: !!actualSearchTerm || actualSearchTerm === '', // 검색어가 설정되면 자동 실행
+    placeholderData: (previousData) => previousData, // 이전 데이터 유지로 깜빡임 방지
   });
+
+  // 검색 실행 함수
+  const handleSearch = () => {
+    setActualSearchTerm(searchTerm);
+    setCurrentPage(0);
+  };
+
+  // 엔터키 처리
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  // 페이지 로드 시 초기 검색어 설정 (빈 문자열로 전체 조회)
+  React.useEffect(() => {
+    if (actualSearchTerm === '' && searchTerm === '') {
+      setActualSearchTerm('');
+    }
+  }, []);
 
   // 상세 정보 조회
   const { data: managerDetailData, isLoading: isDetailLoading } = useQuery({
@@ -68,14 +92,10 @@ export const UsersWaiting: React.FC = () => {
     }
   }, [managerDetailData, selectedUserId]);
 
-  const filteredUsers = (userResponse ?? []).filter((user: any) => {
-    const name = user.userName ?? '';
-    const email = user.userEmail ?? '';
-    return (
-      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
+  // API 응답에서 페이지네이션 정보와 데이터 추출
+  const users = (userResponse as any)?.content || [];
+  const totalPages = (userResponse as any)?.totalPages || 0;
+  const totalElements = (userResponse as any)?.totalElements || 0;
 
   const handleOpenModal = (userId: number) => {
     setSelectedUserId(userId);
@@ -112,7 +132,7 @@ export const UsersWaiting: React.FC = () => {
     }
   };
 
-  if (isLoading) return <div>로딩 중...</div>;
+  if (isLoading && !userResponse) return <div>로딩 중...</div>;
 
   return (
     <>
@@ -125,9 +145,10 @@ export const UsersWaiting: React.FC = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
-              placeholder="이름 또는 이메일로 검색..."
+              placeholder="이름으로 검색... (엔터키로 검색)"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="pl-10"
             />
           </div>
@@ -135,11 +156,23 @@ export const UsersWaiting: React.FC = () => {
       </Card>
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle>승인 대기 매니저 목록 ({filteredUsers.length}명)</CardTitle>
+          <CardTitle>
+            승인 대기 매니저 목록 ({totalElements}명)
+            {isFetching && <span className="ml-2 text-sm text-blue-500 animate-pulse">•</span>}
+          </CardTitle>
           <CardDescription>승인 대기 중인 매니저 회원의 정보와 상태를 확인하고 승인/거절할 수 있습니다.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          <div className="relative">
+            {isFetching && (
+              <div className="absolute inset-0 bg-white bg-opacity-50 flex items-center justify-center z-10">
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                  <span className="text-sm text-gray-600">로딩 중...</span>
+                </div>
+              </div>
+            )}
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>이름</TableHead>
@@ -151,7 +184,7 @@ export const UsersWaiting: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredUsers.map((user: any) => (
+              {users.map((user: any) => (
                 <TableRow key={user.userId}>
                   <TableCell>{user.userName}</TableCell>
                   <TableCell>
@@ -174,6 +207,56 @@ export const UsersWaiting: React.FC = () => {
               ))}
             </TableBody>
           </Table>
+          
+          {/* 페이지네이션 */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center mt-6">
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                  disabled={currentPage === 0}
+                  className="h-8 px-3 text-sm disabled:opacity-50"
+                >
+                  이전
+                </Button>
+                
+                <div className="flex items-center space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageNum = Math.max(0, Math.min(totalPages - 5, currentPage - 2)) + i;
+                    const isActive = currentPage === pageNum;
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`h-8 w-8 p-0 text-sm ${
+                          isActive
+                            ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum + 1}
+                      </Button>
+                    );
+                  })}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                  disabled={currentPage >= totalPages - 1}
+                  className="h-8 px-3 text-sm disabled:opacity-50"
+                >
+                  다음
+                </Button>
+              </div>
+            </div>
+                      )}
+          </div>
         </CardContent>
       </Card>
 

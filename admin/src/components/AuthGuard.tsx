@@ -11,8 +11,11 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     const location = useLocation();
 
     useEffect(() => {
-        // 쿠키에서 토큰 확인
-        const token = getCookie(ADMIN_TOKEN_COOKIE);
+        // 쿠키와 localStorage에서 토큰 확인
+        let token = getCookie(ADMIN_TOKEN_COOKIE);
+        if (!token) {
+            token = localStorage.getItem('adminToken');
+        }
         const user = localStorage.getItem('adminUser');
 
         // 토큰과 사용자 정보가 있으면 인증됨
