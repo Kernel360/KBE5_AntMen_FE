@@ -2,8 +2,8 @@ import axios from 'axios';
 import { AdminLoginRequest, AdminLoginResponse, AdminChangePasswordRequest, Admin, BoardRequestDto } from './types';
 import { getCookie, ADMIN_TOKEN_COOKIE } from '../lib/cookie';
 
-// const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
-const API_BASE_URL = 'http://localhost:9093/api/v1';
+const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
+// const API_BASE_URL = 'http://localhost:9093/api/v1';
 
 // 관리자 API 인스턴스
 const adminApi = axios.create({
@@ -147,7 +147,7 @@ export const adminService = {
     createNotice: async (data: BoardRequestDto): Promise<void> => {
         // 별도의 axios 인스턴스로 9090 포트에 요청
         const boardApi = axios.create({
-            baseURL: 'http://localhost:9090/api/v1',
+            baseURL: 'https://api.antmen.site:9090/api/v1',
             headers: {
                 'Content-Type': 'application/json',
             },
