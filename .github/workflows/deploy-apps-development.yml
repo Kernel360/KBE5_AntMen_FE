@@ -3,7 +3,7 @@ name: 'CI/CD: Build & Deploy to EC2 (ULTRA FAST - 1min Target)'
 
 on:
   push:
-    branches: [develop, feature/#161-alert]
+    branches: [develop]
     paths:
       - 'apps/**'
       - 'admin/**'
