@@ -180,16 +180,16 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } else {
           // 새로운 로그인 상태
           cleanup(); // 기존 연결 정리
-          // connectToAlerts(); // 새로운 연결 시작 - 비활성화
+          connectToAlerts(); // 새로운 연결 시작
         }
       }
     };
 
-    // 주기적으로 인증 상태 확인 (2초마다) - 비활성화
-    // const intervalId = setInterval(checkAuthChange, 2000);
+    // 주기적으로 인증 상태 확인 (2초마다)
+    const intervalId = setInterval(checkAuthChange, 2000);
 
     return () => {
-      // clearInterval(intervalId);
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -200,9 +200,9 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const authResult = checkUserAuth();
     prevAuthRef.current = authResult.isAuthenticated ? authResult.userRole : null;
 
-    // 알림 권한 요청만 수행
+    // 알림 권한 요청 및 초기 연결 시도
     requestNotificationPermission();
-    // connectToAlerts(); // 초기 연결 시도 - 비활성화
+    connectToAlerts();
 
     // 페이지 언로드 시에만 정리
     return () => {
