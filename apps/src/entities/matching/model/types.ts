@@ -124,4 +124,4 @@ export interface MatchingManagerListResponseDto {
   managerImage: string
 }
 
-export type SortType = 'distance' | 'recent'
+export type SortType = 'distance' | 'recent' // todo: 추후 리뷰순 추가 예정
