@@ -14,6 +14,7 @@ import { cancelReservation } from '@/shared/api/reservation'
 import { getReservationComment, type ReservationComment } from '@/entities/reservation/api/reservationApi'
 import { CalendarIcon, ClockIcon, MapPinIcon, CurrencyDollarIcon, UserIcon, CheckCircleIcon, HomeIcon, StarIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline'
 import { getAuthToken } from '@/features/auth/lib/auth'
+import { RefundModal } from '@/shared/ui/modal/RefundModal'
 
 interface ReservationDetailPageClientProps {
   initialReservation: ReservationHistory | null
@@ -564,6 +565,8 @@ export const ReservationDetailPageClient = ({
   )
   const [isProcessing, setIsProcessing] = useState(false)
   const [reservationComment, setReservationComment] = useState<ReservationComment | null>(null)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [showRefundModal, setShowRefundModal] = useState(false)
 
   // 예약 상태가 DONE일 때 코멘트 정보 가져오기
   useEffect(() => {
@@ -648,24 +651,21 @@ export const ReservationDetailPageClient = ({
   }
 
   const handleCancelReservation = async (reason: string) => {
-    if (isProcessing || !reservation?.reservationId) return
-    setIsProcessing(true)
-    
     try {
-      // cancelReservation API 호출
+      setIsProcessing(true)
       await cancelReservation(reservation.reservationId, reason)
-      
-      // 성공시 예약 상태를 CANCEL로 변경
-      setReservation((prev) =>
-        prev ? { ...prev, reservationStatus: 'CANCEL' } : null,
-      )
-      alert('예약이 성공적으로 취소되었습니다.')
+      setShowRefundModal(true)
+      // router.replace('/myreservation')는 환불 모달에서 onConfirm 시 처리
     } catch (error) {
-      console.error('Failed to cancel reservation:', error)
-      alert('예약 취소에 실패했습니다. 다시 시도해주세요.')
+      alert('예약 취소에 실패했습니다.')
     } finally {
       setIsProcessing(false)
     }
+  }
+
+  const handleRefundConfirm = () => {
+    setShowRefundModal(false)
+    router.replace('/myreservation')
   }
 
   // 수요자 매칭 응답 (매니저가 수락한 상태에서)
@@ -767,10 +767,24 @@ export const ReservationDetailPageClient = ({
         // 매칭 완료 후: 취소 버튼
         if (reservation.reservationStatus === 'MATCHING') {
           return (
-            <CancelActionSection
-              onCancel={handleCancelReservation}
-              isProcessing={isProcessing}
-            />
+            <>
+              <CancelActionSection
+                onCancel={handleCancelReservation}
+                isProcessing={isProcessing}
+              />
+              <CancellationModal
+                isOpen={showCancelModal}
+                onClose={() => setShowCancelModal(false)}
+                onConfirm={handleCancelReservation}
+                title="예약 취소"
+                description="정말 예약을 취소하시겠습니까?"
+              />
+              <RefundModal
+                isOpen={showRefundModal}
+                onClose={() => setShowRefundModal(false)}
+                onConfirm={handleRefundConfirm}
+              />
+            </>
           )
         }
         
