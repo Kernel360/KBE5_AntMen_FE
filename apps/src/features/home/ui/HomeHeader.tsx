@@ -2,11 +2,12 @@
 
 import { BellIcon, UserCircleIcon } from '@heroicons/react/24/solid'
 import { useRouter } from 'next/navigation'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import LoginRequiredModal from '@/shared/ui/modal/LoginRequiredModal'
 import { checkUserAuth } from '@/features/auth/lib/auth'
 import Link from 'next/link'
 import { CalendarIcon } from '@heroicons/react/24/outline'
+import { useAlerts } from '@/features/alerts/ui/AlertProvider'
 
 interface HomeHeaderProps {
   title?: string
@@ -27,6 +28,37 @@ export function HomeHeader({
 }: HomeHeaderProps) {
   const router = useRouter()
   const [loginModalOpen, setLoginModalOpen] = useState(false)
+  const { unreadCount, refreshUnreadCount } = useAlerts()
+  const [prevAuthState, setPrevAuthState] = useState<string | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  // 인증 상태 변경 감지
+  useEffect(() => {
+    const checkAuthChange = () => {
+      const authResult = checkUserAuth()
+      const currentAuth = authResult.isAuthenticated ? authResult.userRole : null
+
+      setIsAuthenticated(authResult.isAuthenticated)
+
+      // 인증 상태가 변경되었을 때
+      if (currentAuth !== prevAuthState) {
+        setPrevAuthState(currentAuth)
+        if (currentAuth) {
+          refreshUnreadCount()
+        }
+      }
+    }
+
+    // 초기 인증 상태 설정
+    checkAuthChange()
+
+    // 주기적으로 인증 상태 확인
+    const intervalId = setInterval(checkAuthChange, 2000)
+
+    return () => {
+      clearInterval(intervalId)
+    }
+  }, [prevAuthState, refreshUnreadCount])
 
   const handleNotificationClick = () => {
     const authResult = checkUserAuth()
@@ -85,15 +117,17 @@ export function HomeHeader({
               aria-label="알림 보기"
             >
               <BellIcon className="w-6 h-6 text-white" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
-                1
-              </span>
+              {isAuthenticated && unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
 
         <h1 className="text-2xl font-semibold mb-2 text-gray-900">
-        {title}
+          {title}
         </h1>
         {subtitle && (
           <p className="text-base text-gray-800 mb-4">{subtitle}</p>

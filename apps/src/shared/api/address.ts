@@ -1,3 +1,5 @@
+import { customFetch } from './base'
+
 export interface CustomerAddressRequest {
   addressName: string;
   addressAddr: string;
@@ -59,4 +61,18 @@ export const createAddress = async (
   });
   if (!res.ok) throw new Error('주소 등록 실패');
   return res.json();
-}; 
+};
+
+// 주소 수정
+export const updateAddress = (addressId: number, data: CustomerAddressRequest) => {
+  return customFetch<CustomerAddressResponse>(`https://api.antmen.site:9091/customers/address/${addressId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+};
+
+// 주소 삭제
+export const deleteAddress = (addressId: number) =>
+  customFetch<void>(`https://api.antmen.site:9091/customers/address/${addressId}/delete`, {
+    method: 'DELETE',
+  }); 
