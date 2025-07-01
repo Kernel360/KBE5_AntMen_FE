@@ -135,25 +135,25 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
             <div className="rounded-xl bg-[#F5F5F5] p-4">{selectedAddress}</div>
 
             {/* ✅ 개발 환경에서만 좌표 정보 표시 */}
-            {process.env.NODE_ENV === 'development' && coordinates.customerLatitude && (
+            {/* {process.env.NODE_ENV === 'development' && coordinates.customerLatitude && (
                 <div className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
                   📍 위도: {coordinates.customerLatitude}, 경도: {coordinates.customerLongitude}
                 </div>
-            )}
+            )} */}
 
             <input
               type="text"
               value={detailAddress}
               onChange={(e) => setDetailAddress(e.target.value)}
               placeholder="상세 주소 입력"
-              className="rounded-xl border border-gray-300 p-4 focus:outline-none focus:ring-2 focus:ring-[#00BCD4]"
+              className="rounded-xl border border-gray-300 p-4 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <input
               type="text"
               value={addressName}
               onChange={(e) => setAddressName(e.target.value)}
               placeholder="주소 별칭 (예: 우리집, 사무실)"
-              className="rounded-xl border border-gray-300 p-4 focus:outline-none focus:ring-2 focus:ring-[#00BCD4]"
+              className="rounded-xl border border-gray-300 p-4 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <input
               type="number"
@@ -161,11 +161,11 @@ const AddAddressModal: React.FC<AddAddressModalProps> = ({
               onChange={(e) => setArea(Number(e.target.value))}
               placeholder="평수 (숫자만 입력해주세요, 예: 50)"
               min={1}
-              className="rounded-xl border border-gray-300 p-4 focus:outline-none focus:ring-2 focus:ring-[#00BCD4]"
+              className="rounded-xl border border-gray-300 p-4 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <button
               onClick={handleAddClick}
-              className="rounded-xl bg-[#00BCD4] py-4 text-white font-bold"
+              className="rounded-xl bg-primary-500 py-4 text-white font-bold"
             >
               주소 추가
             </button>
