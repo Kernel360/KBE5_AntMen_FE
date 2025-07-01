@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import type { Manager } from '@/widgets/manager/model/manager'
-import { ReservationStorage } from '@/shared/lib/reservationStorage'
+import { getAutoMatchingManagers, type MatchingRequestDto } from '@/entities/matching'
 
 interface BottomSectionProps {
   selectedManagers: string[]
@@ -13,7 +13,6 @@ interface BottomSectionProps {
 
 export function BottomSection({
   selectedManagers,
-  reservationId,
   managers,
 }: BottomSectionProps) {
   const router = useRouter()
@@ -47,41 +46,63 @@ export function BottomSection({
       }
 
       const reservationInfo = JSON.parse(reservationInfoStr)
-      console.log('매니저 선택 완료 - 예약 정보:', reservationInfo)
-      console.log('선택된 매니저:', selectedManagers)
+      let finalSelectedManagers = selectedManagers
+      let selectedManagerDetails: any[] = []
 
-      // 선택된 매니저 정보를 예약 정보와 함께 저장
-      const selectedManagerDetails = selectedManagers.length > 0
-        ? selectedManagers
-            .map((id) => {
-              const manager = managers.find((m) => m.id === id)
-              return manager
-                ? {
-                    id: manager.id,
-                    name: manager.name,
-                    gender: manager.gender,
-                    age: manager.age,
-                    rating: manager.rating,
-                    description: manager.description,
-                  }
-                : null
-            })
-            .filter(Boolean)
-        : []
+      // 자동 매칭인 경우 (선택된 매니저가 없을 때)
+      if (selectedManagers.length === 0) {
+        
+        const matchingRequest: MatchingRequestDto = {
+          reservationDate: reservationInfo.reservationDate,
+          reservationTime: reservationInfo.reservationTime,
+          reservationDuration: reservationInfo.reservationDuration,
+          addressId: reservationInfo.addressId,
+        }
+
+        // 자동 매칭 API 호출 (상위 3명 매니저 조회)
+        const autoMatchedManagers = await getAutoMatchingManagers(matchingRequest)
+
+        // 자동 매칭된 매니저들을 선택 목록에 추가
+        finalSelectedManagers = autoMatchedManagers.map(manager => manager.managerId.toString())
+        selectedManagerDetails = autoMatchedManagers.map(manager => ({
+          id: manager.managerId.toString(),
+          name: manager.managerName,
+          gender: manager.managerGender,
+          age: manager.managerAge,
+          rating: manager.managerRating,
+          description: manager.managerComment,
+          image: manager.managerImage,
+        }))
+
+      } else {
+        // 수동 선택인 경우
+        selectedManagerDetails = selectedManagers
+          .map((id) => {
+            const manager = managers.find((m) => m.id === id)
+            return manager
+              ? {
+                  id: manager.id,
+                  name: manager.name,
+                  gender: manager.gender,
+                  age: manager.age,
+                  rating: manager.rating,
+                  description: manager.description,
+                }
+              : null
+          })
+          .filter(Boolean)
+      }
 
       // 매니저 선택 정보를 예약 정보에 추가 (ID와 상세 정보 모두 저장)
       const updatedReservationInfo = {
         ...reservationInfo,
-        selectedManagerIds: selectedManagers, // ID 배열
+        selectedManagerIds: finalSelectedManagers, // ID 배열
         selectedManagers: selectedManagerDetails, // 상세 정보 배열
+        isAutoMatching: selectedManagers.length === 0, // 자동 매칭 여부
       }
 
       // 세션에 업데이트된 정보 저장
       sessionStorage.setItem('currentReservation', JSON.stringify(updatedReservationInfo))
-      console.log('매니저 선택 정보 저장 완료:', {
-        ids: selectedManagers,
-        details: selectedManagerDetails
-      })
 
       // 예약 확인 페이지로 이동
       router.push('/reservation/confirm')
@@ -113,7 +134,9 @@ export function BottomSection({
           className="w-full h-14 rounded-2xl font-semibold text-black text-base bg-primary disabled:bg-slate-200 disabled:text-slate-400 transition-colors"
         >
           {isLoading
-            ? '처리 중...'
+            ? selectedManagers.length === 0
+              ? '자동매칭 중...'
+              : '처리 중...'
             : selectedManagers.length === 0
               ? '자동매칭 이용하기'
               : '다음'}

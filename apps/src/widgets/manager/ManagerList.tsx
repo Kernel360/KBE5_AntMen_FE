@@ -83,8 +83,24 @@ export function ManagerList({ managers, selectedManagers, onManagerSelect }: Man
                 onClick={() => onManagerSelect(manager.id)}
               >
                 <div className="flex flex-col gap-2">
-                  <div className="w-[72px] h-[72px] rounded-full bg-slate-100 flex items-center justify-center">
-                    <span className="text-2xl font-semibold text-slate-500">{manager.profileImage}</span>
+                  <div className="w-[72px] h-[72px] rounded-full bg-slate-100 flex items-center justify-center overflow-hidden">
+                    {manager.profileImage && manager.profileImage.includes('.') ? (
+                      <img 
+                        src={manager.profileImage} 
+                        alt={`${manager.name} 프로필`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent) {
+                            parent.innerHTML = `<span class="text-2xl font-semibold text-slate-500">${manager.name[0]}</span>`;
+                          }
+                        }}
+                      />
+                    ) : (
+                      <span className="text-2xl font-semibold text-slate-500">{manager.name[0]}</span>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 justify-center">
                     <StarIconOutline className="w-4 h-4 text-yellow-400 fill-yellow-400" />
