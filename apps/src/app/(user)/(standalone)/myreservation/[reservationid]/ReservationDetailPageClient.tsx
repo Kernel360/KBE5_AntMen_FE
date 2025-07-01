@@ -449,50 +449,6 @@ const ManagerSection = ({ matchings }: { matchings?: any[] }) => {
   )
 }
 
-// 액션 버튼 섹션
-const ActionSection = ({
-  onAccept,
-  onReject,
-  isProcessing,
-}: {
-  onAccept: () => void
-  onReject: (reason: string) => void
-  isProcessing: boolean
-}) => {
-  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false)
-
-  return (
-    <>
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile bg-white/95 backdrop-blur-xl border-t border-gray-200 p-4 shadow-2xl">
-        <div className="flex gap-3">
-          <button
-            onClick={() => setIsRejectModalOpen(true)}
-            disabled={isProcessing}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl py-3 px-4 font-semibold text-sm disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
-          >
-            거절하기
-          </button>
-          <button
-            onClick={onAccept}
-            disabled={isProcessing}
-            className="flex-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl py-3 px-4 font-semibold text-sm disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
-          >
-            {isProcessing ? '처리중...' : '✨ 매칭 수락하기'}
-          </button>
-        </div>
-      </div>
-
-      <RejectionModal
-        isOpen={isRejectModalOpen}
-        onClose={() => setIsRejectModalOpen(false)}
-        onSubmit={onReject}
-        title="매칭 거절 사유"
-        isProcessing={isProcessing}
-      />
-    </>
-  )
-}
-
 // 매니저 수락 상태에서 수요자 응답 액션 섹션
 const CustomerResponseActionSection = ({
   acceptedMatching,
@@ -517,7 +473,7 @@ const CustomerResponseActionSection = ({
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile bg-white/95 backdrop-blur-xl border-t border-gray-200 p-4 shadow-2xl">
         <div className="mb-3 text-center">
           <p className="text-sm font-medium text-gray-700">
-            <span className="font-bold text-emerald-600">{acceptedMatching.manager.name} 매니저</span>가 수락했어요! 
+            <span className="font-bold text-primary-600">{acceptedMatching.manager.name} 매니저</span>가 수락했어요! 
           </p>
           <p className="text-xs text-gray-500">최종 결정을 내려주세요</p>
         </div>
@@ -532,7 +488,7 @@ const CustomerResponseActionSection = ({
           <button
             onClick={() => onAccept(acceptedMatching.matchingId)}
             disabled={isProcessing}
-            className="flex-[2] bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl py-3 px-4 font-semibold text-sm disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+            className="flex-[2] bg-primary-600 hover:bg-primary-700 text-white rounded-xl py-3 px-4 font-semibold text-sm disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
           >
             {isProcessing ? '처리 중...' : '🎉 매칭 확정하기'}
           </button>
@@ -803,17 +759,6 @@ export const ReservationDetailPageClient = ({
               acceptedMatching={acceptedMatching}
               onAccept={(matchingId) => handleCustomerMatchingResponse(matchingId, true)}
               onReject={(matchingId, reason) => handleCustomerMatchingResponse(matchingId, false, reason)}
-              isProcessing={isProcessing}
-            />
-          )
-        }
-        
-        // 매칭 대기중 (아직 매니저 응답 없음)
-        if (reservation.reservationStatus === 'WAITING') {
-          return (
-            <ActionSection
-              onAccept={handleAcceptMatching}
-              onReject={handleRejectMatching}
               isProcessing={isProcessing}
             />
           )
