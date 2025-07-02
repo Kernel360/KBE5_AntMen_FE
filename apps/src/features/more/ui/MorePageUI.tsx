@@ -97,22 +97,22 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
     },
     {
       icon: <CheckCircleIcon className="w-6 h-6" />,
-      label: '이용내역',
+      label: '이용 내역',
       href: '/myreservation'
     },
     {
       icon: <ChatBubbleBottomCenterTextIcon className="w-6 h-6" />,
-      label: '리뷰관리',
+      label: '리뷰 관리',
       onClick: handleReviewManageClick,
     },
     {
       icon: <UserCircleIcon className="w-6 h-6" />,
-      label: '계정관리',
+      label: '계정 관리',
       href: '/account',
     },
     {
       icon: <MapPinIcon className="w-6 h-6" />,
-      label: '주소관리',
+      label: '주소 관리',
       href: '/address',
     },
     {
@@ -131,27 +131,27 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
     },
     {
       icon: <ClipboardDocumentListIcon className="w-6 h-6" />,
-      label: '업무내역',
+      label: '업무 내역',
       href: '/manager/reservations',
     },
     {
       icon: <BanknotesIcon className="w-6 h-6" />,
-      label: '정산내역',
+      label: '정산 내역',
       href: '/manager/salary',
     },
     {
       icon: <ChatBubbleBottomCenterTextIcon className="w-6 h-6" />,
-      label: '리뷰관리',
+      label: '리뷰 관리',
       onClick: handleReviewManageClick,
     },
     {
       icon: <CalendarDaysIcon className="w-6 h-6" />,
-      label: '근무설정',
+      label: '근무 설정',
       href: '/manager/work-settings',
     },
     {
       icon: <UserCircleIcon className="w-6 h-6" />,
-      label: '계정관리',
+      label: '계정 관리',
       href: '/manager/account',
     },
     {
@@ -173,7 +173,7 @@ export const MorePageUI = ({ user }: MorePageUIProps) => {
   return (
     <>
       <CommonHeader
-        title="더보기"
+        title="내 정보"
         showCloseButton={true}
       />
       <div className="flex flex-col bg-gray-50 pt-16 pb-20 min-h-screen">

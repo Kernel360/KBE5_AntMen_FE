@@ -104,7 +104,7 @@ export function BottomNavigation() {
       />
       <NavItem
         icon={<EllipsisHorizontalIcon className="h-full w-full" />}
-        label="더보기"
+        label="내 정보"
         isActive={pathname === '/manager/more'}
         href="/manager/more"
       />
