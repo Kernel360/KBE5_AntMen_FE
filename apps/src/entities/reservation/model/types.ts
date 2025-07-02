@@ -88,7 +88,7 @@ export interface Reservation {
   reservationDate: string
   reservationTime:
     | string
-    | { hour: number; minute: number; second: number; nano: number }
+    | { hour: number; minute: number; }
   categoryId: number
   categoryName: string
   recommendDuration: number
