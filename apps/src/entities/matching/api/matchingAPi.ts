@@ -155,3 +155,61 @@ export const getRecommendedManagers = async (
     )
   }
 }
+
+/**
+ * 자동 매칭 API - 상위 3명의 매니저를 자동으로 선택
+ * @param request - 예약 요청 정보
+ * @returns Promise<MatchingManagerListResponseDto[]> - 최대 3명의 매니저
+ */
+export const getAutoMatchingManagers = async (
+  request: MatchingRequestDto
+): Promise<MatchingManagerListResponseDto[]> => {
+  try {
+    // 거리 필터링 + 거리순 정렬로 자동 매칭
+    const queryParams = new URLSearchParams({
+      useDistanceFilter: 'true',
+      sortType: 'distance',
+    })
+    
+    const response = await fetch(
+      `${MATCHING_API_URL}?${queryParams}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(request),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null)
+      console.error('Auto Matching Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorData,
+      })
+      throw new ApiError(
+        errorData?.errorMessage || '자동 매칭에 실패했습니다.',
+        response.status,
+        response.statusText,
+      )
+    }
+
+    const data: MatchingManagerListResponseDto[] = await response.json()
+    
+    // 최대 3명까지만 반환
+    return data.slice(0, 3)
+
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error
+    }
+    console.error('Auto matching error:', error)
+    throw new ApiError(
+      '자동 매칭 중 오류가 발생했습니다',
+      500,
+      'Internal Server Error',
+    )
+  }
+}

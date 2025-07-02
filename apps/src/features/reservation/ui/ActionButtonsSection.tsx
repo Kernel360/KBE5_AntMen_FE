@@ -59,8 +59,8 @@ const ActionButtonsSection = ({
     setShowCancelModal(false)
   }
 
-  const handleRefundConfirm = (reason: string) => {
-    onRefund(reason)
+  const handleRefundConfirm = () => {
+    onRefund('')
     setShowRefundModal(false)
   }
 

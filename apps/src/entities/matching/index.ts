@@ -20,4 +20,5 @@ export {
   rejectMatchingRequest,
   respondToMatching,
   getRecommendedManagers,
+  getAutoMatchingManagers,
 } from './api/matchingAPi'

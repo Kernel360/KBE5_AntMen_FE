@@ -264,13 +264,27 @@ const ManagerMatchingPage = () => {
                   <MatchingRequestCard
                     key={request.reservationId}
                     request={toMatchingRequest(request)}
-                    onAccept={() => handleAccept(request.matchings[0].matchingId)}
-                    onReject={() =>
-                      setRejection({
-                        isOpen: true,
-                        matchingId: request.matchings[0].matchingId,
-                      })
-                    }
+                    onAccept={() => {
+                      // 현재 매니저가 응답해야 하는 매칭 찾기 (isRequested: true && isAccepted: null)
+                      const currentMatching = request.matchings.find(m => m.isRequested && m.isAccepted === null)
+                      if (currentMatching) {
+                        handleAccept(currentMatching.matchingId)
+                      } else {
+                        alert('응답할 수 있는 매칭이 없습니다.')
+                      }
+                    }}
+                    onReject={() => {
+                      // 현재 매니저가 응답해야 하는 매칭 찾기 (isRequested: true && isAccepted: null)
+                      const currentMatching = request.matchings.find(m => m.isRequested && m.isAccepted === null)
+                      if (currentMatching) {
+                        setRejection({
+                          isOpen: true,
+                          matchingId: currentMatching.matchingId,
+                        })
+                      } else {
+                        alert('응답할 수 있는 매칭이 없습니다.')
+                      }
+                    }}
                     isProcessing={isProcessing}
                   />
                 ) : null,
