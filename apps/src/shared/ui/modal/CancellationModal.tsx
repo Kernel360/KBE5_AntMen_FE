@@ -71,7 +71,7 @@ const CancellationModal: React.FC<CancellationModalProps> = ({
         <div className="bg-white rounded-xl">
           {/* Modal Header */}
           <div className="p-6 border-b border-gray-200">
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center">
                   <AlertCircle className="w-5 h-5 text-orange-500" />

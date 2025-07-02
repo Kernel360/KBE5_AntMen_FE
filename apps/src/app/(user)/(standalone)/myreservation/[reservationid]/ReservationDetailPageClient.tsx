@@ -14,6 +14,7 @@ import { cancelReservation } from '@/shared/api/reservation'
 import { getReservationComment, type ReservationComment } from '@/entities/reservation/api/reservationApi'
 import { CalendarIcon, ClockIcon, MapPinIcon, CurrencyDollarIcon, UserIcon, CheckCircleIcon, HomeIcon, StarIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline'
 import { getAuthToken } from '@/features/auth/lib/auth'
+import { RefundModal } from '@/shared/ui/modal/RefundModal'
 
 interface ReservationDetailPageClientProps {
   initialReservation: ReservationHistory | null
@@ -375,19 +376,29 @@ const ManagerSection = ({ matchings }: { matchings?: any[] }) => {
                      }`}>
                        {priority === 1 ? '1순위' : priority === 2 ? '2순위' : `${priority}순위`}
                      </span>
-                     {isRequested && (
+                     {isRequested && !isAccepted && (
                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-lg text-xs font-bold">
                          매칭 요청됨
                        </span>
                      )}
+                     {isAccepted && matching.isFinal === null && (
+                       <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-lg text-xs font-bold">
+                         🎉 매니저 수락됨
+                       </span>
+                     )}
                      {matching.isFinal === true && (
                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded-lg text-xs font-bold">
-                        최종 매칭
+                         최종 매칭
                        </span>
                      )}
                      {matching.isFinal === false && (
                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded-lg text-xs font-bold">
-                         매칭 거절
+                          매칭 거절
+                       </span>
+                     )}
+                     {!isAccepted && isRequested && matching.refuseReason && (
+                       <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-lg text-xs font-bold">
+                         매니저 거절됨
                        </span>
                      )}
                    </div>
@@ -439,46 +450,59 @@ const ManagerSection = ({ matchings }: { matchings?: any[] }) => {
   )
 }
 
-// 액션 버튼 섹션
-const ActionSection = ({
+// 매니저 수락 상태에서 수요자 응답 액션 섹션
+const CustomerResponseActionSection = ({
+  acceptedMatching,
   onAccept,
   onReject,
   isProcessing,
 }: {
-  onAccept: () => void
-  onReject: (reason: string) => void
+  acceptedMatching: any
+  onAccept: (matchingId: number) => void
+  onReject: (matchingId: number, reason: string) => void
   isProcessing: boolean
 }) => {
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false)
 
+  const handleReject = (reason: string) => {
+    onReject(acceptedMatching.matchingId, reason)
+    setIsRejectModalOpen(false)
+  }
+
   return (
     <>
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile bg-white/95 backdrop-blur-xl border-t border-gray-200 p-4 shadow-2xl">
+        <div className="mb-3 text-center">
+          <p className="text-sm font-medium text-gray-700">
+            <span className="font-bold text-primary-600">{acceptedMatching.manager.name} 매니저</span>가 수락했어요! 
+          </p>
+          <p className="text-xs text-gray-500">최종 결정을 내려주세요</p>
+        </div>
         <div className="flex gap-3">
           <button
             onClick={() => setIsRejectModalOpen(true)}
             disabled={isProcessing}
             className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl py-3 px-4 font-semibold text-sm disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
           >
-            거절하기
+            다른 매니저 찾기
           </button>
           <button
-            onClick={onAccept}
+            onClick={() => onAccept(acceptedMatching.matchingId)}
             disabled={isProcessing}
-            className="flex-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl py-3 px-4 font-semibold text-sm disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+            className="flex-[2] bg-primary-600 hover:bg-primary-700 text-white rounded-xl py-3 px-4 font-semibold text-sm disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
           >
-            {isProcessing ? '처리중...' : '✨ 매칭 수락하기'}
+            {isProcessing ? '처리 중...' : '🎉 매칭 확정하기'}
           </button>
         </div>
       </div>
 
-      <RejectionModal
-        isOpen={isRejectModalOpen}
-        onClose={() => setIsRejectModalOpen(false)}
-        onSubmit={onReject}
-        title="매칭 거절 사유"
-        isProcessing={isProcessing}
-      />
+             <RejectionModal
+         isOpen={isRejectModalOpen}
+         onClose={() => setIsRejectModalOpen(false)}
+         onSubmit={handleReject}
+         title="매칭 거절 사유"
+         isProcessing={isProcessing}
+       />
     </>
   )
 }
@@ -541,6 +565,8 @@ export const ReservationDetailPageClient = ({
   )
   const [isProcessing, setIsProcessing] = useState(false)
   const [reservationComment, setReservationComment] = useState<ReservationComment | null>(null)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [showRefundModal, setShowRefundModal] = useState(false)
 
   // 예약 상태가 DONE일 때 코멘트 정보 가져오기
   useEffect(() => {
@@ -625,24 +651,83 @@ export const ReservationDetailPageClient = ({
   }
 
   const handleCancelReservation = async (reason: string) => {
-    if (isProcessing || !reservation?.reservationId) return
-    setIsProcessing(true)
-    
     try {
-      // cancelReservation API 호출
+      setIsProcessing(true)
       await cancelReservation(reservation.reservationId, reason)
-      
-      // 성공시 예약 상태를 CANCEL로 변경
-      setReservation((prev) =>
-        prev ? { ...prev, reservationStatus: 'CANCEL' } : null,
-      )
-      alert('예약이 성공적으로 취소되었습니다.')
+      setShowRefundModal(true)
+      // router.replace('/myreservation')는 환불 모달에서 onConfirm 시 처리
     } catch (error) {
-      console.error('Failed to cancel reservation:', error)
-      alert('예약 취소에 실패했습니다. 다시 시도해주세요.')
+      alert('예약 취소에 실패했습니다.')
     } finally {
       setIsProcessing(false)
     }
+  }
+
+  const handleRefundConfirm = () => {
+    setShowRefundModal(false)
+    router.replace('/myreservation')
+  }
+
+  // 수요자 매칭 응답 (매니저가 수락한 상태에서)
+  const handleCustomerMatchingResponse = async (matchingId: number, accept: boolean, reason?: string) => {
+    if (isProcessing) return
+    setIsProcessing(true)
+    
+    try {
+      await respondToMatching(matchingId, {
+        matchingIsFinal: accept,
+        matchingRefuseReason: reason,
+      })
+      
+      if (accept) {
+        // 수락 시 MATCHING 상태로 변경
+        setReservation((prev) => {
+          if (!prev) return null
+          return {
+            ...prev,
+            reservationStatus: 'MATCHING',
+            matchings: prev.matchings?.map(m => 
+              m.matchingId === matchingId 
+                ? { ...m, isFinal: true }
+                : m
+            )
+          }
+        })
+        alert('🎉 매칭이 확정되었습니다!')
+      } else {
+        // 거절 시 해당 매칭을 거절 상태로 변경
+        setReservation((prev) => {
+          if (!prev) return null
+          return {
+            ...prev,
+            matchings: prev.matchings?.map(m => 
+              m.matchingId === matchingId 
+                ? { ...m, isFinal: false, matchingRefuseReason: reason }
+                : m
+            )
+          }
+        })
+        alert('매칭을 거절했습니다. 다른 매니저를 찾아드릴게요.')
+      }
+    } catch (error) {
+      console.error('Failed to respond to matching:', error)
+      alert('매칭 응답에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  // 매니저가 수락한 매칭이 있는지 확인
+  const getAcceptedMatching = () => {
+    return reservation?.matchings?.find(m => 
+      m.isAccepted === true && m.isFinal === null
+    )
+  }
+
+  // 모든 매니저가 거절했는지 확인
+  const allManagersRejected = () => {
+    return reservation?.matchings?.length > 0 && 
+           reservation.matchings.every(m => m.isAccepted === false || m.isFinal === false)
   }
 
   return (
@@ -663,22 +748,68 @@ export const ReservationDetailPageClient = ({
         <PaymentSection reservation={reservation} />
       </main>
       
-      {/* 매칭 대기중일 때: 수락/거절 버튼 */}
-      {reservation.reservationStatus === 'WAITING' && (
-        <ActionSection
-          onAccept={handleAcceptMatching}
-          onReject={handleRejectMatching}
-          isProcessing={isProcessing}
-        />
-      )}
-      
-      {/* 매칭 완료 후: 취소 버튼 */}
-      {reservation.reservationStatus === 'MATCHING' && (
-        <CancelActionSection
-          onCancel={handleCancelReservation}
-          isProcessing={isProcessing}
-        />
-      )}
+      {/* 조건별 액션 버튼 표시 */}
+      {(() => {
+        const acceptedMatching = getAcceptedMatching()
+        
+        // 매니저가 수락한 상태 → 수요자 응답 대기
+        if (acceptedMatching) {
+          return (
+            <CustomerResponseActionSection
+              acceptedMatching={acceptedMatching}
+              onAccept={(matchingId) => handleCustomerMatchingResponse(matchingId, true)}
+              onReject={(matchingId, reason) => handleCustomerMatchingResponse(matchingId, false, reason)}
+              isProcessing={isProcessing}
+            />
+          )
+        }
+        
+        // 매칭 완료 후: 취소 버튼
+        if (reservation.reservationStatus === 'MATCHING') {
+          return (
+            <>
+              <CancelActionSection
+                onCancel={handleCancelReservation}
+                isProcessing={isProcessing}
+              />
+              <CancellationModal
+                isOpen={showCancelModal}
+                onClose={() => setShowCancelModal(false)}
+                onConfirm={handleCancelReservation}
+                title="예약 취소"
+                description="정말 예약을 취소하시겠습니까?"
+              />
+              <RefundModal
+                isOpen={showRefundModal}
+                onClose={() => setShowRefundModal(false)}
+                onConfirm={handleRefundConfirm}
+              />
+            </>
+          )
+        }
+        
+        // 모든 매니저가 거절한 경우
+        if (allManagersRejected()) {
+          return (
+            <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile bg-white/95 backdrop-blur-xl border-t border-gray-200 p-4 shadow-2xl">
+              <div className="text-center mb-4">
+                <p className="text-sm font-medium text-gray-700 mb-1">
+                  😔 모든 매니저가 거절했어요
+                </p>
+                <p className="text-xs text-gray-500">새로운 매니저를 찾아드릴게요</p>
+              </div>
+              <button
+                disabled
+                className="w-full bg-gray-200 text-gray-500 rounded-xl py-3 px-4 font-semibold text-sm cursor-not-allowed"
+              >
+                재매칭 중...
+              </button>
+            </div>
+          )
+        }
+        
+        return null
+      })()}
     </div>
   )
 } 
