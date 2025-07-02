@@ -145,7 +145,9 @@ export const MyReservationClient: FC = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto pt-[120px] pb-16">
-        {sortedReservations.length > 0 ? (
+        {loading ? (
+          null
+        ) : sortedReservations.length > 0 ? (
           <div className="space-y-4 p-5">
             {sortedReservations.map((reservation) => (
               <ReservationCard
