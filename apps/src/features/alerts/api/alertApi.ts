@@ -3,13 +3,14 @@ import { Alert, AlertResponse } from '@/entities/alert/model/types';
 import { customFetch } from '@/shared/api/base';
 
 const ALERT_API_BASE = 'https://api.antmen.site:9090/api/v1/common/alerts';
+const MAX_RETRY_COUNT = 3;
 
 // auth-token 쿠키에서 토큰 추출
 function getAuthTokenFromCookie() {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.match(/auth-token=([^;]+)/);
   if (!match) return null;
-  return decodeURIComponent(match[1]); // Bearer 토큰이 이미 포함되어 있음
+  return decodeURIComponent(match[1]);
 }
 
 // 백엔드 응답을 프론트엔드 형식으로 변환
@@ -35,30 +36,19 @@ export const subscribeToAlerts = async (handlers: {
       throw new Error('No authentication token found');
     }
 
+    let retryCount = 0;
+
     await fetchEventSource(`${ALERT_API_BASE}/subscribe`, {
       method: 'GET',
       headers: {
         'Accept': 'text/event-stream',
         'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
         'Authorization': token,
       },
       signal: handlers.signal,
-      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
-        // SSE 연결을 위해 native fetch 사용
-        return fetch(input, {
-          ...init,
-          headers: {
-            ...init?.headers,
-          },
-        });
-      },
+      // 재시도 로직 제어
       async onopen(response) {
-        console.log('[AlertAPI] Connection response:', {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries())
-        });
-
         if (response.ok && response.status === 200) {
           console.log('[AlertAPI] SSE connection established successfully');
           handlers.onConnect?.();
@@ -67,12 +57,6 @@ export const subscribeToAlerts = async (handlers: {
         }
       },
       onmessage(event: EventSourceMessage) {
-        console.log('[AlertAPI] Received event:', {
-          type: event.event,
-          data: event.data,
-          id: event.id
-        });
-        
         if (handlers.signal?.aborted) {
           return;
         }
@@ -85,32 +69,66 @@ export const subscribeToAlerts = async (handlers: {
         if (event.event === 'alert' && event.data) {
           try {
             const alertResponse: AlertResponse = JSON.parse(event.data);
-            console.log('[AlertAPI] Received alert response:', alertResponse);
-            
             const alert = transformAlert(alertResponse);
-            console.log('[AlertAPI] Transformed alert:', alert);
-            
             handlers.onAlert?.(alert);
           } catch (error) {
             console.error('[AlertAPI] Failed to parse alert data:', error);
-            console.error('[AlertAPI] Raw event data:', event.data);
           }
         }
       },
       onclose() {
         if (!handlers.signal?.aborted) {
-          console.log('[AlertAPI] SSE connection closed unexpectedly');
+          console.log('[AlertAPI] Connection closed unexpectedly');
+          handlers.onError?.(new Error('SSE connection closed unexpectedly'));
         }
       },
       onerror(error) {
-        console.error('[AlertAPI] SSE connection error:', error);
-        if (!handlers.signal?.aborted) {
-          handlers.onError?.(error);
+        if (handlers.signal?.aborted) {
+          return;
+        }
+
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('[AlertAPI] SSE connection error:', {
+          message: errorMessage,
+          error
+        });
+
+        if (retryCount >= MAX_RETRY_COUNT) {
+          console.log('[AlertAPI] Max retry attempts reached');
+          handlers.onError?.(error instanceof Error ? error : new Error(errorMessage));
+          return;
+        }
+
+        retryCount++;
+        console.log(`[AlertAPI] Retry attempt ${retryCount}/${MAX_RETRY_COUNT}`);
+      },
+      fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+        try {
+          const response = await fetch(input, {
+            ...init,
+            credentials: 'include',
+            mode: 'cors',
+            headers: {
+              ...init?.headers,
+              'Origin': window.location.origin,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          return response;
+        } catch (error) {
+          console.error('[AlertAPI] Fetch error:', {
+            name: error instanceof Error ? error.name : 'Unknown Error',
+            message: error instanceof Error ? error.message : String(error),
+          });
+          throw error;
         }
       }
     });
   } catch (error) {
-    // AbortError는 정상적인 중단이므로 에러로 처리하지 않음
     if (error instanceof Error && error.name === 'AbortError') {
       console.log('[AlertAPI] Connection aborted by client');
       return;
