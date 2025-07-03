@@ -89,8 +89,6 @@ const ReservationForm = ({
     isRecommendedTimeLoading,
   } = useReservationForm({ initialCategory, initialOptions, addressId })
 
-  // 임시저장 기능 제거됨 - 관련 코드 삭제
-
   // 필수값 체크: 실제 필수값에 맞게 수정하세요
   const isFormValid = !!selectedDate && !!selectedHours && !!selectedVisitTime
   // ... 기타 필수값 체크 필요시 추가
@@ -107,10 +105,6 @@ const ReservationForm = ({
         {/* 선택된 카테고리 정보 표시 */}
         <div className="px-4 py-3 bg-gray-50 border-b pt-20">
           <h2 className="text-lg font-bold">{initialCategory.categoryName}</h2>
-          <p className="text-sm text-gray-600">
-            기본 금액 {initialCategory.categoryPrice.toLocaleString()}원 
-            • 추가시간 시간당 20,000원
-          </p>
         </div>
 
         {/* Content */}
