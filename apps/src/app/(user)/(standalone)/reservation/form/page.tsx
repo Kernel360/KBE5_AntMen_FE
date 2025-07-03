@@ -154,7 +154,9 @@ const ReservationForm = ({
               placeholder="특별히 신경 써주길 바라는 점이나 요청사항을 입력해주세요. (선택사항)"
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
+              maxLength={100}
             />
+            <div className="text-right text-xs text-gray-400 mt-1">{memo.length}/100</div>
           </div>
         </main>
       </div>

@@ -29,7 +29,7 @@ export const navConfig: Record<UserRole, NavItemConfig[]> = {
     {
       icon: '/icons/footer-dot.svg',
       activeIcon: '/icons/footer-dot-active.svg',
-      label: '더보기',
+      label: '내 정보',
       href: '/more',
     },
   ],
@@ -61,7 +61,7 @@ export const navConfig: Record<UserRole, NavItemConfig[]> = {
     {
       icon: '/icons/footer-dot.svg',
       activeIcon: '/icons/footer-dot-active.svg',
-      label: '더보기',
+      label: '내 정보',
       href: '/manager/more',
     },
   ],

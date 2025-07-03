@@ -106,6 +106,13 @@ export const ManagerReservationsClient = ({
     }
   })
 
+  // 서비스 예정일(날짜+시간) 기준으로 가까운 순 정렬
+  const sortedReservations = [...filteredReservations].sort((a, b) => {
+    const aDate = new Date(`${a.reservationDate}T${a.reservationTime || '00:00'}`);
+    const bDate = new Date(`${b.reservationDate}T${b.reservationTime || '00:00'}`);
+    return aDate.getTime() - bDate.getTime();
+  });
+
   // 클라이언트에서 예약 데이터 fetch
   const fetchReservations = async () => {
     try {
@@ -393,9 +400,9 @@ export const ManagerReservationsClient = ({
 
         {/* 예약 목록 */}
         <div className="pb-20">
-          {filteredReservations.length > 0 ? (
+          {sortedReservations.length > 0 ? (
             <div className="space-y-4 p-4">
-              {filteredReservations.map((reservation) => (
+              {sortedReservations.map((reservation) => (
                 <ReservationCard
                   key={reservation.reservationId}
                   reservation={reservation}
@@ -521,6 +528,6 @@ function mapReservationApiToClient(apiData: Reservation): Reservation {
     reservationTime:
       typeof apiData.reservationTime === 'string'
         ? apiData.reservationTime
-        : `${String(apiData.reservationTime.hour).padStart(2, '0')}:${String(apiData.reservationTime.minute).padStart(2, '0')}:${String(apiData.reservationTime.second ?? 0).padStart(2, '0')}`,
+        : `${String(apiData.reservationTime.hour).padStart(2, '0')}:${String(apiData.reservationTime.minute).padStart(2, '0')}`
   }
 }

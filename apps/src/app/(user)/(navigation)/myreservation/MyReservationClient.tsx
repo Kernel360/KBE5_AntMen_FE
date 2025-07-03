@@ -86,6 +86,13 @@ export const MyReservationClient: FC = () => {
     }
   })
 
+  // 서비스 예정일(날짜+시간) 기준으로 가까운 순 정렬
+  const sortedReservations = [...filteredReservations].sort((a, b) => {
+    const aDate = new Date(`${a.reservationDate}T${a.reservationTime || '00:00'}`);
+    const bDate = new Date(`${b.reservationDate}T${b.reservationTime || '00:00'}`);
+    return aDate.getTime() - bDate.getTime(); // 가까운 날짜/시간이 위로
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <CommonHeader 
@@ -138,9 +145,11 @@ export const MyReservationClient: FC = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto pt-[120px] pb-16">
-        {filteredReservations.length > 0 ? (
+        {loading ? (
+          null
+        ) : sortedReservations.length > 0 ? (
           <div className="space-y-4 p-5">
-            {filteredReservations.map((reservation) => (
+            {sortedReservations.map((reservation) => (
               <ReservationCard
                 key={reservation.reservationId}
                 reservation={reservation}
