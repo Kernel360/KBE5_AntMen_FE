@@ -27,6 +27,8 @@ interface BasicSignupFormProps {
   onIdValidationChange: (isValid: boolean) => void
   showUsernameField?: boolean
   showPasswordField?: boolean
+  isPasswordFocused?: boolean
+  setIsPasswordFocused?: (focused: boolean) => void
 }
 
 export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
@@ -38,6 +40,8 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
   onIdValidationChange,
   showUsernameField = true,
   showPasswordField = true,
+  isPasswordFocused = false,
+  setIsPasswordFocused = () => {},
 }) => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,11 +116,18 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
             name="password"
             value={formData.password}
             onChange={onChange}
+            onFocus={() => setIsPasswordFocused(true)}
+            onBlur={() => setIsPasswordFocused(false)}
             className={`w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none ${
               errors.password ? 'border-2 border-red-500' : ''
             }`}
             placeholder="비밀번호를 입력해주세요"
           />
+          {isPasswordFocused && (
+            <span className="text-xs text-gray-500 mt-1 block">
+              비밀번호는 6자리 이상이어야 합니다.
+            </span>
+          )}
           {errors.password && (
             <span className="text-red-500 text-sm">{errors.password}</span>
           )}
