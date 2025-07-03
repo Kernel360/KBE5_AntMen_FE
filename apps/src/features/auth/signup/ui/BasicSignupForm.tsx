@@ -50,6 +50,62 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
     }
   }
 
+  // 생년월일 드롭다운용 상태
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const [birthYear, setBirthYear] = useState('');
+  const [birthMonth, setBirthMonth] = useState('');
+  const [birthDay, setBirthDay] = useState('');
+
+  // 연도 옵션 (1920~올해)
+  const years = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
+  // 월 옵션
+  const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
+  // 일 옵션 (월/윤년 고려)
+  function getDaysInMonth(year: string, month: string) {
+    if (!year || !month) return [];
+    const y = parseInt(year, 10);
+    const m = parseInt(month, 10);
+    const lastDay = new Date(y, m, 0).getDate();
+    return Array.from({ length: lastDay }, (_, i) => String(i + 1).padStart(2, '0'));
+  }
+  const days = getDaysInMonth(birthYear, birthMonth);
+
+  // 오늘 이전만 선택 가능하도록 제한
+  const isFuture = (y: string, m: string, d: string) => {
+    if (!y || !m || !d) return false;
+    const selected = new Date(`${y}-${m}-${d}`);
+    return selected > today;
+  };
+
+  // 드롭다운 변경 핸들러
+  const handleBirthChange = (type: 'year' | 'month' | 'day', value: string) => {
+    let newYear = birthYear, newMonth = birthMonth, newDay = birthDay;
+    if (type === 'year') newYear = value;
+    if (type === 'month') newMonth = value;
+    if (type === 'day') newDay = value;
+    // 미래 날짜 선택 방지
+    if (isFuture(newYear, newMonth, newDay)) {
+      if (type === 'year') setBirthYear('');
+      if (type === 'month') setBirthMonth('');
+      if (type === 'day') setBirthDay('');
+      return;
+    }
+    setBirthYear(newYear);
+    setBirthMonth(newMonth);
+    setBirthDay(newDay);
+    // 모두 선택 시 YYYY-MM-DD로 부모에 전달
+    if (newYear && newMonth && newDay) {
+      const birthDate = `${newYear}-${newMonth}-${newDay}`;
+      onChange({
+        target: {
+          name: 'birthDate',
+          value: birthDate,
+        }
+      } as React.ChangeEvent<HTMLInputElement>);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Profile Image Upload */}
@@ -234,15 +290,43 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
       {/* Birth Date */}
       <div className="space-y-2">
         <label className="block text-base font-medium">생년월일</label>
-        <input
-          type="date"
-          name="birthDate"
-          value={formData.birthDate}
-          onChange={onChange}
-          className={`w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none ${
-            errors.birthDate ? 'border-2 border-red-500' : ''
-          }`}
-        />
+        <div className="flex gap-2">
+          <select
+            name="birthYear"
+            value={birthYear}
+            onChange={e => handleBirthChange('year', e.target.value)}
+            className={`w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none ${errors.birthDate ? 'border-2 border-red-500' : ''}`}
+          >
+            <option value="">년</option>
+            {years.map(y => (
+              <option key={y} value={y}>{y}년</option>
+            ))}
+          </select>
+          <select
+            name="birthMonth"
+            value={birthMonth}
+            onChange={e => handleBirthChange('month', e.target.value)}
+            className={`w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none ${errors.birthDate ? 'border-2 border-red-500' : ''}`}
+            disabled={!birthYear}
+          >
+            <option value="">월</option>
+            {months.map(m => (
+              <option key={m} value={m}>{m}월</option>
+            ))}
+          </select>
+          <select
+            name="birthDay"
+            value={birthDay}
+            onChange={e => handleBirthChange('day', e.target.value)}
+            className={`w-full h-[52px] px-4 bg-[#F9F9F9] rounded-lg text-base focus:outline-none ${errors.birthDate ? 'border-2 border-red-500' : ''}`}
+            disabled={!birthYear || !birthMonth}
+          >
+            <option value="">일</option>
+            {days.map(d => (
+              <option key={d} value={d}>{d}일</option>
+            ))}
+          </select>
+        </div>
         {errors.birthDate && (
           <span className="text-red-500 text-sm">{errors.birthDate}</span>
         )}
