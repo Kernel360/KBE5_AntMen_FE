@@ -68,21 +68,20 @@ const LoginRequiredModal = ({ isOpen, onClose }: LoginRequiredModalProps) => {
         </header>
         {/* 내용 */}
         <main className="px-6 pt-6 pb-4 space-y-4">
-          <div className="flex flex-col mb-12 mt-8">
+          <div className="flex flex-col mb-12 mt-3">
             <p className="text-base text-[#333333] leading-[160%] text-center font-semibold">
               로그인 후 이용 가능합니다
             </p>
             <p className="text-sm text-[#666666] leading-none text-center">
               서비스 이용을 위해 로그인이 필요합니다.
             </p>
-          </div>
-
-          <Link
+            <Link
             href="/login"
             className="w-full h-12 bg-primary rounded-lg flex items-center justify-center font-bold text-base text-gray-900 mt-4  transition-colors"
           >
             로그인
           </Link>
+          </div>
         </main>
       </div>
     </div>
