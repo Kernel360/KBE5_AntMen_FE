@@ -92,7 +92,15 @@ function useAuthHandlers(requireAuth: 'CUSTOMER' | 'MANAGER') {
 
   const handleProfileClick = () => {
     const authResult = checkUserAuth()
-    router.push(authResult.isAuthenticated ? '/more' : '/login')
+    if (!authResult.isAuthenticated) {
+      router.push('/login')
+      return
+    }
+    if (authResult.userRole === 'MANAGER') {
+      router.push('/manager/more')
+    } else {
+      router.push('/more')
+    }
   }
 
   const handleNotificationClick = () => {
