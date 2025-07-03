@@ -8,6 +8,8 @@ import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
 import { BoardSearchBar } from '@/widgets/post/BoardSearchBar';
 import { BoardTabs } from '@/widgets/post/BoardTabs';
 import { BoardSortModal } from '@/widgets/post/BoardSortModal';
+import { useAuthStore } from '@/shared/stores/authStore';
+import LoginRequiredModal from '@/shared/ui/modal/LoginRequiredModal';
 
 export default function BoardsPage() {
   const searchParams = useSearchParams();
@@ -16,6 +18,8 @@ export default function BoardsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSortModalOpen, setIsSortModalOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<NoticeSortOption | InquirySortOption>('latest');
+  const { user } = useAuthStore();
+  const [modalOpen, setModalOpen] = useState(false);
 
   // 탭 초기화 (URL 파라미터 우선, 없으면 localStorage, 그것도 없으면 기본값)
   useEffect(() => {
@@ -60,6 +64,11 @@ export default function BoardsPage() {
     localStorage.setItem('userBoardActiveTab', activeTab);
   }, [activeTab]);
 
+  useEffect(() => {
+    if (!user) setModalOpen(true);
+    else setModalOpen(false);
+  }, [user]);
+
   const handleSearch = (value: string) => {
     setSearchQuery(value);
     // TODO: 검색 로직 구현
@@ -80,45 +89,48 @@ export default function BoardsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <CommonHeader
-        title="게시판"
-        showCloseButton={true}
-      />
-      <div className="pt-16 pb-20">
-        <div className="sticky top-16 z-10 bg-white">
-          <BoardSearchBar 
-            onSearch={handleSearch}
-            onFilterClick={() => setIsSortModalOpen(true)}
-          />
-          <BoardTabs
-            userRole="customer"
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
+    <>
+      <main className="min-h-screen bg-gray-50">
+        <CommonHeader
+          title="게시판"
+          showCloseButton={true}
+        />
+        <div className="pt-16 pb-20">
+          <div className="sticky top-16 z-10 bg-white">
+            <BoardSearchBar 
+              onSearch={handleSearch}
+              onFilterClick={() => setIsSortModalOpen(true)}
+            />
+            <BoardTabs
+              userRole="customer"
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+            />
+          </div>
+          <div className="mx-auto w-full max-w-[430px]">
+            <PostList 
+              userRole="customer"
+              boardType={(() => {
+                // URL 파라미터를 직접 읽어서 탭 결정 (상태 비동기 문제 해결)
+                const tabCode = searchParams?.get('t');
+                if (tabCode === 'i') return '서비스 문의';
+                if (tabCode === 'n') return '공지사항';
+                return activeTab; // URL 파라미터가 없으면 상태값 사용
+              })()}
+            />
+          </div>
         </div>
-        <div className="mx-auto w-full max-w-[430px]">
-          <PostList 
-            userRole="customer"
-            boardType={(() => {
-              // URL 파라미터를 직접 읽어서 탭 결정 (상태 비동기 문제 해결)
-              const tabCode = searchParams?.get('t');
-              if (tabCode === 'i') return '서비스 문의';
-              if (tabCode === 'n') return '공지사항';
-              return activeTab; // URL 파라미터가 없으면 상태값 사용
-            })()}
-          />
-        </div>
-      </div>
 
-      {/* 정렬 모달 */}
-      <BoardSortModal
-        isOpen={isSortModalOpen}
-        onClose={() => setIsSortModalOpen(false)}
-        selectedSort={selectedSort}
-        onSortChange={handleSortChange}
-        boardType={activeTab}
-      />
-    </main>
+        {/* 정렬 모달 */}
+        <BoardSortModal
+          isOpen={isSortModalOpen}
+          onClose={() => setIsSortModalOpen(false)}
+          selectedSort={selectedSort}
+          onSortChange={handleSortChange}
+          boardType={activeTab}
+        />
+      </main>
+      <LoginRequiredModal isOpen={!user} onClose={() => {}} />
+    </>
   );
 }
