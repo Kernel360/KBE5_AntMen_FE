@@ -23,6 +23,7 @@ const ManagerSignUpPage = () => {
   const [errors, setErrors] = useState<ValidationErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isIdValid, setIsIdValid] = useState(false)
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false)
 
   const { socialProfile, isSocialSignup, clearSocialProfile } =
     useSocialProfileStore()
@@ -414,6 +415,8 @@ const ManagerSignUpPage = () => {
                 errors={errors}
                 isSocialSignup={isSocialSignup}
                 onIdValidationChange={setIsIdValid}
+                isPasswordFocused={isPasswordFocused}
+                setIsPasswordFocused={setIsPasswordFocused}
             />
 
             {/* Manager Additional Information */}

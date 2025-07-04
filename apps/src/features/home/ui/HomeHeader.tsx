@@ -108,9 +108,20 @@ export function HomeHeader({
       <div className="relative z-20 pt-4 container">
         <div className="flex justify-end mb-6">
           <div className="flex gap-[10px]">
-            <Link className="relative" href="/login" aria-label="로그인">
+            <button
+              className="relative"
+              onClick={() => {
+                const authResult = checkUserAuth();
+                if (authResult.isAuthenticated) {
+                  router.push('/more');
+                } else {
+                  router.push('/login');
+                }
+              }}
+              aria-label="로그인"
+            >
               <UserCircleIcon className="w-6 h-6 text-white" />
-            </Link>
+            </button>
             <button
               className="relative"
               onClick={handleNotificationClick}

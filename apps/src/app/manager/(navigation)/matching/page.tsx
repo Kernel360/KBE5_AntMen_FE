@@ -143,6 +143,13 @@ const ManagerMatchingPage = () => {
     return true // 임시로 전체 반환
   })
 
+  // 예약 날짜 기준 가까운 순 정렬 (reservationTime 없음)
+  const sortedRequests = [...filteredRequests].sort((a, b) => {
+    const aDate = new Date(a.reservationDate);
+    const bDate = new Date(b.reservationDate);
+    return aDate.getTime() - bDate.getTime();
+  });
+
   const handleAccept = async (matchingId: number) => {
     setIsProcessing(true)
     try {
@@ -259,7 +266,7 @@ const ManagerMatchingPage = () => {
             <div className="text-center py-8 text-red-500">{error}</div>
           ) : filteredRequests.length > 0 ? (
             <>
-              {filteredRequests.map((request) =>
+              {sortedRequests.map((request) =>
                 request ? (
                   <MatchingRequestCard
                     key={request.reservationId}

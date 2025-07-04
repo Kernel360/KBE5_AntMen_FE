@@ -260,10 +260,9 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
             날짜 및 시간
           </span>
           <span className="text-sm font-medium text-black">
-            {new Date(reservationDate).toLocaleDateString()}{' '}
-            {typeof reservationTime === 'string'
-              ? reservationTime
-              : `${reservationTime.hour}:${reservationTime.minute.toString().padStart(2, '0')}`}
+            {new Date(reservationDate).toLocaleDateString()} {typeof reservationTime === 'string'
+              ? reservationTime.slice(0, 5)
+              : `${reservationTime.hour.toString().padStart(2, '0')}:${reservationTime.minute.toString().padStart(2, '0')}`}
           </span>
         </div>
         <div className="flex items-center justify-between">
