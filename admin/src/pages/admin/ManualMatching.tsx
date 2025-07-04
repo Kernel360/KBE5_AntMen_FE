@@ -386,7 +386,8 @@ export const ManualMatching: React.FC = () => {
     const safeServiceFilter = serviceFilter || 'all';
     const safeMatchingStatusFilter = matchingStatusFilter || 'all';
 
-    // 서비스 유형 매핑
+    // 서비스 유형 매핑 (현재 사용되지 않음)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const serviceTypeMap: { [key: string]: string } = {
         'all': '전체',
         'cleaning': '청소',

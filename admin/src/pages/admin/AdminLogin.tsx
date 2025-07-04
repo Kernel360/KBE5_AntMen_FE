@@ -14,7 +14,7 @@ import {
     CheckCircle,
     Loader2
 } from 'lucide-react';
-import { setCookie, getCookie, ADMIN_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE } from '../../lib/cookie';
+import { setCookie, getCookie, ADMIN_TOKEN_COOKIE } from '../../lib/cookie';
 import { adminService } from '../../api/adminService';
 
 interface LoginForm {
@@ -31,7 +31,8 @@ export const AdminLogin: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
-    // 이전에 접근하려던 페이지 정보
+    // 이전에 접근하려던 페이지 정보 (현재 사용되지 않음)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const from = (location.state as any)?.from?.pathname || '/admin/dashboard';
 
     // 이미 로그인된 사용자인지 확인

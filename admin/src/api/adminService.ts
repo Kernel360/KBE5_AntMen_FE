@@ -13,7 +13,8 @@ const adminApi = axios.create({
     },
 });
 
-// JWT 토큰 디코드 유틸리티
+// JWT 토큰 디코드 유틸리티 (현재 사용되지 않음)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const decodeJWT = (token: string) => {
     try {
         const base64Url = token.split('.')[1];
