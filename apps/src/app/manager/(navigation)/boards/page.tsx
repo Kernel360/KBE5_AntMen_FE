@@ -84,6 +84,9 @@ export default function ManagerBoardsPage() {
             <PostList 
               userRole="manager"
               boardType={activeTab}
+              searchTerm={searchQuery}
+              selectedSort={selectedSort}
+              onSortChange={handleSortChange}
             />
           ) : (
             <div className="h-40 flex items-center justify-center text-gray-400">로딩 중...</div>

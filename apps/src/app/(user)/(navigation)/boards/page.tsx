@@ -38,12 +38,10 @@ export default function BoardsPage() {
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
-    // TODO: 검색 로직 구현
   };
 
   const handleSortChange = (sort: NoticeSortOption | InquirySortOption) => {
     setSelectedSort(sort);
-    // TODO: 정렬 로직 구현
   };
 
   const handleTabChange = (tab: '공지사항' | '서비스 문의' | '업무 문의') => {
@@ -91,6 +89,9 @@ export default function BoardsPage() {
               if (tabCode === 'n') return '공지사항';
               return activeTab; // URL 파라미터가 없으면 상태값 사용
             })()}
+            searchTerm={searchQuery}
+            selectedSort={selectedSort}
+            onSortChange={handleSortChange}
           />
         </div>
       </div>
