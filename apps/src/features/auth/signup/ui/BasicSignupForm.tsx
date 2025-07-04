@@ -58,7 +58,7 @@ export const BasicSignupForm: React.FC<BasicSignupFormProps> = ({
   const [birthDay, setBirthDay] = useState('');
 
   // 연도 옵션 (1920~올해)
-  const years = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
+  const years = Array.from({ length: 150 }, (_, i) => String(currentYear - i));
   // 월 옵션
   const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
   // 일 옵션 (월/윤년 고려)
