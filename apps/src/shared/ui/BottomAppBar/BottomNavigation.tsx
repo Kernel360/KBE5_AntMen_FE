@@ -79,7 +79,7 @@ export const BottomNavigation = ({ userRole }: BottomNavigationProps) => {
         aria-label="하단 네비게이션"
       >
         {bottomNav.map((item) => {
-          // 내 정보, 내 예약 버튼만 예외 처리
+          // 내 정보, 내 예약만 로그인 체크
           if (item.label === '내 정보' || item.label === '내 예약') {
             return (
               <NavItem

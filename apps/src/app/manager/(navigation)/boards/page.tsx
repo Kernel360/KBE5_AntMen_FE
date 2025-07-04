@@ -58,6 +58,11 @@ export default function ManagerBoardsPage() {
     }
   };
 
+  const handleClose = () => {
+    // 홈으로 직접 이동
+    router.push('/manager')
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       <BoardHeader />
@@ -79,6 +84,9 @@ export default function ManagerBoardsPage() {
             <PostList 
               userRole="manager"
               boardType={activeTab}
+              searchTerm={searchQuery}
+              selectedSort={selectedSort}
+              onSortChange={handleSortChange}
             />
           ) : (
             <div className="h-40 flex items-center justify-center text-gray-400">로딩 중...</div>

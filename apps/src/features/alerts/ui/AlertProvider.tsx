@@ -75,24 +75,16 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // 알림 권한 요청
   const requestNotificationPermission = async () => {
-    if (!('Notification' in window)) {
-      console.log('[AlertProvider] Notifications not supported');
-      return;
-    }
-
+    if (!('Notification' in window)) return;
     if (Notification.permission === 'default') {
       try {
-        const permission = await Notification.requestPermission();
-        console.log('[AlertProvider] Notification permission:', permission);
-      } catch (error) {
-        console.error('[AlertProvider] Failed to request notification permission:', error);
-      }
+        await Notification.requestPermission();
+      } catch {}
     }
   };
 
   const cleanup = () => {
     if (connectionRef.current) {
-      console.log('[AlertProvider] Cleaning up existing connection');
       connectionRef.current.abort();
       connectionRef.current = null;
     }
@@ -103,119 +95,116 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     isConnectingRef.current = false;
   };
 
-  const connectToAlerts = async () => {
-    const authResult = checkUserAuth();
-    if (!authResult.isAuthenticated) {
-      resetAlerts();
-      return;
-    }
-
-    // 이미 연결 중이거나 마운트되지 않은 경우 중복 연결 방지
-    if (!mountedRef.current || isConnectingRef.current || connectionRef.current) {
-      console.log('[AlertProvider] Connection already exists or in progress, or component not mounted. Skipping...');
-      return;
-    }
-
-    try {
-      console.log('[AlertProvider] Initiating new connection...');
-      isConnectingRef.current = true;
-      const currentController = new AbortController();
-      connectionRef.current = currentController;
-
-      await subscribeToAlerts({
-        onConnect: () => {
-          if (mountedRef.current) {
-            console.log('[AlertProvider] Connected to alert system');
-            isConnectingRef.current = false;
-            refreshUnreadCount();
-          } else {
-            console.log('[AlertProvider] Connected but component unmounted, cleaning up');
-            cleanup();
-          }
-        },
-        onAlert: (alert) => {
-          if (mountedRef.current) {
-            showAlertToast(alert);
-            refreshUnreadCount();
-          }
-        },
-        onError: (error) => {
-          console.error('[AlertProvider] Alert system error:', error);
+  // storage event로 로그인/로그아웃 동기화
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'auth-event') {
+        const data = event.newValue ? JSON.parse(event.newValue) : null;
+        if (!data) return;
+        if (data.type === 'login') {
           cleanup();
-          
-          // 연결 에러 시 재연결 시도 (3초 후)
-          if (mountedRef.current) {
-            console.log('[AlertProvider] Scheduling reconnection attempt...');
-            reconnectTimeoutRef.current = setTimeout(connectToAlerts, 3000);
-          }
-        },
-        signal: currentController.signal
-      });
-    } catch (error) {
-      console.error('[AlertProvider] Failed to connect:', error);
-      cleanup();
-      
-      // 연결 실패 시 재연결 시도 (3초 후)
-      if (mountedRef.current) {
-        console.log('[AlertProvider] Scheduling reconnection attempt...');
-        reconnectTimeoutRef.current = setTimeout(connectToAlerts, 3000);
+          connectToAlerts();
+        } else if (data.type === 'logout') {
+          resetAlerts();
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
+  }, []);
+
+  // 로그인/로그아웃 시점에만 연결/해제
+  const handleAuthChange = () => {
+    const authResult = checkUserAuth()
+    const currentAuth = authResult.isAuthenticated ? authResult.userRole : null;
+    if (currentAuth !== prevAuthRef.current) {
+      prevAuthRef.current = currentAuth
+      if (!currentAuth) {
+        // 로그아웃
+        resetAlerts()
+        // 다른 탭 동기화
+        localStorage.setItem('auth-event', JSON.stringify({ type: 'logout', ts: Date.now() }))
+      } else {
+        // 로그인
+        cleanup()
+        connectToAlerts()
+        // 다른 탭 동기화
+        localStorage.setItem('auth-event', JSON.stringify({ type: 'login', ts: Date.now() }));
       }
     }
   };
 
-  // 인증 상태 변경 감지 및 처리
+  // 마운트 시 1회만 실행
   useEffect(() => {
-    const checkAuthChange = () => {
-      const authResult = checkUserAuth();
-      const currentAuth = authResult.isAuthenticated ? authResult.userRole : null;
-
-      // 인증 상태가 변경되었을 때
-      if (currentAuth !== prevAuthRef.current) {
-        console.log('[AlertProvider] Auth state changed:', { prev: prevAuthRef.current, current: currentAuth });
-        prevAuthRef.current = currentAuth;
-        
-        if (!currentAuth) {
-          // 로그아웃 상태
-          resetAlerts();
-        } else {
-          // 새로운 로그인 상태
-          cleanup(); // 기존 연결 정리
-          connectToAlerts(); // 새로운 연결 시작
-        }
-      }
-    };
-
-    // 주기적으로 인증 상태 확인 (2초마다)
-    const intervalId = setInterval(checkAuthChange, 2000);
-
+    mountedRef.current = true
+    const authResult = checkUserAuth()
+    prevAuthRef.current = authResult.isAuthenticated ? authResult.userRole : null
+    requestNotificationPermission()
+    if (authResult.isAuthenticated) {
+      connectToAlerts()
+    }
     return () => {
-      clearInterval(intervalId);
-    };
-  }, []);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    
-    // 초기 인증 상태 저장
-    const authResult = checkUserAuth();
-    prevAuthRef.current = authResult.isAuthenticated ? authResult.userRole : null;
-
-    // 알림 권한 요청 및 초기 연결 시도
-    requestNotificationPermission();
-    connectToAlerts();
-
-    // 페이지 언로드 시에만 정리
-    return () => {
-      console.log('[AlertProvider] Component unmounting, cleaning up...');
       mountedRef.current = false;
       cleanup();
     };
-  }, []); // 빈 의존성 배열로 마운트/언마운트 시에만 실행
+  }, []);
+
+  // SSE 연결 실패(401 등) 시 자동 로그아웃 처리
+  const connectToAlerts = async () => {
+    const authResult = checkUserAuth();
+    if (!authResult.isAuthenticated) {
+      resetAlerts()
+      return
+    }
+    if (!mountedRef.current || isConnectingRef.current || connectionRef.current) return
+    try {
+      isConnectingRef.current = true;
+      const currentController = new AbortController();
+      connectionRef.current = currentController;
+      await subscribeToAlerts({
+        onConnect: () => {
+          if (mountedRef.current) {
+            isConnectingRef.current = false;
+            refreshUnreadCount()
+          } else {
+            cleanup()
+          }
+        },
+        onAlert: (alert) => {
+          if (mountedRef.current) {
+            showAlertToast(alert)
+            refreshUnreadCount()
+          }
+        },
+        onError: (error: Error) => {
+          console.error('[AlertProvider] Alert system error:', error);
+          cleanup();
+          // 401 등 인증 오류 시 자동 로그아웃
+          if (error.message?.includes('401') || error.message?.toLowerCase().includes('unauthorized')) {
+            localStorage.setItem('auth-event', JSON.stringify({ type: 'logout', ts: Date.now() }))
+            resetAlerts()
+          } else if (mountedRef.current) {
+            reconnectTimeoutRef.current = setTimeout(connectToAlerts, 3000)
+          }
+        },
+        signal: currentController.signal
+      })
+    } catch (error) {
+      cleanup();
+      const err = error as Error;
+      if (err.message?.includes('401') || err.message?.toLowerCase().includes('unauthorized')) {
+        localStorage.setItem('auth-event', JSON.stringify({ type: 'logout', ts: Date.now() }))
+        resetAlerts();
+      } else if (mountedRef.current) {
+        reconnectTimeoutRef.current = setTimeout(connectToAlerts, 3000)
+      }
+    }
+  }
 
   return (
     <AlertContext.Provider value={{ unreadCount, refreshUnreadCount, resetAlerts }}>
       {children}
       <Toaster {...TOASTER_CONFIG} />
     </AlertContext.Provider>
-  );
-}; 
+  )
+}

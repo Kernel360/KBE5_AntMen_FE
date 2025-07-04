@@ -132,7 +132,7 @@ export const MatchingRequestCard = ({
               onAccept();
             }}
             disabled={isProcessing}
-            className="flex-1 h-10 bg-primary rounded-2xl text-sm font-black text-white hover:bg-[#0ca8c0] transition-colors"
+            className="flex-1 h-10 bg-primary-500 rounded-2xl text-sm font-black text-white hover:bg-primary-600 transition-colors"
             aria-label={`${request.categoryName} 매칭 요청 수락`}
           >
             수락

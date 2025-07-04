@@ -17,57 +17,31 @@ export default function BoardsPage() {
   const [isSortModalOpen, setIsSortModalOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<NoticeSortOption | InquirySortOption>('latest');
 
-  // 탭 초기화 (URL 파라미터 우선, 없으면 localStorage, 그것도 없으면 기본값)
+  // 탭 초기화 (URL 파라미터 우선, 없으면 기본값)
   useEffect(() => {
     const tabCode = searchParams?.get('t');
-    const savedTab = localStorage.getItem('userBoardActiveTab');
-    
-    console.log('🔍 탭 초기화 디버깅:', {
-      urlTabCode: tabCode,
-      savedTab,
-      currentActiveTab: activeTab
-    });
     
     if (tabCode) {
-      // URL 파라미터가 있으면 우선 적용
+      // URL 파라미터가 있으면 적용
       const tabMap: Record<string, '공지사항' | '서비스 문의'> = {
         'n': '공지사항',
         'i': '서비스 문의'
       };
       const tab = tabMap[tabCode];
       if (tab) {
-        console.log('✅ URL 파라미터로 탭 설정:', tab);
         setActiveTab(tab);
-        localStorage.setItem('userBoardActiveTab', tab); // localStorage도 업데이트
         return;
-      } else {
-        console.log('⚠️ 알 수 없는 탭 코드:', tabCode);
       }
     }
-    
-    // URL 파라미터가 없으면 localStorage 확인
-    if (savedTab === '공지사항' || savedTab === '서비스 문의') {
-      console.log('✅ localStorage로 탭 설정:', savedTab);
-      setActiveTab(savedTab);
-    } else {
-      console.log('✅ 기본값으로 탭 설정: 공지사항');
-    }
-    // 둘 다 없으면 기본값('공지사항') 유지
+    // URL 파라미터가 없으면 기본값('공지사항') 유지
   }, [searchParams]);
-
-  // 탭이 변경될 때마다 로컬 스토리지에 저장
-  useEffect(() => {
-    localStorage.setItem('userBoardActiveTab', activeTab);
-  }, [activeTab]);
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
-    // TODO: 검색 로직 구현
   };
 
   const handleSortChange = (sort: NoticeSortOption | InquirySortOption) => {
     setSelectedSort(sort);
-    // TODO: 정렬 로직 구현
   };
 
   const handleTabChange = (tab: '공지사항' | '서비스 문의' | '업무 문의') => {
@@ -79,12 +53,19 @@ export default function BoardsPage() {
     }
   };
 
+  const handleClose = () => {
+    // 이전 페이지로 이동
+    router.back();
+  };
+
   return (
     <main className="min-h-screen bg-gray-50">
       <CommonHeader
         title="게시판"
         showCloseButton={true}
+        onClose={handleClose}
       />
+
       <div className="pt-16 pb-20">
         <div className="sticky top-16 z-10 bg-white">
           <BoardSearchBar 
@@ -97,6 +78,7 @@ export default function BoardsPage() {
             onTabChange={handleTabChange}
           />
         </div>
+
         <div className="mx-auto w-full max-w-[430px]">
           <PostList 
             userRole="customer"
@@ -107,6 +89,9 @@ export default function BoardsPage() {
               if (tabCode === 'n') return '공지사항';
               return activeTab; // URL 파라미터가 없으면 상태값 사용
             })()}
+            searchTerm={searchQuery}
+            selectedSort={selectedSort}
+            onSortChange={handleSortChange}
           />
         </div>
       </div>

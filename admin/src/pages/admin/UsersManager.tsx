@@ -6,7 +6,7 @@ import {
 } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Badge } from '../../components/ui/badge';
+
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '../../components/ui/table';
@@ -73,7 +73,7 @@ export const UsersManager: React.FC = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="이름 또는 이메일로 검색... (엔터키로 검색)"
+                  placeholder="이름으로 검색... (엔터키로 검색)"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={handleKeyDown}

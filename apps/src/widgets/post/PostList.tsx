@@ -11,6 +11,9 @@ import { boardService, BoardPost } from './api/boardService';
 interface PostListProps {
   userRole: 'customer' | 'manager';
   boardType: '공지사항' | '서비스 문의' | '업무 문의';
+  searchTerm?: string;
+  selectedSort?: NoticeSortOption | InquirySortOption;
+  onSortChange?: (sort: NoticeSortOption | InquirySortOption) => void;
 }
 
 // FAQ 태그 추가 함수 
@@ -25,10 +28,15 @@ const getDisplayTitle = (post: BoardPost, isPinned: boolean = false, boardType: 
   return post.boardTitle;
 };
 
-export const PostList = ({ userRole, boardType }: PostListProps) => {
+export const PostList = ({ 
+  userRole, 
+  boardType, 
+  searchTerm = '', 
+  selectedSort = 'latest',
+  onSortChange
+}: PostListProps) => {
   const [isPinnedExpanded, setIsPinnedExpanded] = useState(true);
   const [isSortModalOpen, setIsSortModalOpen] = useState(false);
-  const [selectedSort, setSelectedSort] = useState<NoticeSortOption | InquirySortOption>('latest');
   
   // 게시글 상태 관리
   const [pinnedPosts, setPinnedPosts] = useState<BoardPost[]>([]);
@@ -52,10 +60,16 @@ export const PostList = ({ userRole, boardType }: PostListProps) => {
         boardType,
         userRole,
         selectedSort,
-        undefined, // 검색어는 나중에 추가
+        searchTerm,
         pageNum,
         5
       );
+
+      // 날짜 데이터 디버깅
+      console.log('📅 게시글 데이터 날짜 확인:', {
+        pinnedPosts: data.pinnedPosts.map(p => ({ id: p.boardId, createdAt: p.createdAt })),
+        regularPosts: data.posts.content.map(p => ({ id: p.boardId, createdAt: p.createdAt }))
+      });
 
       if (pageNum === 0 || isRefresh) {
         // 첫 페이지 또는 새로고침: 고정글 + 일반글 모두 설정
@@ -78,19 +92,20 @@ export const PostList = ({ userRole, boardType }: PostListProps) => {
       setLoading(false);
       setInitialLoading(false);
     }
-  }, [boardType, userRole, selectedSort, loading]);
+  }, [boardType, userRole, selectedSort, searchTerm, loading]);
 
-  // 초기 로드 및 정렬 변경 시 리로드
+  // 초기 로드 및 정렬/검색어 변경 시 리로드
   useEffect(() => {
     loadPosts(0, true);
-  }, [boardType, userRole, selectedSort]);
+  }, [boardType, userRole, selectedSort, searchTerm]);
 
-  // 무한 스크롤 로드 더보기
-  const loadMore = useCallback(() => {
-    if (hasMore && !loading) {
-      loadPosts(page + 1);
+  // 정렬 변경 핸들러
+  const handleSortChange = useCallback((sort: NoticeSortOption | InquirySortOption) => {
+    if (onSortChange) {
+      onSortChange(sort);
     }
-  }, [hasMore, loading, page, loadPosts]);
+    setIsSortModalOpen(false);
+  }, [onSortChange]);
 
   const getTabCode = (boardType: string) => {
     switch(boardType) {
@@ -206,7 +221,7 @@ export const PostList = ({ userRole, boardType }: PostListProps) => {
                         <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
                           <span>{post.userName}</span>
                           <span>•</span>
-                          <span>{formatDate(post.createdAt)}</span>
+                          <span>{post.createdAt ? formatDate(post.createdAt) : '날짜 없음'}</span>
                         </div>
                       </div>
                       {post.commentNum > 0 && (
@@ -245,7 +260,7 @@ export const PostList = ({ userRole, boardType }: PostListProps) => {
                   <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
                     <span>{post.userName}</span>
                     <span>•</span>
-                    <span>{formatDate(post.createdAt)}</span>
+                    <span>{post.createdAt ? formatDate(post.createdAt) : '날짜 없음'}</span>
                   </div>
                 </div>
                 {post.commentNum > 0 && (
@@ -269,7 +284,7 @@ export const PostList = ({ userRole, boardType }: PostListProps) => {
            {hasMore && !loading && (
              <div 
                className="h-10 flex items-center justify-center cursor-pointer hover:bg-gray-50"
-               onClick={loadMore}
+               onClick={() => loadPosts(page + 1)}
              >
                <span className="text-sm text-gray-500">더 보기</span>
              </div>
@@ -293,7 +308,7 @@ export const PostList = ({ userRole, boardType }: PostListProps) => {
         isOpen={isSortModalOpen}
         onClose={() => setIsSortModalOpen(false)}
         selectedSort={selectedSort}
-        onSortChange={setSelectedSort}
+        onSortChange={handleSortChange}
         boardType={boardType}
       />
     </div>

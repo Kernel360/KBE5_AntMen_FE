@@ -18,7 +18,6 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '../../components/ui/dialog';
 import {
     Select,
@@ -34,9 +33,7 @@ import {
     CheckCircle,
     XCircle,
     AlertTriangle,
-    Search,
-    FileText,
-    TrendingUp
+    Search
 } from 'lucide-react';
 
 interface RefundRequest {
