@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { adminService } from '../api/adminService';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Admin } from '../api/types';
 
 interface AdminUser {

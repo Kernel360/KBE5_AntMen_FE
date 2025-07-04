@@ -13,6 +13,7 @@ import {
 import { Search } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getRoleBadge = (role: string) => {
   if (role === 'user') return <Badge variant="outline">고객</Badge>;
   if (role === 'admin') return <Badge variant="default">관리자</Badge>;
@@ -20,6 +21,7 @@ const getRoleBadge = (role: string) => {
   return <Badge variant="outline">알 수 없음</Badge>;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getStatusBadge = (status: string) => {
   switch (status) {
     case 'active':
