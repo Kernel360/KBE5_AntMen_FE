@@ -60,7 +60,8 @@ export default function WritePostPage() {
       }
       
       alert(`${boardType}가 성공적으로 등록되었습니다.`)
-      router.push(`${basePath}?t=${fromTab}`) // 권한에 따라 다른 페이지로 이동
+      // 글 작성 성공 후 게시판 리스트로 이동 (히스토리 대체)
+      router.replace(`${basePath}?t=${fromTab}`)
     } catch (error) {
       console.error('글 작성 실패:', error)
       alert('글 작성 중 오류가 발생했습니다. 다시 시도해주세요.')
@@ -70,7 +71,8 @@ export default function WritePostPage() {
   }
 
   const handleGoBack = () => {
-    router.push(`${basePath}?t=${fromTab}`) // 권한에 따라 다른 페이지로 이동
+    // 브라우저 히스토리에서 이전 페이지로 돌아가기
+    router.back()
   }
 
   return (

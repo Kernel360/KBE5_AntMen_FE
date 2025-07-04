@@ -58,6 +58,11 @@ export default function ManagerBoardsPage() {
     }
   };
 
+  const handleClose = () => {
+    // 홈으로 직접 이동
+    router.push('/manager')
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       <BoardHeader />
