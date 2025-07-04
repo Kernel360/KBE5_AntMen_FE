@@ -11,12 +11,12 @@ export const Toggle = ({ enabled, onChange }: ToggleProps) => {
       checked={enabled}
       onChange={onChange}
       className={`${
-        enabled ? 'bg-[#00BCD4]' : 'bg-[#E5E7EB]'
+        enabled ? 'bg-primary-500' : 'bg-[#E5E7EB]'
       } relative inline-flex h-6 w-11 items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out`}
     >
       <span
         className={`${
-          enabled ? 'translate-x-6' : 'translate-x-0'
+          enabled ? 'translate-x-5' : 'translate-x-0'
         } inline-block h-5 w-5 transform rounded-full bg-white transition duration-200 ease-in-out`}
       />
     </Switch>
