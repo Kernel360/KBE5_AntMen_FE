@@ -23,51 +23,6 @@ const ROLE_ROUTES = {
   MANAGER: '/manager'
 } as const
 
-// 커스텀 훅: 실시간 인증 상태 관리
-function useAuthStatus() {
-  const { refreshUnreadCount } = useAlerts()
-  const [authState, setAuthState] = useState(() => {
-    const result = checkUserAuth()
-    return {
-      isAuthenticated: result.isAuthenticated,
-      userRole: result.userRole
-    }
-  })
-  const [prevAuthState, setPrevAuthState] = useState<string | null>(null)
-
-  useEffect(() => {
-    const checkAuthChange = () => {
-      const authResult = checkUserAuth()
-      const currentAuth = authResult.isAuthenticated ? authResult.userRole : null
-
-      setAuthState({
-        isAuthenticated: authResult.isAuthenticated,
-        userRole: authResult.userRole
-      })
-
-      // 인증 상태가 변경되었을 때 알림 개수 갱신
-      if (currentAuth !== prevAuthState) {
-        setPrevAuthState(currentAuth)
-        if (currentAuth) {
-          refreshUnreadCount()
-        }
-      }
-    }
-
-    // 초기 인증 상태 설정
-    checkAuthChange()
-
-    // 주기적으로 인증 상태 확인 (실시간 감지)
-    const intervalId = setInterval(checkAuthChange, 2000)
-
-    return () => {
-      clearInterval(intervalId)
-    }
-  }, [prevAuthState, refreshUnreadCount])
-
-  return authState
-}
-
 // 커스텀 훅: 인증 관련 핸들러들
 function useAuthHandlers(requireAuth: 'CUSTOMER' | 'MANAGER') {
   const router = useRouter()
@@ -143,7 +98,8 @@ export function HomeHeader({
   requireAuth = 'CUSTOMER',
 }: HomeHeaderProps) {
   const { unreadCount } = useAlerts()
-  const { isAuthenticated } = useAuthStatus()
+  const authResult = checkUserAuth()
+  const isAuthenticated = authResult.isAuthenticated
   const {
     loginModalOpen,
     setLoginModalOpen,
