@@ -7,8 +7,6 @@ interface CommonHeaderProps {
   title: string;
   showBackButton?: boolean;
   showCloseButton?: boolean;
-  onBack?: () => void;
-  onClose?: () => void;
   rightContent?: React.ReactNode;
   subtitle?: string;
 }
@@ -17,20 +15,21 @@ export const CommonHeader = ({
   title,
   showBackButton = false,
   showCloseButton = false,
-  onBack,
-  onClose,
   rightContent,
-  subtitle
+  subtitle,
 }: CommonHeaderProps) => {
   const router = useRouter();
 
-  const handleNavigation = () => {
-    if (onBack) {
-      onBack();
-    } else if (onClose) {
-      onClose();
+  const handleBack = () => {
+    router.back();
+  };
+
+  const handleClose = () => {
+    // 매니저 페이지면 /manager, 아니면 /로 이동
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/manager')) {
+      router.push('/manager');
     } else {
-      router.back();
+      router.push('/');
     }
   };
 
@@ -41,7 +40,7 @@ export const CommonHeader = ({
         <div className="absolute left-0 w-[48px] h-[64px] flex items-center justify-start pl-4">
           {showBackButton && (
             <button 
-              onClick={handleNavigation}
+              onClick={handleBack}
               className="inline-flex items-center justify-center text-gray-700 transition-all duration-200 ease-in-out hover:scale-125 hover:text-gray-600/85"
             >
               <ArrowLeftIcon className="w-6 h-6" style={{ strokeWidth: 1.5 }} />
@@ -49,7 +48,7 @@ export const CommonHeader = ({
           )}
           {showCloseButton && (
             <button 
-              onClick={handleNavigation}
+              onClick={handleClose}
               className="inline-flex items-center justify-center text-gray-700 transition-all duration-200 ease-in-out hover:scale-125 hover:text-gray-600/85"
             >
               <XMarkIcon className="w-6 h-6" style={{ strokeWidth: 1.5 }} />

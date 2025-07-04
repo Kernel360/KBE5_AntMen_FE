@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ChevronDown, ChevronUp, Pin, Plus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { BoardSortModal } from './BoardSortModal';
 import { NoticeSortOption, InquirySortOption } from '@/shared/types/board';
 import { formatDate } from '@/shared/lib/utils/date';
@@ -49,6 +49,12 @@ export const PostList = ({
   
   const { user } = useAuthStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // props 디버깅
+  useEffect(() => {
+    console.log('📋 PostList props:', { userRole, boardType, searchTerm, selectedSort });
+  }, [userRole, boardType, searchTerm, selectedSort]);
 
   // 게시글 목록 로드
   const loadPosts = useCallback(async (pageNum: number = 0, isRefresh: boolean = false) => {
@@ -123,7 +129,12 @@ export const PostList = ({
   const handlePostClick = (postId: number) => {
     const basePath = userRole === 'manager' ? '/manager/boards' : '/boards';
     const tabCode = getTabCode(boardType);
-    const boardPath = `${basePath}/${postId}?t=${tabCode}`;
+    
+    // 현재 URL 파라미터를 유지하면서 게시글 상세 페이지로 이동
+    const currentParams = new URLSearchParams(searchParams?.toString() || '');
+    currentParams.set('t', tabCode);
+    
+    const boardPath = `${basePath}/${postId}?${currentParams.toString()}`;
     console.log('Clicking post:', { postId, userRole, boardPath, boardType });
     router.push(boardPath);
   };

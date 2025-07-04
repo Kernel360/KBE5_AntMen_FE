@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Comments } from './Comments'
 import { formatDate } from '@/shared/utils/date'
 import {
@@ -17,6 +18,9 @@ interface BoardDetailProps {
 export const BoardDetail = ({ initialData, boardType }: BoardDetailProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [post, setPost] = useState(initialData)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
 
   const handleSubmitComment = async (content: string) => {
     setIsSubmitting(true)
@@ -30,10 +34,18 @@ export const BoardDetail = ({ initialData, boardType }: BoardDetailProps) => {
     }
   }
 
+  const handleBack = () => {
+    // 브라우저 히스토리에서 뒤로가기 (URL 파라미터가 자동으로 유지됨)
+    router.back();
+  }
+
   return (
     <div className="min-h-screen bg-accent/5">
       <div className="fixed flex justify-center max-w-mobile w-full bg-white">
-        <CommonHeader title={boardType} showBackButton />
+        <CommonHeader 
+          title={boardType} 
+          showBackButton={true}
+        />
       </div>
 
       {/* 헤더 높이만큼 여백 */}

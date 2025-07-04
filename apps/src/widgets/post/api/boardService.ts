@@ -170,6 +170,8 @@ class BoardService {
     page: number = 0, 
     size: number = 5
   ): Promise<BoardListResponse> {
+    console.log('🚀 getBoardList 호출:', { boardType, userRole, sortBy, searchName, page, size });
+    
     const authToken = this.getAuthToken();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -188,7 +190,7 @@ class BoardService {
 
     // 백엔드 boardType으로 변환
     const backendBoardType = this.getBoardTypeParam(boardType, userRole);
-    const url = `https://api.antmen.site:9090/api/v1/board/${backendBoardType}/list?${params.toString()}`;
+    const url = `http://localhost:9090/api/v1/board/${backendBoardType}/list?${params.toString()}`;
     console.log('📤 게시글 목록 요청:', { 
       frontendBoardType: boardType, 
       backendBoardType, 
@@ -197,7 +199,8 @@ class BoardService {
       searchName, 
       page, 
       size, 
-      url 
+      url,
+      params: params.toString()
     });
 
     const response = await fetch(url, { headers });

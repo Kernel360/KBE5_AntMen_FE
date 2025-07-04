@@ -17,12 +17,13 @@ export default function BoardsPage() {
   const [isSortModalOpen, setIsSortModalOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<NoticeSortOption | InquirySortOption>('latest');
 
-  // 탭 초기화 (URL 파라미터 우선, 없으면 기본값)
+  // URL 파라미터에서 상태 초기화
   useEffect(() => {
     const tabCode = searchParams?.get('t');
+    const search = searchParams?.get('search') || '';
+    const sort = (searchParams?.get('sort') as NoticeSortOption | InquirySortOption) || 'latest';
     
     if (tabCode) {
-      // URL 파라미터가 있으면 적용
       const tabMap: Record<string, '공지사항' | '서비스 문의'> = {
         'n': '공지사항',
         'i': '서비스 문의'
@@ -30,31 +31,61 @@ export default function BoardsPage() {
       const tab = tabMap[tabCode];
       if (tab) {
         setActiveTab(tab);
-        return;
       }
     }
-    // URL 파라미터가 없으면 기본값('공지사항') 유지
+    
+    setSearchQuery(search);
+    setSelectedSort(sort);
   }, [searchParams]);
+
+  // 상태 변화 디버깅
+  useEffect(() => {
+    console.log('📊 상태 업데이트:', { activeTab, searchQuery, selectedSort });
+  }, [activeTab, searchQuery, selectedSort]);
+
+  // 초기 로드 시 URL 파라미터가 없으면 기본값으로 설정
+  useEffect(() => {
+    if (!searchParams?.toString()) {
+      const defaultParams = new URLSearchParams();
+      defaultParams.set('t', 'n');
+      defaultParams.set('sort', 'latest');
+      router.replace(`/boards?${defaultParams.toString()}`);
+    }
+  }, [searchParams, router]);
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
+    updateURL({ search: value });
   };
 
   const handleSortChange = (sort: NoticeSortOption | InquirySortOption) => {
     setSelectedSort(sort);
+    updateURL({ sort });
   };
 
   const handleTabChange = (tab: '공지사항' | '서비스 문의' | '업무 문의') => {
     if (tab === '공지사항' || tab === '서비스 문의') {
       setActiveTab(tab);
-      // URL에 탭 정보 반영
       const tabCode = tab === '공지사항' ? 'n' : 'i';
-      router.replace(`/boards?t=${tabCode}`);
+      updateURL({ t: tabCode });
     }
   };
 
+  const updateURL = (params: Record<string, string>) => {
+    const currentParams = new URLSearchParams(searchParams?.toString() || '');
+    
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        currentParams.set(key, value);
+      } else {
+        currentParams.delete(key);
+      }
+    });
+    
+    router.push(`/boards?${currentParams.toString()}`);
+  };
+
   const handleClose = () => {
-    // 이전 페이지로 이동
     router.back();
   };
 
@@ -63,7 +94,6 @@ export default function BoardsPage() {
       <CommonHeader
         title="게시판"
         showCloseButton={true}
-        onClose={handleClose}
       />
 
       <div className="pt-16 pb-20">
@@ -71,6 +101,7 @@ export default function BoardsPage() {
           <BoardSearchBar 
             onSearch={handleSearch}
             onFilterClick={() => setIsSortModalOpen(true)}
+            searchTerm={searchQuery}
           />
           <BoardTabs
             userRole="customer"
@@ -81,14 +112,9 @@ export default function BoardsPage() {
 
         <div className="mx-auto w-full max-w-[430px]">
           <PostList 
+            key={`${searchQuery}-${selectedSort}-${activeTab}`}
             userRole="customer"
-            boardType={(() => {
-              // URL 파라미터를 직접 읽어서 탭 결정 (상태 비동기 문제 해결)
-              const tabCode = searchParams?.get('t');
-              if (tabCode === 'i') return '서비스 문의';
-              if (tabCode === 'n') return '공지사항';
-              return activeTab; // URL 파라미터가 없으면 상태값 사용
-            })()}
+            boardType={activeTab}
             searchTerm={searchQuery}
             selectedSort={selectedSort}
             onSortChange={handleSortChange}

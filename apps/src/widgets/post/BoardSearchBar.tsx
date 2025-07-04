@@ -1,22 +1,27 @@
 import { Search, SlidersHorizontal } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface BoardSearchBarProps {
   onSearch: (value: string) => void;
   onFilterClick: () => void;
+  searchTerm?: string;
 }
 
-export const BoardSearchBar = ({ onSearch, onFilterClick }: BoardSearchBarProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
+export const BoardSearchBar = ({ onSearch, onFilterClick, searchTerm = '' }: BoardSearchBarProps) => {
+  const [inputValue, setInputValue] = useState(searchTerm);
+
+  useEffect(() => {
+    setInputValue(searchTerm);
+  }, [searchTerm]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+    setInputValue(e.target.value);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      onSearch(searchTerm);
+      onSearch(inputValue);
     }
   };
 
@@ -29,7 +34,7 @@ export const BoardSearchBar = ({ onSearch, onFilterClick }: BoardSearchBarProps)
             type="text"
             placeholder="게시글 검색"
             className="h-11 w-full rounded-xl bg-gray-50 pl-10 pr-4 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/10"
-            value={searchTerm}
+            value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
           />
