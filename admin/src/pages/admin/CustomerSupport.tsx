@@ -18,8 +18,6 @@ import {
     Clock,
     CheckCircle,
     AlertCircle,
-    User,
-    MessageSquare,
     Send,
     Plus,
     Edit,

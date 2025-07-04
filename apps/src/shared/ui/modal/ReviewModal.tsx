@@ -143,7 +143,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
           </button>
           <button
             onClick={handleSubmit}
-            className="flex-1 py-3 bg-[#4DD0E1] text-white rounded-lg font-medium hover:bg-[#26C6DA] transition-colors"
+            className="flex-1 py-3 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 transition-colors"
           >
             등록
           </button>

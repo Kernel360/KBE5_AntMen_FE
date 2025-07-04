@@ -73,7 +73,7 @@ export const UsersWaiting: React.FC = () => {
     if (actualSearchTerm === '' && searchTerm === '') {
       setActualSearchTerm('');
     }
-  }, []);
+  }, [actualSearchTerm, searchTerm]);
 
   // 상세 정보 조회
   const { data: managerDetailData, isLoading: isDetailLoading } = useQuery({

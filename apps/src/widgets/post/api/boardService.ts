@@ -13,8 +13,8 @@ export interface BoardPost {
   boardId: number;
   userName: string;
   boardTitle: string;
-  createdAt: string;
-  modifiedAt: string;
+  createdAt: string | number[]; // Java LocalDateTime 배열 형태 지원
+  modifiedAt: string | number[]; // Java LocalDateTime 배열 형태 지원
   commentNum: number;
 }
 
@@ -42,8 +42,8 @@ export interface Comment {
   commentId: number;
   userName: string;
   commentContent: string;
-  createdAt: string;
-  modifiedAt: string;
+  createdAt: string | number[]; // Java LocalDateTime 배열 형태 지원
+  modifiedAt: string | number[]; // Java LocalDateTime 배열 형태 지원
   subComments: Comment[]; // 자기 참조로 무한 중첩 가능
 }
 
@@ -53,8 +53,8 @@ export interface BoardDetailResponse {
   userName: string;
   boardTitle: string;
   boardContent: string;
-  createdAt: string;
-  modifiedAt: string;
+  createdAt: string | number[]; // Java LocalDateTime 배열 형태 지원
+  modifiedAt: string | number[]; // Java LocalDateTime 배열 형태 지원
   comments: Comment[] | null;
 }
 
@@ -188,7 +188,7 @@ class BoardService {
 
     // 백엔드 boardType으로 변환
     const backendBoardType = this.getBoardTypeParam(boardType, userRole);
-    const url = `https://api.antmen.site:9090/api/v1/board/${backendBoardType}/list?${params.toString()}`;
+    const url = `http://localhost:9090/api/v1/board/${backendBoardType}/list?${params.toString()}`;
     console.log('📤 게시글 목록 요청:', { 
       frontendBoardType: boardType, 
       backendBoardType, 
