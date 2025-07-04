@@ -188,7 +188,7 @@ class BoardService {
 
     // 백엔드 boardType으로 변환
     const backendBoardType = this.getBoardTypeParam(boardType, userRole);
-    const url = `http://localhost:9090/api/v1/board/${backendBoardType}/list?${params.toString()}`;
+    const url = `https://api.antmen.site:9090/api/v1/board/${backendBoardType}/list?${params.toString()}`;
     console.log('📤 게시글 목록 요청:', { 
       frontendBoardType: boardType, 
       backendBoardType, 
