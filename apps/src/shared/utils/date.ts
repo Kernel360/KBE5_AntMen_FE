@@ -1,5 +1,14 @@
-export const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
+export const formatDate = (dateInput: string | number[]): string => {
+  let date: Date;
+  
+  if (Array.isArray(dateInput)) {
+    // number[] 형식의 Java LocalDateTime 처리 ([year, month, day, hour, minute, second, nano])
+    const [year, month, day, hour = 0, minute = 0, second = 0] = dateInput;
+    date = new Date(year, month - 1, day, hour, minute, second);
+  } else {
+    date = new Date(dateInput);
+  }
+
   const now = new Date();
   const diff = now.getTime() - date.getTime();
   
