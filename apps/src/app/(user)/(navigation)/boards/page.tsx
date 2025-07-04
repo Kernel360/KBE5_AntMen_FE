@@ -8,8 +8,6 @@ import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
 import { BoardSearchBar } from '@/widgets/post/BoardSearchBar';
 import { BoardTabs } from '@/widgets/post/BoardTabs';
 import { BoardSortModal } from '@/widgets/post/BoardSortModal';
-import { useAuthStore } from '@/shared/stores/authStore';
-import LoginRequiredModal from '@/shared/ui/modal/LoginRequiredModal';
 
 export default function BoardsPage() {
   const searchParams = useSearchParams();
@@ -18,8 +16,6 @@ export default function BoardsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSortModalOpen, setIsSortModalOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState<NoticeSortOption | InquirySortOption>('latest');
-  const { user } = useAuthStore();
-  const [modalOpen, setModalOpen] = useState(false);
 
   // 탭 초기화 (URL 파라미터 우선, 없으면 기본값)
   useEffect(() => {
@@ -39,11 +35,6 @@ export default function BoardsPage() {
     }
     // URL 파라미터가 없으면 기본값('공지사항') 유지
   }, [searchParams]);
-
-  useEffect(() => {
-    if (!user) setModalOpen(true);
-    else setModalOpen(false);
-  }, [user]);
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
@@ -66,8 +57,8 @@ export default function BoardsPage() {
 
   const handleClose = () => {
     // 이전 페이지로 이동
-    router.back()
-  }
+    router.back();
+  };
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -76,6 +67,7 @@ export default function BoardsPage() {
         showCloseButton={true}
         onClose={handleClose}
       />
+
       <div className="pt-16 pb-20">
         <div className="sticky top-16 z-10 bg-white">
           <BoardSearchBar 
@@ -88,6 +80,7 @@ export default function BoardsPage() {
             onTabChange={handleTabChange}
           />
         </div>
+
         <div className="mx-auto w-full max-w-[430px]">
           <PostList 
             userRole="customer"
@@ -102,16 +95,14 @@ export default function BoardsPage() {
         </div>
       </div>
 
-        {/* 정렬 모달 */}
-        <BoardSortModal
-          isOpen={isSortModalOpen}
-          onClose={() => setIsSortModalOpen(false)}
-          selectedSort={selectedSort}
-          onSortChange={handleSortChange}
-          boardType={activeTab}
-        />
-      </main>
-      <LoginRequiredModal isOpen={!user} onClose={() => {}} />
-    </>
+      {/* 정렬 모달 */}
+      <BoardSortModal
+        isOpen={isSortModalOpen}
+        onClose={() => setIsSortModalOpen(false)}
+        selectedSort={selectedSort}
+        onSortChange={handleSortChange}
+        boardType={activeTab}
+      />
+    </main>
   );
 }
