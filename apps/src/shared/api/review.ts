@@ -32,15 +32,24 @@ export interface UpdateReviewRequest {
   reviewComment: string
 }
 
-// 매니저 리뷰 summary 타입
-export interface ManagerReviewSummary {
+// 리뷰 summary 타입
+export interface ReviewSummary {
   totalReviews: number
   avgRating: number
 }
 
 // 매니저 리뷰 summary API 함수
-export async function getManagerReviewSummary(managerId: number | string): Promise<ManagerReviewSummary> {
+export async function getManagerReviewSummary(managerId: number | string): Promise<ReviewSummary> {
   const res = await fetch(`https://api.antmen.site:9092/v1/manager/reviews/summary/${managerId}`)
+  if (!res.ok) {
+    return { totalReviews: 0, avgRating: 0 }
+  }
+  return res.json()
+}
+
+// 수요자 리뷰 summary API 함수
+export async function getCustomerReviewSummary(customerId: number | string): Promise<ReviewSummary> {
+  const res = await fetch(`https://api.antmen.site:9091/api/v1/customer/reviews/summary/${customerId}`)
   if (!res.ok) {
     return { totalReviews: 0, avgRating: 0 }
   }

@@ -6,13 +6,9 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline'
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
-import {
-  ChevronLeftIcon,
-  EllipsisHorizontalIcon,
-} from '@heroicons/react/24/outline'
 import { ManagerDetailLoading } from '@/widgets/manager'
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
-import { getManagerReviewSummary, type Manager, type Characteristic, type ManagerReviewSummary } from '@/shared/api/review'
+import { getManagerReviewSummary, type Manager, type Characteristic, type ReviewSummary } from '@/shared/api/review'
 
 export default function ManagerDetailPage() {
   const params = useParams()
@@ -22,7 +18,7 @@ export default function ManagerDetailPage() {
   const [manager, setManager] = useState<Manager | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [summary, setSummary] = useState<ManagerReviewSummary | null>(null)
+  const [summary, setSummary] = useState<ReviewSummary | null>(null)
 
   useEffect(() => {
     // 매니저 상세 데이터 로딩 시뮬레이션

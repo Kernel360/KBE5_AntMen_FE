@@ -11,6 +11,8 @@ import { getReservationDetail } from '@/entities/reservation/api/reservationApi'
 import { getReservationComment, type ReservationComment } from '@/entities/reservation/api/reservationApi'
 import { getAuthToken } from '@/features/auth/lib/auth'
 import { CalendarIcon, ClockIcon, MapPinIcon, CurrencyDollarIcon, UserIcon, CheckCircleIcon, HomeIcon, StarIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline'
+import { getCustomerReviewSummary } from '@/shared/api/review'
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
 
 // 상태 배지 컴포넌트
 const StatusBadge = ({ status }: { status: string }) => {
@@ -314,7 +316,6 @@ const CustomerSection = ({ customer }: { customer?: any }) => {
         </div>
         <h3 className="text-lg font-bold text-gray-900">고객 정보</h3>
       </div>
-      
       {customer ? (
         <div className="space-y-3">
           <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
@@ -335,10 +336,19 @@ const CustomerSection = ({ customer }: { customer?: any }) => {
                 <p className="text-sm text-gray-600 mb-2">
                   {customer.gender} · {customer.age >= 0 ? `${customer.age}세` : '나이 정보 없음'}
                 </p>
-                <div className="flex items-center gap-3">
-                  <div className="bg-white px-2 py-1 rounded-lg border border-gray-200">
-                    <span className="text-xs font-bold text-gray-700">고객</span>
+                {/* 리뷰 요약 */}
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center">
+                    {[1,2,3,4,5].map(i => (
+                      <StarIconSolid
+                        key={i}
+                        className={`w-4 h-4 ${i <= Math.round(customer.avgRating ?? customer.rating ?? 0) ? 'text-yellow-400' : 'text-gray-200'}`}
+                      />
+                    ))}
                   </div>
+                  <span className="text-xs font-semibold text-gray-700">
+                    리뷰 {typeof customer.totalReviews === 'number' ? customer.totalReviews : '-'}개
+                  </span>
                 </div>
               </div>
             </div>

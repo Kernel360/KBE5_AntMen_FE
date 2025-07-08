@@ -20,6 +20,20 @@ interface ReservationDetailPageClientProps {
   initialReservation: ReservationHistory | null
 }
 
+// 별점 렌더 함수 (공통)
+const renderStars = (rating: number) => {
+  return [1,2,3,4,5].map(i => (
+    <svg
+      key={i}
+      className={`w-5 h-5 ${i <= Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'}`}
+      fill="currentColor"
+      viewBox="0 0 20 20"
+    >
+      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.286 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.286-3.966a1 1 0 00-.364-1.118l-3.385-2.46c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
+    </svg>
+  ));
+};
+
 // 상태 배지 컴포넌트
 const StatusBadge = ({ status }: { status: string }) => {
   const getStatusConfig = (status: string) => {
@@ -334,7 +348,7 @@ const ServiceCompletionSection = ({ comment }: { comment: ReservationComment }) 
 
 // 매니저 정보 섹션
 const ManagerSection = ({ matchings }: { matchings?: any[] }) => {
-  const hasMatchings = matchings && matchings.length > 0
+  const hasMatchings = matchings && matchings.length > 0;
 
   return (
     <div className="bg-white rounded-2xl p-5 mb-4 shadow-md border border-gray-100">
@@ -346,15 +360,13 @@ const ManagerSection = ({ matchings }: { matchings?: any[] }) => {
           매칭 매니저 {hasMatchings && `(${matchings.length}명)`}
         </h3>
       </div>
-      
       {hasMatchings ? (
         <div className="space-y-3">
-          {matchings.map((matching, index) => {
-            const manager = matching.manager
-            const isRequested = matching.isRequested
-            const isAccepted = matching.isAccepted
-            const priority = matching.priority
-            
+          {matchings.map((matching) => {
+            const manager = matching.manager;
+            const isRequested = matching.isRequested;
+            const isAccepted = matching.isAccepted;
+            const priority = matching.priority;
             return (
               <div 
                 key={matching.matchingId} 
@@ -364,45 +376,45 @@ const ManagerSection = ({ matchings }: { matchings?: any[] }) => {
                     : 'bg-gray-50 border-gray-200'
                 }`}
               >
-                                 {/* 우선순위 배지 */}
-                 <div className="flex items-center justify-between mb-3">
-                   <div className="flex items-center gap-2">
-                     <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
-                       priority === 1 
-                         ? 'bg-yellow-100 text-yellow-800' 
-                         : priority === 2 
-                         ? 'bg-blue-100 text-blue-800'
-                         : 'bg-gray-100 text-gray-800'
-                     }`}>
-                       {priority === 1 ? '1순위' : priority === 2 ? '2순위' : `${priority}순위`}
-                     </span>
-                     {isRequested && !isAccepted && (
-                       <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-lg text-xs font-bold">
-                         매칭 요청됨
-                       </span>
-                     )}
-                     {isAccepted && matching.isFinal === null && (
-                       <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-lg text-xs font-bold">
-                         🎉 매니저 수락됨
-                       </span>
-                     )}
-                     {matching.isFinal === true && (
-                       <span className="bg-green-100 text-green-800 px-2 py-1 rounded-lg text-xs font-bold">
-                         최종 매칭
-                       </span>
-                     )}
-                     {matching.isFinal === false && (
-                       <span className="bg-red-100 text-red-800 px-2 py-1 rounded-lg text-xs font-bold">
+                {/* 우선순위 배지 */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
+                      priority === 1 
+                        ? 'bg-yellow-100 text-yellow-800' 
+                        : priority === 2 
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {priority === 1 ? '1순위' : priority === 2 ? '2순위' : `${priority}순위`}
+                    </span>
+                    {isRequested && !isAccepted && (
+                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-lg text-xs font-bold">
+                        매칭 요청됨
+                      </span>
+                    )}
+                    {isAccepted && matching.isFinal === null && (
+                      <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-lg text-xs font-bold">
+                        🎉 매니저 수락됨
+                      </span>
+                    )}
+                    {matching.isFinal === true && (
+                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-lg text-xs font-bold">
+                        최종 매칭
+                      </span>
+                    )}
+                    {matching.isFinal === false && (
+                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded-lg text-xs font-bold">
                           매칭 거절
-                       </span>
-                     )}
-                     {!isAccepted && isRequested && matching.refuseReason && (
-                       <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-lg text-xs font-bold">
-                         매니저 거절됨
-                       </span>
-                     )}
-                   </div>
-                 </div>
+                      </span>
+                    )}
+                    {!isAccepted && isRequested && matching.refuseReason && (
+                      <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded-lg text-xs font-bold">
+                        매니저 거절됨
+                      </span>
+                    )}
+                  </div>
+                </div>
 
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-indigo-200 rounded-xl flex items-center justify-center overflow-hidden">
@@ -412,7 +424,7 @@ const ManagerSection = ({ matchings }: { matchings?: any[] }) => {
                         alt={manager.name}
                         className="w-full h-full object-cover"
                       />
-                                          ) : (
+                    ) : (
                       <UserIcon className="w-6 h-6 text-indigo-700" />
                     )}
                   </div>
@@ -422,18 +434,17 @@ const ManagerSection = ({ matchings }: { matchings?: any[] }) => {
                       {manager.gender} · {manager.age >= 0 ? `${manager.age}세` : '나이 정보 없음'}
                     </p>
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1 bg-white/70 px-2 py-1 rounded-lg">
-                        <StarIcon className="w-3 h-3 text-yellow-500 fill-current" />
-                        <span className="text-xs font-bold text-gray-700">4.8</span>
+                      <div className="flex items-center">
+                        {renderStars(manager.avgRating ?? manager.rating ?? 0)}
                       </div>
-                      <div className="bg-white/70 px-2 py-1 rounded-lg">
-                        <span className="text-xs font-semibold text-gray-700">리뷰 127개</span> {/* TODO: 예림님 여기에 리뷰 연동 부탁드려용~ */}
-                      </div>
+                        <span className="text-xs font-semibold text-gray-700">
+                          리뷰 {typeof manager.totalReviews === 'number' ? manager.totalReviews : '-'}개
+                        </span>
                     </div>
                   </div>
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       ) : (
@@ -447,7 +458,7 @@ const ManagerSection = ({ matchings }: { matchings?: any[] }) => {
         </div>
       )}
     </div>
-  )
+  );
 }
 
 // 매니저 수락 상태에서 수요자 응답 액션 섹션
@@ -552,6 +563,42 @@ const CancelActionSection = ({
     </>
   )
 }
+
+// 고객 정보 카드 컴포넌트
+const CustomerInfoCard = ({ customer }: { customer: any }) => {
+  return (
+    <div className="bg-white rounded-2xl p-5 mb-4 shadow-md border border-gray-100">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="w-6 h-6 bg-indigo-50 rounded-full flex items-center justify-center">
+          <UserIcon className="w-4 h-4 text-indigo-400" />
+        </span>
+        <span className="text-base font-bold text-gray-900">고객 정보</span>
+      </div>
+      <div className="bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-4 px-4 py-3">
+        <img
+          src={customer.profileImage}
+          alt={customer.name}
+          className="w-14 h-14 rounded-lg object-cover bg-white border border-gray-200"
+        />
+        <div className="flex-1 min-w-0">
+          <div className="font-bold text-lg text-gray-900 mb-1">{customer.name}</div>
+          <div className="text-gray-500 text-sm mb-2">{customer.gender} · {customer.age}세</div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center">
+              {renderStars(customer.rating ?? customer.avgRating ?? 0)}
+            </div>
+            <span className="text-base font-semibold text-gray-700">
+              {(customer.rating ?? customer.avgRating ?? 0).toFixed(2)}점
+            </span>
+            <span className="text-base text-gray-500">
+              ({customer.reviewCount ?? customer.totalReviews ?? 0}개)
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // 메인 컴포넌트
 export const ReservationDetailPageClient = ({
@@ -746,6 +793,7 @@ export const ReservationDetailPageClient = ({
         <ServiceDetailsSection reservation={reservation} />
         <ManagerSection matchings={reservation.matchings} />
         <PaymentSection reservation={reservation} />
+        <CustomerInfoCard customer={reservation.customer} />
       </main>
       
       {/* 조건별 액션 버튼 표시 */}
