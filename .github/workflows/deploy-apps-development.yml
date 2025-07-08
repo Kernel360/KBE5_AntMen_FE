@@ -3,14 +3,14 @@ name: 'CI/CD: Build & Deploy to EC2 via SSM (ULTRA FAST - 1min Target)'
 
 on:
   push:
-    branches: [ develop, feature/ssm-config-migration ]
-    #paths:
-    #  - 'apps/**'
-    #  - 'admin/**'
-    #  - '.github/workflows/**'
-    #  - 'docker-compose.yml'
-    #  - 'package.json'
-    #  - 'yarn.lock'
+    branches: [ develop ]
+    paths:
+      - 'apps/**'
+      - 'admin/**'
+      - '.github/workflows/**'
+      - 'docker-compose.yml'
+      - 'package.json'
+      - 'yarn.lock'
 
 permissions:
   id-token: write
