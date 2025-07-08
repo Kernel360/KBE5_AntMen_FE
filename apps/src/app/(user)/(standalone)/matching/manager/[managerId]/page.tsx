@@ -173,10 +173,10 @@ export default function ManagerDetailPage() {
       />
       
       {/* 콘텐츠 */}
-      <div className="pt-16 p-0 pb-20 min-h-[calc(100vh-64px)]">
+      <div className="pt-16 min-h-[calc(100vh-64px)]">
         <div className="max-w-[420px] mx-auto bg-white">
           {/* 프로필 섹션 */}
-          <section className="px-5 py-8 text-center border-b border-gray-100">
+          <section className="px-5 py-5 text-center border-b border-gray-100">
             <div className="w-24 h-24 mx-auto mb-6 bg-slate-200 rounded-full flex items-center justify-center overflow-hidden">
               <img
                 src={manager.profileImage}
