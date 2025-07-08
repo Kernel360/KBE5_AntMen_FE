@@ -32,6 +32,42 @@ export interface UpdateReviewRequest {
   reviewComment: string
 }
 
+// 매니저 리뷰 summary 타입
+export interface ManagerReviewSummary {
+  totalReviews: number
+  avgRating: number
+}
+
+// 매니저 리뷰 summary API 함수
+export async function getManagerReviewSummary(managerId: number | string): Promise<ManagerReviewSummary> {
+  const res = await fetch(`https://api.antmen.site:9092/v1/manager/reviews/summary/${managerId}`)
+  if (!res.ok) {
+    return { totalReviews: 0, avgRating: 0 }
+  }
+  return res.json()
+}
+
+// 매니저 성격 특성 타입
+export interface Characteristic {
+  id: string
+  label: string
+  type: 'kind' | 'punctual' | 'thorough'
+}
+
+// 매니저 타입 (상세/리스트 공통)
+export interface Manager {
+  profileImage: string
+  name: string
+  gender: string
+  age: number
+  rating: number
+  reviewCount: number
+  introduction: string
+  reviewList: ReviewResponse[]
+  characteristics: Characteristic[]
+  // 기타 필요한 필드
+}
+
 // 매니저용 API 함수들
 export const managerApi = {
   /**
@@ -49,7 +85,6 @@ export const managerApi = {
    */
   getMyWrittenReviews: async (): Promise<ReviewResponse[]> => {
     const response = await customFetch<ReviewResponse[]>(`${MANAGER_BASE_URL}/my/written`)
-    console.log('📦 [getManagerWrittenReviews] response:', response)
     return response
   },
 
@@ -58,7 +93,6 @@ export const managerApi = {
    */
   getMyReceivedReviews: async (): Promise<ReviewResponse[]> => {
     const response = await customFetch<ReviewResponse[]>(`${MANAGER_BASE_URL}/my/received`)
-    console.log('📦 [getManagerReceivedReviews] response:', response)
     return response
   },
 
@@ -108,7 +142,6 @@ export const customerApi = {
    */
   getMyWrittenReviews: async (): Promise<ReviewResponse[]> => {
     const response = await customFetch<ReviewResponse[]>(`${CUSTOMER_BASE_URL}/my/written`)
-    console.log('📦 [getCustomerWrittenReviews] response:', response)
     return response
   },
 

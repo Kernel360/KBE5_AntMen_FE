@@ -1,19 +1,18 @@
-import type { Review } from '../model/types'
 import type { ReviewResponse } from '@/shared/api/review'
 
-export function mapReviewResponseToModel(response: ReviewResponse): Review {
+export function mapReviewResponseToModel(response: ReviewResponse): ReviewResponse {
   return {
-    id: String(response.reviewId),
-    customerId: String(response.reviewCustomerId),
-    customerName: response.reviewCustomerName,
-    customerProfile: response.reviewCustomerProfile,
-    managerId: String(response.reviewManagerId),
-    managerName: response.reviewManagerName,
-    managerProfile: response.reviewManagerProfile,
-    reservationId: String(response.reservationId),
-    rating: response.reviewRating,
-    comment: response.reviewComment,
-    authorType: response.reviewAuthor,
-    createdAt: response.reviewDate,
+    reviewId: response.reviewId,
+    reviewCustomerId: response.reviewCustomerId,
+    reviewCustomerName: response.reviewCustomerName,
+    reviewCustomerProfile: response.reviewCustomerProfile,
+    reviewManagerId: response.reviewManagerId,
+    reviewManagerName: response.reviewManagerName,
+    reviewManagerProfile: response.reviewManagerProfile,
+    reservationId: response.reservationId,
+    reviewRating: response.reviewRating,
+    reviewComment: response.reviewComment,
+    reviewAuthor: response.reviewAuthor,
+    reviewDate: response.reviewDate,
   }
 } 

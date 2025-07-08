@@ -7,7 +7,7 @@ import { ReviewCard } from '@/entities/review/ui/ReviewCard';
 import { StaticStarRating } from '@/shared/ui/StaticStarRating';
 import { EllipsisVerticalIcon, StarIcon as StarIconSolid, XMarkIcon } from '@heroicons/react/24/solid';
 import { mapReviewResponseToModel } from '@/entities/review/lib/mappers';
-import type { Review } from '@/entities/review/model/types';
+import type { ReviewResponse } from '@/shared/api/review';
 import { managerApi } from '@/shared/api/review';
 import { EditReviewModal, DeleteConfirmModal } from '@/shared/ui/modal/ReviewModals';
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
@@ -25,12 +25,12 @@ function EmptyState({ tab }: { tab: ActiveTab }) {
   );
 }
 
-function ReviewStats({ reviews }: { reviews: { rating: number }[] }) {
+function ReviewStats({ reviews }: { reviews: { reviewRating: number }[] }) {
   if (!reviews || reviews.length === 0) {
     return null;
   }
   const totalReviews = reviews.length;
-  const averageRating = reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews;
+  const averageRating = reviews.reduce((sum, r) => sum + r.reviewRating, 0) / totalReviews;
   return (
     <section className="p-5 border-b border-gray-100 bg-slate-50">
       <div className="flex items-center gap-4">
@@ -60,13 +60,13 @@ function maskName(name: string) {
 export default function ManagerReviewsClient() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<ActiveTab>('received');
-  const [receivedReviews, setReceivedReviews] = useState<Review[]>([]);
-  const [writtenReviews, setWrittenReviews] = useState<Review[]>([]);
+  const [receivedReviews, setReceivedReviews] = useState<ReviewResponse[]>([]);
+  const [writtenReviews, setWrittenReviews] = useState<ReviewResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+  const [selectedReview, setSelectedReview] = useState<ReviewResponse | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
@@ -78,8 +78,8 @@ export default function ManagerReviewsClient() {
           managerApi.getMyReceivedReviews(),
           managerApi.getMyWrittenReviews()
         ]);
-        setReceivedReviews(receivedResponses.map(mapReviewResponseToModel));
-        setWrittenReviews(writtenResponses.map(mapReviewResponseToModel));
+        setReceivedReviews(receivedResponses);
+        setWrittenReviews(writtenResponses);
       } catch (error) {
         console.error('Error fetching reviews:', error);
         setError('리뷰를 불러오는데 실패했습니다.');
@@ -91,12 +91,12 @@ export default function ManagerReviewsClient() {
     fetchReviews();
   }, []);
 
-  const handleOpenEditModal = (review: Review) => {
+  const handleOpenEditModal = (review: ReviewResponse) => {
     setSelectedReview(review);
     setEditModalOpen(true);
   };
 
-  const handleOpenDeleteModal = (review: Review) => {
+  const handleOpenDeleteModal = (review: ReviewResponse) => {
     setSelectedReview(review);
     setDeleteModalOpen(true);
   };
@@ -116,8 +116,8 @@ export default function ManagerReviewsClient() {
 
       // 성공 시 로컬 상태 업데이트
       setWrittenReviews(prev => prev.map(r => 
-        r.id === id 
-          ? { ...r, rating: newRating, comment: newContent } 
+        r.reviewId === Number(id) 
+          ? { ...r, reviewRating: newRating, reviewComment: newContent } 
           : r
       ));
 
@@ -134,10 +134,10 @@ export default function ManagerReviewsClient() {
 
     try {
       setIsDeleting(true);
-      await managerApi.deleteReview(Number(selectedReview.id));
+      await managerApi.deleteReview(Number(selectedReview.reviewId));
 
       // 성공 시 로컬 상태 업데이트
-      setWrittenReviews(prev => prev.filter(r => r.id !== selectedReview.id));
+      setWrittenReviews(prev => prev.filter(r => r.reviewId !== Number(selectedReview.reviewId)));
 
       handleCloseModals();
       alert('리뷰가 성공적으로 삭제되었습니다.');
@@ -204,10 +204,10 @@ export default function ManagerReviewsClient() {
                 receivedReviews.length > 0
                   ? receivedReviews.map(review => (
                       <ReviewCard
-                        key={review.id}
+                        key={review.reviewId}
                         review={{
                           ...review,
-                          customerName: maskName(review.customerName),
+                          reviewCustomerName: maskName(review.reviewCustomerName),
                         }}
                         showProfileType="customer"
                       />
@@ -218,15 +218,15 @@ export default function ManagerReviewsClient() {
                 writtenReviews.length > 0
                   ? writtenReviews.map(review => (
                       <ReviewCard
-                        key={review.id}
+                        key={review.reviewId}
                         review={review}
                         showProfileType="customer"
                         onEdit={id => {
-                          const r = writtenReviews.find(r => r.id === id);
+                          const r = writtenReviews.find(r => r.reviewId === Number(id));
                           if (r) handleOpenEditModal(r);
                         }}
                         onDelete={id => {
-                          const r = writtenReviews.find(r => r.id === id);
+                          const r = writtenReviews.find(r => r.reviewId === Number(id));
                           if (r) handleOpenDeleteModal(r);
                         }}
                       />
