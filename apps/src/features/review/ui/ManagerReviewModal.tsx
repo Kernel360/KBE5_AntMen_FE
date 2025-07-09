@@ -72,7 +72,7 @@ export const ManagerReviewModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black bg-opacity-50"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-black bg-opacity-50"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose()

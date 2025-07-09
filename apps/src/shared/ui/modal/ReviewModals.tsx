@@ -50,7 +50,7 @@ export function EditReviewModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60]">
       <div className="bg-white rounded-lg p-6 w-full max-w-sm">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold">리뷰 수정</h2>
@@ -128,7 +128,7 @@ export function DeleteConfirmModal({
   if (!isOpen) return null
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60]">
       <div className="bg-white rounded-lg p-6 w-full max-w-sm text-center">
         <h2 className="text-lg font-bold mb-4">리뷰 삭제</h2>
         <p className="text-slate-600 mb-6">정말로 이 리뷰를 삭제하시겠습니까?</p>
