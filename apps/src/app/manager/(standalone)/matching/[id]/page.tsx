@@ -88,7 +88,7 @@ export default function ManagerMatchingDetailPage() {
         title="매칭 요청 확인"
         showBackButton
       />
-      <div className="pt-20 p-5 pb-32 min-h-[calc(100vh-64px)] flex flex-col gap-6 max-w-xl mx-auto w-full">
+      <div className="pt-20 p-5 pb-32 min-h-[calc(100vh-64px)] flex flex-col gap-2 max-w-xl mx-auto w-full">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="text-4xl">⏳</div>
@@ -101,92 +101,196 @@ export default function ManagerMatchingDetailPage() {
           </div>
         ) : reservation ? (
           <>
-            {/* 서비스 정보 카드 */}
-            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-4">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="bg-primary/20 rounded-full p-3">
-                  <Image src="/icons/customer.svg" alt="서비스" width={32} height={32}/>
-                </div>
+            {/* 매칭 요청 안내 */}
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3 mb-2">
+              <div className="flex items-start gap-3">
+                <span className="text-blue-500 text-lg">ℹ️</span>
                 <div>
-                  <div className="text-xl font-bold text-gray-900">{reservation.categoryName}</div>
-                  <div className="text-gray-500 text-base">일반 가정집 청소 서비스</div>
+                  <h4 className="text-sm font-semibold text-blue-800 mb-1">매칭 요청 확인</h4>
+                  <p className="text-xs text-blue-700 leading-relaxed">
+                    고객의 매칭 요청을 신중히 검토하신 후 수락 또는 거절을 선택해주세요.<br/>
+                    수락 시 해당 예약 건이 확정되며, 거절 시 다른 매니저에게 재배정됩니다.
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 text-gray-700 text-base">
-                <Image src="/icons/linear-check.svg" alt="날짜" width={20} height={20} />
-                <span>{reservation.reservationDate}</span>
-                <span className="mx-1">·</span>
-                <span>총 {reservation.totalDuration}시간</span>
-              </div>
-            </section>
+            </div>
 
-            {/* 주소 정보 카드 */}
-            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-2">
-              <div className="flex items-center gap-2 mb-2">
-                <Image src="/icons/map-pin.svg" alt="주소" width={20} height={20} />
-                <span className="text-lg font-bold">주소 정보</span>
+            {/* 서비스 정보 */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-4">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl">🏠</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 mb-0.5">{reservation.categoryName}</h3>
+                  <div className="text-sm font-medium text-gray-600 space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span>예약 날짜</span>
+                      <span>{reservation.reservationDate} </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>예약 시간</span>
+                      <span>{reservation.reservationTime ? `${reservation.reservationTime}` : '협의 후 결정'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>서비스 제공</span>
+                      <span>{reservation.totalDuration}시간</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="text-gray-800 text-base font-medium">{reservation.address}</div>
-            </section>
+            </div>
 
-            {/* 옵션 카드 */}
-            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-2">
-              <div className="flex items-center gap-2 mb-2">
-                <Image src="/icons/linear-bell.svg" alt="옵션" width={20} height={20}/>
-                <span className="text-lg font-bold">옵션 내용</span>
+            {/* 위치 정보 */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-4">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl">📍</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">서비스 위치</h3>
+                  <p className="text-sm text-gray-700">{reservation.address}</p>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {reservation.selectedOptions && reservation.selectedOptions.length > 0 ? (
-                  reservation.selectedOptions.map((opt) => (
-                    <span key={opt} className="bg-gray-100 rounded-lg px-4 py-1 text-base font-medium text-gray-700">{opt}</span>
-                  ))
-                ) : (
-                  <span className="text-gray-400">옵션을 선택하지 않았습니다</span>
-                )}
-              </div>
-            </section>
+            </div>
 
-            {/* 특이사항 카드 */}
-            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-2">
-              <div className="flex items-center gap-2 mb-2">
-                <Image src="/icons/linear-share.svg" alt="특이사항" width={20} height={20} />
-                <span className="text-lg font-bold">특이사항</span>
+            {/* 추가 옵션 */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-4">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl">⚙️</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">추가 옵션</h3>
+                  {reservation.selectedOptions && reservation.selectedOptions.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {reservation.selectedOptions.map((opt) => (
+                        <span key={opt} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {opt}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm">선택된 옵션이 없습니다</p>
+                  )}
+                </div>
               </div>
-              <div className="text-gray-700 text-base">
-                {reservation.reservationMemo ? reservation.reservationMemo : '수요자가 작성하지 않았습니다'}
-              </div>
-            </section>
+            </div>
 
-            {/* 결제 정보 카드 */}
-            <section className="bg-white rounded-2xl shadow p-6 flex flex-col gap-2">
-              <div className="flex items-center gap-2 mb-2">
-                <Image src="/icons/linear-card.svg" alt="결제" width={20} height={20} />
-                <span className="text-lg font-bold">결제 정보</span>
+            {/* 특이사항 */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-4">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl">📝</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">특이사항</h3>
+                  <p className={`text-sm font-medium ${reservation.reservationMemo ? 'text-gray-700' : 'text-gray-500'}`}>
+                    {reservation.reservationMemo || '특별한 요청사항이 없습니다'}
+                  </p>
+                </div>
               </div>
-              <div className="flex justify-between text-base">
-                <span className="text-gray-500">결제 금액</span>
-                <span className="font-bold text-primary">{reservation.totalAmount.toLocaleString()}원</span>
+            </div>
+
+            {/* 고객 정보 */}
+            {reservation.customer && (
+              <div className="bg-white rounded-2xl border border-gray-200 p-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">👤</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">고객 정보</h3>
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        {reservation.customer.profileImage ? (
+                          <img 
+                            src={reservation.customer.profileImage} 
+                            alt={reservation.customer.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-gray-400 text-xl">👤</span>
+                        )}
+                      </div>
+                                              <div className="flex-1">
+                          <h4 className="font-medium text-gray-900 mb-0.5">{reservation.customer.name}</h4>
+                          <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                          <span>{reservation.customer.gender}</span>
+                          <span>•</span>
+                          <span>{reservation.customer.age >= 0 ? `${reservation.customer.age}세` : '나이 미상'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <div className="flex items-center">
+                            {[1,2,3,4,5].map(i => (
+                              <span
+                                key={i}
+                                className={`text-sm ${i <= Math.round((reservation.customer as any)?.avgRating ?? 0) ? 'text-yellow-400' : 'text-gray-300'}`}
+                              >
+                                ★
+                              </span>
+                            ))}
+                          </div>
+                          <span className="text-gray-600">
+                            {(reservation.customer as any)?.avgRating?.toFixed(1) || '-'} ({(reservation.customer as any)?.totalReviews || 0}개 리뷰)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </section>
+            )}
+
+            {/* 결제 정보 */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-4">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl">💰</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">결제 정보</h3>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600 text-sm">총 결제 금액</span>
+                    <span className="text-lg font-bold text-primary">{reservation.totalAmount.toLocaleString()}원</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 하단 주의사항 */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-3 mt-2">
+              <div className="flex items-start gap-3">
+                <span className="text-yellow-600 text-lg">⚠️</span>
+                <div>
+                  <h4 className="text-sm font-semibold text-yellow-800 mb-1">주의사항</h4>
+                  <ul className="text-xs text-yellow-700 space-y-1">
+                    <li>• 매칭 수락 후에는 취소가 어려우니 신중히 결정해주세요</li>
+                    <li>• 예약 시간 30분 전까지는 현장에 도착해주시기 바랍니다</li>
+                    <li>• 고객과의 원활한 소통을 위해 예의를 지켜주세요</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
           </>
         ) : null}
       </div>
 
-      {/* 매칭 수락/거절 버튼 - 화면 바닥에 고정 */}
+      {/* 매칭 수락/거절 버튼 */}
       {reservation && reservation.reservationStatus === 'WAITING' && (
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile bg-white border-t border-gray-200 p-4 shadow-lg z-50">
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile bg-white border-t border-gray-200 p-4 z-50">
           <div className="flex gap-3">
             <button
               onClick={handleAccept}
               disabled={isProcessing}
-              className="flex-1 bg-primary text-white rounded-xl py-4 font-bold text-base disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors hover:bg-primary/90"
+              className="flex-1 bg-primary text-white rounded-2xl py-3 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors hover:bg-primary/90"
             >
               {isProcessing ? '처리 중...' : '매칭 수락'}
             </button>
             <button
               onClick={() => setIsRejectModalOpen(true)}
               disabled={isProcessing}
-              className="flex-1 bg-gray-200 text-gray-800 rounded-xl py-4 font-bold text-base disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors hover:bg-gray-300"
+              className="flex-1 bg-gray-100 text-gray-700 rounded-2xl py-3 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors hover:bg-gray-200 border border-gray-300"
             >
               매칭 거절
             </button>
