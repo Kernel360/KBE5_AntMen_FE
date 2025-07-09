@@ -399,7 +399,6 @@ const ManagerSignUpPage = () => {
         <CommonHeader 
           title="매니저 회원가입" 
           showBackButton 
-          onBack={handleBack} 
         />
         
         <div className="pt-24 pb-8">

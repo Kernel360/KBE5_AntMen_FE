@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { Comments } from './Comments'
 import { formatDate } from '@/shared/utils/date'
@@ -21,6 +21,7 @@ export const BoardDetail = ({ initialData, boardType }: BoardDetailProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [post, setPost] = useState(initialData)
+  const [refreshKey, setRefreshKey] = useState(0)
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
@@ -36,25 +37,28 @@ export const BoardDetail = ({ initialData, boardType }: BoardDetailProps) => {
     post.userId &&
     user.userId === post.userId;
 
-  // 디버깅 박스 userId 기준으로만 표시
-  // ... (생략)
-  {/* 디버깅 박스 */}
-  <div className="mt-2 text-xs text-gray-500 bg-yellow-100 p-2 rounded">
-    <div>로그인: {isLoggedIn ? '예' : '아니오'}</div>
-    <div>userId: {user?.userId ?? '없음'}</div>
-    <div>post.userId: {post.userId ?? '없음'}</div>
-    <div>작성자 여부: {isAuthor ? '예' : '아니오'}</div>
-  </div>
-
   const handleSubmitComment = async (content: string) => {
     setIsSubmitting(true)
     try {
       await boardService.createComment(String(post.boardId), content)
-      // TODO: 댓글 작성 후 데이터 갱신
-      // const updatedPost = await boardService.getBoardDetail(String(post.boardId));
-      // setPost(updatedPost);
+      // 댓글 작성 후 데이터 갱신
+      const updatedPost = await boardService.getBoardDetail(String(post.boardId));
+      setPost(updatedPost);
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleCompleteInquiry = async () => {
+    try {
+      await boardService.resolveBoard(String(post.boardId));
+      alert('문의가 완료되었습니다.');
+      // 게시글 상태 업데이트를 위해 다시 불러오기
+      const updatedPost = await boardService.getBoardDetail(String(post.boardId));
+      setPost(updatedPost);
+    } catch (error) {
+      console.error('문의 완료 처리 실패:', error);
+      alert('문의 완료 처리 중 오류가 발생했습니다.');
     }
   }
 
@@ -89,9 +93,24 @@ export const BoardDetail = ({ initialData, boardType }: BoardDetailProps) => {
     router.back();
   }
 
+  // 페이지 포커스 시 데이터 새로고침
+  useEffect(() => {
+    const handleFocus = async () => {
+      try {
+        const updatedPost = await boardService.getBoardDetail(String(post.boardId));
+        setPost(updatedPost);
+      } catch (error) {
+        console.error('데이터 새로고침 실패:', error);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [post.boardId]);
+
   return (
     <div className="min-h-screen bg-accent/5">
-      <div className="fixed flex justify-center max-w-mobile w-full bg-white">
+      <div className="fixed flex justify-center max-w-mobile w-full bg-white z-[1000]">
         <CommonHeader 
           title={boardType} 
           showBackButton={true}
@@ -110,46 +129,43 @@ export const BoardDetail = ({ initialData, boardType }: BoardDetailProps) => {
             </h1>
             <div className="flex items-center text-sm text-accent-foreground/70 pb-4 justify-between">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-primary/80">
+                <span className="font-medium text-primary-500">
                   {post.userName}
                 </span>
                 <span className="mx-2 text-accent/30">|</span>
-                <span>{formatDate(post.createdAt)}</span>
+                <div className="flex items-center gap-1 text-sm">
+                  <span>작성: {formatDate(post.createdAt)}</span>
+                  {post.modifiedAt && post.modifiedAt !== post.createdAt && (
+                    <>
+                      <span className="mx-1 text-accent/30">•</span>
+                      <span>수정: {formatDate(post.modifiedAt)}</span>
+                    </>
+                  )}
+                </div>
               </div>
-              {/* 수정/삭제 버튼 - 작성자일 때만 표시 */}
+              {/* 작성자일 때만 버튼 노출 */}
               {isAuthor && (
-                <div className="flex items-center gap-1 ml-2">
-                  {/* 수정 버튼: 작성자이면서 boardStatus가 'new'일 때만 노출 */}
-                  {post.boardStatus?.toLowerCase() === 'new' && (
-                    <>
-                      <button
-                        onClick={handleEdit}
-                        className="text-primary hover:text-primary/80 transition-colors"
-                      >
-                        수정
-                      </button>
-                      <span className="mx-1 text-accent/30">·</span>
-                    </>
-                  )}
-                  {/* 문의 완료 버튼: boardStatus가 'inprogress'일 때 노출 */}
-                  {post.boardStatus?.toLowerCase() === 'inprogress' && (
-                    <>
-                      <button
-                        className="text-green-600 font-semibold border border-green-500 rounded px-2 py-1 ml-1 cursor-default bg-green-50"
-                        disabled
-                      >
-                        문의 완료
-                      </button>
-                      <span className="mx-1 text-accent/30">·</span>
-                    </>
-                  )}
-                  {/* 삭제 버튼: 작성자이면 언제나 노출 */}
-                  <button
-                    onClick={handleDelete}
-                    className="text-red-500 hover:text-red-600 transition-colors"
-                  >
-                    삭제
-                  </button>
+                <div className="flex flex-col items-end gap-1 ml-2">
+                  {/* 수정/삭제 버튼: 한 줄 아래에 표시 */}
+                  <div className="flex items-center gap-1">
+                    {post.boardStatus?.toLowerCase() === 'new' && (
+                      <>
+                        <button
+                          onClick={handleEdit}
+                          className="text-primary hover:text-primary/80 transition-colors"
+                        >
+                          수정
+                        </button>
+                        <span className="mx-1 text-accent/30">·</span>
+                      </>
+                    )}
+                    <button
+                      onClick={handleDelete}
+                      className="text-red-500 hover:text-red-600 transition-colors"
+                    >
+                      삭제
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -162,6 +178,7 @@ export const BoardDetail = ({ initialData, boardType }: BoardDetailProps) => {
           </div>
         </div>
 
+        {/* 문의 완료 버튼이 있던 위치에 구분선만 남김 */}
         <div className="h-2 bg-accent/5" />
 
         {/* 댓글 영역 */}
@@ -170,6 +187,13 @@ export const BoardDetail = ({ initialData, boardType }: BoardDetailProps) => {
             comments={post.comments}
             onSubmitComment={handleSubmitComment}
             isSubmitting={isSubmitting}
+            inquiryDoneButton={!!(isAuthor && post.boardStatus?.toLowerCase() === 'inprogress')}
+            onCompleteInquiry={handleCompleteInquiry}
+            boardId={String(post.boardId)}
+            onCommentUpdate={async () => {
+              const updatedPost = await boardService.getBoardDetail(String(post.boardId));
+              setPost(updatedPost);
+            }}
           />
         </div>
       </div>

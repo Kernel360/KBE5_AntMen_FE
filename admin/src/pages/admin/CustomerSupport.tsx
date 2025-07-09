@@ -97,13 +97,22 @@ const getCategoryBadge = (notice: Notice) => {
     if (notice.boardStatus) {
         const statusLabels = {
             'Reserved': '예약',
+            'reserved': '예약',
             'Draft': '임시저장',
-            'Published': '발행됨'
+            'Published': '발행됨',
+            'null': '임시저장'
         };
         const statusLabel = statusLabels[notice.boardStatus as keyof typeof statusLabels] || notice.boardStatus;
         badges.push(
             <Badge key="status" className="bg-yellow-100 text-yellow-800">
                 {statusLabel}
+            </Badge>
+        );
+    } else {
+        // boardStatus가 null인 경우
+        badges.push(
+            <Badge key="status" className="bg-yellow-100 text-yellow-800">
+                임시저장
             </Badge>
         );
     }
@@ -246,21 +255,57 @@ export const CustomerSupport: React.FC = () => {
                 ticketSearchTerm,
                 ticketSortBy
             );
-            const transformedTickets: CustomerTicket[] = response.map((inquiry: any) => ({
-                id: inquiry.boardId,
-                title: inquiry.boardTitle,
-                status: inquiry.boardStatus === 'COMPLETED' ? 'resolved' : 
-                       inquiry.boardStatus === 'IN_PROGRESS' ? 'in_progress' : 'new',
-                content: inquiry.boardContent || '',
-                createdAt: inquiry.createdAt,
-                lastResponse: inquiry.modifiedAt,
-                commentNum: inquiry.commentNum || inquiry.commentCount || 0,
-                customerInfo: {
-                    name: inquiry.userName || '고객',
-                    email: inquiry.userEmail || ''
-                },
-                responses: [],
-            }));
+            const transformedTickets: CustomerTicket[] = response.map((inquiry: any) => {
+                // isDeleted가 true면 무조건 closed 상태
+                if (inquiry.isDeleted) {
+                    return {
+                        id: inquiry.boardId,
+                        title: inquiry.boardTitle,
+                        status: 'closed' as const,
+                        content: inquiry.boardContent || '',
+                        createdAt: inquiry.createdAt,
+                        lastResponse: inquiry.modifiedAt,
+                        commentNum: inquiry.commentNum || inquiry.commentCount || 0,
+                        customerInfo: {
+                            name: inquiry.userName || '고객',
+                            email: inquiry.userEmail || ''
+                        },
+                        responses: [],
+                    };
+                }
+
+                // boardStatus에 따른 상태 분류
+                let status: 'new' | 'in_progress' | 'resolved' | 'closed';
+                switch (inquiry.boardStatus) {
+                    case 'New':
+                        status = 'new';
+                        break;
+                    case 'IN_PROGRESS':
+                        status = 'in_progress';
+                        break;
+                    case 'COMPLETED':
+                    case 'Resolved':
+                        status = 'resolved';
+                        break;
+                    default:
+                        status = 'in_progress'; // 기본값
+                }
+
+                return {
+                    id: inquiry.boardId,
+                    title: inquiry.boardTitle,
+                    status,
+                    content: inquiry.boardContent || '',
+                    createdAt: inquiry.createdAt,
+                    lastResponse: inquiry.modifiedAt,
+                    commentNum: inquiry.commentNum || inquiry.commentCount || 0,
+                    customerInfo: {
+                        name: inquiry.userName || '고객',
+                        email: inquiry.userEmail || ''
+                    },
+                    responses: [],
+                };
+            });
             setTickets(transformedTickets);
         } catch (error) {
             console.error('고객 문의 로드 실패:', error);
@@ -552,11 +597,29 @@ export const CustomerSupport: React.FC = () => {
 
     // 필터링된 공지사항
     const filteredNotices = notices.filter(notice => {
-        const matchesFilter = noticeFilter === 'all' || 
-                            (noticeFilter === 'notice' && notice.category === 'notice') ||
-                            (noticeFilter === 'faq' && notice.category === 'faq') ||
-                            (noticeFilter === 'reservation' && notice.boardStatus === 'Reserved') ||
-                            (noticeFilter === 'deleted' && notice.isDeleted);
+        let matchesFilter = false;
+        
+        switch (noticeFilter) {
+            case 'all':
+                matchesFilter = true;
+                break;
+            case 'notice':
+                matchesFilter = notice.category === 'notice' && !notice.isDeleted;
+                break;
+            case 'faq':
+                matchesFilter = notice.category === 'faq' && !notice.isDeleted;
+                break;
+            case 'reservation':
+                // Reserved 또는 reserved 상태인 경우
+                matchesFilter = (notice.boardStatus === 'Reserved' || notice.boardStatus === 'reserved') && !notice.isDeleted;
+                break;
+            case 'deleted':
+                matchesFilter = notice.isDeleted === true;
+                break;
+            default:
+                matchesFilter = true;
+        }
+        
         const matchesSearch = notice.boardTitle.toLowerCase().includes(noticeSearchTerm.toLowerCase()) ||
                             notice.userName.toLowerCase().includes(noticeSearchTerm.toLowerCase());
         return matchesFilter && matchesSearch;
@@ -793,7 +856,7 @@ export const CustomerSupport: React.FC = () => {
                                     { value: 'all', label: '전체', count: noticeStats.total, icon: MessageCircle, color: 'text-blue-600' },
                                     { value: 'notice', label: '공지', count: noticeStats.notice, icon: Megaphone, color: 'text-green-600' },
                                     { value: 'faq', label: 'FAQ', count: noticeStats.faq, icon: MessageCircle, color: 'text-purple-600' },
-                                    { value: 'reservation', label: '예약', count: notices.filter(n => n.boardStatus === 'Reserved').length, icon: Clock, color: 'text-orange-600' },
+                                    { value: 'reservation', label: '예약', count: notices.filter(n => (n.boardStatus === 'Reserved' || n.boardStatus === 'reserved') && !n.isDeleted).length, icon: Clock, color: 'text-orange-600' },
                                     { value: 'deleted', label: '삭제', count: notices.filter(n => n.isDeleted).length, icon: Trash2, color: 'text-red-600' },
                                 ].map((filter) => {
                                     const IconComponent = filter.icon;

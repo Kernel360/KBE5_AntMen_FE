@@ -28,6 +28,23 @@ const getDisplayTitle = (post: BoardPost, isPinned: boolean = false, boardType: 
   return post.boardTitle;
 };
 
+// 수정 여부 확인 함수
+const isModified = (post: BoardPost): boolean => {
+  if (!post.modifiedAt) return false;
+  
+  // Java LocalDateTime 배열 형태인 경우
+  if (Array.isArray(post.modifiedAt) && Array.isArray(post.createdAt)) {
+    return JSON.stringify(post.modifiedAt) !== JSON.stringify(post.createdAt);
+  }
+  
+  // 문자열 형태인 경우
+  if (typeof post.modifiedAt === 'string' && typeof post.createdAt === 'string') {
+    return post.modifiedAt !== post.createdAt;
+  }
+  
+  return false;
+};
+
 export const PostList = ({ 
   userRole, 
   boardType, 
@@ -233,6 +250,12 @@ export const PostList = ({
                           <span>{post.userName}</span>
                           <span>•</span>
                           <span>{post.createdAt ? formatDate(post.createdAt) : '날짜 없음'}</span>
+                          {isModified(post) && (
+                            <>
+                              <span>•</span>
+                              <span className="text-gray-400">수정됨 ({post.modifiedAt ? formatDate(post.modifiedAt) : ''})</span>
+                            </>
+                          )}
                         </div>
                       </div>
                       {post.commentNum > 0 && (
@@ -272,6 +295,12 @@ export const PostList = ({
                     <span>{post.userName}</span>
                     <span>•</span>
                     <span>{post.createdAt ? formatDate(post.createdAt) : '날짜 없음'}</span>
+                    {isModified(post) && (
+                      <>
+                        <span>•</span>
+                        <span className="text-gray-400">수정됨 ({post.modifiedAt ? formatDate(post.modifiedAt) : ''})</span>
+                      </>
+                    )}
                   </div>
                 </div>
                 {post.commentNum > 0 && (

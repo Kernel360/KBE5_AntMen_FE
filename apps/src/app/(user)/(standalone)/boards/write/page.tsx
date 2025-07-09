@@ -14,12 +14,37 @@ export default function WritePostPage() {
   const [content, setContent] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [fromTab, setFromTab] = useState('i') // 기본값은 서비스 문의(i)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [boardId, setBoardId] = useState<string | null>(null)
+
+  // 기존 게시글 데이터 로드 (수정 모드용)
+  const loadBoardData = async (id: string) => {
+    try {
+      const boardData = await boardService.getBoardDetail(id)
+      setTitle(boardData.boardTitle)
+      setContent(boardData.boardContent)
+    } catch (error) {
+      console.error('게시글 데이터 로드 실패:', error)
+      alert('게시글 데이터를 불러오는데 실패했습니다.')
+      router.back()
+    }
+  }
 
   // 클라이언트에서만 searchParams 처리
   useEffect(() => {
     if (searchParams) {
       const tab = searchParams.get('from') || 'i'
+      const mode = searchParams.get('mode')
+      const id = searchParams.get('id')
+      
       setFromTab(tab)
+      setIsEditMode(mode === 'edit')
+      setBoardId(id)
+      
+      // 수정 모드인 경우 기존 게시글 데이터 로드
+      if (mode === 'edit' && id) {
+        loadBoardData(id)
+      }
     }
   }, [searchParams])
 
@@ -45,42 +70,49 @@ export default function WritePostPage() {
     setIsSubmitting(true)
     
     try {
-      console.log('📋 글 작성 시도:', { 
+      console.log('📋 글 처리 시도:', { 
         isManager, 
         boardType, 
+        isEditMode,
         userId: user?.userId,
         userRole: user?.userRole
       });
 
-      // 권한에 따라 다른 API 호출
-      if (isManager) {
-        await boardService.createManagerBoard(title, content)
+      if (isEditMode && boardId) {
+        // 수정 모드
+        const updateData = {
+          boardTitle: title,
+          boardContent: content,
+          boardIsPinned: false,
+          boardReservatedAt: null
+        }
+        await boardService.updateBoard(boardId, updateData)
+        alert(`${boardType}가 성공적으로 수정되었습니다.`)
+        // 수정 후 원래 페이지로 돌아가기
+        router.back()
       } else {
-        await boardService.createCustomerBoard(title, content)
+        // 작성 모드
+        if (isManager) {
+          await boardService.createManagerBoard(title, content)
+        } else {
+          await boardService.createCustomerBoard(title, content)
+        }
+        alert(`${boardType}가 성공적으로 등록되었습니다.`)
+        router.replace(`${basePath}?t=${fromTab}`)
       }
-      
-      alert(`${boardType}가 성공적으로 등록되었습니다.`)
-      // 글 작성 성공 후 게시판 리스트로 이동 (히스토리 대체)
-      router.replace(`${basePath}?t=${fromTab}`)
     } catch (error) {
-      console.error('글 작성 실패:', error)
-      alert('글 작성 중 오류가 발생했습니다. 다시 시도해주세요.')
+      console.error('글 처리 실패:', error)
+      alert(isEditMode ? '글 수정 중 오류가 발생했습니다.' : '글 작성 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handleGoBack = () => {
-    // 브라우저 히스토리에서 이전 페이지로 돌아가기
-    router.back()
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <CommonHeader 
-        title={`${boardType} 작성`} 
+        title={`${boardType} ${isEditMode ? '수정' : '작성'}`} 
         showBackButton 
-        onBack={handleGoBack} 
       />
       
       <div className="pt-16 pb-28">
@@ -152,7 +184,7 @@ export default function WritePostPage() {
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={handleGoBack}
+              onClick={() => router.back()}
               disabled={isSubmitting}
               className="flex-1 py-3 px-4 text-gray-600 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 disabled:opacity-50"
             >
@@ -163,7 +195,7 @@ export default function WritePostPage() {
               disabled={isSubmitting || !title.trim() || !content.trim()}
               className="flex-2 py-3 px-6 bg-primary-500 text-white rounded-lg font-medium hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? '등록 중...' : `${boardType} 등록`}
+              {isSubmitting ? (isEditMode ? '수정 중...' : '등록 중...') : (isEditMode ? `${boardType} 수정` : `${boardType} 등록`)}
             </button>
           </div>
         </div>
