@@ -67,19 +67,17 @@ export default function ReviewsPageClient() {
         reviewRating: newRating,
         reviewComment: newContent,
       })
-
       // 성공 시 로컬 상태 업데이트
       setReviews(prev => prev.map(r => 
         r.reviewId === Number(id)
           ? { ...r, rating: newRating, comment: newContent }
           : r
       ))
-
       // 모달 닫기
       handleCloseModals()
-      
       // 성공 메시지
       alert('리뷰가 성공적으로 수정되었습니다.')
+      router.refresh()
     } catch (error) {
       console.error('리뷰 수정 실패:', error)
       alert('리뷰 수정에 실패했습니다.')
@@ -88,21 +86,17 @@ export default function ReviewsPageClient() {
 
   const handleDeleteReview = async () => {
     if (!selectedReview) return
-
     try {
       setIsDeleting(true)
-      
       // API 호출
       await customerApi.deleteReview(Number(selectedReview.reviewId))
-
       // 성공 시 로컬 상태 업데이트
       setReviews(prev => prev.filter(r => r.reviewId !== selectedReview.reviewId))
-
       // 모달 닫기
       handleCloseModals()
-      
       // 성공 메시지
       alert('리뷰가 성공적으로 삭제되었습니다.')
+      router.refresh()
     } catch (error) {
       console.error('리뷰 삭제 실패:', error)
       alert('리뷰 삭제에 실패했습니다.')

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ReviewCard } from '@/entities/review/ui/ReviewCard'
 import { StaticStarRating } from '@/shared/ui/StaticStarRating'
 import { mapReviewResponseToModel } from '@/entities/review/lib/mappers'
@@ -38,7 +38,7 @@ function ReviewStats({ summary }: { summary: ReviewSummary | null }) {
           <h2 className="text-sm font-semibold text-slate-500 mb-1">전체 평점</h2>
           <div className="flex items-center justify-center gap-2">
             <StaticStarRating rating={summary.avgRating} />
-            <span className="text-xl font-bold text-slate-800">{summary.avgRating.toFixed(1)}</span>
+            <span className="text-xl font-bold text-slate-800">{summary.avgRating}</span>
           </div>
         </div>
       </div>
@@ -55,47 +55,55 @@ function maskName(name: string) {
 
 export default function ManagerReviewsClient() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<ActiveTab>('received')
-  const [receivedReviews, setReceivedReviews] = useState<ReviewResponse[]>([])
-  const [writtenReviews, setWrittenReviews] = useState<ReviewResponse[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const searchParams = useSearchParams()
+  const tabQuery = searchParams.get('tab')
   const [isEditModalOpen, setEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false)
   const [selectedReview, setSelectedReview] = useState<ReviewResponse | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [reviewSummary, setReviewSummary] = useState<ReviewSummary | null>(null)
+  const [receivedReviews, setReceivedReviews] = useState<ReviewResponse[]>([])
+  const [writtenReviews, setWrittenReviews] = useState<ReviewResponse[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const { user } = useAuthStore()
 
+  // 쿼리 기반 탭 상태
+  const activeTab: ActiveTab = tabQuery === 'written' ? 'written' : 'received'
+
+  // fetchSummary, fetchReviews를 useEffect 바깥에서 선언
+  const fetchSummary = async () => {
+    if (!user?.userId) return
+    try {
+      setLoading(true)
+      setError(null)
+      const summary = await getManagerReviewSummary(user.userId)
+      setReviewSummary(summary)
+    } catch (error) {
+      setError('리뷰 요약 정보를 불러오는데 실패했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+  const fetchReviews = async () => {
+    try {
+      const [receivedResponses, writtenResponses] = await Promise.all([
+        managerApi.getMyReceivedReviews(),
+        managerApi.getMyWrittenReviews()
+      ])
+      setReceivedReviews(receivedResponses.map(mapReviewResponseToModel).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
+      setWrittenReviews(writtenResponses.map(mapReviewResponseToModel).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
+    } catch (error) {
+      setError('리뷰를 불러오는데 실패했습니다.')
+    }
+  }
+  const fetchAll = async () => {
+    await fetchSummary()
+    await fetchReviews()
+  }
+
   useEffect(() => {
-    const fetchSummary = async () => {
-      if (!user?.userId) return
-      try {
-        setLoading(true)
-        setError(null)
-        const summary = await getManagerReviewSummary(user.userId)
-        setReviewSummary(summary)
-      } catch (error) {
-        setError('리뷰 요약 정보를 불러오는데 실패했습니다.')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchSummary()
-    // 기존 리뷰 목록 fetch는 그대로 유지
-    const fetchReviews = async () => {
-      try {
-        const [receivedResponses, writtenResponses] = await Promise.all([
-          managerApi.getMyReceivedReviews(),
-          managerApi.getMyWrittenReviews()
-        ])
-        setReceivedReviews(receivedResponses.map(mapReviewResponseToModel).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
-        setWrittenReviews(writtenResponses.map(mapReviewResponseToModel).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
-      } catch (error) {
-        setError('리뷰를 불러오는데 실패했습니다.')
-      }
-    }
-    fetchReviews()
+    fetchAll()
   }, [user?.userId])
 
   const handleOpenEditModal = (review: ReviewResponse) => {
@@ -120,16 +128,10 @@ export default function ManagerReviewsClient() {
         reviewRating: newRating,
         reviewComment: newContent,
       })
-
-      // 성공 시 로컬 상태 업데이트
-      setWrittenReviews(prev => prev.map(r => 
-        r.reviewId === Number(id) 
-          ? { ...r, reviewRating: newRating, reviewComment: newContent } 
-          : r
-      ))
-
       handleCloseModals()
       alert('리뷰가 성공적으로 수정되었습니다.')
+      await fetchAll()
+      router.replace(`?tab=written`)
     } catch (error) {
       console.error('리뷰 수정 실패:', error)
       alert('리뷰 수정에 실패했습니다.')
@@ -138,16 +140,13 @@ export default function ManagerReviewsClient() {
 
   const handleDeleteReview = async () => {
     if (!selectedReview) return
-
     try {
       setIsDeleting(true)
       await managerApi.deleteReview(Number(selectedReview.reviewId))
-
-      // 성공 시 로컬 상태 업데이트
-      setWrittenReviews(prev => prev.filter(r => r.reviewId !== Number(selectedReview.reviewId)))
-
       handleCloseModals()
       alert('리뷰가 성공적으로 삭제되었습니다.')
+      await fetchAll()
+      router.replace(`?tab=written`)
     } catch (error) {
       console.error('리뷰 삭제 실패:', error)
       alert('리뷰 삭제에 실패했습니다.')
@@ -162,13 +161,12 @@ export default function ManagerReviewsClient() {
         title="리뷰 관리"
         showBackButton
       />
-
       <div className="flex-1 flex flex-col pt-[64px]">
         {/* Tab Navigation */}
         <div className="sticky top-[64px] z-10 bg-white border-b border-gray-200">
           <div className="grid grid-cols-2">
             <button
-              onClick={() => setActiveTab('received')}
+              onClick={() => router.replace(`?tab=received`)}
               className={`relative py-3.5 text-sm font-medium transition-colors ${
                 activeTab === 'received' ? 'bg-primary/10' : ''
               }`}
@@ -181,7 +179,7 @@ export default function ManagerReviewsClient() {
               )}
             </button>
             <button
-              onClick={() => setActiveTab('written')}
+              onClick={() => router.replace(`?tab=written`)}
               className={`relative py-3.5 text-sm font-medium transition-colors ${
                 activeTab === 'written' ? 'bg-primary/10' : ''
               }`}
@@ -195,10 +193,8 @@ export default function ManagerReviewsClient() {
             </button>
           </div>
         </div>
-
         {/* 리뷰 통계 (받은 리뷰 탭 전용) */}
         {activeTab === 'received' && <ReviewStats summary={reviewSummary} />}
-
         {/* Content */}
         <div className="p-5 space-y-4">
           {loading ? (
@@ -244,7 +240,6 @@ export default function ManagerReviewsClient() {
           )}
         </div>
       </div>
-
       {/* 모달 렌더링 */}
       <EditReviewModal
         isOpen={isEditModalOpen}
