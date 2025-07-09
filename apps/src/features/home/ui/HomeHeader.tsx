@@ -42,7 +42,11 @@ function useAuthHandlers(requireAuth: 'CUSTOMER' | 'MANAGER') {
       return
     }
 
-    callback?.() || router.push('/reservation')
+    if (callback) {
+      callback()
+    } else {
+      router.push('/reservation')
+    }
   }
 
   const handleProfileClick = () => {

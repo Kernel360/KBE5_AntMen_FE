@@ -115,6 +115,7 @@ export default function ManagerHomePage() {
           buttonText="급여 확인하기"
           onButtonClick={() => router.push('/manager/salary')}
           buttonIcon={<BanknotesIcon className="w-6 h-6 text-black" />}
+          requireAuth="MANAGER"
         />
       </div>
       <ManagerTodaySchedule />
