@@ -57,7 +57,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50">
       <div className="w-[90%] max-w-[400px] bg-white rounded-xl p-6 relative">
         {/* 닫기 버튼 */}
         <button
