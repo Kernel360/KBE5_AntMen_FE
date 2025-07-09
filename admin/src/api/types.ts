@@ -40,4 +40,11 @@ export interface BoardRequestDto {
     boardIsPinned: boolean;
     boardReservatedAt?: string; // ISO string format
     boardType: string; // 'customer-notice' | 'manager-notice'
+}
+
+// 매출 요약 응답 타입
+export interface AdminSalesSummaryResponseDto {
+    totalSales: number;           // 총 매출
+    currentMonthSales: number;    // 최근 한달 매출
+    averageDailySales: number;    // 일간 평균 매출
 } 
