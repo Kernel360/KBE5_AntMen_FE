@@ -86,11 +86,34 @@ export const MyReservationClient: FC = () => {
     }
   })
 
-  // 서비스 예정일(날짜+시간) 기준으로 가까운 순 정렬
+  // 오늘 날짜 기준으로 예약 분리 및 정렬
   const sortedReservations = [...filteredReservations].sort((a, b) => {
-    const aDate = new Date(`${a.reservationDate}T${a.reservationTime || '00:00'}`);
-    const bDate = new Date(`${b.reservationDate}T${b.reservationTime || '00:00'}`);
-    return aDate.getTime() - bDate.getTime(); // 가까운 날짜/시간이 위로
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // 오늘 날짜의 00:00:00으로 설정
+    
+    const aDate = new Date(a.reservationDate);
+    const bDate = new Date(b.reservationDate);
+    
+    // 오늘 기준으로 미래/과거 분류
+    const aIsFuture = aDate >= today;
+    const bIsFuture = bDate >= today;
+    
+    // 1. 미래 예약을 상단에, 과거 예약을 하단에 배치
+    if (aIsFuture && !bIsFuture) return -1;
+    if (!aIsFuture && bIsFuture) return 1;
+    
+    // 2. 같은 그룹 내에서 정렬
+    if (aIsFuture && bIsFuture) {
+      // 미래 예약: 가까운 날짜순 (오름차순)
+      const aDateTime = new Date(`${a.reservationDate}T${a.reservationTime || '00:00'}`);
+      const bDateTime = new Date(`${b.reservationDate}T${b.reservationTime || '00:00'}`);
+      return aDateTime.getTime() - bDateTime.getTime();
+    } else {
+      // 과거 예약: 최신순 (내림차순)
+      const aDateTime = new Date(`${a.reservationDate}T${a.reservationTime || '00:00'}`);
+      const bDateTime = new Date(`${b.reservationDate}T${b.reservationTime || '00:00'}`);
+      return bDateTime.getTime() - aDateTime.getTime();
+    }
   });
 
   return (
@@ -149,21 +172,47 @@ export const MyReservationClient: FC = () => {
           null
         ) : sortedReservations.length > 0 ? (
           <div className="space-y-4 p-5">
-            {sortedReservations.map((reservation) => (
-              <ReservationCard
-                key={reservation.reservationId}
-                reservation={reservation}
-                userType="customer"
-                onViewDetails={() =>
-                  handleViewDetails(String(reservation.reservationId))
-                }
-                onWriteReview={
-                  reservation.reservationStatus === 'DONE' && !reservation.hasReview
-                    ? () => handleOpenReviewModal(String(reservation.reservationId))
-                    : undefined
-                }
-              />
-            ))}
+            {sortedReservations.map((reservation, index) => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              
+              const reservationDate = new Date(reservation.reservationDate);
+              const isCurrentReservationPast = reservationDate < today;
+              
+              // 이전 예약이 미래였고 현재 예약이 과거인 경우 구분선 표시
+              const showDivider = index > 0 && (() => {
+                const prevReservation = sortedReservations[index - 1];
+                const prevDate = new Date(prevReservation.reservationDate);
+                const isPrevReservationFuture = prevDate >= today;
+                return isPrevReservationFuture && isCurrentReservationPast;
+              })();
+
+              return (
+                <React.Fragment key={reservation.reservationId}>
+                  {showDivider && (
+                    <div className="flex items-center gap-4 py-4">
+                      <div className="flex-1 h-px bg-gray-200"></div>
+                      <span className="text-sm font-medium text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
+                        지난 예약
+                      </span>
+                      <div className="flex-1 h-px bg-gray-200"></div>
+                    </div>
+                  )}
+                  <ReservationCard
+                    reservation={reservation}
+                    userType="customer"
+                    onViewDetails={() =>
+                      handleViewDetails(String(reservation.reservationId))
+                    }
+                    onWriteReview={
+                      reservation.reservationStatus === 'DONE' && !reservation.hasReview
+                        ? () => handleOpenReviewModal(String(reservation.reservationId))
+                        : undefined
+                    }
+                  />
+                </React.Fragment>
+              );
+            })}
           </div>
         ) : (
           <div className="flex h-[500px] flex-col items-center justify-center gap-6 p-6">

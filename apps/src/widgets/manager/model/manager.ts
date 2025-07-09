@@ -1,4 +1,4 @@
-import type { Review } from '@/entities/review';
+import type { MappedReview } from '@/entities/review/lib/mappers';
 
 export const MAX_MANAGER_COUNT = 3;
 
@@ -30,7 +30,7 @@ export interface Manager {
     label: string;
     type: 'kind' | 'punctual' | 'thorough';
   }>;
-  reviews: Review[];
+  reviews: MappedReview[];
 }
 
 export const MANAGER_LIST: Manager[] = [];

@@ -6,13 +6,9 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { StarIcon as StarIconOutline } from '@heroicons/react/24/outline'
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
-import {
-  ChevronLeftIcon,
-  EllipsisHorizontalIcon,
-} from '@heroicons/react/24/outline'
-import { type Manager } from '@/widgets/manager/model/manager'
 import { ManagerDetailLoading } from '@/widgets/manager'
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
+import { getManagerReviewSummary, type Manager, type Characteristic, type ReviewSummary } from '@/shared/api/review'
 
 export default function ManagerDetailPage() {
   const params = useParams()
@@ -22,6 +18,7 @@ export default function ManagerDetailPage() {
   const [manager, setManager] = useState<Manager | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [summary, setSummary] = useState<ReviewSummary | null>(null)
 
   useEffect(() => {
     // 매니저 상세 데이터 로딩 시뮬레이션
@@ -45,16 +42,22 @@ export default function ManagerDetailPage() {
           { id: '3', label: '꼼꼼해요', type: 'thorough' },
         ]
 
-        const managerWithMock = {
+        const managerWithMock: Manager = {
           ...data,
           characteristics: mockCharacteristics,
-          // 프로필 이미지가 없으면 기본 이미지 사용
           profileImage: data.profileImage || '/icons/profile.png',
-          // 기본값들 설정
           introduction: data.introduction || '안녕하세요! 성실하고 친절한 매니저입니다.',
-          reviews: data.reviews || [],
         }
         setManager(managerWithMock)
+
+        // 리뷰 summary API 호출
+        const summaryRes = await getManagerReviewSummary(managerId)
+        if (summaryRes) {
+          setSummary(summaryRes)
+        } else {
+          setSummary({ totalReviews: 0, avgRating: 0 })
+        }
+
         setIsLoading(false)
       } catch (error) {
         console.error('매니저 정보 로딩 실패:', error)
@@ -151,6 +154,13 @@ export default function ManagerDetailPage() {
     }
   }
 
+  // 이름 마스킹 함수 (파일 내 적절한 위치에 추가)
+  function maskName(name: string) {
+    if (!name) return '';
+    if (name.length <= 2) return name;
+    return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       <CommonHeader 
@@ -159,10 +169,10 @@ export default function ManagerDetailPage() {
       />
       
       {/* 콘텐츠 */}
-      <div className="pt-16 p-0 pb-20 min-h-[calc(100vh-64px)]">
+      <div className="pt-16 min-h-[calc(100vh-64px)]">
         <div className="max-w-[420px] mx-auto bg-white">
           {/* 프로필 섹션 */}
-          <section className="px-5 py-8 text-center border-b border-gray-100">
+          <section className="px-5 py-5 text-center border-b border-gray-100">
             <div className="w-24 h-24 mx-auto mb-6 bg-slate-200 rounded-full flex items-center justify-center overflow-hidden">
               <img
                 src={manager.profileImage}
@@ -189,14 +199,14 @@ export default function ManagerDetailPage() {
 
             <div className="flex items-center justify-center gap-2 mb-2">
               <div className="flex items-center gap-1">
-                {renderStars(manager.rating)}
+                {renderStars(summary ? summary.avgRating : manager.rating)}
               </div>
               <span className="text-lg font-semibold text-slate-800">
-                {manager.rating}점
+                {summary ? summary.avgRating.toFixed(1) : manager.rating}점
               </span>
             </div>
             <p className="text-sm text-slate-500">
-              (리뷰 {manager.reviewCount}개)
+              (리뷰 {summary ? summary.totalReviews : manager.reviewCount}개)
             </p>
           </section>
 
@@ -212,7 +222,7 @@ export default function ManagerDetailPage() {
           <section className="px-5 py-6 border-b border-gray-100">
             <h2 className="text-lg font-bold text-slate-900 mb-4">성격 특징</h2>
             <div className="flex flex-wrap gap-3">
-              {manager.characteristics.map((char) => (
+              {manager.characteristics.map((char: Characteristic) => (
                 <span
                   key={char.id}
                   className={`px-4 py-2 rounded-full text-sm font-medium ${getCharacteristicColor(char.type)}`}
@@ -226,34 +236,52 @@ export default function ManagerDetailPage() {
           {/* 고객 리뷰 */}
           <section className="px-5 py-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-slate-900">고객 리뷰</h2>
+              <h2 className="text-lg font-bold text-slate-900">최근 고객 리뷰</h2>
               <button
-                onClick={() =>
-                  router.push(`/matching/manager/${managerId}/reviews`)
-                }
+                onClick={() => router.push(`/matching/manager/${managerId}/reviews`)}
                 className="text-primary text-sm font-medium"
               >
                 전체보기 &gt;
               </button>
             </div>
-
             <div className="space-y-4">
-              {manager.reviews?.map((review) => (
-                <div key={review.id} className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-slate-800">
-                      {review.customerName}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      {renderStars(review.rating)}
+              {manager && Array.isArray(manager.reviewList) && manager.reviewList.length > 0 ? (
+                <div className="bg-white rounded-xl p-4 flex gap-4 items-start border border-gray-100">
+                  <img
+                    src={manager.reviewList[0].reviewCustomerProfile}
+                    alt="프로필"
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover w-10 h-10"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-bold text-slate-800 truncate">
+                        {maskName(manager.reviewList[0].reviewCustomerName)}
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        {manager.reviewList[0].reviewDate.slice(0, 10).replace(/-/g, '.').replace(/\.$/, '')}
+                      </span>
+                      <div className="flex items-center ml-auto">
+                        {[1,2,3,4,5].map(i => (
+                          <span key={i}>
+                            {i <= manager.reviewList[0].reviewRating ?
+                              <svg className="w-4 h-4 text-yellow-400 inline" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.286 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.286-3.966a1 1 0 00-.364-1.118l-3.385-2.46c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z"/></svg>
+                              :
+                              <svg className="w-4 h-4 text-gray-300 inline" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.286 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.54-1.118l1.286-3.966a1 1 0 00-.364-1.118l-3.385-2.46c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z"/></svg>
+                            }
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="text-slate-700 text-sm break-words">
+                      {manager.reviewList[0].reviewComment}
                     </div>
                   </div>
-                  <p className="text-slate-700 text-sm leading-relaxed mb-2">
-                    {review.comment}
-                  </p>
-                  <p className="text-xs text-slate-500">{review.createdAt}</p>
                 </div>
-              ))}
+              ) : (
+                <div className="text-center text-slate-400 py-8">아직 작성된 리뷰가 없습니다.</div>
+              )}
             </div>
           </section>
         </div>
