@@ -1,153 +1,160 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { ReviewCard } from '@/entities/review/ui/ReviewCard';
-import { StaticStarRating } from '@/shared/ui/StaticStarRating';
-import { EllipsisVerticalIcon, StarIcon as StarIconSolid, XMarkIcon } from '@heroicons/react/24/solid';
-import { mapReviewResponseToModel } from '@/entities/review/lib/mappers';
-import type { ReviewResponse } from '@/shared/api/review';
-import { managerApi } from '@/shared/api/review';
-import { EditReviewModal, DeleteConfirmModal } from '@/shared/ui/modal/ReviewModals';
-import { CommonHeader } from '@/shared/ui/Header/CommonHeader';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { ReviewCard } from '@/entities/review/ui/ReviewCard'
+import { StaticStarRating } from '@/shared/ui/StaticStarRating'
+import { mapReviewResponseToModel } from '@/entities/review/lib/mappers'
+import type { ReviewResponse } from '@/shared/api/review'
+import { managerApi } from '@/shared/api/review'
+import { EditReviewModal, DeleteConfirmModal } from '@/shared/ui/modal/ReviewModals'
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
+import { getManagerReviewSummary, type ReviewSummary } from '@/shared/api/review'
+import { useAuthStore } from '@/shared/stores/authStore'
 
-type ActiveTab = 'received' | 'written';
+type ActiveTab = 'received' | 'written'
 
 function EmptyState({ tab }: { tab: ActiveTab }) {
   const message = tab === 'received'
     ? '아직 받은 리뷰가 없습니다.'
-    : '아직 작성한 리뷰가 없습니다.';
+    : '아직 작성한 리뷰가 없습니다.'
   return (
     <div className="text-center py-20">
       <p className="text-slate-500">{message}</p>
     </div>
-  );
+  )
 }
 
-function ReviewStats({ reviews }: { reviews: { reviewRating: number }[] }) {
-  if (!reviews || reviews.length === 0) {
-    return null;
-  }
-  const totalReviews = reviews.length;
-  const averageRating = reviews.reduce((sum, r) => sum + r.reviewRating, 0) / totalReviews;
+function ReviewStats({ summary }: { summary: ReviewSummary | null }) {
+  if (!summary) return null
   return (
     <section className="p-5 border-b border-gray-100 bg-slate-50">
       <div className="flex items-center gap-4">
         <div className="flex-1 text-center">
           <h2 className="text-sm font-semibold text-slate-500 mb-1">리뷰 총 개수</h2>
-          <p className="text-xl font-bold text-slate-800">{totalReviews}개</p>
+          <p className="text-xl font-bold text-slate-800">{summary.totalReviews}개</p>
         </div>
         <div className="flex-1 text-center">
           <h2 className="text-sm font-semibold text-slate-500 mb-1">전체 평점</h2>
           <div className="flex items-center justify-center gap-2">
-            <StaticStarRating rating={averageRating} />
-            <span className="text-xl font-bold text-slate-800">{averageRating.toFixed(1)}</span>
+            <StaticStarRating rating={summary.avgRating} />
+            <span className="text-xl font-bold text-slate-800">{summary.avgRating.toFixed(1)}</span>
           </div>
         </div>
       </div>
     </section>
-  );
+  )
 }
 
 // 이름 마스킹 함수
 function maskName(name: string) {
-  if (!name) return '';
-  if (name.length <= 2) return name;
-  return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+  if (!name) return ''
+  if (name.length <= 2) return name
+  return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1]
 }
 
 export default function ManagerReviewsClient() {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<ActiveTab>('received');
-  const [receivedReviews, setReceivedReviews] = useState<ReviewResponse[]>([]);
-  const [writtenReviews, setWrittenReviews] = useState<ReviewResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isEditModalOpen, setEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedReview, setSelectedReview] = useState<ReviewResponse | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState<ActiveTab>('received')
+  const [receivedReviews, setReceivedReviews] = useState<ReviewResponse[]>([])
+  const [writtenReviews, setWrittenReviews] = useState<ReviewResponse[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isEditModalOpen, setEditModalOpen] = useState(false)
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [selectedReview, setSelectedReview] = useState<ReviewResponse | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [reviewSummary, setReviewSummary] = useState<ReviewSummary | null>(null)
+  const { user } = useAuthStore()
 
   useEffect(() => {
+    const fetchSummary = async () => {
+      if (!user?.userId) return
+      try {
+        setLoading(true)
+        setError(null)
+        const summary = await getManagerReviewSummary(user.userId)
+        setReviewSummary(summary)
+      } catch (error) {
+        setError('리뷰 요약 정보를 불러오는데 실패했습니다.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchSummary()
+    // 기존 리뷰 목록 fetch는 그대로 유지
     const fetchReviews = async () => {
       try {
-        setLoading(true);
-        setError(null);
         const [receivedResponses, writtenResponses] = await Promise.all([
           managerApi.getMyReceivedReviews(),
           managerApi.getMyWrittenReviews()
-        ]);
-        setReceivedReviews(receivedResponses);
-        setWrittenReviews(writtenResponses);
+        ])
+        setReceivedReviews(receivedResponses.map(mapReviewResponseToModel).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
+        setWrittenReviews(writtenResponses.map(mapReviewResponseToModel).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
       } catch (error) {
-        console.error('Error fetching reviews:', error);
-        setError('리뷰를 불러오는데 실패했습니다.');
-      } finally {
-        setLoading(false);
+        setError('리뷰를 불러오는데 실패했습니다.')
       }
-    };
-
-    fetchReviews();
-  }, []);
+    }
+    fetchReviews()
+  }, [user?.userId])
 
   const handleOpenEditModal = (review: ReviewResponse) => {
-    setSelectedReview(review);
-    setEditModalOpen(true);
-  };
+    setSelectedReview(review)
+    setEditModalOpen(true)
+  }
 
   const handleOpenDeleteModal = (review: ReviewResponse) => {
-    setSelectedReview(review);
-    setDeleteModalOpen(true);
-  };
+    setSelectedReview(review)
+    setDeleteModalOpen(true)
+  }
 
   const handleCloseModals = () => {
-    setSelectedReview(null);
-    setEditModalOpen(false);
-    setDeleteModalOpen(false);
-  };
+    setSelectedReview(null)
+    setEditModalOpen(false)
+    setDeleteModalOpen(false)
+  }
 
   const handleSaveReview = async (id: string, newRating: number, newContent: string) => {
     try {
       await managerApi.updateReview(Number(id), {
         reviewRating: newRating,
         reviewComment: newContent,
-      });
+      })
 
       // 성공 시 로컬 상태 업데이트
       setWrittenReviews(prev => prev.map(r => 
         r.reviewId === Number(id) 
           ? { ...r, reviewRating: newRating, reviewComment: newContent } 
           : r
-      ));
+      ))
 
-      handleCloseModals();
-      alert('리뷰가 성공적으로 수정되었습니다.');
+      handleCloseModals()
+      alert('리뷰가 성공적으로 수정되었습니다.')
     } catch (error) {
-      console.error('리뷰 수정 실패:', error);
-      alert('리뷰 수정에 실패했습니다.');
+      console.error('리뷰 수정 실패:', error)
+      alert('리뷰 수정에 실패했습니다.')
     }
-  };
+  }
 
   const handleDeleteReview = async () => {
-    if (!selectedReview) return;
+    if (!selectedReview) return
 
     try {
-      setIsDeleting(true);
-      await managerApi.deleteReview(Number(selectedReview.reviewId));
+      setIsDeleting(true)
+      await managerApi.deleteReview(Number(selectedReview.reviewId))
 
       // 성공 시 로컬 상태 업데이트
-      setWrittenReviews(prev => prev.filter(r => r.reviewId !== Number(selectedReview.reviewId)));
+      setWrittenReviews(prev => prev.filter(r => r.reviewId !== Number(selectedReview.reviewId)))
 
-      handleCloseModals();
-      alert('리뷰가 성공적으로 삭제되었습니다.');
+      handleCloseModals()
+      alert('리뷰가 성공적으로 삭제되었습니다.')
     } catch (error) {
-      console.error('리뷰 삭제 실패:', error);
-      alert('리뷰 삭제에 실패했습니다.');
+      console.error('리뷰 삭제 실패:', error)
+      alert('리뷰 삭제에 실패했습니다.')
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
-  };
+  }
 
   return (
     <main className="flex min-h-screen flex-col bg-white">
@@ -190,7 +197,7 @@ export default function ManagerReviewsClient() {
         </div>
 
         {/* 리뷰 통계 (받은 리뷰 탭 전용) */}
-        {activeTab === 'received' && <ReviewStats reviews={receivedReviews} />}
+        {activeTab === 'received' && <ReviewStats summary={reviewSummary} />}
 
         {/* Content */}
         <div className="p-5 space-y-4">
@@ -222,12 +229,12 @@ export default function ManagerReviewsClient() {
                         review={review}
                         showProfileType="customer"
                         onEdit={id => {
-                          const r = writtenReviews.find(r => r.reviewId === Number(id));
-                          if (r) handleOpenEditModal(r);
+                          const r = writtenReviews.find(r => r.reviewId === Number(id))
+                          if (r) handleOpenEditModal(r)
                         }}
                         onDelete={id => {
-                          const r = writtenReviews.find(r => r.reviewId === Number(id));
-                          if (r) handleOpenDeleteModal(r);
+                          const r = writtenReviews.find(r => r.reviewId === Number(id))
+                          if (r) handleOpenDeleteModal(r)
                         }}
                       />
                     ))
@@ -252,5 +259,5 @@ export default function ManagerReviewsClient() {
         isDeleting={isDeleting}
       />
     </main>
-  );
+  )
 } 

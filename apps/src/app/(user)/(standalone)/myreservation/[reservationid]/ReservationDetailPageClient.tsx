@@ -564,42 +564,6 @@ const CancelActionSection = ({
   )
 }
 
-// 고객 정보 카드 컴포넌트
-const CustomerInfoCard = ({ customer }: { customer: any }) => {
-  return (
-    <div className="bg-white rounded-2xl p-5 mb-4 shadow-md border border-gray-100">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="w-6 h-6 bg-indigo-50 rounded-full flex items-center justify-center">
-          <UserIcon className="w-4 h-4 text-indigo-400" />
-        </span>
-        <span className="text-base font-bold text-gray-900">고객 정보</span>
-      </div>
-      <div className="bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-4 px-4 py-3">
-        <img
-          src={customer.profileImage}
-          alt={customer.name}
-          className="w-14 h-14 rounded-lg object-cover bg-white border border-gray-200"
-        />
-        <div className="flex-1 min-w-0">
-          <div className="font-bold text-lg text-gray-900 mb-1">{customer.name}</div>
-          <div className="text-gray-500 text-sm mb-2">{customer.gender} · {customer.age}세</div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center">
-              {renderStars(customer.rating ?? customer.avgRating ?? 0)}
-            </div>
-            <span className="text-base font-semibold text-gray-700">
-              {(customer.rating ?? customer.avgRating ?? 0).toFixed(2)}점
-            </span>
-            <span className="text-base text-gray-500">
-              ({customer.reviewCount ?? customer.totalReviews ?? 0}개)
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // 메인 컴포넌트
 export const ReservationDetailPageClient = ({
   initialReservation,
@@ -793,7 +757,6 @@ export const ReservationDetailPageClient = ({
         <ServiceDetailsSection reservation={reservation} />
         <ManagerSection matchings={reservation.matchings} />
         <PaymentSection reservation={reservation} />
-        <CustomerInfoCard customer={reservation.customer} />
       </main>
       
       {/* 조건별 액션 버튼 표시 */}
