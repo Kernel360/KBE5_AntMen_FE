@@ -50,11 +50,13 @@ export interface Comment {
 // 게시글 상세 응답
 export interface BoardDetailResponse {
   boardId: number;
+  userId: number;
   userName: string;
   boardTitle: string;
   boardContent: string;
   createdAt: string | number[]; // Java LocalDateTime 배열 형태 지원
   modifiedAt: string | number[]; // Java LocalDateTime 배열 형태 지원
+  boardStatus: string | null;
   comments: Comment[] | null;
 }
 
@@ -99,7 +101,7 @@ class BoardService {
       'Content-Type': 'application/json',
     };
 
-    const url = `https://api.antmen.site:9090/api/v1/board/${id}`;
+    const url = `http://localhost:9090/api/v1/board/${id}`;
     console.log('📤 게시글 상세 요청 (인증 없음):', {
       url,
       boardId: id,
@@ -324,6 +326,101 @@ class BoardService {
       const errorText = await response.text();
       console.error('❌ 응답 에러:', errorText);
       throw new Error(`게시글 작성 실패: ${response.status}`);
+    }
+  }
+
+  // 게시글 수정
+  async updateBoard(boardId: string, boardData: BoardRequestDto): Promise<void> {
+    console.log('🚀 게시글 수정 요청:', { boardId, boardData });
+    
+    const authToken = this.getAuthToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (authToken) {
+      headers['Authorization'] = authToken;
+    }
+
+    const url = `https://api.antmen.site:9090/api/v1/board/${boardId}`;
+    console.log('📤 게시글 수정 요청:', { url, boardId });
+
+    try {
+      const fetchOptions: RequestInit = {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(boardData),
+      };
+
+      if (typeof window !== 'undefined') {
+        fetchOptions.credentials = 'include';
+      }
+
+      const response = await fetch(url, fetchOptions);
+
+      if (!response.ok) {
+        let errorMessage = `게시글 수정 실패: ${response.status}`;
+        try {
+          const errorBody = await response.text();
+          console.error('❌ 에러 응답 내용:', errorBody);
+          errorMessage += ` - ${errorBody}`;
+        } catch (e) {
+          console.error('❌ 에러 응답 파싱 실패:', e);
+        }
+        throw new Error(errorMessage);
+      }
+
+      console.log('✅ 게시글 수정 성공');
+    } catch (error) {
+      console.error('❌ 게시글 수정 중 오류:', error);
+      throw error;
+    }
+  }
+
+  // 게시글 삭제
+  async deleteBoard(boardId: string): Promise<void> {
+    console.log('🚀 게시글 삭제 요청:', { boardId });
+    
+    const authToken = this.getAuthToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (authToken) {
+      headers['Authorization'] = authToken;
+    }
+
+    const url = `https://api.antmen.site:9090/api/v1/board/${boardId}`;
+    console.log('📤 게시글 삭제 요청:', { url, boardId });
+
+    try {
+      const fetchOptions: RequestInit = {
+        method: 'DELETE',
+        headers,
+      };
+
+      if (typeof window !== 'undefined') {
+        fetchOptions.credentials = 'include';
+      }
+
+      const response = await fetch(url, fetchOptions);
+
+      if (!response.ok) {
+        let errorMessage = `게시글 삭제 실패: ${response.status}`;
+        try {
+          const errorBody = await response.text();
+          console.error('❌ 에러 응답 내용:', errorBody);
+          errorMessage += ` - ${errorBody}`;
+        } catch (e) {
+          console.error('❌ 에러 응답 파싱 실패:', e);
+        }
+        throw new Error(errorMessage);
+      }
+
+      console.log('✅ 게시글 삭제 성공');
+    } catch (error) {
+      console.error('❌ 게시글 삭제 중 오류:', error);
+      throw error;
     }
   }
 }
