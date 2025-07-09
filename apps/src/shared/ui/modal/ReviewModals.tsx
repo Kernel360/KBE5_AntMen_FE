@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react'
 import { XMarkIcon } from '@heroicons/react/24/solid'
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid'
-import type { Review } from '@/entities/review'
+import type { MappedReview } from '@/entities/review/lib/mappers'
 
 interface EditReviewModalProps {
   isOpen: boolean
   onClose: () => void
-  review: Review | null
+  review: MappedReview | null
   onSave: (id: string, newRating: number, newContent: string) => Promise<void>
 }
 
@@ -43,7 +43,7 @@ export function EditReviewModal({
 
     try {
       setIsSubmitting(true)
-      await onSave(review.id, rating, content)
+      await onSave(String(review.id), rating, content)
     } finally {
       setIsSubmitting(false)
     }

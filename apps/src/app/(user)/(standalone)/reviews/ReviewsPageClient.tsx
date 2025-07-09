@@ -6,7 +6,7 @@ import type { ReviewResponse } from '@/shared/api/review'
 import { ReviewCard } from '@/entities/review/ui/ReviewCard'
 import { EditReviewModal, DeleteConfirmModal } from '@/shared/ui/modal/ReviewModals'
 import { customerApi } from '@/shared/api/review'
-import { mapReviewResponseToModel } from '@/entities/review/lib/mappers'
+import { mapReviewResponseToModel, type MappedReview } from '@/entities/review/lib/mappers'
 import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
 
 function EmptyState() {
@@ -19,12 +19,12 @@ function EmptyState() {
 
 export default function ReviewsPageClient() {
   const router = useRouter()
-  const [reviews, setReviews] = useState<ReviewResponse[]>([])
+  const [reviews, setReviews] = useState<MappedReview[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isEditModalOpen, setEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false)
-  const [selectedReview, setSelectedReview] = useState<ReviewResponse | null>(null)
+  const [selectedReview, setSelectedReview] = useState<MappedReview | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
@@ -44,12 +44,12 @@ export default function ReviewsPageClient() {
     fetchReviews()
   }, [])
 
-  const handleOpenEditModal = (review: ReviewResponse) => {
+  const handleOpenEditModal = (review: MappedReview) => {
     setSelectedReview(review)
     setEditModalOpen(true)
   }
 
-  const handleOpenDeleteModal = (review: ReviewResponse) => {
+  const handleOpenDeleteModal = (review: MappedReview) => {
     setSelectedReview(review)
     setDeleteModalOpen(true)
   }

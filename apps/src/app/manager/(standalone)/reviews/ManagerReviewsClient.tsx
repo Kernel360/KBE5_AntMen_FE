@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ReviewCard } from '@/entities/review/ui/ReviewCard'
 import { StaticStarRating } from '@/shared/ui/StaticStarRating'
-import { mapReviewResponseToModel } from '@/entities/review/lib/mappers'
+import { mapReviewResponseToModel, type MappedReview } from '@/entities/review/lib/mappers'
 import type { ReviewResponse } from '@/shared/api/review'
 import { managerApi } from '@/shared/api/review'
 import { EditReviewModal, DeleteConfirmModal } from '@/shared/ui/modal/ReviewModals'
@@ -59,11 +59,11 @@ export default function ManagerReviewsClient() {
   const tabQuery = searchParams.get('tab')
   const [isEditModalOpen, setEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false)
-  const [selectedReview, setSelectedReview] = useState<ReviewResponse | null>(null)
+  const [selectedReview, setSelectedReview] = useState<MappedReview | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [reviewSummary, setReviewSummary] = useState<ReviewSummary | null>(null)
-  const [receivedReviews, setReceivedReviews] = useState<ReviewResponse[]>([])
-  const [writtenReviews, setWrittenReviews] = useState<ReviewResponse[]>([])
+  const [receivedReviews, setReceivedReviews] = useState<MappedReview[]>([])
+  const [writtenReviews, setWrittenReviews] = useState<MappedReview[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuthStore()
@@ -106,12 +106,12 @@ export default function ManagerReviewsClient() {
     fetchAll()
   }, [user?.userId])
 
-  const handleOpenEditModal = (review: ReviewResponse) => {
+  const handleOpenEditModal = (review: MappedReview) => {
     setSelectedReview(review)
     setEditModalOpen(true)
   }
 
-  const handleOpenDeleteModal = (review: ReviewResponse) => {
+  const handleOpenDeleteModal = (review: MappedReview) => {
     setSelectedReview(review)
     setDeleteModalOpen(true)
   }
@@ -210,7 +210,7 @@ export default function ManagerReviewsClient() {
                         key={review.reviewId}
                         review={{
                           ...review,
-                          reviewCustomerName: maskName(review.reviewCustomerName),
+                          customerName: maskName(review.customerName || ''),
                         }}
                         showProfileType="customer"
                       />
