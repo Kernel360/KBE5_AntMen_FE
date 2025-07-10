@@ -3,21 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { adminSalesService } from '../../api/adminSales';
 import { AdminSalesSummaryResponseDto } from '../../api/types';
 
-// 예시 비용 데이터
-const totalCost = 4300000; // 누적 비용
-const monthlyCost = 800000; // 이번 달 비용
-const avgDailyCost = 30000; // 최근 30일 일평균 비용
-
-const dailySales = [
-  { date: '06-01', amount: 70000, cost: 30000 },
-  { date: '06-02', amount: 68000, cost: 29000 },
-  { date: '06-03', amount: 72000, cost: 31000 },
-  { date: '06-04', amount: 69000, cost: 32000 },
-  { date: '06-05', amount: 71000, cost: 28000 },
-  { date: '06-06', amount: 73000, cost: 33000 },
-  { date: '06-07', amount: 75000, cost: 34000 },
-];
-
 export const FinanceSales: React.FC = () => {
   const [salesData, setSalesData] = useState<AdminSalesSummaryResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -78,9 +63,9 @@ export const FinanceSales: React.FC = () => {
     { label: '총 매출', value: `₩${salesData.totalSales.toLocaleString()}`, desc: '누적' },
     { label: '이번 달 매출', value: `₩${salesData.currentMonthSales.toLocaleString()}`, desc: '2025-07 기준' },
     { label: '일평균 매출', value: `₩${salesData.averageDailySales.toLocaleString()}`, desc: '(총 매출 ÷ 결제 발생 일 수)' },
-    { label: '총 순이익', value: `₩${(salesData.totalSales - totalCost).toLocaleString()}`, desc: '누적' },
-    { label: '이번 달 순이익', value: `₩${(salesData.currentMonthSales - monthlyCost).toLocaleString()}`, desc: '2025-07 기준' },
-    { label: '일평균 순이익', value: `₩${(salesData.averageDailySales - avgDailyCost).toLocaleString()}`, desc: '(총 매출 ÷ 결제 발생 일 수)' },
+    { label: '총 순이익', value: `₩${salesData.totalProfit.toLocaleString()}`, desc: '누적' },
+    { label: '이번 달 순이익', value: `₩${salesData.currentMonthProfit.toLocaleString()}`, desc: '2025-07 기준' },
+    { label: '일평균 순이익', value: `₩${salesData.averageDailyProfit.toLocaleString()}`, desc: '(총 순이익 ÷ 결제 발생 일 수)' },
   ];
 
   return (
@@ -119,7 +104,7 @@ export const FinanceSales: React.FC = () => {
       {/* 일별 매출/순이익 테이블 */}
       <Card>
         <CardHeader>
-          <CardTitle>최근 7일간 일별 매출/순이익</CardTitle>
+          <CardTitle>최근 주간 일별 매출/순이익</CardTitle>
           <CardDescription>일별 매출 및 순이익 추이</CardDescription>
         </CardHeader>
         <CardContent>
@@ -129,25 +114,25 @@ export const FinanceSales: React.FC = () => {
                 <tr className="bg-gray-50">
                   <th className="p-2">날짜</th>
                   <th className="p-2">매출(₩)</th>
-                  <th className="p-2">비용(₩)</th>
+                  <th className="p-2">수수료(₩)</th>
                   <th className="p-2">순이익(₩)</th>
                 </tr>
               </thead>
               <tbody>
-                {dailySales.map((d) => (
-                  <React.Fragment key={d.date}>
-                    <tr className="border-b">
-                      <td className="p-2 font-medium" rowSpan={2}>{d.date}</td>
-                      <td className="p-2 text-blue-700 font-semibold">{d.amount.toLocaleString()}</td>
-                      <td className="p-2">{d.cost.toLocaleString()}</td>
-                      <td className="p-2"></td>
+                {salesData.recentWeeklySalesProfit && salesData.recentWeeklySalesProfit.length > 0 ? (
+                  salesData.recentWeeklySalesProfit.map((dailyData, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="p-2 font-medium">{dailyData.dailyDate}</td>
+                      <td className="p-2 text-blue-700 font-semibold">{dailyData.dailySales.toLocaleString()}</td>
+                      <td className="p-2">{dailyData.dailyFee.toLocaleString()}</td>
+                      <td className="p-2 text-green-700 font-semibold">{dailyData.dailyProfit.toLocaleString()}</td>
                     </tr>
-                    <tr className="border-b bg-green-50">
-                      <td className="p-2 font-medium" colSpan={2}>순이익</td>
-                      <td className="p-2 text-green-700 font-semibold">{(d.amount - d.cost).toLocaleString()}</td>
-                    </tr>
-                  </React.Fragment>
-                ))}
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="p-4 text-gray-500">데이터가 없습니다.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

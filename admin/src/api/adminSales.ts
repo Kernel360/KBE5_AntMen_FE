@@ -2,7 +2,7 @@ import axios from 'axios';
 import { AdminSalesSummaryResponseDto } from './types';
 import { getCookie, ADMIN_TOKEN_COOKIE } from '../lib/cookie';
 
-const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
+const API_BASE_URL = 'http://localhost:9093/api/v1';
 
 // 매출 API 인스턴스
 const salesApi = axios.create({
@@ -51,7 +51,7 @@ export const adminSalesService = {
     // 매출 요약 정보 조회
     getSalesSummary: async (): Promise<AdminSalesSummaryResponseDto> => {
         try {
-            const response = await salesApi.get('/admin/sales/sales-summary');
+            const response = await salesApi.get('/admin/sales');
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 401) {
