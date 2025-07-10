@@ -11,6 +11,7 @@ export { ManagerSupport } from './ManagerSupport';
 export { ManualMatching } from './ManualMatching';
 export { MatchingAlgorithm } from './MatchingAlgorithm';
 export { RecommendMatching } from './RecommendMatching';
+export { ReservationStatus } from './ReservationStatus';
 export { FinanceSales } from './FinanceSales';
 export { FinanceSettlement } from './FinanceSettlement';
 export { FinanceRefund } from './FinanceRefund'; 

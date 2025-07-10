@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { AdminLoginRequest, AdminLoginResponse, AdminChangePasswordRequest, Admin, BoardRequestDto } from './types';
+import { AdminLoginRequest, AdminLoginResponse, AdminChangePasswordRequest, Admin, BoardRequestDto, ReservationMatchingListDto, ManualMatchingRequest, ReservationMatchingResponse } from './types';
 import { getCookie, ADMIN_TOKEN_COOKIE } from '../lib/cookie';
 
-const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
-const API_BASE_URL_9090 = 'https://api.antmen.site:9090/api/v1';
-// const API_BASE_URL = 'http://localhost:9093/api/v1';
-// const API_BASE_URL_9090 = 'http://localhost:9090/api/v1';
+// const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
+// const API_BASE_URL_9090 = 'https://api.antmen.site:9090/api/v1';
+const API_BASE_URL = 'http://localhost:9093/api/v1';
+const API_BASE_URL_9090 = 'http://localhost:9090/api/v1';
 
 // 관리자 API 인스턴스
 const adminApi = axios.create({
@@ -339,6 +339,58 @@ export const adminService = {
     updateBoardComment: async (boardId: number, commentId: number, content: string): Promise<void> => {
         try {
             const response = await adminApi9090.put(`/board/${boardId}/${commentId}`, { content });
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 매칭 전 예약 목록 조회
+    getReservationMatchingList: async (
+        matchingStatus?: string,
+        searchName?: string,
+        category?: string,
+        reservatedStartDate?: string,
+        reservatedEndDate?: string
+    ): Promise<ReservationMatchingResponse> => {
+        try {
+            const params: any = {};
+            if (matchingStatus) params.matchingStatus = matchingStatus;
+            if (searchName) params.searchName = searchName;
+            if (category) params.category = category;
+            if (reservatedStartDate) params.reservatedStartDate = reservatedStartDate;
+            if (reservatedEndDate) params.reservatedEndDate = reservatedEndDate;
+            
+            const response = await adminApi.get('/admin/reservations/about-matching', { params });
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 수동 매칭 요청
+    createManualMatching: async (data: ManualMatchingRequest): Promise<void> => {
+        try {
+            const response = await adminApi.post('/admin/matching/manual', data);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 매칭 재시도
+    retryMatching: async (reservationId: string): Promise<void> => {
+        try {
+            const response = await adminApi.post(`/admin/matching/retry/${reservationId}`);
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 401) {

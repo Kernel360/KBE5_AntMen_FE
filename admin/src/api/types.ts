@@ -40,4 +40,46 @@ export interface BoardRequestDto {
     boardIsPinned: boolean;
     boardReservatedAt?: string; // ISO string format
     boardType: string; // 'customer-notice' | 'manager-notice'
+}
+
+// 매칭 전 예약 관련 타입
+export interface ReservationMatchingListDto {
+    reservationId: number;
+    customerId: number;
+    customerName: string;
+    categoryName: string;
+    reservationDate: string;
+    reservationTime: string;
+    totalRequests: number;
+    totalManagerResponses: number;
+    totalManagerAccepts: number;
+    matchingStatus: 'ing' | 'fail' | 'nothing';
+}
+
+// 통계 정보 타입
+export interface ReservationStats {
+    status: 'ing' | 'fail' | 'nothing';
+    count: number;
+}
+
+// 통합 응답 타입
+export interface ReservationMatchingResponse {
+    stats: ReservationStats[];
+    reservations: ReservationMatchingListDto[];
+}
+
+export interface MatchingRequest {
+    id: string;
+    status: 'pending' | 'failed' | 'matched';
+    requestedAt: string;
+    candidateCount: number;
+    reason: string;
+    managerIds: string[];
+    matchedManagerId?: string;
+}
+
+export interface ManualMatchingRequest {
+    reservationId: string;
+    managerIds: string[];
+    matchingType: 'auto' | 'manual';
 } 
