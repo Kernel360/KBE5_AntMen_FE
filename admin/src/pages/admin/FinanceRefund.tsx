@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Textarea } from '../../components/ui/textarea';
 import { Badge } from '../../components/ui/badge';
 import {
     Table,
@@ -20,134 +19,35 @@ import {
     DialogTitle,
 } from '../../components/ui/dialog';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '../../components/ui/select';
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from '../../components/ui/tabs';
 import {
     CreditCard,
     DollarSign,
     Clock,
     CheckCircle,
     XCircle,
-    AlertTriangle,
-    Search
+    Search,
+    TrendingUp,
+    FileText,
+    AlertTriangle
 } from 'lucide-react';
-
-interface RefundRequest {
-    id: number;
-    customerName: string;
-    customerEmail: string;
-    orderId: string;
-    productName: string;
-    orderAmount: number;
-    refundAmount: number;
-    reason: string;
-    status: 'pending' | 'approved' | 'rejected' | 'processing' | 'completed';
-    requestDate: string;
-    processedDate?: string;
-    processedBy?: string;
-    paymentMethod: 'card' | 'bank' | 'paypal' | 'other';
-    notes?: string;
-    refundMethod?: 'original' | 'bank_transfer' | 'store_credit';
-}
-
-const sampleRefunds: RefundRequest[] = [
-    {
-        id: 1,
-        customerName: '김고객',
-        customerEmail: 'customer1@example.com',
-        orderId: 'ORD-2025-001',
-        productName: '프리미엄 서비스 1개월',
-        orderAmount: 29900,
-        refundAmount: 29900,
-        reason: '서비스 불만족',
-        status: 'pending',
-        requestDate: '2025-06-06 14:30',
-        paymentMethod: 'card'
-    },
-    {
-        id: 2,
-        customerName: '이사용',
-        customerEmail: 'user2@example.com',
-        orderId: 'ORD-2025-002',
-        productName: '베이직 플랜 3개월',
-        orderAmount: 59800,
-        refundAmount: 39867,
-        reason: '부분 사용 후 해지',
-        status: 'approved',
-        requestDate: '2025-06-05 16:45',
-        processedDate: '2025-06-06 10:30',
-        processedBy: '관리자A',
-        paymentMethod: 'bank',
-        refundMethod: 'original'
-    },
-    {
-        id: 3,
-        customerName: '박환불',
-        customerEmail: 'refund@example.com',
-        orderId: 'ORD-2025-003',
-        productName: '엔터프라이즈 플랜 1년',
-        orderAmount: 299000,
-        refundAmount: 299000,
-        reason: '중복 결제',
-        status: 'completed',
-        requestDate: '2025-06-04 11:20',
-        processedDate: '2025-06-05 14:15',
-        processedBy: '관리자B',
-        paymentMethod: 'card',
-        notes: '중복 결제 확인됨. 전액 환불 처리',
-        refundMethod: 'original'
-    },
-    {
-        id: 4,
-        customerName: '최거절',
-        customerEmail: 'rejected@example.com',
-        orderId: 'ORD-2025-004',
-        productName: '프로 플랜 6개월',
-        orderAmount: 149000,
-        refundAmount: 0,
-        reason: '단순 변심',
-        status: 'rejected',
-        requestDate: '2025-06-03 09:15',
-        processedDate: '2025-06-04 16:30',
-        processedBy: '관리자A',
-        paymentMethod: 'paypal',
-        notes: '환불 정책에 따라 거절됨'
-    },
-    {
-        id: 5,
-        customerName: '정처리',
-        customerEmail: 'processing@example.com',
-        orderId: 'ORD-2025-005',
-        productName: '스탠다드 플랜 6개월',
-        orderAmount: 119000,
-        refundAmount: 119000,
-        reason: '기술적 문제',
-        status: 'processing',
-        requestDate: '2025-06-06 08:15',
-        processedDate: '2025-06-06 11:00',
-        processedBy: '관리자C',
-        paymentMethod: 'card',
-        notes: '기술팀 확인 완료. 환불 진행중',
-        refundMethod: 'original'
-    }
-];
+import { adminRefundsService } from '../../api/adminRefunds';
+import { AdminRefundResponseDto } from '../../api/types';
 
 const getStatusBadge = (status: string) => {
-    switch (status) {
-        case 'pending':
-            return <Badge variant="outline"><Clock className="w-3 h-3 mr-1" />대기중</Badge>;
-        case 'approved':
+    switch (status.toUpperCase()) {
+        case 'WAITING':
+            return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                <Clock className="w-3 h-3 mr-1" />대기중
+            </Badge>;
+        case 'APPROVED':
             return <Badge className="bg-blue-100 text-blue-800"><CheckCircle className="w-3 h-3 mr-1" />승인됨</Badge>;
-        case 'rejected':
+        case 'REJECTED':
             return <Badge className="bg-red-100 text-red-800"><XCircle className="w-3 h-3 mr-1" />거절됨</Badge>;
-        case 'processing':
-            return <Badge className="bg-yellow-100 text-yellow-800"><AlertTriangle className="w-3 h-3 mr-1" />처리중</Badge>;
-        case 'completed':
-            return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />완료</Badge>;
         default:
             return <Badge variant="outline">알 수 없음</Badge>;
     }
@@ -155,17 +55,20 @@ const getStatusBadge = (status: string) => {
 
 const getPaymentMethodBadge = (method: string) => {
     const methods = {
-        card: { label: '신용카드', icon: CreditCard },
-        bank: { label: '계좌이체', icon: DollarSign },
-        paypal: { label: 'PayPal', icon: DollarSign },
-        other: { label: '기타', icon: DollarSign }
+        CARD: { label: '신용카드', icon: CreditCard, color: 'bg-blue-50 text-blue-700 border-blue-200' },
+        BANK: { label: '계좌이체', icon: DollarSign, color: 'bg-green-50 text-green-700 border-green-200' },
+        KAKAO: { label: '카카오페이', icon: DollarSign, color: 'bg-yellow-50 text-yellow-700 border-yellow-200' }
     };
 
-    const methodInfo = methods[method as keyof typeof methods] || methods.other;
+    const methodInfo = methods[method.toUpperCase() as keyof typeof methods] || { 
+        label: method, 
+        icon: DollarSign, 
+        color: 'bg-gray-50 text-gray-700 border-gray-200' 
+    };
     const Icon = methodInfo.icon;
 
     return (
-        <Badge variant="secondary">
+        <Badge variant="outline" className={methodInfo.color}>
             <Icon className="w-3 h-3 mr-1" />
             {methodInfo.label}
         </Badge>
@@ -173,235 +76,540 @@ const getPaymentMethodBadge = (method: string) => {
 };
 
 export const FinanceRefund: React.FC = () => {
-    const [refunds, setRefunds] = useState<RefundRequest[]>(sampleRefunds);
-    const [selectedRefund, setSelectedRefund] = useState<RefundRequest | null>(null);
-    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const [allRefunds, setAllRefunds] = useState<AdminRefundResponseDto[]>([]);
+    const [waitingRefunds, setWaitingRefunds] = useState<AdminRefundResponseDto[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [selectedRefund, setSelectedRefund] = useState<AdminRefundResponseDto | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<'all' | 'waiting'>('waiting');
+    const [processingPayId, setProcessingPayId] = useState<number | null>(null);
 
-    const filteredRefunds = refunds.filter(refund => {
-        const matchesStatus = statusFilter === 'all' || refund.status === statusFilter;
-        const matchesSearch =
-            refund.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            refund.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            refund.customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
-
-        return matchesStatus && matchesSearch;
-    });
-
-    const handleStatusChange = (refundId: number, newStatus: string, notes?: string) => {
-        setRefunds(refunds.map(refund =>
-            refund.id === refundId
-                ? {
-                    ...refund,
-                    status: newStatus as any,
-                    notes: notes ?? refund.notes,
-                    processedDate: new Date().toLocaleString('ko-KR'),
-                    processedBy: '관리자',
-                }
-                : refund
-        ));
-        setDialogOpen(false);
-        setSelectedRefund(null);
+    const fetchRefunds = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            // 두 API를 병렬로 호출
+            const [allData, waitingData] = await Promise.all([
+                adminRefundsService.getAllRefunds(),
+                adminRefundsService.getWaitingRefunds()
+            ]);
+            
+            setAllRefunds(allData);
+            setWaitingRefunds(waitingData);
+        } catch (err: any) {
+            console.error('환불 데이터 조회 실패:', err);
+            setError(err.message || '환불 데이터를 불러오는데 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
     };
+
+    useEffect(() => {
+        fetchRefunds();
+    }, []);
+
+    // 환불 승인 처리
+    const handleApprove = async (payId: number) => {
+        try {
+            setProcessingPayId(payId);
+            await adminRefundsService.approveRefund(payId);
+            alert('환불이 승인되었습니다.');
+            await fetchRefunds(); // 데이터 다시 불러오기
+            setDialogOpen(false);
+        } catch (error: any) {
+            console.error('환불 승인 실패:', error);
+            alert(error.message || '환불 승인에 실패했습니다.');
+        } finally {
+            setProcessingPayId(null);
+        }
+    };
+
+    // 환불 거절 처리
+    const handleReject = async (payId: number) => {
+        try {
+            setProcessingPayId(payId);
+            await adminRefundsService.rejectRefund(payId);
+            alert('환불이 거절되었습니다.');
+            await fetchRefunds(); // 데이터 다시 불러오기
+            setDialogOpen(false);
+        } catch (error: any) {
+            console.error('환불 거절 실패:', error);
+            alert(error.message || '환불 거절에 실패했습니다.');
+        } finally {
+            setProcessingPayId(null);
+        }
+    };
+
+    // 현재 탭에 따른 데이터 선택
+    const currentRefunds = activeTab === 'all' ? allRefunds : waitingRefunds;
+
+    const filteredRefunds = currentRefunds
+        .filter(refund => 
+            refund.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            refund.userLoginId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            refund.reservationId.toString().includes(searchTerm) ||
+            refund.payId.toString().includes(searchTerm)
+        )
+        .sort((a, b) => new Date(b.refundCreatedAt).getTime() - new Date(a.refundCreatedAt).getTime());
 
     const formatCurrency = (amount: number) => {
         return amount.toLocaleString('ko-KR', { style: 'currency', currency: 'KRW' });
     };
 
+    const formatDateTime = (dateString: string | null) => {
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleString('ko-KR');
+    };
+
+    // 모든 환불건 기준 통계 계산 (고정)
+    const totalAmount = allRefunds.reduce((sum, refund) => sum + refund.refundAmount, 0);
+    const waitingCount = allRefunds.filter(refund => refund.refundStatus.toUpperCase() === 'WAITING').length;
+
+    if (loading) {
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                    <FileText className="w-8 h-8 text-blue-500" />
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">환불 관리</h1>
+                        <p className="text-gray-600">환불 요청 현황을 관리합니다</p>
+                    </div>
+                </div>
+                <div className="flex justify-center items-center h-64">
+                    <div className="text-lg text-gray-600">데이터를 불러오는 중...</div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                    <FileText className="w-8 h-8 text-blue-500" />
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">환불 관리</h1>
+                        <p className="text-gray-600">환불 요청 현황을 관리합니다</p>
+                    </div>
+                </div>
+                <div className="flex justify-center items-center h-64">
+                    <div className="text-lg text-red-600">오류: {error}</div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            {/* 헤더 */}
+            <div className="flex items-center gap-3">
+                <FileText className="w-8 h-8 text-blue-500" />
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">환불관리</h1>
-                    <p className="text-gray-600 mt-2">환불 요청 및 처리 현황을 관리합니다.</p>
+                    <h1 className="text-3xl font-bold text-gray-900">환불 관리</h1>
+                    <p className="text-gray-600">환불 요청 현황을 관리합니다</p>
                 </div>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>환불 요청 검색 및 필터</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-1">
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                                <Input
-                                    placeholder="고객명, 주문번호, 이메일로 검색..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10"
-                                />
+            {/* 통계 카드 (모든 환불건 기준 고정) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                                <FileText className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">전체 환불건</p>
+                                <p className="text-2xl font-bold text-blue-600">{allRefunds.length}건</p>
                             </div>
                         </div>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="w-full md:w-40">
-                                <SelectValue placeholder="상태 필터" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">전체</SelectItem>
-                                <SelectItem value="pending">대기중</SelectItem>
-                                <SelectItem value="approved">승인됨</SelectItem>
-                                <SelectItem value="processing">처리중</SelectItem>
-                                <SelectItem value="completed">완료</SelectItem>
-                                <SelectItem value="rejected">거절됨</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                                <Clock className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">대기중</p>
+                                <p className="text-2xl font-bold text-blue-600">{waitingCount}건</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                                <TrendingUp className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-600">총 환불 금액</p>
+                                <p className="text-2xl font-bold text-blue-600">{formatCurrency(totalAmount)}</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* 탭과 검색 */}
+            <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="w-full">
+                <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+                    <TabsList className="grid w-full lg:w-auto grid-cols-2">
+                        <TabsTrigger value="waiting" className="flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            대기중인 환불건 ({waitingRefunds.length})
+                        </TabsTrigger>
+                        <TabsTrigger value="all" className="flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            모든 환불건 ({allRefunds.length})
+                        </TabsTrigger>
+                    </TabsList>
+
+                    {/* 검색만 남김 */}
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                        <Input
+                            placeholder="고객명, 로그인ID, 예약번호, 결제ID로 검색..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 w-full md:w-80"
+                        />
                     </div>
-                </CardContent>
-            </Card>
+                </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>환불 요청 목록 ({filteredRefunds.length}건)</CardTitle>
-                    <CardDescription>최근 환불 요청 내역을 확인하고 처리할 수 있습니다.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>고객명</TableHead>
-                                <TableHead>이메일</TableHead>
-                                <TableHead>주문번호</TableHead>
-                                <TableHead>상품명</TableHead>
-                                <TableHead>결제금액</TableHead>
-                                <TableHead>환불금액</TableHead>
-                                <TableHead>결제수단</TableHead>
-                                <TableHead>상태</TableHead>
-                                <TableHead>요청일</TableHead>
-                                <TableHead>작업</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredRefunds.map((refund) => (
-                                <TableRow key={refund.id}>
-                                    <TableCell>{refund.customerName}</TableCell>
-                                    <TableCell>{refund.customerEmail}</TableCell>
-                                    <TableCell>{refund.orderId}</TableCell>
-                                    <TableCell>{refund.productName}</TableCell>
-                                    <TableCell>{formatCurrency(refund.orderAmount)}</TableCell>
-                                    <TableCell>{formatCurrency(refund.refundAmount)}</TableCell>
-                                    <TableCell>{getPaymentMethodBadge(refund.paymentMethod)}</TableCell>
-                                    <TableCell>{getStatusBadge(refund.status)}</TableCell>
-                                    <TableCell>{refund.requestDate}</TableCell>
-                                    <TableCell>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => {
-                                                setSelectedRefund(refund);
-                                                setDialogOpen(true);
-                                            }}
-                                        >
-                                            상세
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+                {/* 대기중인 환불건 탭 */}
+                <TabsContent value="waiting" className="mt-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <AlertTriangle className="w-5 h-5 text-orange-500" />
+                                대기중인 환불 요청 ({filteredRefunds.length}건)
+                            </CardTitle>
+                            <CardDescription>처리가 필요한 환불 요청입니다.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>고객 정보</TableHead>
+                                            <TableHead>환불 정보</TableHead>
+                                            <TableHead>결제 수단</TableHead>
+                                            <TableHead>요청일</TableHead>
+                                            <TableHead>환불 사유</TableHead>
+                                            <TableHead>상태</TableHead>
+                                            <TableHead>승인/거절</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredRefunds.length > 0 ? (
+                                            filteredRefunds.map((refund) => (
+                                                <TableRow key={refund.payId} className="group hover:bg-gray-50">
+                                                    <TableCell>
+                                                        <div className="space-y-1">
+                                                            <p className="font-semibold text-gray-900">{refund.userName}</p>
+                                                            <p className="text-sm text-gray-500 max-w-32 truncate" title={refund.userLoginId}>
+                                                                ID: {refund.userLoginId}
+                                                            </p>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="space-y-1">
+                                                            <p className="font-bold text-lg text-blue-600">
+                                                                {formatCurrency(refund.refundAmount)}
+                                                            </p>
+                                                            <p className="text-sm text-gray-500">예약#{refund.reservationId}</p>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {getPaymentMethodBadge(refund.payMethod)}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <p className="text-sm">{formatDateTime(refund.refundCreatedAt)}</p>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <p className="max-w-32 truncate text-sm" title={refund.refundReason}>
+                                                            {refund.refundReason}
+                                                        </p>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {getStatusBadge(refund.refundStatus)}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex gap-2">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() => {
+                                                                    setSelectedRefund(refund);
+                                                                    setDialogOpen(true);
+                                                                }}
+                                                            >
+                                                                상세
+                                                            </Button>
+                                                            {refund.refundStatus.toUpperCase() === 'WAITING' && (
+                                                                <>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                                                                        disabled={processingPayId === refund.payId}
+                                                                        onClick={() => handleApprove(refund.payId)}
+                                                                    >
+                                                                        {processingPayId === refund.payId ? '처리중...' : '승인'}
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="destructive"
+                                                                        disabled={processingPayId === refund.payId}
+                                                                        onClick={() => handleReject(refund.payId)}
+                                                                    >
+                                                                        {processingPayId === refund.payId ? '처리중...' : '거절'}
+                                                                    </Button>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={7} className="text-center py-12">
+                                                    <div className="flex flex-col items-center gap-3">
+                                                        <CheckCircle className="w-12 h-12 text-green-500" />
+                                                        <div>
+                                                            <p className="text-lg font-semibold text-gray-900">대기중인 환불 요청이 없습니다</p>
+                                                            <p className="text-gray-500">모든 환불 요청이 처리되었습니다.</p>
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
 
-            {/* 환불 상세/처리 다이얼로그 */}
+                {/* 모든 환불건 탭 */}
+                <TabsContent value="all" className="mt-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <FileText className="w-5 h-5 text-blue-500" />
+                                전체 환불 현황 ({filteredRefunds.length}건)
+                            </CardTitle>
+                            <CardDescription>모든 환불 요청의 전체 현황입니다.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>고객 정보</TableHead>
+                                            <TableHead>환불 정보</TableHead>
+                                            <TableHead>결제 수단</TableHead>
+                                            <TableHead>요청일</TableHead>
+                                            <TableHead>처리일</TableHead>
+                                            <TableHead>환불 사유</TableHead>
+                                            <TableHead>상태</TableHead>
+                                            <TableHead>승인/거절</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredRefunds.length > 0 ? (
+                                            filteredRefunds.map((refund) => (
+                                                <TableRow key={refund.payId} className="hover:bg-gray-50">
+                                                    <TableCell>
+                                                        <div className="space-y-1">
+                                                            <p className="font-semibold text-gray-900">{refund.userName}</p>
+                                                            <p className="text-sm text-gray-500 max-w-32 truncate" title={refund.userLoginId}>
+                                                                ID: {refund.userLoginId}
+                                                            </p>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="space-y-1">
+                                                            <p className="font-bold text-lg text-blue-600">
+                                                                {formatCurrency(refund.refundAmount)}
+                                                            </p>
+                                                            <p className="text-sm text-gray-500">예약#{refund.reservationId}</p>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {getPaymentMethodBadge(refund.payMethod)}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <p className="text-sm">{formatDateTime(refund.refundCreatedAt)}</p>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <p className="text-sm">{formatDateTime(refund.refundProcessedAt)}</p>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <p className="max-w-32 truncate text-sm" title={refund.refundReason}>
+                                                            {refund.refundReason}
+                                                        </p>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {getStatusBadge(refund.refundStatus)}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => {
+                                                                setSelectedRefund(refund);
+                                                                setDialogOpen(true);
+                                                            }}
+                                                        >
+                                                            상세
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={8} className="text-center py-12">
+                                                    <div className="flex flex-col items-center gap-3">
+                                                        <FileText className="w-12 h-12 text-gray-400" />
+                                                        <div>
+                                                            <p className="text-lg font-semibold text-gray-900">환불 요청이 없습니다</p>
+                                                            <p className="text-gray-500">아직 등록된 환불 요청이 없습니다.</p>
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+            </Tabs>
+
+            {/* 환불 상세 다이얼로그 */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-3xl">
                     <DialogHeader>
-                        <DialogTitle>환불 상세 및 처리</DialogTitle>
+                        <DialogTitle className="flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-blue-500" />
+                            환불 요청 상세 정보
+                        </DialogTitle>
                         <DialogDescription>
                             {selectedRefund && (
-                                <div className="space-y-2 mt-2">
-                                    <div className="flex gap-4">
-                                        <span className="font-bold">고객명:</span>
-                                        <span>{selectedRefund.customerName}</span>
+                                <div className="space-y-4 mt-4">
+                                    {/* 기본 정보 */}
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="space-y-3">
+                                            <h4 className="font-semibold text-gray-900">고객 정보</h4>
+                                            <div className="space-y-2 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium">고객명:</span>
+                                                    <span>{selectedRefund.userName}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium">로그인ID:</span>
+                                                    <span>{selectedRefund.userLoginId}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium">사용자ID:</span>
+                                                    <span>{selectedRefund.userId}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            <h4 className="font-semibold text-gray-900">결제 정보</h4>
+                                            <div className="space-y-2 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium">결제ID:</span>
+                                                    <span>{selectedRefund.payId}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium">예약번호:</span>
+                                                    <span>{selectedRefund.reservationId}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium">결제수단:</span>
+                                                    <span>{getPaymentMethodBadge(selectedRefund.payMethod)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-4">
-                                        <span className="font-bold">이메일:</span>
-                                        <span>{selectedRefund.customerEmail}</span>
+
+                                    {/* 환불 정보 */}
+                                    <div className="p-4 bg-blue-50 rounded-lg">
+                                        <h4 className="font-semibold text-gray-900 mb-3">환불 정보</h4>
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-medium">환불금액:</span>
+                                                <span className="text-2xl font-bold text-blue-600">
+                                                    {formatCurrency(selectedRefund.refundAmount)}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="font-medium">환불사유:</span>
+                                                <span className="text-right max-w-xs">{selectedRefund.refundReason}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="font-medium">상태:</span>
+                                                <span>{getStatusBadge(selectedRefund.refundStatus)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="font-medium">요청일:</span>
+                                                <span>{formatDateTime(selectedRefund.refundCreatedAt)}</span>
+                                            </div>
+                                            {selectedRefund.refundProcessedAt && (
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium">처리일:</span>
+                                                    <span>{formatDateTime(selectedRefund.refundProcessedAt)}</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="flex gap-4">
-                                        <span className="font-bold">주문번호:</span>
-                                        <span>{selectedRefund.orderId}</span>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <span className="font-bold">상품명:</span>
-                                        <span>{selectedRefund.productName}</span>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <span className="font-bold">결제금액:</span>
-                                        <span>{formatCurrency(selectedRefund.orderAmount)}</span>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <span className="font-bold">환불금액:</span>
-                                        <span>{formatCurrency(selectedRefund.refundAmount)}</span>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <span className="font-bold">결제수단:</span>
-                                        <span>{getPaymentMethodBadge(selectedRefund.paymentMethod)}</span>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <span className="font-bold">상태:</span>
-                                        <span>{getStatusBadge(selectedRefund.status)}</span>
-                                    </div>
-                                    <div className="flex gap-4">
-                                        <span className="font-bold">요청일:</span>
-                                        <span>{selectedRefund.requestDate}</span>
-                                    </div>
-                                    {selectedRefund.processedDate && (
-                                        <div className="flex gap-4">
-                                            <span className="font-bold">처리일:</span>
-                                            <span>{selectedRefund.processedDate}</span>
+
+                                    {/* 처리 액션 (대기중인 경우만) */}
+                                    {selectedRefund.refundStatus.toUpperCase() === 'WAITING' && (
+                                        <div className="flex gap-3 pt-4 border-t">
+                                            <Button
+                                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                                disabled={processingPayId === selectedRefund.payId}
+                                                onClick={() => handleApprove(selectedRefund.payId)}
+                                            >
+                                                {processingPayId === selectedRefund.payId ? '처리중...' : '환불 승인'}
+                                            </Button>
+                                            <Button
+                                                variant="destructive"
+                                                className="flex-1"
+                                                disabled={processingPayId === selectedRefund.payId}
+                                                onClick={() => handleReject(selectedRefund.payId)}
+                                            >
+                                                {processingPayId === selectedRefund.payId ? '처리중...' : '환불 거절'}
+                                            </Button>
                                         </div>
                                     )}
-                                    {selectedRefund.processedBy && (
-                                        <div className="flex gap-4">
-                                            <span className="font-bold">처리자:</span>
-                                            <span>{selectedRefund.processedBy}</span>
-                                        </div>
-                                    )}
-                                    {selectedRefund.notes && (
-                                        <div className="flex gap-4">
-                                            <span className="font-bold">비고:</span>
-                                            <span>{selectedRefund.notes}</span>
-                                        </div>
-                                    )}
+                                    
+                                    <div className="pt-4 border-t">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => setDialogOpen(false)}
+                                            className="w-full"
+                                        >
+                                            닫기
+                                        </Button>
+                                    </div>
                                 </div>
                             )}
                         </DialogDescription>
                     </DialogHeader>
-                    {selectedRefund && (
-                        <div className="space-y-4 mt-4">
-                            <Textarea
-                                placeholder="비고를 입력하세요..."
-                                value={selectedRefund.notes || ''}
-                                onChange={(e) => setSelectedRefund({ ...selectedRefund, notes: e.target.value })}
-                            />
-                            <div className="flex items-center gap-2">
-                                <Select
-                                    value={selectedRefund.status}
-                                    onValueChange={(value) => handleStatusChange(selectedRefund.id, value, selectedRefund.notes)}
-                                >
-                                    <SelectTrigger className="w-40 bg-white border-gray-200 hover:bg-gray-50">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white border-gray-200 shadow-lg">
-                                        <SelectItem value="pending">대기중</SelectItem>
-                                        <SelectItem value="approved">승인됨</SelectItem>
-                                        <SelectItem value="processing">처리중</SelectItem>
-                                        <SelectItem value="completed">완료</SelectItem>
-                                        <SelectItem value="rejected">거절됨</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Button
-                                    onClick={() => handleStatusChange(selectedRefund.id, selectedRefund.status, selectedRefund.notes)}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                                >
-                                    상태 저장
-                                </Button>
-                            </div>
-                        </div>
-                    )}
                 </DialogContent>
             </Dialog>
         </div>

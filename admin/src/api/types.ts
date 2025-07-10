@@ -50,7 +50,7 @@ export interface AdminDailySaleResponseDto {
     dailyProfit: number;      // 일일 순이익
 }
 
-// 매출 요약 응답 타입
+// 매출 응답 타입
 export interface AdminSalesSummaryResponseDto {
     totalSales: number;                 // 총 매출
     currentMonthSales: number;          // 이번달 매출
@@ -61,4 +61,19 @@ export interface AdminSalesSummaryResponseDto {
     averageDailyProfit: number;         // 일간 평균 순이익
     
     recentWeeklySalesProfit: AdminDailySaleResponseDto[];  // 최근 주간 매출/순이익 데이터
+}
+
+// 환불 응답 타입
+export interface AdminRefundResponseDto {
+    payId: number;                      // 결제 ID
+    userId: number;                     // 사용자 ID
+    userName: string;                   // 사용자명
+    userLoginId: string;                // 사용자 로그인 ID
+    reservationId: number;              // 예약 ID
+    refundAmount: number;               // 환불 금액
+    refundReason: string;               // 환불 사유
+    payMethod: string;                  // 결제 방법 (CARD, BANK 등)
+    refundStatus: string;               // 환불 상태 (WAITING, APPROVED, REJECTED 등)
+    refundCreatedAt: string;            // 환불 요청 생성일 (ISO string)
+    refundProcessedAt: string | null;   // 환불 처리일 (ISO string or null)
 } 
