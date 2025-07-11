@@ -426,4 +426,17 @@ export const adminService = {
             throw error;
         }
     },
+
+    // 예약 상세 정보 조회
+    getReservationDetail: async (reservationId: string): Promise<any> => {
+        try {
+            const response = await adminApi.get(`/admin/reservations/${reservationId}/detail`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
 }; 

@@ -16,7 +16,7 @@ export const CommonHeader = ({
   showBackButton = false,
   showCloseButton = false,
   rightContent,
-  subtitle,
+  subtitle
 }: CommonHeaderProps) => {
   const router = useRouter();
 
