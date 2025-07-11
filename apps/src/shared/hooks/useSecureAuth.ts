@@ -66,6 +66,14 @@ export const useSecureAuth = () => {
     return () => clearInterval(interval)
   }, [extractUserFromJWT])
 
+  // JWT 만료 감지 시 storage 이벤트 트리거 (여러 탭 동기화)
+  useEffect(() => {
+    if (user && user.isTokenValid === false) {
+      // 만료 감지 시 storage 이벤트 트리거
+      localStorage.setItem('auth-event', JSON.stringify({ type: 'logout', ts: Date.now() }));
+    }
+  }, [user]);
+
   // 편의 메서드들
   const isLoggedIn = useMemo(() => user !== null, [user])
   

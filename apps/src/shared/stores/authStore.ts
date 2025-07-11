@@ -106,6 +106,10 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             state.matchingRequestCount = 0
           })
         }
+        // 로그인 storage 이벤트 트리거
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('auth-event', JSON.stringify({ type: 'login', ts: Date.now() }));
+        }
       },
       logout: () => {
         set((state) => {
@@ -114,6 +118,10 @@ export const useAuthStore = create<AuthState & AuthActions>()(
             matchingRequestCount: 0,
           })
         })
+        // 로그아웃 storage 이벤트 트리거
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('auth-event', JSON.stringify({ type: 'logout', ts: Date.now() }));
+        }
       },
       setToken: (token) => {
         set((state) => {

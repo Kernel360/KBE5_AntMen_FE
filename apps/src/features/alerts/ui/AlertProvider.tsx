@@ -5,7 +5,7 @@ import { Toaster, ToasterProps } from 'react-hot-toast';
 import { subscribeToAlerts } from '@/features/alerts/api/alertApi';
 import { showAlertToast } from './AlertToast';
 import { alertApi } from '@/shared/api/alert';
-import { checkUserAuth } from '@/features/auth/lib/auth';
+import { useSecureAuth } from '@/shared/hooks/useSecureAuth';
 
 interface AlertContextType {
   unreadCount: number;
@@ -49,7 +49,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const isConnectingRef = useRef(false);
   const mountedRef = useRef(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const prevAuthRef = useRef<string | null>(null);
+  const { isLoggedIn, isLoading } = useSecureAuth();
 
   const resetAlerts = () => {
     cleanup();
@@ -58,8 +58,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const refreshUnreadCount = async () => {
     try {
-      const authResult = checkUserAuth();
-      if (!authResult.isAuthenticated) {
+      if (!isLoggedIn || isLoading) {
         resetAlerts();
         return;
       }
@@ -95,17 +94,34 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     isConnectingRef.current = false;
   };
 
-  // storage event로 로그인/로그아웃 동기화
+  // JWT 인증 상태 변화에 따라 SSE 연결/해제
+  useEffect(() => {
+    mountedRef.current = true;
+    requestNotificationPermission();
+    if (!isLoading && isLoggedIn) {
+      connectToAlerts();
+    } else if (!isLoading && !isLoggedIn) {
+      cleanup();
+      setUnreadCount(0);
+    }
+    return () => {
+      mountedRef.current = false;
+      cleanup();
+    };
+    // isLoggedIn, isLoading이 바뀔 때마다 실행
+  }, [isLoggedIn, isLoading]);
+
+  // storage 이벤트로 여러 탭 동기화 (로그인/로그아웃)
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
       if (event.key === 'auth-event') {
         const data = event.newValue ? JSON.parse(event.newValue) : null;
         if (!data) return;
-        if (data.type === 'login') {
-          cleanup();
-          connectToAlerts();
-        } else if (data.type === 'logout') {
-          resetAlerts();
+        if (data.type === 'logout') {
+          // 다른 탭에서 로그아웃 → zustand store에 로그아웃 반영
+        } else if (data.type === 'login') {
+          // 다른 탭에서 로그인 → 인증 상태 동기화(새로고침)
+          window.location.reload();
         }
       }
     };
@@ -113,46 +129,9 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => window.removeEventListener('storage', handleStorage)
   }, []);
 
-  // 로그인/로그아웃 시점에만 연결/해제
-  const handleAuthChange = () => {
-    const authResult = checkUserAuth()
-    const currentAuth = authResult.isAuthenticated ? authResult.userRole : null;
-    if (currentAuth !== prevAuthRef.current) {
-      prevAuthRef.current = currentAuth
-      if (!currentAuth) {
-        // 로그아웃
-        resetAlerts()
-        // 다른 탭 동기화
-        localStorage.setItem('auth-event', JSON.stringify({ type: 'logout', ts: Date.now() }))
-      } else {
-        // 로그인
-        cleanup()
-        connectToAlerts()
-        // 다른 탭 동기화
-        localStorage.setItem('auth-event', JSON.stringify({ type: 'login', ts: Date.now() }));
-      }
-    }
-  };
-
-  // 마운트 시 1회만 실행
-  useEffect(() => {
-    mountedRef.current = true
-    const authResult = checkUserAuth()
-    prevAuthRef.current = authResult.isAuthenticated ? authResult.userRole : null
-    requestNotificationPermission()
-    if (authResult.isAuthenticated) {
-      connectToAlerts()
-    }
-    return () => {
-      mountedRef.current = false;
-      cleanup();
-    };
-  }, []);
-
   // SSE 연결 실패(401 등) 시 자동 로그아웃 처리
   const connectToAlerts = async () => {
-    const authResult = checkUserAuth();
-    if (!authResult.isAuthenticated) {
+    if (!isLoggedIn || isLoading) {
       resetAlerts()
       return
     }
@@ -181,7 +160,6 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           cleanup();
           // 401 등 인증 오류 시 자동 로그아웃
           if (error.message?.includes('401') || error.message?.toLowerCase().includes('unauthorized')) {
-            localStorage.setItem('auth-event', JSON.stringify({ type: 'logout', ts: Date.now() }))
             resetAlerts()
           } else if (mountedRef.current) {
             reconnectTimeoutRef.current = setTimeout(connectToAlerts, 3000)
@@ -193,7 +171,6 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       cleanup();
       const err = error as Error;
       if (err.message?.includes('401') || err.message?.toLowerCase().includes('unauthorized')) {
-        localStorage.setItem('auth-event', JSON.stringify({ type: 'logout', ts: Date.now() }))
         resetAlerts();
       } else if (mountedRef.current) {
         reconnectTimeoutRef.current = setTimeout(connectToAlerts, 3000)
