@@ -293,13 +293,6 @@ export const adminService = {
                 requestBody.parentId = parentId;
             }
 
-            console.log('댓글 작성 요청:', {
-                boardId,
-                requestBody,
-                content: content,
-                contentType: typeof content
-            });
-
             const response = await adminApi9090.post(`/board/comment/${boardId}`, requestBody);
             return response.data;
         } catch (error: any) {
