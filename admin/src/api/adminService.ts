@@ -86,7 +86,7 @@ adminApi9090.interceptors.request.use(
         if (!token) {
             token = localStorage.getItem('adminToken');
         }
-        
+
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -118,7 +118,18 @@ export const adminService = {
         return response.data;
     },
 
-
+    // 관리자 정보 조회
+    getProfile: async (): Promise<Admin> => {
+        try {
+            const response = await adminApi.get('/admin/auth/profile');
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
 
     // 관리자 비밀번호 변경
     changePassword: async (data: AdminChangePasswordRequest): Promise<void> => {
@@ -150,7 +161,11 @@ export const adminService = {
         }
     },
 
-
+    // 토큰 갱신
+    refreshToken: async (refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> => {
+        const response = await adminApi.post('/admin/auth/refresh', { refreshToken });
+        return response.data;
+    },
 
     // 로그아웃
     logout: async (): Promise<void> => {
@@ -233,22 +248,22 @@ export const adminService = {
 
     // 통합 게시판 목록 조회 - 전체 데이터 반환
     getBoardList: async (
-        usertype: string, 
-        boardType: string, 
-        name?: string, 
+        usertype: string,
+        boardType: string,
+        name?: string,
         sortBy?: string
     ): Promise<any[]> => {
         try {
             const endpoint = `/admin/board/list/${usertype}/${boardType}`;
             const params: any = {};
-            
+
             if (name) {
                 params.name = name;
             }
             if (sortBy) {
                 params.sortBy = sortBy;
             }
-            
+
             const response = await adminApi.get(endpoint, { params });
             return response.data;
         } catch (error: any) {
@@ -270,21 +285,21 @@ export const adminService = {
     // 댓글 작성 - 9090 포트
     createBoardComment: async (boardId: number, content: string, parentId?: number | null): Promise<void> => {
         try {
-            const requestBody: any = { 
+            const requestBody: any = {
                 content: content
             };
-            
+
             if (parentId !== undefined && parentId !== null) {
                 requestBody.parentId = parentId;
             }
-            
+
             console.log('댓글 작성 요청:', {
                 boardId,
                 requestBody,
                 content: content,
                 contentType: typeof content
             });
-            
+
             const response = await adminApi9090.post(`/board/comment/${boardId}`, requestBody);
             return response.data;
         } catch (error: any) {
@@ -363,7 +378,7 @@ export const adminService = {
             if (category) params.category = category;
             if (reservatedStartDate) params.reservatedStartDate = reservatedStartDate;
             if (reservatedEndDate) params.reservatedEndDate = reservatedEndDate;
-            
+
             const response = await adminApi.get('/admin/reservations/about-matching', { params });
             return response.data;
         } catch (error: any) {
