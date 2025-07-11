@@ -1,47 +1,40 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/shared/components/Button';
-import { Textarea } from '@/shared/components/Textarea';
+import { useState, FormEvent } from 'react';
 
 interface CommentFormProps {
-  onSubmit: (content: string) => Promise<void>;
+  onSubmit: (content: string) => void;
   isSubmitting?: boolean;
 }
 
-export const CommentForm = ({ onSubmit, isSubmitting }: CommentFormProps) => {
+export const CommentForm = ({ onSubmit, isSubmitting = false }: CommentFormProps) => {
   const [content, setContent] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!content.trim()) return;
-
-    try {
-      await onSubmit(content);
-      setContent(''); // 성공 시 입력 필드 초기화
-    } catch (error) {
-      console.error('댓글 작성 중 오류 발생:', error);
+    if (content.trim() && !isSubmitting) {
+      onSubmit(content);
+      setContent('');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-stretch space-x-3">
+    <form onSubmit={handleSubmit} className="flex items-center gap-3">
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder="댓글을 작성해주세요."
+        placeholder="댓글을 작성해주세요..."
         rows={1}
-        className="flex-1 resize-none h-10 overflow-y-auto border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="flex-1 resize-none border border-gray-200 rounded-lg px-3 py-2.5 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary leading-tight h-10"
         disabled={isSubmitting}
       />
-      <Button
+      <button
         type="submit"
         disabled={!content.trim() || isSubmitting}
-        isLoading={isSubmitting}
-        className="h-10 px-4 text-sm font-medium flex-shrink-0"
+        className="px-4 py-2.5 text-sm font-semibold flex-shrink-0 bg-primary-500 text-white rounded-lg disabled:bg-primary hover:bg-primary-600 transition-colors h-10"
       >
-        작성
-      </Button>
+        {isSubmitting ? '전송중' : '작성'}
+      </button>
     </form>
   );
 }; 

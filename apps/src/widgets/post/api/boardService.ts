@@ -40,7 +40,9 @@ export interface BoardListResponse {
 // 댓글 타입 (무한 중첩 구조)
 export interface Comment {
   commentId: number;
+  userId: number;
   userName: string;
+  userAvatar: string | null;
   commentContent: string;
   createdAt: string | number[]; // Java LocalDateTime 배열 형태 지원
   modifiedAt: string | number[]; // Java LocalDateTime 배열 형태 지원
@@ -50,11 +52,13 @@ export interface Comment {
 // 게시글 상세 응답
 export interface BoardDetailResponse {
   boardId: number;
+  userId: number;
   userName: string;
   boardTitle: string;
   boardContent: string;
   createdAt: string | number[]; // Java LocalDateTime 배열 형태 지원
   modifiedAt: string | number[]; // Java LocalDateTime 배열 형태 지원
+  boardStatus: string | null;
   comments: Comment[] | null;
 }
 
@@ -109,6 +113,7 @@ class BoardService {
     try {
       const fetchOptions: RequestInit = { 
         headers,
+        cache: 'no-store',
       };
 
       // 클라이언트 환경에서만 credentials 설정
@@ -155,10 +160,65 @@ class BoardService {
 
 
   // 댓글 작성
-  async createComment(boardId: string, content: string): Promise<void> {
-    // TODO: 실제 API 연동 시 여기만 수정하면 됨
-    console.log('댓글 작성:', { boardId, content });
-    await new Promise(resolve => setTimeout(resolve, 1000)); // 임시 딜레이
+  async createComment(boardId: string, content: string, parentId: number | null = null): Promise<void> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const authToken = this.getAuthToken();
+    if (authToken) {
+      headers['Authorization'] = authToken;
+    }
+    const url = `https://api.antmen.site:9090/api/v1/board/comment/${boardId}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ content, parentId }),
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`댓글 작성 실패: ${response.status} - ${errorText}`);
+    }
+  }
+
+  // 댓글 수정
+  async updateComment(boardId: string, commentId: string, content: string): Promise<void> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const authToken = this.getAuthToken();
+    if (authToken) {
+      headers['Authorization'] = authToken;
+    }
+    const url = `https://api.antmen.site:9090/api/v1/board/${boardId}/${commentId}`;
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ content: content }),
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`댓글 수정 실패: ${response.status} - ${errorText}`);
+    }
+  }
+
+  // 댓글 삭제
+  async deleteComment(boardId: string, commentId: string): Promise<void> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const authToken = this.getAuthToken();
+    if (authToken) {
+      headers['Authorization'] = authToken;
+    }
+    const url = `https://api.antmen.site:9090/api/v1/board/${boardId}/${commentId}`;
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers,
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`댓글 삭제 실패: ${response.status} - ${errorText}`);
+    }
   }
 
   // 게시글 목록 조회 (정렬 포함)
@@ -170,6 +230,8 @@ class BoardService {
     page: number = 0, 
     size: number = 5
   ): Promise<BoardListResponse> {
+    console.log('🚀 getBoardList 호출:', { boardType, userRole, sortBy, searchName, page, size });
+    
     const authToken = this.getAuthToken();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -197,7 +259,8 @@ class BoardService {
       searchName, 
       page, 
       size, 
-      url 
+      url,
+      params: params.toString()
     });
 
     const response = await fetch(url, { headers });
@@ -321,6 +384,152 @@ class BoardService {
       const errorText = await response.text();
       console.error('❌ 응답 에러:', errorText);
       throw new Error(`게시글 작성 실패: ${response.status}`);
+    }
+  }
+
+  // 게시글 수정
+  async updateBoard(boardId: string, boardData: BoardRequestDto): Promise<void> {
+    console.log('🚀 게시글 수정 요청:', { boardId, boardData });
+    
+    const authToken = this.getAuthToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (authToken) {
+      headers['Authorization'] = authToken;
+      console.log('🔑 게시글 수정 API 요청 토큰:', authToken);
+    } else {
+      console.warn('⚠️ 쿠키에서 auth-token을 찾을 수 없습니다!');
+    }
+
+    const url = `https://api.antmen.site:9090/api/v1/board/${boardId}`;
+    console.log('📤 게시글 수정 요청:', { url, boardId, headers });
+
+    try {
+      const fetchOptions: RequestInit = {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(boardData),
+        credentials: 'include',
+      };
+
+      const response = await fetch(url, fetchOptions);
+
+      console.log('📥 게시글 수정 응답 상태:', response.status);
+
+      if (!response.ok) {
+        let errorMessage = `게시글 수정 실패: ${response.status}`;
+        try {
+          const errorBody = await response.text();
+          console.error('❌ 에러 응답 내용:', errorBody);
+          errorMessage += ` - ${errorBody}`;
+        } catch (e) {
+          console.error('❌ 에러 응답 파싱 실패:', e);
+        }
+        throw new Error(errorMessage);
+      }
+
+      console.log('✅ 게시글 수정 성공');
+    } catch (error) {
+      console.error('❌ 게시글 수정 중 오류:', error);
+      throw error;
+    }
+  }
+
+  // 게시글 삭제
+  async deleteBoard(boardId: string): Promise<void> {
+    console.log('🚀 게시글 삭제 요청:', { boardId });
+    
+    const authToken = this.getAuthToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (authToken) {
+      headers['Authorization'] = authToken;
+    }
+
+    const url = `https://api.antmen.site:9090/api/v1/board/${boardId}`;
+    console.log('📤 게시글 삭제 요청:', { url, boardId });
+
+    try {
+      const fetchOptions: RequestInit = {
+        method: 'DELETE',
+        headers,
+      };
+
+      if (typeof window !== 'undefined') {
+        fetchOptions.credentials = 'include';
+      }
+
+      const response = await fetch(url, fetchOptions);
+
+      if (!response.ok) {
+        let errorMessage = `게시글 삭제 실패: ${response.status}`;
+        try {
+          const errorBody = await response.text();
+          console.error('❌ 에러 응답 내용:', errorBody);
+          errorMessage += ` - ${errorBody}`;
+        } catch (e) {
+          console.error('❌ 에러 응답 파싱 실패:', e);
+        }
+        throw new Error(errorMessage);
+      }
+
+      console.log('✅ 게시글 삭제 성공');
+    } catch (error) {
+      console.error('❌ 게시글 삭제 중 오류:', error);
+      throw error;
+    }
+  }
+
+  // 문의 완료 처리
+  async resolveBoard(boardId: string): Promise<void> {
+    console.log('🚀 문의 완료 요청:', { boardId });
+    
+    const authToken = this.getAuthToken();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (authToken) {
+      headers['Authorization'] = authToken;
+      console.log('🔑 문의 완료 API 요청 토큰:', authToken);
+    } else {
+      console.warn('⚠️ 쿠키에서 auth-token을 찾을 수 없습니다!');
+    }
+
+    const url = `https://api.antmen.site:9090/api/v1/board/${boardId}/resolved`;
+    console.log('📤 문의 완료 요청:', { url, boardId, headers });
+
+    try {
+      const fetchOptions: RequestInit = {
+        method: 'PUT',
+        headers,
+        credentials: 'include',
+      };
+
+      const response = await fetch(url, fetchOptions);
+
+      console.log('📥 문의 완료 응답 상태:', response.status);
+
+      if (!response.ok) {
+        let errorMessage = `문의 완료 처리 실패: ${response.status}`;
+        try {
+          const errorBody = await response.text();
+          console.error('❌ 에러 응답 내용:', errorBody);
+          errorMessage += ` - ${errorBody}`;
+        } catch (e) {
+          console.error('❌ 에러 응답 파싱 실패:', e);
+        }
+        throw new Error(errorMessage);
+      }
+
+      console.log('✅ 문의 완료 처리 성공');
+    } catch (error) {
+      console.error('❌ 문의 완료 처리 중 오류:', error);
+      throw error;
     }
   }
 }

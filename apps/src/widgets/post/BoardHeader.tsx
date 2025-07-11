@@ -12,7 +12,6 @@ export const BoardHeader = () => {
     <CommonHeader 
       title="게시판" 
       showCloseButton
-      onClose={handleClose}
     />
   );
 }; 

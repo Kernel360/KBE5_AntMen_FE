@@ -1,13 +1,23 @@
 import axios from 'axios';
-import { AdminLoginRequest, AdminLoginResponse, AdminChangePasswordRequest, Admin, BoardRequestDto } from './types';
+import { AdminLoginRequest, AdminLoginResponse, AdminChangePasswordRequest, Admin, BoardRequestDto, ReservationMatchingListDto, ManualMatchingRequest, ReservationMatchingResponse, ReservationCancelRequest, ReservationCancelResponse } from './types';
 import { getCookie, ADMIN_TOKEN_COOKIE } from '../lib/cookie';
 
-const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
 // const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
+// const API_BASE_URL_9090 = 'https://api.antmen.site:9090/api/v1';
+const API_BASE_URL = 'http://localhost:9093/api/v1';
+const API_BASE_URL_9090 = 'http://localhost:9090/api/v1';
 
 // 관리자 API 인스턴스
 const adminApi = axios.create({
     baseURL: API_BASE_URL,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+
+// 9090 포트용 API 인스턴스 (공지 상세 조회용)
+const adminApi9090 = axios.create({
+    baseURL: API_BASE_URL_9090,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -63,6 +73,39 @@ adminApi.interceptors.response.use(
                 document.cookie = `${ADMIN_TOKEN_COOKIE}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
                 window.location.href = '/admin/login';
             }
+        }
+        return Promise.reject(error);
+    }
+);
+
+// 9090 포트용 API 인스턴스에도 인터셉터 추가
+adminApi9090.interceptors.request.use(
+    (config) => {
+        // 쿠키와 localStorage 둘 다 확인
+        let token = getCookie(ADMIN_TOKEN_COOKIE);
+        if (!token) {
+            token = localStorage.getItem('adminToken');
+        }
+
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+adminApi9090.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            alert('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            localStorage.removeItem('adminUser');
+            localStorage.removeItem('adminToken');
+            document.cookie = `${ADMIN_TOKEN_COOKIE}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+            window.location.href = '/admin/login';
         }
         return Promise.reject(error);
     }
@@ -144,54 +187,19 @@ export const adminService = {
         return response.data;
     },
 
-    // 통합 공지사항 생성 (카테고리에 따라 엔드포인트 변경) - 9090 포트
+    // 통합 공지사항 생성 (카테고리에 따라 엔드포인트 변경) - 9090 포트로 통일
     createNotice: async (data: BoardRequestDto): Promise<void> => {
-        // 별도의 axios 인스턴스로 9090 포트에 요청
-        const boardApi = axios.create({
-            baseURL: 'https://api.antmen.site:9090/api/v1',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-
-        // JWT 토큰 자동 추가 인터셉터
-        boardApi.interceptors.request.use(
-            (config) => {
-                let token = getCookie(ADMIN_TOKEN_COOKIE);
-                if (!token) {
-                    token = localStorage.getItem('adminToken');
-                }
-                
-                if (token) {
-                    config.headers.Authorization = `Bearer ${token}`;
-                }
-                return config;
-            },
-            (error) => {
-                return Promise.reject(error);
+        try {
+            // boardType에 따라 엔드포인트 동적 설정
+            const endpoint = `/board/${data.boardType}`;
+            const response = await adminApi9090.post(endpoint, data);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
             }
-        );
-
-        // 401 에러 시 로그인 페이지로 리다이렉트 인터셉터
-        boardApi.interceptors.response.use(
-            (response) => response,
-            (error) => {
-                if (error.response?.status === 401) {
-                    // 토큰이 만료되었거나 유효하지 않은 경우
-                    alert('토큰이 만료되었습니다. 다시 로그인해주세요.');
-                    localStorage.removeItem('adminUser');
-                    localStorage.removeItem('adminToken');
-                    document.cookie = `${ADMIN_TOKEN_COOKIE}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-                    window.location.href = '/admin/login';
-                }
-                return Promise.reject(error);
-            }
-        );
-
-        // boardType에 따라 엔드포인트 동적 설정
-        const endpoint = `/board/${data.boardType}`;
-        const response = await boardApi.post(endpoint, data);
-        return response.data;
+            throw error;
+        }
     },
 
     // 게시판 목록 조회 - 9093 포트
@@ -208,11 +216,11 @@ export const adminService = {
         }
     },
 
-    // 특정 게시글 조회 - 9093 포트
-    getNotice: async (boardType: string, boardId: number): Promise<any> => {
+    // 특정 게시글 조회 - 9090 포트
+    getNotice: async (boardId: number): Promise<any> => {
         try {
-            const endpoint = `/board/${boardType}/${boardId}`;
-            const response = await adminApi.get(endpoint);
+            const endpoint = `/board/${boardId}`;
+            const response = await adminApi9090.get(endpoint);
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 401) {
@@ -222,11 +230,200 @@ export const adminService = {
         }
     },
 
-    // 게시글 삭제 - 9093 포트
-    deleteNotice: async (boardType: string, boardId: number): Promise<void> => {
+
+
+    // 게시글 삭제 - 9090 포트
+    deleteNotice: async (boardId: number): Promise<void> => {
         try {
-            const endpoint = `/board/${boardType}/${boardId}`;
-            const response = await adminApi.delete(endpoint);
+            const endpoint = `/board/${boardId}`;
+            const response = await adminApi9090.delete(endpoint);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 통합 게시판 목록 조회 - 전체 데이터 반환
+    getBoardList: async (
+        usertype: string,
+        boardType: string,
+        name?: string,
+        sortBy?: string
+    ): Promise<any[]> => {
+        try {
+            const endpoint = `/admin/board/list/${usertype}/${boardType}`;
+            const params: any = {};
+
+            if (name) {
+                params.name = name;
+            }
+            if (sortBy) {
+                params.sortBy = sortBy;
+            }
+
+            const response = await adminApi.get(endpoint, { params });
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+
+
+
+
+
+
+
+
+    // 댓글 작성 - 9090 포트
+    createBoardComment: async (boardId: number, content: string, parentId?: number | null): Promise<void> => {
+        try {
+            const requestBody: any = {
+                content: content
+            };
+
+            if (parentId !== undefined && parentId !== null) {
+                requestBody.parentId = parentId;
+            }
+
+            const response = await adminApi9090.post(`/board/comment/${boardId}`, requestBody);
+            return response.data;
+        } catch (error: any) {
+            console.error('댓글 작성 에러:', error.response?.data);
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 게시판 수정 - 9090 포트
+    updateBoard: async (boardId: number, data: any): Promise<void> => {
+        try {
+            const response = await adminApi9090.put(`/board/${boardId}`, data);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 게시판 삭제 - 9090 포트
+    deleteBoard: async (boardId: number): Promise<void> => {
+        try {
+            const response = await adminApi9090.delete(`/board/${boardId}`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 댓글 삭제 - 9090 포트
+    deleteBoardComment: async (boardId: number, commentId: number): Promise<void> => {
+        try {
+            const response = await adminApi9090.delete(`/board/${boardId}/${commentId}`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 댓글 수정 - 9090 포트
+    updateBoardComment: async (boardId: number, commentId: number, content: string): Promise<void> => {
+        try {
+            const response = await adminApi9090.put(`/board/${boardId}/${commentId}`, { content });
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 매칭 전 예약 목록 조회
+    getReservationMatchingList: async (
+        matchingStatus?: string,
+        searchName?: string,
+        category?: string,
+        reservatedStartDate?: string,
+        reservatedEndDate?: string
+    ): Promise<ReservationMatchingResponse> => {
+        try {
+            const params: any = {};
+            if (matchingStatus) params.matchingStatus = matchingStatus;
+            if (searchName) params.searchName = searchName;
+            if (category) params.category = category;
+            if (reservatedStartDate) params.reservatedStartDate = reservatedStartDate;
+            if (reservatedEndDate) params.reservatedEndDate = reservatedEndDate;
+
+            const response = await adminApi.get('/admin/reservations/about-matching', { params });
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 수동 매칭 요청
+    createManualMatching: async (data: ManualMatchingRequest): Promise<void> => {
+        try {
+            const response = await adminApi.post('/admin/matching/manual', data);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 매칭 재시도
+    retryMatching: async (reservationId: string): Promise<void> => {
+        try {
+            const response = await adminApi.post(`/admin/matching/retry/${reservationId}`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 예약 취소
+    cancelReservation: async (reservationId: string, data: ReservationCancelRequest): Promise<void> => {
+        try {
+            await adminApi.patch(`/admin/reservations/${reservationId}/status`, data);
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 예약 상세 정보 조회
+    getReservationDetail: async (reservationId: string): Promise<any> => {
+        try {
+            const response = await adminApi.get(`/admin/reservations/${reservationId}/detail`);
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 401) {

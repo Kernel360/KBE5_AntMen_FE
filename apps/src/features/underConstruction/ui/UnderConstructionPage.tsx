@@ -26,7 +26,6 @@ export const UnderConstructionPage = ({
       <CommonHeader 
         title={`${title} ${emoji}`}
         showCloseButton
-        onClose={handleClose}
       />
       <div className="pt-16 flex-1">
         <UnderConstruction 

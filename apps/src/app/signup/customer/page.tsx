@@ -183,7 +183,6 @@ const CustomerSignUpPage = () => {
       <CommonHeader 
         title="고객 회원가입" 
         showBackButton 
-        onBack={handleBack} 
       />
       
       <div className="pt-24 pb-8">

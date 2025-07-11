@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { adminService } from '../api/adminService';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Admin } from '../api/types';
 
 interface AdminUser {
     id: number;
@@ -31,24 +29,7 @@ export const useAdmin = () => {
         }
     };
 
-    const refreshAdminProfile = async () => {
-        try {
-            setIsLoading(true);
-            const profile = await adminService.getProfile();
-            
-            const adminUser: AdminUser = {
-                id: profile.id,
-            };
-            
-            setAdmin(adminUser);
-            localStorage.setItem('adminUser', JSON.stringify(adminUser));
-            setError(null);
-        } catch (err: any) {
-            setError('관리자 프로필을 새로고침할 수 없습니다.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+
 
     const logout = async () => {
         try {
@@ -65,7 +46,6 @@ export const useAdmin = () => {
         admin,
         isLoading,
         error,
-        refreshAdminProfile,
         logout,
         // 편의 메서드
         isLoggedIn: !!admin,
