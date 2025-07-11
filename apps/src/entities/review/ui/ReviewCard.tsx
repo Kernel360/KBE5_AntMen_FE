@@ -2,11 +2,19 @@
 
 import { StaticStarRating } from '@/shared/ui/StaticStarRating'
 import { EllipsisVerticalIcon } from '@heroicons/react/24/solid'
-import type { Review } from '../model/types'
 import { useState } from 'react'
 
 interface ReviewCardProps {
-  review: Review
+  review: {
+    id: string | number
+    rating: number
+    comment: string
+    createdAt: string
+    customerProfile?: string
+    customerName?: string
+    managerProfile?: string
+    managerName?: string
+  }
   // 'manager' = 매니저 프로필/이름, 'customer' = 고객 프로필/이름
   showProfileType?: 'manager' | 'customer'
   serviceType?: string
@@ -64,7 +72,7 @@ export const ReviewCard = ({
                   >
                     {onEdit && (
                       <button
-                        onClick={() => { onEdit(review.id); setMenuOpen(false); }}
+                        onClick={() => { onEdit(String(review.id)); setMenuOpen(false); }}
                         className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                       >
                         수정
@@ -72,7 +80,7 @@ export const ReviewCard = ({
                     )}
                     {onDelete && (
                       <button
-                        onClick={() => { onDelete(review.id); setMenuOpen(false); }}
+                        onClick={() => { onDelete(String(review.id)); setMenuOpen(false); }}
                         className="block w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
                       >
                         삭제

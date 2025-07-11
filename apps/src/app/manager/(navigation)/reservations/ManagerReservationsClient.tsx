@@ -106,10 +106,15 @@ export const ManagerReservationsClient = ({
     }
   })
 
-  // 서비스 예정일(날짜+시간) 기준으로 가까운 순 정렬
+  // 서비스 예정일(날짜+시간) 기준으로 정렬
   const sortedReservations = [...filteredReservations].sort((a, b) => {
     const aDate = new Date(`${a.reservationDate}T${a.reservationTime || '00:00'}`);
     const bDate = new Date(`${b.reservationDate}T${b.reservationTime || '00:00'}`);
+    if (activeTab === 'past') {
+      // 지난 업무는 최신순(내림차순)
+      return bDate.getTime() - aDate.getTime();
+    }
+    // 나머지 탭은 가까운 순(오름차순)
     return aDate.getTime() - bDate.getTime();
   });
 
