@@ -121,6 +121,12 @@ const menuItems: MenuItem[] = [
                 label: '추천 기준 설정',
                 path: '/admin/matching/recommend',
                 icon: GitBranch
+            },
+            {
+                id: 'reservation-status',
+                label: '예약현황',
+                path: '/admin/matching/reservation',
+                icon: GitBranch
             }
         ]
     },

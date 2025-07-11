@@ -8,10 +8,6 @@ import { FaQuestionCircle, FaInfoCircle, FaExclamationTriangle } from 'react-ico
 export default function EventsPage() {
   const router = useRouter()
 
-  const handleClose = () => {
-    router.back()
-  }
-
   const handleContactClick = () => {
     router.push('/boards?t=i')
   }
@@ -21,7 +17,6 @@ export default function EventsPage() {
       <CommonHeader 
         title="이벤트" 
         showCloseButton
-        onClose={handleClose}
       />
       <div className="pt-16 flex-1">
       <div className="h-4"></div>

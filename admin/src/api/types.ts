@@ -42,6 +42,49 @@ export interface BoardRequestDto {
     boardType: string; // 'customer-notice' | 'manager-notice'
 }
 
+// 매칭 전 예약 관련 타입
+export interface ReservationMatchingListDto {
+    reservationId: number;
+    customerId: number;
+    customerName: string;
+    categoryName: string;
+    reservationCreatedAt: string;
+    reservationDate: string;
+    reservationTime: string;
+    totalRequests: number;
+    totalManagerResponses: number;
+    totalManagerAccepts: number;
+    matchingStatus: 'ing' | 'fail' | 'nothing';
+}
+
+// 통계 정보 타입
+export interface ReservationStats {
+    status: 'ing' | 'fail' | 'nothing';
+    count: number;
+}
+
+// 통합 응답 타입
+export interface ReservationMatchingResponse {
+    stats: ReservationStats[];
+    reservations: ReservationMatchingListDto[];
+}
+
+export interface MatchingRequest {
+    id: string;
+    status: 'pending' | 'failed' | 'matched';
+    requestedAt: string;
+    candidateCount: number;
+    reason: string;
+    managerIds: string[];
+    matchedManagerId?: string;
+}
+
+export interface ManualMatchingRequest {
+    reservationId: string;
+    managerIds: string[];
+    matchingType: 'auto' | 'manual';
+}
+
 // 일일 매출 응답 타입
 export interface AdminDailySaleResponseDto {
     dailyDate: string;        // LocalDate -> ISO string format (YYYY-MM-DD)
@@ -55,11 +98,11 @@ export interface AdminSalesSummaryResponseDto {
     totalSales: number;                 // 총 매출
     currentMonthSales: number;          // 이번달 매출
     averageDailySales: number;          // 일간 평균 매출
-    
+
     totalProfit: number;                // 총 순이익
     currentMonthProfit: number;         // 이번달 순이익
     averageDailyProfit: number;         // 일간 평균 순이익
-    
+
     recentWeeklySalesProfit: AdminDailySaleResponseDto[];  // 최근 주간 매출/순이익 데이터
 }
 
@@ -76,4 +119,17 @@ export interface AdminRefundResponseDto {
     refundStatus: string;               // 환불 상태 (WAITING, APPROVED, REJECTED 등)
     refundCreatedAt: string;            // 환불 요청 생성일 (ISO string)
     refundProcessedAt: string | null;   // 환불 처리일 (ISO string or null)
-} 
+}
+
+// 예약 취소 요청 타입
+export interface ReservationCancelRequest {
+    status: string;
+    reason: string;
+}
+
+// 예약 취소 응답 타입
+export interface ReservationCancelResponse {
+    success: boolean;
+    message: string;
+    refundAmount?: number;
+}

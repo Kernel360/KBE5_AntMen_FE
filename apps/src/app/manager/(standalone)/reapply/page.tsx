@@ -346,7 +346,6 @@ const ManagerReapplyPage = () => {
       <CommonHeader 
         title="매니저 재신청" 
         showBackButton 
-        onBack={() => router.back()} 
       />
       
       <div className="pt-24 pb-8">

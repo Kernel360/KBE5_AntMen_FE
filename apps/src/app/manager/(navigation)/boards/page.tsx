@@ -22,21 +22,37 @@ export default function ManagerBoardsPage() {
   const tabCode = searchParams?.get('t');
   const expectedTab = tabMap[tabCode as 'n' | 'w'] ?? '공지사항';
 
-  // 탭 초기화 (URL 파라미터 우선, 없으면 localStorage, 그것도 없으면 기본값)
+  // URL 파라미터에서 상태 초기화
   useEffect(() => {
+    const search = searchParams?.get('search') || '';
+    const sort = (searchParams?.get('sort') as SortOption) || 'latest';
+    
     if (tabCode) {
       const tab = tabMap[tabCode as 'n' | 'w'];
       if (tab) {
         setActiveTab(tab as '공지사항' | '업무 문의');
         localStorage.setItem('managerBoardActiveTab', tab);
-        return;
+      }
+    } else {
+      const savedTab = localStorage.getItem('managerBoardActiveTab');
+      if (savedTab === '공지사항' || savedTab === '업무 문의') {
+        setActiveTab(savedTab as '공지사항' | '업무 문의');
       }
     }
-    const savedTab = localStorage.getItem('managerBoardActiveTab');
-    if (savedTab === '공지사항' || savedTab === '업무 문의') {
-      setActiveTab(savedTab as '공지사항' | '업무 문의');
-    }
+    
+    setSearchQuery(search);
+    setSelectedSort(sort);
   }, [searchParams, tabCode, tabMap]);
+
+  // 초기 로드 시 URL 파라미터가 없으면 기본값으로 설정
+  useEffect(() => {
+    if (!searchParams?.toString()) {
+      const defaultParams = new URLSearchParams();
+      defaultParams.set('t', 'n');
+      defaultParams.set('sort', 'latest');
+      router.replace(`/manager/boards?${defaultParams.toString()}`);
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     localStorage.setItem('managerBoardActiveTab', activeTab);
@@ -44,18 +60,34 @@ export default function ManagerBoardsPage() {
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
+    updateURL({ search: value });
   };
 
   const handleSortChange = (sort: SortOption) => {
     setSelectedSort(sort);
+    updateURL({ sort });
   };
 
   const handleTabChange = (tab: '공지사항' | '서비스 문의' | '업무 문의') => {
     if (tab === '공지사항' || tab === '업무 문의') {
       setActiveTab(tab);
       const tabCode = tab === '공지사항' ? 'n' : 'w';
-      router.replace(`/manager/boards?t=${tabCode}`);
+      updateURL({ t: tabCode });
     }
+  };
+
+  const updateURL = (params: Record<string, string>) => {
+    const currentParams = new URLSearchParams(searchParams?.toString() || '');
+    
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        currentParams.set(key, value);
+      } else {
+        currentParams.delete(key);
+      }
+    });
+    
+    router.push(`/manager/boards?${currentParams.toString()}`);
   };
 
   const handleClose = () => {
@@ -71,6 +103,7 @@ export default function ManagerBoardsPage() {
           <BoardSearchBar 
             onSearch={handleSearch}
             onFilterClick={() => setIsSortModalOpen(true)}
+            searchTerm={searchQuery}
           />
           <BoardTabs
             userRole="manager"
@@ -82,6 +115,7 @@ export default function ManagerBoardsPage() {
           {/* PostList를 activeTab이 expectedTab과 일치할 때만 렌더링 */}
           {activeTab === expectedTab ? (
             <PostList 
+              key={`${searchQuery}-${selectedSort}-${activeTab}`}
               userRole="manager"
               boardType={activeTab}
               searchTerm={searchQuery}
