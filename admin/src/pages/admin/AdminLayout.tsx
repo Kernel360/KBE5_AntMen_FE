@@ -117,12 +117,6 @@ const menuItems: MenuItem[] = [
                 icon: GitBranch
             },
             {
-                id: 'algorithm-review',
-                label: '알고리즘 검토',
-                path: '/admin/matching/algorithm',
-                icon: GitBranch
-            },
-            {
                 id: 'algorithm-recommend',
                 label: '추천 기준 설정',
                 path: '/admin/matching/recommend',
