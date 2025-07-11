@@ -76,4 +76,23 @@ export interface AdminRefundResponseDto {
     refundStatus: string;               // 환불 상태 (WAITING, APPROVED, REJECTED 등)
     refundCreatedAt: string;            // 환불 요청 생성일 (ISO string)
     refundProcessedAt: string | null;   // 환불 처리일 (ISO string or null)
+}
+
+// 정산 관련 타입
+export interface AdminCalculationItemDto {
+    calculationId: number;              // 정산 ID
+    managerId: number;                  // 매니저 ID
+    managerName: string;                // 매니저명
+    startDate: string;                  // 시작일 (YYYY-MM-DD)
+    endDate: string;                    // 종료일 (YYYY-MM-DD)
+    amount: number;                     // 정산 금액
+    requestedAt: string;                // 요청일 (ISO string)
+}
+
+export interface AdminCalculationResponseDto {
+    totalAmount: number;                // 총 정산 금액
+    currentMonthAmount: number;         // 이번 달 정산
+    currentWeekAmount: number;          // 지난주 정산
+    calculationCount: number;           // 정산 완료 건수
+    recentMonthCalculations: AdminCalculationItemDto[];  // 최근 정산 내역
 } 
