@@ -48,6 +48,7 @@ export interface ReservationMatchingListDto {
     customerId: number;
     customerName: string;
     categoryName: string;
+    reservationCreatedAt: string;
     reservationDate: string;
     reservationTime: string;
     totalRequests: number;

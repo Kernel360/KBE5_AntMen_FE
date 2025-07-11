@@ -16,6 +16,8 @@ export default function WritePostPage() {
   const [fromTab, setFromTab] = useState('i') // 기본값은 서비스 문의(i)
   const [isEditMode, setIsEditMode] = useState(false)
   const [boardId, setBoardId] = useState<string | null>(null)
+  const [originalTitle, setOriginalTitle] = useState('')
+  const [originalContent, setOriginalContent] = useState('')
 
   // 기존 게시글 데이터 로드 (수정 모드용)
   const loadBoardData = async (id: string) => {
@@ -23,10 +25,12 @@ export default function WritePostPage() {
       const boardData = await boardService.getBoardDetail(id)
       setTitle(boardData.boardTitle)
       setContent(boardData.boardContent)
+      setOriginalTitle(boardData.boardTitle)
+      setOriginalContent(boardData.boardContent)
     } catch (error) {
       console.error('게시글 데이터 로드 실패:', error)
       alert('게시글 데이터를 불러오는데 실패했습니다.')
-      router.back()
+      handleGoBack()
     }
   }
 
@@ -89,7 +93,7 @@ export default function WritePostPage() {
         await boardService.updateBoard(boardId, updateData)
         alert(`${boardType}가 성공적으로 수정되었습니다.`)
         // 수정 후 원래 페이지로 돌아가기
-        router.back()
+        handleGoBack()
       } else {
         // 작성 모드
         if (isManager) {
@@ -105,6 +109,17 @@ export default function WritePostPage() {
       alert(isEditMode ? '글 수정 중 오류가 발생했습니다.' : '글 작성 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleGoBack = () => {
+    // 수정 모드에서 내용이 변경된 경우 확인
+    if (isEditMode && (title !== originalTitle || content !== originalContent)) {
+      if (confirm('변경사항이 저장되지 않았습니다. 정말 나가시겠습니까?')) {
+        router.back()
+      }
+    } else {
+      router.back()
     }
   }
 
@@ -184,7 +199,7 @@ export default function WritePostPage() {
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => router.back()}
+              onClick={handleGoBack}
               disabled={isSubmitting}
               className="flex-1 py-3 px-4 text-gray-600 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 disabled:opacity-50"
             >
