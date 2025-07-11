@@ -421,9 +421,9 @@ export const adminService = {
     },
 
     // 예약 상세 정보 조회
-    getReservationDetail: async (reservationId: string): Promise<any> => {
+    getReservationDetail: async (id: string): Promise<any> => {
         try {
-            const response = await adminApi.get(`/admin/reservations/${reservationId}/detail`);
+            const response = await adminApi.get(`/admin/reservations/${id}/detail`);
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 401) {

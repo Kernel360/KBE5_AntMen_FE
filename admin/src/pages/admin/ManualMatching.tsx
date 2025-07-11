@@ -16,15 +16,18 @@ const ITEMS_PER_PAGE = 15;
 
 export const ManualMatching: React.FC = () => {
     const [selectedReservation, setSelectedReservation] = useState<ReservationMatchingListDto | null>(null);
+    const [reservationDetail, setReservationDetail] = useState<any>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isMatchingRequestModalOpen, setIsMatchingRequestModalOpen] = useState(false);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
     const [cancelReasonType, setCancelReasonType] = useState<'preset1' | 'preset2' | 'custom'>('preset1');
+    const [cancelModalSource, setCancelModalSource] = useState<'list' | 'detail'>('list');
     const [matchingType, setMatchingType] = useState<'auto' | 'manual'>('auto');
     const [selectedManagerId, setSelectedManagerId] = useState<string>('');
     const [managerSearchTerm, setManagerSearchTerm] = useState<string>('');
     const [showManagerDropdown, setShowManagerDropdown] = useState(false);
+    const [detailLoading, setDetailLoading] = useState(false);
     
     // 검색 및 필터 상태
     const [customerSearch, setCustomerSearch] = useState<string>('');
@@ -282,16 +285,30 @@ export const ManualMatching: React.FC = () => {
         }
     };
 
-    const openCancelModal = (reservation: ReservationMatchingListDto) => {
+    const openCancelModal = (reservation: ReservationMatchingListDto, source: 'list' | 'detail' = 'list') => {
         setSelectedReservation(reservation);
         setCancelReason('');
         setCancelReasonType('preset1');
+        setCancelModalSource(source);
         setIsCancelModalOpen(true);
     };
 
-    const openDetailModal = (reservation: any) => {
+    const openDetailModal = async (reservation: any) => {
         setSelectedReservation(reservation);
         setIsDetailModalOpen(true);
+        setDetailLoading(true);
+        
+        try {
+            // 상세 정보 API 호출
+            const detail = await adminService.getReservationDetail(reservation.reservationId.toString());
+            setReservationDetail(detail);
+        } catch (err: any) {
+            console.error('상세 정보 로드 오류:', err);
+            // API 호출 실패 시에도 기본 정보는 표시
+            setReservationDetail(null);
+        } finally {
+            setDetailLoading(false);
+        }
     };
 
     // 백엔드에서 받은 stats 데이터를 사용하여 통계 계산
@@ -552,10 +569,11 @@ export const ManualMatching: React.FC = () => {
                                 <TableHead>예약ID</TableHead>
                                 <TableHead>고객정보</TableHead>
                                 <TableHead>서비스</TableHead>
+                                <TableHead>예약 신청일</TableHead>
                                 <TableHead>서비스요청일</TableHead>
                                 <TableHead>매칭상태</TableHead>
-                                <TableHead>시도횟수</TableHead>
-                                <TableHead>매니저 현황</TableHead>
+                                <TableHead>요청횟수</TableHead>
+                                <TableHead>매니저 응답</TableHead>
                                 <TableHead>작업</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -584,16 +602,50 @@ export const ManualMatching: React.FC = () => {
                                         <TableCell>{reservation?.categoryName}</TableCell>
                                         <TableCell>
                                             <div className="text-sm">
-                                                <div className="font-medium">{reservation?.reservationDate} {reservation?.reservationTime}</div>
+                                                <div className="font-medium">
+                                                    {reservation?.reservationCreatedAt ? 
+                                                        new Date(reservation.reservationCreatedAt).toLocaleDateString('ko-KR', {
+                                                            year: 'numeric',
+                                                            month: '2-digit',
+                                                            day: '2-digit'
+                                                        }) : '-'
+                                                    }
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                    {reservation?.reservationCreatedAt ? 
+                                                        new Date(reservation.reservationCreatedAt).toLocaleTimeString('ko-KR', {
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        }) : '-'
+                                                    }
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="text-sm">
+                                                <div className="font-medium">
+                                                    {selectedReservation?.reservationDate ? 
+                                                        new Date(selectedReservation.reservationDate).toLocaleDateString('ko-KR', {
+                                                            year: 'numeric',
+                                                            month: '2-digit',
+                                                            day: '2-digit'
+                                                        }) : '-'
+                                                    } {selectedReservation?.reservationTime ? 
+                                                        `${selectedReservation.reservationTime.substring(0, 5)} ~ ${(() => {
+                                                            const startTime = selectedReservation.reservationTime;
+                                                            const [hours, minutes] = startTime.split(':').map(Number);
+                                                            const endHours = hours + reservationDetail.reservationDuration;
+                                                            return `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                                                        })()}`
+                                                        : '-'
+                                                    }
+                                                </div>
                                             </div>
                                         </TableCell>
                                         <TableCell>{getMatchingStatusBadge(currentStatus)}</TableCell>
                                         <TableCell>
                                             <div className="text-sm">
-                                                <div className="font-medium text-blue-600">
-                                                    {reservation?.totalRequests}차 시도
-                                                </div>
-                                                <div className="text-xs text-gray-500">
+                                                <div className="text-sm font-medium text-blue-600">
                                                     {reservation?.totalRequests > 0 ? `${reservation.totalRequests}회 요청` : '요청 없음'}
                                                 </div>
                                             </div>
@@ -610,24 +662,6 @@ export const ManualMatching: React.FC = () => {
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex gap-2">
-                                                {currentStatus === 'nothing' && (
-                                                    <Button 
-                                                        size="sm" 
-                                                        onClick={() => openMatchingRequestModal(reservation)}
-                                                        className="bg-blue-600 hover:bg-blue-700"
-                                                    >
-                                                        매칭요청
-                                                    </Button>
-                                                )}
-                                                {currentStatus === 'fail' && (
-                                                    <Button 
-                                                        size="sm" 
-                                                        onClick={() => handleRetryMatchingRequest(reservation?.reservationId)}
-                                                        className="bg-orange-600 hover:bg-orange-700"
-                                                    >
-                                                        재시도
-                                                    </Button>
-                                                )}
                                                 <Button 
                                                     variant="outline" 
                                                     size="sm"
@@ -638,7 +672,7 @@ export const ManualMatching: React.FC = () => {
                                                 <Button 
                                                     variant="outline" 
                                                     size="sm"
-                                                    onClick={() => openCancelModal(reservation)}
+                                                    onClick={() => openCancelModal(reservation, 'list')}
                                                     className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 hover:text-red-700"
                                                 >
                                                     취소
@@ -732,160 +766,140 @@ export const ManualMatching: React.FC = () => {
 
             {/* 매칭 요청 생성 모달 */}
             <Dialog open={isMatchingRequestModalOpen} onOpenChange={setIsMatchingRequestModalOpen}>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-4xl z-[70]">
                     <DialogHeader>
-                        <DialogTitle>매칭 요청 생성</DialogTitle>
+                        <DialogTitle>매칭 수정</DialogTitle>
                     </DialogHeader>
-                    {selectedReservation && (
+                    {selectedReservation && reservationDetail && (
                         <div className="space-y-6">
-                                                            <div className="bg-gray-50 p-4 rounded-lg">
-                                    <h3 className="font-medium mb-2">예약 정보</h3>
-                                    <div className="text-sm space-y-1">
-                                        <div><span className="font-medium">예약 ID:</span> {selectedReservation.reservationId}</div>
-                                        <div><span className="font-medium">고객명:</span> {selectedReservation.customerName}</div>
-                                        <div><span className="font-medium">고객 ID:</span> {selectedReservation.customerId}</div>
-                                        <div><span className="font-medium">서비스:</span> {selectedReservation.categoryName}</div>
-                                        <div><span className="font-medium">서비스요청일:</span> {selectedReservation.reservationDate} {selectedReservation.reservationTime}</div>
-                                    </div>
-                                </div>
-                            
-                            <div>
-                                <Label className="text-base font-medium">매칭 방식 선택</Label>
-                                <div className="mt-3 space-y-3">
-                                    <div className="flex items-center space-x-2">
-                                        <input
-                                            type="radio"
-                                            id="auto"
-                                            name="matchingType"
-                                            value="auto"
-                                            checked={matchingType === 'auto'}
-                                            onChange={(e) => setMatchingType(e.target.value as 'auto' | 'manual')}
-                                            className="w-4 h-4"
-                                        />
-                                        <label htmlFor="auto" className="text-sm">
-                                            <span className="font-medium">자동 추천</span>
-                                            <div className="text-gray-500">알고리즘이 최적의 매니저를 자동으로 찾아 매칭 요청을 보냅니다.</div>
-                                        </label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <input
-                                            type="radio"
-                                            id="manual"
-                                            name="matchingType"
-                                            value="manual"
-                                            checked={matchingType === 'manual'}
-                                            onChange={(e) => setMatchingType(e.target.value as 'auto' | 'manual')}
-                                            className="w-4 h-4"
-                                        />
-                                        <label htmlFor="manual" className="text-sm">
-                                            <span className="font-medium">직접 지정</span>
-                                            <div className="text-gray-500">관리자가 직접 매니저를 선택하여 매칭 요청을 보냅니다.</div>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            {matchingType === 'manual' && (
-                                <div className="relative">
-                                    <Label htmlFor="manager-search">매니저 검색 및 선택</Label>
-                                    <Input
-                                        id="manager-search"
-                                        type="text"
-                                        placeholder="매니저 이름, 지역, ID로 검색..."
-                                        value={managerSearchTerm}
-                                        onChange={(e) => {
-                                            setManagerSearchTerm(e.target.value);
-                                            setShowManagerDropdown(true);
-                                            if (!e.target.value) {
-                                                setSelectedManagerId('');
-                                            }
-                                        }}
-                                        onFocus={() => setShowManagerDropdown(true)}
-                                        className="w-full"
-                                    />
-                                    
-                                    {/* 선택된 매니저 정보 */}
-                                    {selectedManagerId && getSelectedManagerInfo() && (
-                                        <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <div className="font-medium text-blue-900">
-                                                        {getSelectedManagerInfo()?.name}
-                                                    </div>
-                                                    <div className="text-sm text-blue-700">
-                                                        {getSelectedManagerInfo()?.area} | ★ {getSelectedManagerInfo()?.rating}
-                                                    </div>
-                                                    <div className="text-xs text-blue-600">
-                                                        {getSelectedManagerInfo()?.phone}
-                                                    </div>
-                                                </div>
-                                                <Button
-                                                    variant="outline" 
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        setSelectedManagerId('');
-                                                        setManagerSearchTerm('');
-                                                    }}
-                                                    className="text-xs"
-                                                >
-                                                    변경
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    )}
-                                    
-                                    {/* 검색 결과 드롭다운 */}
-                                    {showManagerDropdown && managerSearchTerm && !selectedManagerId && (
-                                        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                            {filteredManagers.length > 0 ? (
-                                                filteredManagers.map((manager) => (
-                                                    <div
-                                                        key={manager.id}
-                                                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                                                        onClick={() => handleManagerSelect(manager)}
-                                                    >
-                                                        <div className="flex justify-between items-start">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* 왼쪽: 매니저가 수락했는데 고객이 응답하지 않은 매칭 */}
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="text-base">고객 응답 대기 중</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                                            {reservationDetail.matchingDtoList?.filter((matching: any) => 
+                                                matching.isAccepted === true && matching.isFinal === null
+                                            ).map((matching: any) => (
+                                                <div key={matching.matchingId} className="border rounded-lg p-4 bg-gray-50">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <img 
+                                                                src={matching.manager.profileImage} 
+                                                                alt={matching.manager.name}
+                                                                className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                                                            />
                                                             <div>
-                                                                <div className="font-medium text-gray-900">
-                                                                    {manager.name}
+                                                                <div className="font-semibold text-gray-900">
+                                                                    {matching.manager.name}
                                                                 </div>
                                                                 <div className="text-sm text-gray-600">
-                                                                    {manager.area} | 평점: ★ {manager.rating}
+                                                                    {matching.manager.gender} | {matching.manager.age}세 | ★ {matching.manager.avgRating || 0}
                                                                 </div>
                                                                 <div className="text-xs text-gray-500">
-                                                                    ID: {manager.id} | {manager.phone}
+                                                                    매니저 수락: {new Date(matching.updatedAt).toLocaleDateString('ko-KR')}
                                                                 </div>
                                                             </div>
                                                         </div>
+                                                        <Button 
+                                                            size="sm" 
+                                                            className="bg-green-600 hover:bg-green-700 text-white"
+                                                            onClick={() => {
+                                                                // 고객 수락 처리
+                                                                console.log('고객 수락 처리:', matching.matchingId);
+                                                            }}
+                                                        >
+                                                            고객 수락
+                                                        </Button>
                                                     </div>
-                                                ))
-                                            ) : (
-                                                <div className="px-4 py-3 text-gray-500 text-center">
-                                                    검색 결과가 없습니다.
+                                                </div>
+                                            ))}
+                                            {reservationDetail.matchingDtoList?.filter((matching: any) => 
+                                                matching.isAccepted === true && matching.isFinal === null
+                                            ).length === 0 && (
+                                                <div className="text-center py-8 text-gray-500">
+                                                    매니저가 수락하고 고객 응답 대기 중인 매칭이 없습니다.
                                                 </div>
                                             )}
                                         </div>
-                                    )}
-                                    
-                                    {/* 드롭다운 외부 클릭시 닫기 */}
-                                    {showManagerDropdown && (
-                                        <div 
-                                            className="fixed inset-0 z-40"
-                                            onClick={() => setShowManagerDropdown(false)}
-                                        />
-                                    )}
-                                </div>
-                            )}
+                                    </CardContent>
+                                </Card>
+
+                                {/* 오른쪽: 요청이 가지 않은 매칭 */}
+                                <Card>
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <CardTitle className="text-base">요청 대기 중</CardTitle>
+                                            <Button 
+                                                size="sm" 
+                                                variant="outline"
+                                                onClick={() => {
+                                                    // 새 요청 만들기 처리
+                                                    console.log('새 요청 만들기');
+                                                }}
+                                            >
+                                                새 요청 만들기
+                                            </Button>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                                            {reservationDetail.matchingDtoList?.filter((matching: any) => 
+                                                !matching.isRequested
+                                            ).map((matching: any) => (
+                                                <div key={matching.matchingId} className="border rounded-lg p-4 bg-gray-50">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <img 
+                                                                src={matching.manager.profileImage} 
+                                                                alt={matching.manager.name}
+                                                                className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                                                            />
+                                                            <div>
+                                                                <div className="font-semibold text-gray-900">
+                                                                    {matching.manager.name}
+                                                                </div>
+                                                                <div className="text-sm text-gray-600">
+                                                                    {matching.manager.gender} | {matching.manager.age}세 | ★ {matching.manager.avgRating || 0}
+                                                                </div>
+                                                                <div className="text-xs text-gray-500">
+                                                                    후보 지정: {new Date(matching.updatedAt).toLocaleDateString('ko-KR')}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <Button 
+                                                            size="sm" 
+                                                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                                                            onClick={() => {
+                                                                // 매칭 요청 보내기
+                                                                console.log('매칭 요청 보내기:', matching.matchingId);
+                                                            }}
+                                                        >
+                                                            요청 보내기
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {reservationDetail.matchingDtoList?.filter((matching: any) => 
+                                                !matching.isRequested
+                                            ).length === 0 && (
+                                                <div className="text-center py-8 text-gray-500">
+                                                    요청 대기 중인 매칭이 없습니다.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </div>
                             
-                            <div className="flex justify-end gap-2">
+                            <div className="flex justify-end gap-2 pt-4 border-t">
                                 <Button 
                                     variant="outline" 
                                     onClick={() => setIsMatchingRequestModalOpen(false)}
                                 >
-                                    취소
-                                </Button>
-                                <Button onClick={handleCreateMatchingRequest}>
-                                    매칭 요청 생성
+                                    닫기
                                 </Button>
                             </div>
                         </div>
@@ -895,155 +909,304 @@ export const ManualMatching: React.FC = () => {
 
             {/* 상세보기 모달 */}
             <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
-                <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
+                <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto z-[50]">
                     {selectedReservation && (
                         <>
                             <DialogHeader>
                                 <DialogTitle>예약 상세정보 및 매칭 요청 히스토리</DialogTitle>
                             </DialogHeader>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* 예약 정보 */}
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="text-lg">예약 정보</CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div>
-                                            <Label className="text-sm font-medium text-gray-500">예약 ID</Label>
-                                            <div className="font-mono">{selectedReservation?.reservationId}</div>
-                                        </div>
-                                        <div>
-                                            <Label className="text-sm font-medium text-gray-500">고객 정보</Label>
-                                            <div className="font-medium">{selectedReservation?.customerName}</div>
-                                            <div className="text-sm text-gray-600">고객 ID: {selectedReservation?.customerId}</div>
-                                        </div>
-                                        <div>
-                                            <Label className="text-sm font-medium text-gray-500">서비스 유형</Label>
-                                            <div>{selectedReservation?.categoryName}</div>
-                                        </div>
-                                        <div>
-                                            <Label className="text-sm font-medium text-gray-500">예약 일시</Label>
-                                            <div className="font-medium">{selectedReservation?.reservationDate} {selectedReservation?.reservationTime}</div>
-                                        </div>
-                                        <div>
-                                            <Label className="text-sm font-medium text-gray-500">매칭 상태</Label>
-                                            <div>{getMatchingStatusBadge(selectedReservation?.matchingStatus)}</div>
-                                        </div>
-                                        <div>
-                                            <Label className="text-sm font-medium text-gray-500">매칭 요청 횟수</Label>
-                                            <div>{selectedReservation?.totalRequests}회</div>
-                                        </div>
-                                        <div>
-                                            <Label className="text-sm font-medium text-gray-500">매니저 응답</Label>
-                                            <div>{selectedReservation?.totalManagerResponses}명</div>
-                                        </div>
-                                        <div>
-                                            <Label className="text-sm font-medium text-gray-500">매니저 수락</Label>
-                                            <div>{selectedReservation?.totalManagerAccepts}명</div>
-                                        </div>
-                                        <div>
-                                            <Label className="text-sm font-medium text-gray-500">현재 매칭 상태</Label>
-                                            <div>{getMatchingStatusBadge(getCurrentMatchingStatus(selectedReservation))}</div>
-                                        </div>
+                            
+                            {detailLoading && (
+                                <div className="text-center py-8">
+                                    <div className="text-lg text-gray-600">상세 정보를 불러오는 중...</div>
+                                </div>
+                            )}
+                            
+                            {!detailLoading && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* 예약 정보 */}
+                                    <div className="space-y-4">
 
-                                        {/* 수동 작업 버튼들 */}
-                                        <div className="pt-4 space-y-2">
-                                            <Label className="text-sm font-medium text-gray-500">수동 작업</Label>
-                                            <div className="flex gap-2 flex-wrap">
-                                                {getCurrentMatchingStatus(selectedReservation) === 'nothing' && (
-                                                    <Button 
-                                                        onClick={() => {
-                                                            setIsDetailModalOpen(false);
-                                                            openMatchingRequestModal(selectedReservation);
-                                                        }}
-                                                        className="bg-blue-600 hover:bg-blue-700"
-                                                    >
-                                                        첫 매칭 요청 생성
-                                                    </Button>
-                                                )}
-                                                {getCurrentMatchingStatus(selectedReservation) === 'fail' && (
-                                                    <Button 
-                                                        onClick={() => {
-                                                            setIsDetailModalOpen(false);
-                                                            openMatchingRequestModal(selectedReservation);
-                                                        }}
-                                                        className="bg-orange-600 hover:bg-orange-700"
-                                                    >
-                                                        새 매칭 요청 생성
-                                                    </Button>
-                                                )}
-                                                {getCurrentMatchingStatus(selectedReservation) === 'ing' && (
-                                                    <Button variant="outline">
-                                                        매칭 진행 중...
-                                                    </Button>
-                                                )}
-                                                <Button 
-                                                    variant="outline"
-                                                    onClick={() => {
-                                                        setIsDetailModalOpen(false);
-                                                        openCancelModal(selectedReservation);
-                                                    }}
-                                                    className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 hover:text-red-700"
-                                                >
-                                                    예약 취소
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-
-                                {/* 매칭 요청 히스토리 */}
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="text-lg">
-                                            매칭 요청 히스토리 
-                                            <Badge className="ml-2">{selectedReservation?.totalRequests || 0}건</Badge>
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        {!selectedReservation?.totalRequests || selectedReservation.totalRequests === 0 ? (
-                                            <div className="text-center py-8 text-gray-500">
-                                                아직 매칭 요청이 없습니다.
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-4 max-h-96 overflow-y-auto">
-                                                <div className="border rounded-lg p-4">
-                                                    <div className="flex justify-between items-start mb-2">
+                                        {/* 고객 정보 */}
+                                        {reservationDetail && (
+                                            <Card>
+                                                <CardHeader>
+                                                    <CardTitle className="text-lg">고객 정보</CardTitle>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <div className="space-y-4 text-sm">
                                                         <div>
-                                                            <div className="font-medium flex items-center gap-2">
-                                                                <span className="text-sm bg-gray-100 px-2 py-1 rounded">
-                                                                    {selectedReservation.totalRequests}차 시도
-                                                                </span>
+                                                            <Label className="text-xs text-gray-500">이름</Label>
+                                                            <div className="font-medium">{selectedReservation?.customerName}</div>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div>
+                                                                <Label className="text-xs text-gray-500">성별</Label>
+                                                                <div>{reservationDetail.customerGender}</div>
+                                                            </div>
+                                                            <div>
+                                                                <Label className="text-xs text-gray-500">나이</Label>
+                                                                <div>{reservationDetail.customerAge}세</div>
                                                             </div>
                                                         </div>
-                                                        <div>{getMatchingStatusBadge(selectedReservation.matchingStatus)}</div>
-                                                    </div>
-                                                    
-                                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                                        <div>
-                                                            <Label className="text-xs text-gray-500">매니저 응답</Label>
-                                                            <div>{selectedReservation.totalManagerResponses}명</div>
-                                                        </div>
-                                                        <div>
-                                                            <Label className="text-xs text-gray-500">매니저 수락</Label>
-                                                            <div>{selectedReservation.totalManagerAccepts}명</div>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div>
+                                                                <Label className="text-xs text-gray-500">연락처</Label>
+                                                                <div>{reservationDetail.customerPhone}</div>
+                                                            </div>
+                                                            <div>
+                                                                <Label className="text-xs text-gray-500">이메일</Label>
+                                                                <div>{reservationDetail.customerEmail}</div>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    
-                                                    <div className="mt-2">
-                                                        <Label className="text-xs text-gray-500">현재 상태</Label>
-                                                        <div className="text-sm">
-                                                            {selectedReservation.matchingStatus === 'ing' && '매칭 진행 중'}
-                                                            {selectedReservation.matchingStatus === 'fail' && '매칭 실패'}
-                                                            {selectedReservation.matchingStatus === 'nothing' && '매칭 요청 없음'}
+                                                </CardContent>
+                                            </Card>
+                                        )}
+
+                                        {/* 서비스 정보 */}
+                                        {reservationDetail && (
+                                            <Card>
+                                                <CardHeader>
+                                                    <CardTitle className="text-lg">서비스 정보</CardTitle>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <div className="space-y-4 text-sm">
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div>
+                                                                <Label className="text-xs text-gray-500">서비스명</Label>
+                                                                <div className="font-medium">{selectedReservation?.categoryName}</div>
+                                                            </div>
+                                                            <div>
+                                                                <Label className="text-xs text-gray-500">예약 신청일</Label>
+                                                                <div className="font-medium">
+                                                                    {selectedReservation?.reservationCreatedAt ? 
+                                                                        new Date(selectedReservation.reservationCreatedAt).toLocaleDateString('ko-KR', {
+                                                                            year: 'numeric',
+                                                                            month: '2-digit',
+                                                                            day: '2-digit'
+                                                                        }) : '-'
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <Label className="text-xs text-gray-500">서비스 시간</Label>
+                                                            <div className="font-medium">
+                                                                {selectedReservation?.reservationDate ? 
+                                                                    new Date(selectedReservation.reservationDate).toLocaleDateString('ko-KR', {
+                                                                        year: 'numeric',
+                                                                        month: '2-digit',
+                                                                        day: '2-digit'
+                                                                    }) : '-'
+                                                                } {selectedReservation?.reservationTime ? 
+                                                                    `${selectedReservation.reservationTime.substring(0, 5)} ~ ${(() => {
+                                                                        const startTime = selectedReservation.reservationTime;
+                                                                        const [hours, minutes] = startTime.split(':').map(Number);
+                                                                        const endHours = hours + reservationDetail.reservationDuration;
+                                                                        return `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                                                                    })()}`
+                                                                    : '-'
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <Label className="text-xs text-gray-500">서비스 주소</Label>
+                                                            <div className="text-xs">
+                                                                {reservationDetail.reservationAddress ? reservationDetail.reservationAddress : '삭제된 주소입니다'}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        )}
+
+                                        {/* 수동 작업 버튼들 */}
+                                        <Card>
+                                            <CardHeader>
+                                                <CardTitle className="text-lg">수동 작업</CardTitle>
+                                            </CardHeader>
+                                            <CardContent>
+                                                <div className="flex gap-2 flex-wrap">
+                                                    <Button 
+                                                        variant="outline"
+                                                        onClick={() => {
+                                                            openMatchingRequestModal(selectedReservation);
+                                                        }}
+                                                        className="border-green-300 text-green-600 hover:bg-green-50 hover:border-green-400 hover:text-green-700"
+                                                    >
+                                                        매칭 수정
+                                                    </Button>
+                                                    <Button 
+                                                        variant="outline"
+                                                        onClick={() => {
+                                                            openCancelModal(selectedReservation, 'detail');
+                                                        }}
+                                                        className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 hover:text-red-700"
+                                                    >
+                                                        예약 취소
+                                                    </Button>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+
+                                    {/* 매칭 요청 히스토리 */}
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle className="text-lg">
+                                                매칭 요청 히스토리 
+                                                <Badge className="ml-2">{reservationDetail?.matchingDtoList?.length || 0}건</Badge>
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            {reservationDetail ? (
+                                                <div className="space-y-4">
+                                                    {reservationDetail.matchingDtoList?.map((matching: any, index: number) => (
+                                                        <div key={matching.matchingId} className="border rounded-lg p-4 bg-gray-50">
+                                                            <div className="flex justify-between items-start mb-4">
+                                                                <div className="flex items-center gap-2">
+                                                                    <Badge variant="outline" className="text-xs">
+                                                                        {matching.priority}순위
+                                                                    </Badge>
+                                                                    {matching.isRequested && (
+                                                                        <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                                                            요청됨
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                                <div className="text-xs text-gray-500">
+                                                                    {!matching.isRequested && (
+                                                                        <span>후보지정: {new Date(matching.updatedAt).toLocaleDateString('ko-KR')}</span>
+                                                                    )}
+                                                                    {matching.isRequested && matching.isAccepted === null && (
+                                                                        <span>요청: {new Date(matching.updatedAt).toLocaleDateString('ko-KR')}</span>
+                                                                    )}
+                                                                    {matching.isAccepted !== null && matching.isFinal === null && (
+                                                                        <span>매니저 응답: {new Date(matching.updatedAt).toLocaleDateString('ko-KR')}</span>
+                                                                    )}
+                                                                    {matching.isFinal !== null && (
+                                                                        <span>고객 응답: {new Date(matching.updatedAt).toLocaleDateString('ko-KR')}</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            {/* 매니저 정보 - 더 눈에 잘 띄게 */}
+                                                            <div className="bg-white border rounded-lg p-3 mb-3">
+                                                                <div className="flex items-center gap-3">
+                                                                    <img 
+                                                                        src={matching.manager.profileImage} 
+                                                                        alt={matching.manager.name}
+                                                                        className="w-14 h-14 rounded-full object-cover border-2 border-gray-200"
+                                                                    />
+                                                                    <div className="flex-1">
+                                                                        <div className="font-semibold text-base text-gray-900">
+                                                                            {matching.manager.name} <span className="text-sm font-normal text-gray-600">| {matching.manager.gender} | {matching.manager.age}세</span>
+                                                                        </div>
+                                                                        <div className="text-sm text-gray-600">
+                                                                            리뷰 {matching.manager.totalReviews}개 | 평점 {matching.manager.avgRating || 0}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            {/* 매니저/고객 응답 상태 */}
+                                                            <div className="space-y-2">
+                                                                {/* 매니저 응답 상태 (요청을 보낸 경우에만) */}
+                                                                {matching.isRequested && (
+                                                                    <>
+                                                                        {matching.isAccepted === null && (
+                                                                            <div className="p-2 bg-gray-50 rounded text-xs text-gray-600">
+                                                                                매니저 응답 대기 중
+                                                                            </div>
+                                                                        )}
+                                                                        {matching.isAccepted === false && (
+                                                                            <div className="p-2 bg-red-50 rounded text-xs text-red-700">
+                                                                                매니저 거절
+                                                                            </div>
+                                                                        )}
+                                                                        {matching.isAccepted === true && (
+                                                                            <div className="p-2 bg-green-50 rounded text-xs text-green-700">
+                                                                                매니저 수락
+                                                                            </div>
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                                
+                                                                {/* 고객 응답 상태 (매니저가 수락한 경우에만) */}
+                                                                {matching.isAccepted === true && (
+                                                                    <>
+                                                                        {matching.isFinal === null && (
+                                                                            <div className="p-2 bg-yellow-50 rounded text-xs text-yellow-700">
+                                                                                고객 응답 대기 중
+                                                                            </div>
+                                                                        )}
+                                                                        {matching.isFinal === false && (
+                                                                            <div className="p-2 bg-red-50 rounded text-xs text-red-700">
+                                                                                고객이 거절함
+                                                                            </div>
+                                                                        )}
+                                                                        {matching.isFinal === true && (
+                                                                            <div className="p-2 bg-purple-50 rounded text-xs text-purple-700">
+                                                                                고객이 수락함 (최종 매칭)
+                                                                            </div>
+                                                                        )}
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                            
+                                                            {matching.refuseReason && (
+                                                                <div className="mt-2 p-2 bg-red-50 rounded text-xs text-red-700">
+                                                                    거절 사유: {matching.refuseReason}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : !selectedReservation?.totalRequests || selectedReservation.totalRequests === 0 ? (
+                                                <div className="text-center py-8 text-gray-500">
+                                                    아직 매칭 요청이 없습니다.
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-4 max-h-96 overflow-y-auto">
+                                                    <div className="border rounded-lg p-4">
+                                                        <div className="flex justify-between items-start mb-2">
+                                                            <div>
+                                                                <div className="font-medium flex items-center gap-2">
+                                                                    <span className="text-sm bg-gray-100 px-2 py-1 rounded">
+                                                                        {selectedReservation.totalRequests}차 시도
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div>{getMatchingStatusBadge(selectedReservation.matchingStatus)}</div>
+                                                        </div>
+                                                        
+                                                        <div className="grid grid-cols-2 gap-4 text-sm">
+                                                            <div>
+                                                                <Label className="text-xs text-gray-500">매니저 응답</Label>
+                                                                <div>{selectedReservation.totalManagerResponses}명</div>
+                                                            </div>
+                                                            <div>
+                                                                <Label className="text-xs text-gray-500">매니저 수락</Label>
+                                                                <div>{selectedReservation.totalManagerAccepts}명</div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div className="mt-2">
+                                                            <Label className="text-xs text-gray-500">현재 상태</Label>
+                                                            <div className="text-sm">
+                                                                {selectedReservation.matchingStatus === 'ing' && '매칭 진행 중'}
+                                                                {selectedReservation.matchingStatus === 'fail' && '매칭 실패'}
+                                                                {selectedReservation.matchingStatus === 'nothing' && '매칭 요청 없음'}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            )}
                         </>
                     )}
                 </DialogContent>
@@ -1051,7 +1214,7 @@ export const ManualMatching: React.FC = () => {
 
             {/* 예약 취소 모달 */}
             <Dialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
-                <DialogContent className="max-w-md">
+                <DialogContent className={`max-w-md ${cancelModalSource === 'detail' ? 'z-[60]' : 'z-[50]'}`}>
                     <DialogHeader>
                         <DialogTitle>예약 취소</DialogTitle>
                     </DialogHeader>
