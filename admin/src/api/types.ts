@@ -46,7 +46,7 @@ export interface BoardRequestDto {
 export interface AdminDailySaleResponseDto {
     dailyDate: string;        // LocalDate -> ISO string format (YYYY-MM-DD)
     dailySales: number;       // 일일 매출
-    dailyFee: number;         // 일일 수수료
+    dailyFee: number;         // 일일 비용
     dailyProfit: number;      // 일일 순이익
 }
 
@@ -95,4 +95,27 @@ export interface AdminCalculationResponseDto {
     currentWeekAmount: number;          // 지난주 정산
     calculationCount: number;           // 정산 완료 건수
     recentMonthCalculations: AdminCalculationItemDto[];  // 최근 정산 내역
+}
+
+// 정산 상세보기 관련 타입
+export interface AdminCalculationReservationDto {
+    reservationId: number;              // 예약 ID
+    reservationDate: string;            // 예약일 (YYYY-MM-DD)
+    categoryName: string;               // 카테고리명
+    optionNames: string[];              // 옵션명 리스트
+    reservationAmount: number;          // 예약 금액
+}
+
+export interface AdminCalculationDetailDto {
+    calculationId: number;              // 정산 ID
+    startDate: string;                  // 시작일 (YYYY-MM-DD)
+    endDate: string;                    // 종료일 (YYYY-MM-DD)
+    requestedAt: string;                // 요청일 (ISO string)
+    amount: number;                     // 정산 금액
+    managerId: number;                  // 매니저 ID
+    managerName: string;                // 매니저명
+    managerLoginId: string;             // 매니저 로그인 ID
+    totalReservationCount: number;      // 총 예약 건수
+    totalReservationAmount: number;     // 총 예약 금액
+    reservations: AdminCalculationReservationDto[];  // 예약 목록
 } 

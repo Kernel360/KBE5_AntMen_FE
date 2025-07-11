@@ -33,10 +33,13 @@ import {
     CalendarDays,
     Users,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    Calendar,
+    User,
+    Receipt
 } from 'lucide-react';
 import { adminCalculationService } from '../../api/adminCalculation';
-import { AdminCalculationResponseDto, AdminCalculationItemDto } from '../../api/types';
+import { AdminCalculationResponseDto, AdminCalculationItemDto, AdminCalculationDetailDto } from '../../api/types';
 
 // 주차별 정산 그룹
 interface WeeklyCalculationGroup {
@@ -53,6 +56,8 @@ export const FinanceSettlement: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedCalculation, setSelectedCalculation] = useState<AdminCalculationItemDto | null>(null);
+    const [calculationDetail, setCalculationDetail] = useState<AdminCalculationDetailDto | null>(null);
+    const [detailLoading, setDetailLoading] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'weekly' | 'all'>('weekly');
     const [weeklyGroups, setWeeklyGroups] = useState<WeeklyCalculationGroup[]>([]);
@@ -139,6 +144,32 @@ export const FinanceSettlement: React.FC = () => {
                 i === index ? { ...group, isExpanded: !group.isExpanded } : group
             )
         );
+    };
+
+    // 정산 상세 정보 조회
+    const handleDetailClick = async (calculation: AdminCalculationItemDto) => {
+        try {
+            setSelectedCalculation(calculation);
+            setDialogOpen(true);
+            setDetailLoading(true);
+            setCalculationDetail(null);
+            
+            const detail = await adminCalculationService.getCalculationDetail(calculation.calculationId);
+            setCalculationDetail(detail);
+        } catch (error: any) {
+            console.error('상세 정보 조회 실패:', error);
+            alert(error.message || '상세 정보를 불러오는데 실패했습니다.');
+        } finally {
+            setDetailLoading(false);
+        }
+    };
+
+    // 다이얼로그 닫기
+    const handleDialogClose = () => {
+        setDialogOpen(false);
+        setSelectedCalculation(null);
+        setCalculationDetail(null);
+        setDetailLoading(false);
     };
 
     if (loading) {
@@ -359,10 +390,7 @@ export const FinanceSettlement: React.FC = () => {
                                                                         <Button
                                                                             size="sm"
                                                                             variant="outline"
-                                                                            onClick={() => {
-                                                                                setSelectedCalculation(calculation);
-                                                                                setDialogOpen(true);
-                                                                            }}
+                                                                            onClick={() => handleDetailClick(calculation)}
                                                                         >
                                                                             상세
                                                                         </Button>
@@ -443,10 +471,7 @@ export const FinanceSettlement: React.FC = () => {
                                                             <Button
                                                                 size="sm"
                                                                 variant="outline"
-                                                                onClick={() => {
-                                                                    setSelectedCalculation(calculation);
-                                                                    setDialogOpen(true);
-                                                                }}
+                                                                onClick={() => handleDetailClick(calculation)}
                                                             >
                                                                 상세
                                                             </Button>
@@ -475,77 +500,149 @@ export const FinanceSettlement: React.FC = () => {
             </Tabs>
 
             {/* 정산 상세 다이얼로그 */}
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogContent className="max-w-2xl">
+            <Dialog open={dialogOpen} onOpenChange={handleDialogClose}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Calculator className="w-5 h-5 text-blue-500" />
                             정산 요청 상세 정보
                         </DialogTitle>
                         <DialogDescription>
-                            {selectedCalculation && (
-                                <div className="space-y-4 mt-4">
+                            {detailLoading ? (
+                                <div className="flex justify-center items-center py-8">
+                                    <div className="text-gray-600">상세 정보를 불러오는 중...</div>
+                                </div>
+                            ) : calculationDetail ? (
+                                <div className="space-y-6 mt-4">
                                     {/* 기본 정보 */}
-                                    <div className="grid grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-3">
-                                            <h4 className="font-semibold text-gray-900">매니저 정보</h4>
-                                            <div className="space-y-2 text-sm">
+                                            <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                                                <User className="w-4 h-4" />
+                                                매니저 정보
+                                            </h4>
+                                            <div className="space-y-2 text-sm bg-gray-50 p-3 rounded-lg">
                                                 <div className="flex justify-between">
                                                     <span className="font-medium">매니저명:</span>
-                                                    <span>{selectedCalculation.managerName}</span>
+                                                    <span>{calculationDetail.managerName}</span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="font-medium">매니저ID:</span>
-                                                    <span>{selectedCalculation.managerId}</span>
+                                                    <span>{calculationDetail.managerId}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium">로그인ID:</span>
+                                                    <span>{calculationDetail.managerLoginId}</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="space-y-3">
-                                            <h4 className="font-semibold text-gray-900">정산 정보</h4>
-                                            <div className="space-y-2 text-sm">
+                                            <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                                                <Calendar className="w-4 h-4" />
+                                                정산 정보
+                                            </h4>
+                                            <div className="space-y-2 text-sm bg-gray-50 p-3 rounded-lg">
                                                 <div className="flex justify-between">
                                                     <span className="font-medium">정산ID:</span>
-                                                    <span>{selectedCalculation.calculationId}</span>
+                                                    <span>{calculationDetail.calculationId}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="font-medium">정산 기간:</span>
+                                                    <span>
+                                                        {formatDate(calculationDetail.startDate)} ~ {formatDate(calculationDetail.endDate)}
+                                                    </span>
                                                 </div>
                                                 <div className="flex justify-between">
                                                     <span className="font-medium">요청일:</span>
-                                                    <span>{formatDateTime(selectedCalculation.requestedAt)}</span>
+                                                    <span>{formatDateTime(calculationDetail.requestedAt)}</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* 정산 세부 정보 */}
+                                    {/* 정산 요약 */}
                                     <div className="p-4 bg-blue-50 rounded-lg">
-                                        <h4 className="font-semibold text-gray-900 mb-3">정산 세부 정보</h4>
-                                        <div className="space-y-2">
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-medium">정산 기간:</span>
-                                                <span>
-                                                    {formatDate(selectedCalculation.startDate)} ~ {formatDate(selectedCalculation.endDate)}
-                                                </span>
+                                        <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                            <Receipt className="w-4 h-4" />
+                                            정산 요약
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="text-center">
+                                                <p className="text-sm text-gray-600">총 예약 건수</p>
+                                                <p className="text-xl font-bold text-blue-600">{calculationDetail.totalReservationCount}건</p>
                                             </div>
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-medium">정산 금액:</span>
-                                                <span className="text-2xl font-bold text-blue-600">
-                                                    {formatCurrency(selectedCalculation.amount)}
-                                                </span>
+                                            <div className="text-center">
+                                                <p className="text-sm text-gray-600">총 예약 금액</p>
+                                                <p className="text-xl font-bold text-blue-600">{formatCurrency(calculationDetail.totalReservationAmount)}</p>
                                             </div>
+                                            <div className="text-center">
+                                                <p className="text-sm text-gray-600">정산 금액</p>
+                                                <p className="text-xl font-bold text-blue-600">{formatCurrency(calculationDetail.amount)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* 예약 목록 */}
+                                    <div className="space-y-3">
+                                        <h4 className="font-semibold text-gray-900">예약 목록</h4>
+                                        <div className="overflow-x-auto">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>예약ID</TableHead>
+                                                        <TableHead>예약일</TableHead>
+                                                        <TableHead>카테고리</TableHead>
+                                                        <TableHead>옵션</TableHead>
+                                                        <TableHead>금액</TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {calculationDetail.reservations.map((reservation) => (
+                                                        <TableRow key={reservation.reservationId}>
+                                                            <TableCell className="font-medium">
+                                                                {reservation.reservationId}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                {formatDate(reservation.reservationDate)}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                {reservation.categoryName}
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {reservation.optionNames.map((option, index) => (
+                                                                        <Badge key={index} variant="outline" className="text-xs">
+                                                                            {option}
+                                                                        </Badge>
+                                                                    ))}
+                                                                </div>
+                                                            </TableCell>
+                                                            <TableCell className="font-bold text-blue-600">
+                                                                {formatCurrency(reservation.reservationAmount)}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
                                         </div>
                                     </div>
                                     
                                     <div className="pt-4 border-t">
                                         <Button
                                             variant="outline"
-                                            onClick={() => setDialogOpen(false)}
+                                            onClick={handleDialogClose}
                                             className="w-full"
                                         >
                                             닫기
                                         </Button>
                                     </div>
                                 </div>
-                            )}
+                            ) : selectedCalculation ? (
+                                <div className="text-center py-8">
+                                    <div className="text-red-600">상세 정보를 불러오는데 실패했습니다.</div>
+                                </div>
+                            ) : null}
                         </DialogDescription>
                     </DialogHeader>
                 </DialogContent>

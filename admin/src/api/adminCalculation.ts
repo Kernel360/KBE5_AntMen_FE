@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AdminCalculationResponseDto } from './types';
+import { AdminCalculationResponseDto, AdminCalculationDetailDto } from './types';
 import { getCookie, ADMIN_TOKEN_COOKIE } from '../lib/cookie';
 
 const API_BASE_URL = 'http://localhost:9093/api/v1';
@@ -51,7 +51,20 @@ export const adminCalculationService = {
     // 정산 데이터 조회
     getCalculation: async (): Promise<AdminCalculationResponseDto> => {
         try {
-            const response = await calculationApi.get('/admin/calculation');
+            const response = await calculationApi.get('/admin/calculations');
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 정산 상세 정보 조회
+    getCalculationDetail: async (calculationId: number): Promise<AdminCalculationDetailDto> => {
+        try {
+            const response = await calculationApi.get(`/admin/calculations/${calculationId}`);
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 401) {
