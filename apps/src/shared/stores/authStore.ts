@@ -40,6 +40,7 @@ interface AuthActions {
   clearAuth: () => void
   setLoading: (loading: boolean) => void
   setMatchingRequestCount: (count: number) => void
+  incrementMatchingRequestCount: () => void
   fetchMatchingRequestCount: () => Promise<void>
   updateManagerStatus: (status: ManagerStatus) => void
   updateRejectionReason: (reason: string | null) => void
@@ -72,7 +73,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
     immer((set, get) => ({
       ...initialState,
-      login: async (authUser, token) => {
+      login: (authUser, token) => {
         set((state) => {
           state.isLoggedIn = true
           state.user = {
@@ -86,26 +87,6 @@ export const useAuthStore = create<AuthState & AuthActions>()(
           state.token = token
         })
         
-        // 매니저로 로그인한 경우 즉시 매칭 요청 개수 가져오기
-        if (authUser.userRole === 'MANAGER') {
-          try {
-            const count = await getMatchingRequestCount()
-            set((state) => {
-              state.matchingRequestCount = count
-            })
-            console.log('✅ 로그인 시 매칭 요청 개수 설정:', count)
-          } catch (error) {
-            console.error('❌ 로그인 시 매칭 요청 개수 가져오기 실패:', error)
-            set((state) => {
-              state.matchingRequestCount = 0
-            })
-          }
-        } else {
-          // 매니저가 아닌 경우 0으로 설정
-          set((state) => {
-            state.matchingRequestCount = 0
-          })
-        }
         // 로그인 storage 이벤트 트리거
         if (typeof window !== 'undefined') {
           localStorage.setItem('auth-event', JSON.stringify({ type: 'login', ts: Date.now() }));
@@ -145,6 +126,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         }),
       setLoading: (isLoading) => set({ isLoading }),
       setMatchingRequestCount: (count) => set({ matchingRequestCount: typeof count === 'number' && count >= 0 ? count : 0 }),
+      incrementMatchingRequestCount: () => set((state) => ({ matchingRequestCount: state.matchingRequestCount + 1 })),
       fetchMatchingRequestCount: async () => {
         const { user } = get()
         if (user?.userRole === 'MANAGER') {

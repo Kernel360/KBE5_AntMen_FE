@@ -6,6 +6,7 @@ import { subscribeToAlerts } from '@/features/alerts/api/alertApi';
 import { showAlertToast } from './AlertToast';
 import { alertApi } from '@/shared/api/alert';
 import { useSecureAuth } from '@/shared/hooks/useSecureAuth';
+import { useAuthStore } from '@/shared/stores/authStore';
 
 interface AlertContextType {
   unreadCount: number;
@@ -50,6 +51,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const mountedRef = useRef(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const { isLoggedIn, isLoading } = useSecureAuth();
+  const incrementMatchingRequestCount = useAuthStore((s) => s.incrementMatchingRequestCount);
 
   const resetAlerts = () => {
     cleanup();
@@ -151,6 +153,10 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         },
         onAlert: (alert) => {
           if (mountedRef.current) {
+            // 매칭요청 알림이면 매칭요청수 +1
+            if (alert.redirectUrl?.startsWith('/manager/matching')) {
+              incrementMatchingRequestCount();
+            }
             showAlertToast(alert)
             refreshUnreadCount()
           }
