@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { ChevronLeft, ChevronRight, SkipBack, SkipForward } from 'lucide-react';
+import { Textarea } from '../../components/ui/textarea';
+import { ChevronLeft, ChevronRight, SkipBack, SkipForward, Calendar } from 'lucide-react';
 import { adminService } from '../../api/adminService';
 import { ReservationMatchingListDto, ManualMatchingRequest, ReservationStats } from '../../api/types';
 
@@ -17,6 +18,9 @@ export const ManualMatching: React.FC = () => {
     const [selectedReservation, setSelectedReservation] = useState<ReservationMatchingListDto | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isMatchingRequestModalOpen, setIsMatchingRequestModalOpen] = useState(false);
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [cancelReason, setCancelReason] = useState('');
+    const [cancelReasonType, setCancelReasonType] = useState<'preset1' | 'preset2' | 'custom'>('preset1');
     const [matchingType, setMatchingType] = useState<'auto' | 'manual'>('auto');
     const [selectedManagerId, setSelectedManagerId] = useState<string>('');
     const [managerSearchTerm, setManagerSearchTerm] = useState<string>('');
@@ -53,6 +57,7 @@ export const ManualMatching: React.FC = () => {
                 startDateFilter || undefined,
                 endDateFilter || undefined
             );
+            
             setAllReservations(response.reservations);
             setStats(response.stats);
             setCurrentPage(1); // 필터 변경 시 첫 페이지로 이동
@@ -229,6 +234,59 @@ export const ManualMatching: React.FC = () => {
             alert(err.message || '매칭 재시도 중 오류가 발생했습니다.');
             console.error('매칭 재시도 오류:', err);
         }
+    };
+
+    const handleCancelReservation = async () => {
+        let finalCancelReason = '';
+
+        if (cancelReasonType === 'preset1') {
+            finalCancelReason = '예약날까지 매칭안됨';
+        } else if (cancelReasonType === 'preset2') {
+            finalCancelReason = '매칭할 매니저 없음';
+        } else {
+            if (!cancelReason.trim()) {
+                alert('취소 사유를 입력해주세요.');
+                return;
+            }
+            finalCancelReason = cancelReason.trim();
+        }
+
+        if (!selectedReservation) {
+            alert('예약 정보를 찾을 수 없습니다.');
+            return;
+        }
+
+        try {
+            await adminService.cancelReservation(
+                selectedReservation.reservationId.toString(),
+                {
+                    status: 'CANCEL',
+                    reason: finalCancelReason
+                }
+            );
+
+            // 백엔드에서 응답을 보내주지 않으므로 성공으로 처리
+            alert(`예약 ${selectedReservation.reservationId}이(가) 취소되었습니다.`);
+            
+            // 모달 닫기 및 상태 초기화
+            setIsCancelModalOpen(false);
+            setCancelReason('');
+            setCancelReasonType('preset1');
+            setSelectedReservation(null);
+            
+            // 데이터 새로고침
+            await loadReservations();
+        } catch (err: any) {
+            alert(err.message || '예약 취소 중 오류가 발생했습니다.');
+            console.error('예약 취소 오류:', err);
+        }
+    };
+
+    const openCancelModal = (reservation: ReservationMatchingListDto) => {
+        setSelectedReservation(reservation);
+        setCancelReason('');
+        setCancelReasonType('preset1');
+        setIsCancelModalOpen(true);
     };
 
     const openDetailModal = (reservation: any) => {
@@ -430,12 +488,18 @@ export const ManualMatching: React.FC = () => {
                                 type="date" 
                                 value={startDateFilter} 
                                 onChange={(e) => setStartDateFilter(e.target.value)}
-                                className="
-                                    mt-1 h-10
-                                    [&::-webkit-calendar-picker-indicator]:ml-auto
-                                    [&::-webkit-calendar-picker-indicator]:mr-2
-                                    [&::-webkit-calendar-picker-indicator]:cursor-pointer
-                                "
+                                className="mt-1 h-10 cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-blue-500"
+                                style={{
+                                    cursor: 'pointer',
+                                    WebkitAppearance: 'none',
+                                    MozAppearance: 'none',
+                                    appearance: 'none',
+                                    position: 'relative',
+                                    zIndex: 1
+                                }}
+                                onFocus={(e) => {
+                                    e.target.showPicker && e.target.showPicker();
+                                }}
                             />
                         </div>
                         {/* 종료일 필터 */}
@@ -446,12 +510,18 @@ export const ManualMatching: React.FC = () => {
                                 type="date" 
                                 value={endDateFilter} 
                                 onChange={(e) => setEndDateFilter(e.target.value)}
-                                className="
-                                    mt-1 h-10
-                                    [&::-webkit-calendar-picker-indicator]:ml-auto
-                                    [&::-webkit-calendar-picker-indicator]:mr-2
-                                    [&::-webkit-calendar-picker-indicator]:cursor-pointer
-                                "
+                                className="mt-1 h-10 cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-blue-500"
+                                style={{
+                                    cursor: 'pointer',
+                                    WebkitAppearance: 'none',
+                                    MozAppearance: 'none',
+                                    appearance: 'none',
+                                    position: 'relative',
+                                    zIndex: 1
+                                }}
+                                onFocus={(e) => {
+                                    e.target.showPicker && e.target.showPicker();
+                                }}
                             />
                         </div>
                         <div className="col-span-1">
@@ -482,7 +552,7 @@ export const ManualMatching: React.FC = () => {
                                 <TableHead>예약ID</TableHead>
                                 <TableHead>고객정보</TableHead>
                                 <TableHead>서비스</TableHead>
-                                <TableHead>예약일시</TableHead>
+                                <TableHead>서비스요청일</TableHead>
                                 <TableHead>매칭상태</TableHead>
                                 <TableHead>시도횟수</TableHead>
                                 <TableHead>매니저 현황</TableHead>
@@ -564,6 +634,14 @@ export const ManualMatching: React.FC = () => {
                                                     onClick={() => openDetailModal(reservation)}
                                                 >
                                                     상세보기
+                                                </Button>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm"
+                                                    onClick={() => openCancelModal(reservation)}
+                                                    className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 hover:text-red-700"
+                                                >
+                                                    취소
                                                 </Button>
                                             </div>
                                         </TableCell>
@@ -667,7 +745,7 @@ export const ManualMatching: React.FC = () => {
                                         <div><span className="font-medium">고객명:</span> {selectedReservation.customerName}</div>
                                         <div><span className="font-medium">고객 ID:</span> {selectedReservation.customerId}</div>
                                         <div><span className="font-medium">서비스:</span> {selectedReservation.categoryName}</div>
-                                        <div><span className="font-medium">예약일시:</span> {selectedReservation.reservationDate} {selectedReservation.reservationTime}</div>
+                                        <div><span className="font-medium">서비스요청일:</span> {selectedReservation.reservationDate} {selectedReservation.reservationTime}</div>
                                     </div>
                                 </div>
                             
@@ -871,7 +949,7 @@ export const ManualMatching: React.FC = () => {
                                         {/* 수동 작업 버튼들 */}
                                         <div className="pt-4 space-y-2">
                                             <Label className="text-sm font-medium text-gray-500">수동 작업</Label>
-                                            <div className="flex gap-2">
+                                            <div className="flex gap-2 flex-wrap">
                                                 {getCurrentMatchingStatus(selectedReservation) === 'nothing' && (
                                                     <Button 
                                                         onClick={() => {
@@ -899,6 +977,16 @@ export const ManualMatching: React.FC = () => {
                                                         매칭 진행 중...
                                                     </Button>
                                                 )}
+                                                <Button 
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        setIsDetailModalOpen(false);
+                                                        openCancelModal(selectedReservation);
+                                                    }}
+                                                    className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 hover:text-red-700"
+                                                >
+                                                    예약 취소
+                                                </Button>
                                             </div>
                                         </div>
                                     </CardContent>
@@ -957,6 +1045,138 @@ export const ManualMatching: React.FC = () => {
                                 </Card>
                             </div>
                         </>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* 예약 취소 모달 */}
+            <Dialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>예약 취소</DialogTitle>
+                    </DialogHeader>
+                    {selectedReservation && (
+                        <div className="space-y-6">
+                            <div className="bg-red-50 p-4 rounded-lg">
+                                <h3 className="font-medium text-red-900 mb-2">취소할 예약 정보</h3>
+                                <div className="text-sm space-y-1 text-red-800">
+                                    <div><span className="font-medium">예약 ID:</span> {selectedReservation.reservationId}</div>
+                                    <div><span className="font-medium">고객명:</span> {selectedReservation.customerName}</div>
+                                    <div><span className="font-medium">서비스:</span> {selectedReservation.categoryName}</div>
+                                    <div><span className="font-medium">서비스요청일:</span> {selectedReservation.reservationDate} {selectedReservation.reservationTime}</div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <Label className="text-base font-medium">
+                                    취소 사유 선택 <span className="text-red-500">*</span>
+                                </Label>
+                                <div className="mt-3 space-y-3">
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="radio"
+                                            id="preset1"
+                                            name="cancelReasonType"
+                                            value="preset1"
+                                            checked={cancelReasonType === 'preset1'}
+                                            onChange={(e) => setCancelReasonType('preset1')}
+                                            className="w-4 h-4"
+                                        />
+                                        <label htmlFor="preset1" className="text-sm">
+                                            <span className="font-medium">예약날까지 매칭안됨</span>
+                                            <div className="text-gray-500">예약 신청한 날이 지났는데도 매칭이 진행되지 않은 경우</div>
+                                        </label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="radio"
+                                            id="preset2"
+                                            name="cancelReasonType"
+                                            value="preset2"
+                                            checked={cancelReasonType === 'preset2'}
+                                            onChange={(e) => setCancelReasonType('preset2')}
+                                            className="w-4 h-4"
+                                        />
+                                        <label htmlFor="preset2" className="text-sm">
+                                            <span className="font-medium">매칭할 매니저 없음</span>
+                                            <div className="text-gray-500">해당 지역이나 서비스에 매칭 가능한 매니저가 없는 경우</div>
+                                        </label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="radio"
+                                            id="custom"
+                                            name="cancelReasonType"
+                                            value="custom"
+                                            checked={cancelReasonType === 'custom'}
+                                            onChange={(e) => setCancelReasonType('custom')}
+                                            className="w-4 h-4"
+                                        />
+                                        <label htmlFor="custom" className="text-sm">
+                                            <span className="font-medium">직접 입력</span>
+                                            <div className="text-gray-500">예약 취소 사유를 직접 입력합니다.</div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {cancelReasonType === 'custom' && (
+                                <div>
+                                    <Label htmlFor="cancel-reason" className="text-base font-medium">
+                                        취소 사유 입력 <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Textarea
+                                        id="cancel-reason"
+                                        placeholder="예약 취소 사유를 입력해주세요..."
+                                        value={cancelReason}
+                                        onChange={(e) => setCancelReason(e.target.value)}
+                                        className="mt-2 min-h-[100px]"
+                                        maxLength={500}
+                                    />
+                                    <div className="text-xs text-gray-500 mt-1">
+                                        {cancelReason.length}/500자
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="bg-yellow-50 p-3 rounded-lg">
+                                <div className="text-sm text-yellow-800">
+                                    <strong>주의사항:</strong>
+                                    <ul className="mt-1 space-y-1">
+                                        <li>• 예약 취소 시 자동으로 환불 처리가 진행됩니다.</li>
+                                        <li>• 취소된 예약은 복구할 수 없습니다.</li>
+                                        <li>• 고객에게 취소 알림이 발송됩니다.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div className="flex justify-end gap-2">
+                                <Button 
+                                    variant="outline" 
+                                    onClick={() => {
+                                        setIsCancelModalOpen(false);
+                                        setCancelReason('');
+                                        setCancelReasonType('preset1');
+                                        setSelectedReservation(null);
+                                    }}
+                                >
+                                    취소
+                                </Button>
+                                <Button 
+                                    onClick={handleCancelReservation}
+                                    disabled={
+                                        cancelReasonType === 'preset1' 
+                                            ? false // 미리 정의된 사유는 항상 유효
+                                            : cancelReasonType === 'preset2'
+                                            ? false // 미리 정의된 사유는 항상 유효
+                                            : !cancelReason.trim()
+                                    }
+                                    className="bg-red-600 hover:bg-red-700"
+                                >
+                                    예약 취소
+                                </Button>
+                            </div>
+                        </div>
                     )}
                 </DialogContent>
             </Dialog>

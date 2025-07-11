@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { AdminLoginRequest, AdminLoginResponse, AdminChangePasswordRequest, Admin, BoardRequestDto, ReservationMatchingListDto, ManualMatchingRequest, ReservationMatchingResponse } from './types';
+import { AdminLoginRequest, AdminLoginResponse, AdminChangePasswordRequest, Admin, BoardRequestDto, ReservationMatchingListDto, ManualMatchingRequest, ReservationMatchingResponse, ReservationCancelRequest, ReservationCancelResponse } from './types';
 import { getCookie, ADMIN_TOKEN_COOKIE } from '../lib/cookie';
 
-const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
-const API_BASE_URL_9090 = 'https://api.antmen.site:9090/api/v1';
-// const API_BASE_URL = 'http://localhost:9093/api/v1';
-// const API_BASE_URL_9090 = 'http://localhost:9090/api/v1';
+// const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
+// const API_BASE_URL_9090 = 'https://api.antmen.site:9090/api/v1';
+const API_BASE_URL = 'http://localhost:9093/api/v1';
+const API_BASE_URL_9090 = 'http://localhost:9090/api/v1';
 
 // 관리자 API 인스턴스
 const adminApi = axios.create({
@@ -407,6 +407,18 @@ export const adminService = {
         try {
             const response = await adminApi.post(`/admin/matching/retry/${reservationId}`);
             return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 예약 취소
+    cancelReservation: async (reservationId: string, data: ReservationCancelRequest): Promise<void> => {
+        try {
+            await adminApi.patch(`/admin/reservations/${reservationId}/status`, data);
         } catch (error: any) {
             if (error.response?.status === 401) {
                 throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');

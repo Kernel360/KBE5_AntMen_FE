@@ -119,3 +119,16 @@ export interface AdminRefundResponseDto {
     refundCreatedAt: string;            // 환불 요청 생성일 (ISO string)
     refundProcessedAt: string | null;   // 환불 처리일 (ISO string or null)
 }
+
+// 예약 취소 요청 타입
+export interface ReservationCancelRequest {
+    status: string;
+    reason: string;
+}
+
+// 예약 취소 응답 타입
+export interface ReservationCancelResponse {
+    success: boolean;
+    message: string;
+    refundAmount?: number;
+}
