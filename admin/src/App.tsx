@@ -6,6 +6,7 @@ import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminPassword } from './pages/admin/AdminPassword';
 import { AuthGuard } from './components/AuthGuard';
 import { Dashboard } from './pages/admin/Dashboard';
+import { ServiceManagement } from './pages/admin/ServiceManagement';
 import { UsersCustomer } from './pages/admin/UsersCustomer';
 import { UsersManager } from './pages/admin/UsersManager';
 import { UsersWaiting } from './pages/admin/UsersWaiting';
@@ -54,6 +55,7 @@ function App() {
             }>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="service" element={<ServiceManagement />} />
               <Route path="users/customer" element={<UsersCustomer />} />
               <Route path="users/manager" element={<UsersManager />} />
               <Route path="users/waiting" element={<UsersWaiting />} />

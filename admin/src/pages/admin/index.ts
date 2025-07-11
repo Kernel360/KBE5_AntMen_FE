@@ -2,6 +2,7 @@ export { AdminLayout } from './AdminLayout';
 export { AdminLogin } from './AdminLogin';
 export { AdminPassword } from './AdminPassword';
 export { Dashboard } from './Dashboard';
+export { ServiceManagement } from './ServiceManagement';
 export { UsersCustomer } from './UsersCustomer';
 export { UsersManager } from './UsersManager';
 export { UsersWaiting } from './UsersWaiting';
