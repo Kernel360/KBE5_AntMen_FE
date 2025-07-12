@@ -27,7 +27,7 @@ const CancellationModal: React.FC<CancellationModalProps> = ({
     // '건강상의 이유',
     '청소가 더 이상 필요하지 않음',
     '서비스 불만족',
-    '비용 문제',
+    '매니저 불만족',
     '기타'
   ];
 

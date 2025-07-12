@@ -578,6 +578,7 @@ export const ReservationDetailPageClient = ({
   const [reservationComment, setReservationComment] = useState<ReservationComment | null>(null)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showRefundModal, setShowRefundModal] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
 
   // 예약 상태가 DONE일 때 코멘트 정보 가져오기
   useEffect(() => {
@@ -664,6 +665,7 @@ export const ReservationDetailPageClient = ({
   const handleCancelReservation = async (reason: string) => {
     try {
       setIsProcessing(true)
+      setCancelReason(reason) // 취소 사유 저장
       await cancelReservation(reservation.reservationId, reason)
       setShowRefundModal(true)
       // router.replace('/myreservation')는 환불 모달에서 onConfirm 시 처리
@@ -793,7 +795,12 @@ export const ReservationDetailPageClient = ({
               <RefundModal
                 isOpen={showRefundModal}
                 onClose={() => setShowRefundModal(false)}
-                onConfirm={handleRefundConfirm}
+                onSuccess={handleRefundConfirm}
+                refundData={{
+                  payId: reservation.reservationId || 0,
+                  refundReason: cancelReason || "예약 취소", // 실제 취소 사유 전달
+                  refundAmount: reservation.totalAmount || 0 // 예약 가격 동일하게 전달
+                }}
               />
             </>
           )
