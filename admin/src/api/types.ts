@@ -134,6 +134,14 @@ export interface AdminRefundResponseDto {
     refundProcessedAt: string | null;   // 환불 처리일 (ISO string or null)
 }
 
+// 환불 통계 응답 타입
+export interface AdminRefundStatisticsResponseDto {
+    refundRate: number;                 // 환불률 (%)
+    totalRefundCount: number;           // 총 환불 건수
+    approveRefundCount: number;         // 승인된 환불 건수
+    totalRefundAmount: number;          // 총 환불 금액
+}
+
 // 정산 관련 타입
 export interface AdminCalculationItemDto {
     calculationId: number;              // 정산 ID
