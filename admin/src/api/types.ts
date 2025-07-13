@@ -156,6 +156,14 @@ export interface AdminRefundCustomerTopDto {
     totalRefundAmount: number;          // 총 환불 금액
 }
 
+// 매니저별 환불금액 TOP3 응답 타입
+export interface AdminRefundManagerTopDto {
+    managerId: number;                  // 매니저 ID
+    managerName: string;                // 매니저명
+    refundCount: number;                // 환불 건수
+    totalRefundAmount: number;          // 총 환불 금액
+}
+
 // 정산 관련 타입
 export interface AdminCalculationItemDto {
     calculationId: number;              // 정산 ID

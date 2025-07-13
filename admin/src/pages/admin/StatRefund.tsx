@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { adminRefundsService } from '../../api/adminRefunds';
-import { AdminRefundStatisticsResponseDto, AdminRefundReasonDto, AdminRefundCustomerTopDto } from '../../api/types';
-
-// 매니저별 환불률 - 추후 API 연동 예정
-const managerRefunds = [
-  { name: '김매니저', refunds: 5, total: 40, rate: 12 },
-  { name: '이매니저', refunds: 2, total: 35, rate: 6 },
-  { name: '박매니저', refunds: 1, total: 30, rate: 3 },
-];
+import { AdminRefundStatisticsResponseDto, AdminRefundReasonDto, AdminRefundCustomerTopDto, AdminRefundManagerTopDto } from '../../api/types';
 
 // 주요 환불 사유 정의
 const predefinedReasons = [
@@ -22,6 +15,7 @@ export const StatRefund: React.FC = () => {
   const [refundStatistics, setRefundStatistics] = useState<AdminRefundStatisticsResponseDto | null>(null);
   const [refundReasons, setRefundReasons] = useState<AdminRefundReasonDto[]>([]);
   const [customerTop, setCustomerTop] = useState<AdminRefundCustomerTopDto[]>([]);
+  const [managerTop, setManagerTop] = useState<AdminRefundManagerTopDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showOtherDetails, setShowOtherDetails] = useState(false);
@@ -30,15 +24,17 @@ export const StatRefund: React.FC = () => {
     const fetchRefundData = async () => {
       try {
         setLoading(true);
-        // 통계, 사유 분포, 사용자별 환불률 top3를 병렬로 가져오기
-        const [statisticsData, reasonsData, customerTopData] = await Promise.all([
+        // 통계, 사유 분포, 고객/매니저별 환불금액 top3를 병렬로 가져오기
+        const [statisticsData, reasonsData, customerTopData, managerTopData] = await Promise.all([
           adminRefundsService.getRefundStatistics(),
           adminRefundsService.getRefundReasons(),
-          adminRefundsService.getRefundCustomerTop()
+          adminRefundsService.getRefundCustomerTop(),
+          adminRefundsService.getRefundManagerTop()
         ]);
         setRefundStatistics(statisticsData);
         setRefundReasons(reasonsData);
-        setCustomerTop(customerTopData.slice(0, 3)); // 혹시 3개 이상 와도 top3만
+        setCustomerTop(customerTopData.slice(0, 3));
+        setManagerTop(managerTopData.slice(0, 3));
         setError(null);
       } catch (err: any) {
         console.error('환불 데이터 조회 실패:', err);
@@ -249,29 +245,29 @@ export const StatRefund: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* 매니저별 환불률 */}
+      {/* 매니저별 환불금액 TOP3 */}
       <Card>
         <CardHeader>
-          <CardTitle>매니저별 환불률 TOP3</CardTitle>
-          <CardDescription>최근 30일 기준 (추후 API 연동 예정)</CardDescription>
+          <CardTitle>매니저별 환불금액 TOP3</CardTitle>
+          <CardDescription>누적 기준, 환불금액 상위 3명</CardDescription>
         </CardHeader>
         <CardContent>
           <table className="min-w-full text-center text-sm">
             <thead>
               <tr className="bg-gray-50">
+                <th className="p-2">매니저ID</th>
                 <th className="p-2">이름</th>
                 <th className="p-2">환불 건수</th>
-                <th className="p-2">총 매칭 건수</th>
-                <th className="p-2">환불률(%)</th>
+                <th className="p-2">총 환불 금액</th>
               </tr>
             </thead>
             <tbody>
-              {managerRefunds.map((m) => (
-                <tr key={m.name} className="border-b">
-                  <td className="p-2 font-medium">{m.name}</td>
-                  <td className="p-2">{m.refunds}</td>
-                  <td className="p-2">{m.total}</td>
-                  <td className="p-2 text-blue-600 font-bold">{m.rate}%</td>
+              {managerTop.map((m) => (
+                <tr key={m.managerId} className="border-b">
+                  <td className="p-2">{m.managerId}</td>
+                  <td className="p-2 font-semibold">{m.managerName}</td>
+                  <td className="p-2 text-blue-600 font-bold">{m.refundCount}</td>
+                  <td className="p-2">₩{m.totalRefundAmount.toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
