@@ -4,7 +4,7 @@ const REFUND_API_URL = 'https://api.antmen.site:9091/api/v1/customer/refunds'
 
 // 환불 요청 DTO
 export interface RefundRequestDto {
-  payId: number
+  reservationId: number
   refundReason: string
   refundAmount: number
 }
