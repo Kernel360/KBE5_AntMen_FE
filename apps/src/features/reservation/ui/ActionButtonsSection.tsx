@@ -39,15 +39,13 @@ const ActionButtonsSection = ({
   const [showActionModal, setShowActionModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showRefundModal, setShowRefundModal] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
 
   const handleActionConfirm = (option: 'cancel' | 'reschedule') => {
     if (option === 'cancel') {
       setShowActionModal(false)
-      if (reservation.paymentStatus === 'paid') {
-        setShowRefundModal(true)
-      } else {
-        setShowCancelModal(true)
-      }
+      // 결제 완료 여부에 관계없이 먼저 취소 사유를 받아야 함
+      setShowCancelModal(true)
     } else if (option === 'reschedule') {
       setShowActionModal(false)
       router.push(`/reservation/${reservationId}/matching/managers`)
@@ -55,8 +53,14 @@ const ActionButtonsSection = ({
   }
 
   const handleCancelConfirm = (reason: string) => {
+    setCancelReason(reason) // 취소 사유 저장
     onCancel(reason)
     setShowCancelModal(false)
+    
+    // 결제가 완료된 예약의 경우 취소 후 환불 모달 열기
+    if (reservation.paymentStatus === 'paid') {
+      setShowRefundModal(true)
+    }
   }
 
   const handleRefundConfirm = () => {
@@ -151,10 +155,20 @@ const ActionButtonsSection = ({
         onConfirm={handleActionConfirm}
         isPaid={true}
       />
+      <CancellationModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={handleCancelConfirm}
+      />
       <RefundModal
         isOpen={showRefundModal}
         onClose={() => setShowRefundModal(false)}
-        onConfirm={handleRefundConfirm}
+        onSuccess={handleRefundConfirm}
+        refundData={{
+          reservationId: parseInt(reservation.id) || 0,
+          refundReason: cancelReason || "예약 취소", // 실제 취소 사유 전달
+          refundAmount: reservation.amount || 0 // 예약 가격 동일하게 전달
+        }}
       />
     </>
   )

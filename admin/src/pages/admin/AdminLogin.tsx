@@ -17,6 +17,20 @@ import {
 import { setCookie, getCookie, ADMIN_TOKEN_COOKIE } from '../../lib/cookie';
 import { adminService } from '../../api/adminService';
 
+// JWT 토큰 디코드 유틸리티
+const decodeJWT = (token: string) => {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (error) {
+        return null;
+    }
+};
+
 interface LoginForm {
     loginId: string;
     password: string;
@@ -76,6 +90,10 @@ export const AdminLogin: React.FC = () => {
 
             setSuccess(true);
 
+            // JWT 토큰에서 사용자 정보 추출
+            const decodedToken = decodeJWT(loginResponse.accessToken);
+            const userId = decodedToken?.userId || decodedToken?.sub || 101; // fallback
+
             // 쿠키와 localStorage 둘 다 저장
             setCookie(ADMIN_TOKEN_COOKIE, loginResponse.accessToken, 1, {
                 secure: false,
@@ -84,9 +102,8 @@ export const AdminLogin: React.FC = () => {
             });
             localStorage.setItem('adminToken', loginResponse.accessToken);
 
-            // 관리자 정보는 localStorage에 저장 (로그인 ID 사용)
             localStorage.setItem('adminUser', JSON.stringify({
-                id: 1, // 임시 ID
+                id: userId, // JWT 토큰에서 추출한 실제 userId
                 loginId: form.loginId,
                 initialPassword: loginResponse.initialPassword
             }));

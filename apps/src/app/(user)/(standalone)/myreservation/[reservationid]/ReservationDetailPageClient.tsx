@@ -578,6 +578,7 @@ export const ReservationDetailPageClient = ({
   const [reservationComment, setReservationComment] = useState<ReservationComment | null>(null)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showRefundModal, setShowRefundModal] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
 
   // 예약 상태가 DONE일 때 코멘트 정보 가져오기
   useEffect(() => {
@@ -664,6 +665,7 @@ export const ReservationDetailPageClient = ({
   const handleCancelReservation = async (reason: string) => {
     try {
       setIsProcessing(true)
+      setCancelReason(reason) // 취소 사유 저장
       await cancelReservation(reservation.reservationId, reason)
       setShowRefundModal(true)
       // router.replace('/myreservation')는 환불 모달에서 onConfirm 시 처리
@@ -775,30 +777,6 @@ export const ReservationDetailPageClient = ({
           )
         }
         
-        // 매칭 완료 후: 취소 버튼
-        if (reservation.reservationStatus === 'MATCHING') {
-          return (
-            <>
-              <CancelActionSection
-                onCancel={handleCancelReservation}
-                isProcessing={isProcessing}
-              />
-              <CancellationModal
-                isOpen={showCancelModal}
-                onClose={() => setShowCancelModal(false)}
-                onConfirm={handleCancelReservation}
-                title="예약 취소"
-                description="정말 예약을 취소하시겠습니까?"
-              />
-              <RefundModal
-                isOpen={showRefundModal}
-                onClose={() => setShowRefundModal(false)}
-                onConfirm={handleRefundConfirm}
-              />
-            </>
-          )
-        }
-        
         // 모든 매니저가 거절한 경우
         if (allManagersRejected()) {
           return (
@@ -821,6 +799,33 @@ export const ReservationDetailPageClient = ({
         
         return null
       })()}
+
+      {/* 예약 취소 버튼 - CANCEL 상태가 아니고 매니저 수락 대기 상태가 아닐 때만 표시 */}
+      {reservation.reservationStatus !== 'CANCEL' && !getAcceptedMatching() && (
+        <>
+          <CancelActionSection
+            onCancel={handleCancelReservation}
+            isProcessing={isProcessing}
+          />
+          <CancellationModal
+            isOpen={showCancelModal}
+            onClose={() => setShowCancelModal(false)}
+            onConfirm={handleCancelReservation}
+            title="예약 취소"
+            description="정말 예약을 취소하시겠습니까?"
+          />
+          <RefundModal
+            isOpen={showRefundModal}
+            onClose={() => setShowRefundModal(false)}
+            onSuccess={handleRefundConfirm}
+            refundData={{
+              reservationId: reservation.reservationId || 0, // 백엔드에서 reservationId로 결제 정보를 찾아서 환불 처리
+              refundReason: cancelReason || "예약 취소",
+              refundAmount: reservation.totalAmount || 0
+            }}
+          />
+        </>
+      )}
     </div>
   )
 } 

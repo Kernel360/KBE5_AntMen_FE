@@ -1,17 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { Textarea } from '../../components/ui/textarea';
+import { ChevronLeft, ChevronRight, SkipBack, SkipForward, Calendar } from 'lucide-react';
+import { adminService } from '../../api/adminService';
+import { ReservationMatchingListDto, ManualMatchingRequest, ReservationStats } from '../../api/types';
+
+const ITEMS_PER_PAGE = 15;
 
 export const ManualMatching: React.FC = () => {
-    const [selectedReservation, setSelectedReservation] = useState<any>(null);
+    const [selectedReservation, setSelectedReservation] = useState<ReservationMatchingListDto | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isMatchingRequestModalOpen, setIsMatchingRequestModalOpen] = useState(false);
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [cancelReason, setCancelReason] = useState('');
+    const [cancelReasonType, setCancelReasonType] = useState<'preset1' | 'preset2' | 'custom'>('preset1');
     const [matchingType, setMatchingType] = useState<'auto' | 'manual'>('auto');
     const [selectedManagerId, setSelectedManagerId] = useState<string>('');
     const [managerSearchTerm, setManagerSearchTerm] = useState<string>('');
@@ -19,257 +28,135 @@ export const ManualMatching: React.FC = () => {
     
     // 검색 및 필터 상태
     const [customerSearch, setCustomerSearch] = useState<string>('');
+    const [customerSearchInput, setCustomerSearchInput] = useState<string>(''); // 실제 입력값
     const [serviceFilter, setServiceFilter] = useState<string>('all');
     const [matchingStatusFilter, setMatchingStatusFilter] = useState<string>('all');
-    const [dateFilter, setDateFilter] = useState<string>('');
+    const [startDateFilter, setStartDateFilter] = useState<string>('');
+    const [endDateFilter, setEndDateFilter] = useState<string>('');
 
-    // 매칭 전 예약 데이터 (실제로는 API에서 가져올 데이터)
-    const allReservations = [
-        {
-            id: 'R001',
-            customerName: '김고객',
-            customerId: 'C1001',
-            serviceType: '청소',
-            address: '서울시 강남구 테헤란로 123',
-            scheduledTime: '2024-01-16 10:00',
-            createdAt: '2024-01-15 09:30',
-            status: 'confirmed',
-            matchingRequests: []
-        },
-        {
-            id: 'R002',
-            customerName: '이고객',
-            customerId: 'C1002',
-            serviceType: '세탁',
-            address: '서울시 서초구 강남대로 456',
-            scheduledTime: '2024-01-16 14:00',
-            createdAt: '2024-01-15 11:00',
-            status: 'confirmed',
-            matchingRequests: [
-                {
-                    id: 'MR001',
-                    status: 'pending',
-                    requestedAt: '2024-01-15 11:30',
-                    candidateCount: 2,
-                    reason: '매칭 진행 중',
-                    managerIds: ['M001', 'M002']
-                }
-            ]
-        },
-        {
-            id: 'R003',
-            customerName: '박고객',
-            customerId: 'C1003',
-            serviceType: '정리정돈',
-            address: '서울시 송파구 올림픽로 789',
-            scheduledTime: '2024-01-16 16:00',
-            createdAt: '2024-01-15 13:15',
-            status: 'confirmed',
-            matchingRequests: [
-                {
-                    id: 'MR002',
-                    status: 'failed',
-                    requestedAt: '2024-01-15 13:45',
-                    candidateCount: 0,
-                    reason: '해당 지역 매니저 부족',
-                    managerIds: []
-                },
-                {
-                    id: 'MR003',
-                    status: 'failed',
-                    requestedAt: '2024-01-15 15:00',
-                    candidateCount: 1,
-                    reason: '매니저 응답 없음',
-                    managerIds: ['M003']
-                },
-                {
-                    id: 'MR004',
-                    status: 'pending',
-                    requestedAt: '2024-01-15 16:30',
-                    candidateCount: 2,
-                    reason: '매칭 진행 중 (3차 시도)',
-                    managerIds: ['M004', 'M005']
-                }
-            ]
-        },
-        {
-            id: 'R004',
-            customerName: '최고객',
-            customerId: 'C1004',
-            serviceType: '청소',
-            address: '서울시 마포구 홍대입구',
-            scheduledTime: '2024-01-16 18:00',
-            createdAt: '2024-01-15 15:20',
-            status: 'confirmed',
-            matchingRequests: []
-        },
-        {
-            id: 'R005',
-            customerName: '정고객',
-            customerId: 'C1005',
-            serviceType: '세탁',
-            address: '서울시 용산구 한강대로',
-            scheduledTime: '2024-01-17 09:00',
-            createdAt: '2024-01-15 16:00',
-            status: 'confirmed',
-            matchingRequests: [
-                {
-                    id: 'MR005',
-                    status: 'failed',
-                    requestedAt: '2024-01-15 16:30',
-                    candidateCount: 0,
-                    reason: '매니저 부족',
-                    managerIds: []
-                },
-                {
-                    id: 'MR006',
-                    status: 'matched',
-                    requestedAt: '2024-01-15 17:00',
-                    candidateCount: 1,
-                    reason: '매칭 완료',
-                    managerIds: ['M006'],
-                    matchedManagerId: 'M006'
-                }
-            ]
-        },
-        {
-            id: 'R006',
-            customerName: '강민수',
-            customerId: 'C1006',
-            serviceType: '청소',
-            address: '서울시 강남구 역삼동',
-            scheduledTime: '2024-01-17 11:00',
-            createdAt: '2024-01-16 09:00',
-            status: 'confirmed',
-            matchingRequests: [
-                {
-                    id: 'MR007',
-                    status: 'failed',
-                    requestedAt: '2024-01-16 09:30',
-                    candidateCount: 1,
-                    reason: '매니저 거절',
-                    managerIds: ['M002']
-                }
-            ]
-        },
-        {
-            id: 'R007',
-            customerName: '윤서영',
-            customerId: 'C1007',
-            serviceType: '정리정돈',
-            address: '서울시 서초구 서초동',
-            scheduledTime: '2024-01-17 14:00',
-            createdAt: '2024-01-16 10:30',
-            status: 'pending',
-            matchingRequests: []
-        },
-        {
-            id: 'R008',
-            customerName: '조현우',
-            customerId: 'C1008',
-            serviceType: '세탁',
-            address: '서울시 송파구 잠실동',
-            scheduledTime: '2024-01-18 10:00',
-            createdAt: '2024-01-16 12:00',
-            status: 'confirmed',
-            matchingRequests: [
-                {
-                    id: 'MR008',
-                    status: 'pending',
-                    requestedAt: '2024-01-16 12:30',
-                    candidateCount: 3,
-                    reason: '매칭 진행 중',
-                    managerIds: ['M003', 'M005', 'M008']
-                }
-            ]
-        },
-        {
-            id: 'R009',
-            customerName: '한지민',
-            customerId: 'C1009',
-            serviceType: '청소',
-            address: '서울시 마포구 상수동',
-            scheduledTime: '2024-01-18 15:00',
-            createdAt: '2024-01-16 14:20',
-            status: 'confirmed',
-            matchingRequests: []
-        },
-        {
-            id: 'R010',
-            customerName: '신동엽',
-            customerId: 'C1010',
-            serviceType: '정리정돈',
-            address: '서울시 용산구 이태원동',
-            scheduledTime: '2024-01-19 09:00',
-            createdAt: '2024-01-16 16:45',
-            status: 'confirmed',
-            matchingRequests: [
-                {
-                    id: 'MR009',
-                    status: 'failed',
-                    requestedAt: '2024-01-16 17:00',
-                    candidateCount: 0,
-                    reason: '가능한 매니저 없음',
-                    managerIds: []
-                },
-                {
-                    id: 'MR010',
-                    status: 'failed',
-                    requestedAt: '2024-01-16 18:00',
-                    candidateCount: 2,
-                    reason: '매니저 모두 거절',
-                    managerIds: ['M004', 'M007']
-                }
-            ]
+    // API 데이터 상태
+    const [allReservations, setAllReservations] = useState<ReservationMatchingListDto[]>([]);
+    const [stats, setStats] = useState<ReservationStats[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    // API에서 데이터 로드
+    useEffect(() => {
+        loadReservations();
+    }, [customerSearch, serviceFilter, matchingStatusFilter, startDateFilter, endDateFilter]);
+
+    const loadReservations = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await adminService.getReservationMatchingList(
+                matchingStatusFilter !== 'all' ? matchingStatusFilter : undefined,
+                customerSearch || undefined,
+                serviceFilter !== 'all' ? serviceFilter : undefined,
+                startDateFilter || undefined,
+                endDateFilter || undefined
+            );
+            
+            setAllReservations(response.reservations);
+            setStats(response.stats);
+            setCurrentPage(1); // 필터 변경 시 첫 페이지로 이동
+        } catch (err: any) {
+            setError(err.message || '예약 데이터를 불러오는 중 오류가 발생했습니다.');
+            console.error('예약 데이터 로드 오류:', err);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
 
-    // 매칭 완료된 예약 제외
-    const allFilteredReservations = allReservations.filter(r => getCurrentMatchingStatus(r) !== 'matched');
-    
-    // 검색 및 필터 적용
-    const reservations = allFilteredReservations.filter(reservation => {
-        // 고객명 검색
-        const matchesCustomerSearch = !customerSearch || 
-            reservation.customerName?.toLowerCase().includes(customerSearch.toLowerCase()) ||
-            reservation.customerId?.toLowerCase().includes(customerSearch.toLowerCase());
+    // 검색 실행 함수
+    const handleSearch = () => {
+        setCustomerSearch(customerSearchInput);
+    };
+
+    // 엔터키 처리
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
+
+    // 현재는 API에서 필터링된 데이터를 받아오므로 그대로 사용
+    const reservations = allReservations;
+
+    // 페이지네이션 계산
+    const totalPages = Math.ceil(reservations.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const currentReservations = reservations.slice(startIndex, endIndex);
+
+    // 페이지 변경 함수
+    const goToPage = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const goToPreviousPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const goToNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    // 페이지 번호 배열 생성 (5개씩 그룹)
+    const getPageNumbers = () => {
+        const pages = [];
+        const groupSize = 5;
+        const currentGroup = Math.ceil(currentPage / groupSize);
+        const startPage = (currentGroup - 1) * groupSize + 1;
+        const endPage = Math.min(startPage + groupSize - 1, totalPages);
         
-        // 서비스 유형 필터
-        const matchesServiceFilter = serviceFilter === 'all' || 
-            reservation.serviceType === (serviceFilter === 'cleaning' ? '청소' : 
-                                        serviceFilter === 'laundry' ? '세탁' : 
-                                        serviceFilter === 'organization' ? '정리정돈' : 
-                                        serviceFilter);
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(i);
+        }
         
-        // 매칭 상태 필터
-        const currentStatus = getCurrentMatchingStatus(reservation);
-        const matchesStatusFilter = matchingStatusFilter === 'all' || 
-            currentStatus === matchingStatusFilter;
-        
-        // 예약일 필터
-        const matchesDateFilter = !dateFilter || 
-            reservation.scheduledTime?.startsWith(dateFilter);
-        
-        return matchesCustomerSearch && matchesServiceFilter && matchesStatusFilter && matchesDateFilter;
-    });
+        return pages;
+    };
+
+    // 그룹 이동 함수
+    const goToPreviousGroup = () => {
+        const currentGroup = Math.ceil(currentPage / 5);
+        if (currentGroup > 1) {
+            const newPage = (currentGroup - 2) * 5 + 1;
+            setCurrentPage(newPage);
+        }
+    };
+
+    const goToNextGroup = () => {
+        const currentGroup = Math.ceil(currentPage / 5);
+        const totalGroups = Math.ceil(totalPages / 5);
+        if (currentGroup < totalGroups) {
+            const newPage = currentGroup * 5 + 1;
+            setCurrentPage(Math.min(newPage, totalPages));
+        }
+    };
+
+    const goToFirstPage = () => {
+        setCurrentPage(1);
+    };
+
+    const goToLastPage = () => {
+        setCurrentPage(totalPages);
+    };
 
     // 예약의 현재 매칭 상태를 결정하는 함수
-    function getCurrentMatchingStatus(reservation: any) {
-        if (!reservation?.matchingRequests || reservation.matchingRequests.length === 0) {
-            return 'none';
-        }
-        
-        // 가장 최근 매칭 요청의 상태를 반환
-        const latestRequest = reservation.matchingRequests[reservation.matchingRequests.length - 1];
-        return latestRequest?.status || 'none';
+    function getCurrentMatchingStatus(reservation: ReservationMatchingListDto) {
+        return reservation.matchingStatus;
     }
 
     // 예약의 최신 매칭 요청을 가져오는 함수
-    const getLatestMatchingRequest = (reservation: any) => {
-        if (!reservation?.matchingRequests || reservation.matchingRequests.length === 0) {
-            return null;
-        }
-        return reservation.matchingRequests[reservation.matchingRequests.length - 1];
+    const getLatestMatchingRequest = (reservation: ReservationMatchingListDto) => {
+        return null; // 현재 API에서는 매칭 요청 정보가 없음
     };
 
     const getReservationStatusBadge = (status: string) => {
@@ -285,14 +172,12 @@ export const ManualMatching: React.FC = () => {
 
     const getMatchingStatusBadge = (status: string) => {
         switch (status) {
-            case 'none':
+            case 'nothing':
                 return <Badge className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-center font-medium whitespace-nowrap">요청없음</Badge>;
-            case 'pending':
+            case 'ing':
                 return <Badge className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-center font-medium whitespace-nowrap">매칭중</Badge>;
-            case 'failed':
+            case 'fail':
                 return <Badge className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-center font-medium whitespace-nowrap">매칭실패</Badge>;
-            case 'matched':
-                return <Badge className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-center font-medium whitespace-nowrap">매칭완료</Badge>;
             default:
                 return <Badge className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-center font-medium whitespace-nowrap">{status}</Badge>;
         }
@@ -307,7 +192,7 @@ export const ManualMatching: React.FC = () => {
         setShowManagerDropdown(false);
     };
 
-    const handleCreateMatchingRequest = () => {
+    const handleCreateMatchingRequest = async () => {
         if (!selectedReservation) return;
         
         if (matchingType === 'manual' && !selectedManagerId) {
@@ -315,20 +200,93 @@ export const ManualMatching: React.FC = () => {
             return;
         }
 
-        // 실제로는 API 호출로 매칭 요청을 생성
-        const action = matchingType === 'auto' ? '자동 매칭 요청' : `매니저 ${selectedManagerId}로 직접 매칭 요청`;
-        console.log('매칭 요청 생성:', selectedReservation.id, action);
-        alert(`예약 ${selectedReservation.id}에 대한 ${action}을 생성했습니다.`);
-        
-        setIsMatchingRequestModalOpen(false);
-        setIsDetailModalOpen(false);
+        try {
+            const matchingRequest: ManualMatchingRequest = {
+                reservationId: selectedReservation.reservationId.toString(),
+                managerIds: matchingType === 'manual' ? [selectedManagerId] : [],
+                matchingType: matchingType
+            };
+
+            await adminService.createManualMatching(matchingRequest);
+            
+            const action = matchingType === 'auto' ? '자동 매칭 요청' : `매니저 ${selectedManagerId}로 직접 매칭 요청`;
+            alert(`예약 ${selectedReservation.reservationId}에 대한 ${action}을 생성했습니다.`);
+            
+            // 데이터 새로고침
+            await loadReservations();
+            
+            setIsMatchingRequestModalOpen(false);
+            setIsDetailModalOpen(false);
+        } catch (err: any) {
+            alert(err.message || '매칭 요청 생성 중 오류가 발생했습니다.');
+            console.error('매칭 요청 오류:', err);
+        }
     };
 
-    const handleRetryMatchingRequest = (reservationId: string) => {
-        const reservation = reservations.find(r => r.id === reservationId);
-        if (reservation) {
-            openMatchingRequestModal(reservation);
+    const handleRetryMatchingRequest = async (reservationId: number) => {
+        try {
+            await adminService.retryMatching(reservationId.toString());
+            alert(`예약 ${reservationId}의 매칭을 재시도했습니다.`);
+            
+            // 데이터 새로고침
+            await loadReservations();
+        } catch (err: any) {
+            alert(err.message || '매칭 재시도 중 오류가 발생했습니다.');
+            console.error('매칭 재시도 오류:', err);
         }
+    };
+
+    const handleCancelReservation = async () => {
+        let finalCancelReason = '';
+
+        if (cancelReasonType === 'preset1') {
+            finalCancelReason = '예약날까지 매칭안됨';
+        } else if (cancelReasonType === 'preset2') {
+            finalCancelReason = '매칭할 매니저 없음';
+        } else {
+            if (!cancelReason.trim()) {
+                alert('취소 사유를 입력해주세요.');
+                return;
+            }
+            finalCancelReason = cancelReason.trim();
+        }
+
+        if (!selectedReservation) {
+            alert('예약 정보를 찾을 수 없습니다.');
+            return;
+        }
+
+        try {
+            await adminService.cancelReservation(
+                selectedReservation.reservationId.toString(),
+                {
+                    status: 'CANCEL',
+                    reason: finalCancelReason
+                }
+            );
+
+            // 백엔드에서 응답을 보내주지 않으므로 성공으로 처리
+            alert(`예약 ${selectedReservation.reservationId}이(가) 취소되었습니다.`);
+            
+            // 모달 닫기 및 상태 초기화
+            setIsCancelModalOpen(false);
+            setCancelReason('');
+            setCancelReasonType('preset1');
+            setSelectedReservation(null);
+            
+            // 데이터 새로고침
+            await loadReservations();
+        } catch (err: any) {
+            alert(err.message || '예약 취소 중 오류가 발생했습니다.');
+            console.error('예약 취소 오류:', err);
+        }
+    };
+
+    const openCancelModal = (reservation: ReservationMatchingListDto) => {
+        setSelectedReservation(reservation);
+        setCancelReason('');
+        setCancelReasonType('preset1');
+        setIsCancelModalOpen(true);
     };
 
     const openDetailModal = (reservation: any) => {
@@ -336,14 +294,12 @@ export const ManualMatching: React.FC = () => {
         setIsDetailModalOpen(true);
     };
 
-    // 통계 계산 (매칭 완료 제외)
-    const stats = {
-        total: reservations?.length || 0,
-        noRequest: reservations?.filter(r => getCurrentMatchingStatus(r) === 'none').length || 0,
-        pending: reservations?.filter(r => getCurrentMatchingStatus(r) === 'pending').length || 0,
-        failed: reservations?.filter(r => getCurrentMatchingStatus(r) === 'failed').length || 0,
-        needAction: reservations?.filter(r => ['none', 'failed'].includes(getCurrentMatchingStatus(r))).length || 0
-    };
+    // 백엔드에서 받은 stats 데이터를 사용하여 통계 계산
+    const totalReservations = stats.reduce((sum, stat) => sum + stat.count, 0);
+    const ingCount = stats.find(s => s.status === 'ing')?.count || 0;
+    const failCount = stats.find(s => s.status === 'fail')?.count || 0;
+    const nothingCount = stats.find(s => s.status === 'nothing')?.count || 0;
+    const needActionCount = failCount + nothingCount;
 
     // 매니저 목록 (실제로는 API에서 가져올 데이터)
     const availableManagers = [
@@ -377,14 +333,14 @@ export const ManualMatching: React.FC = () => {
     // 검색/필터 초기화
     const handleResetFilters = () => {
         setCustomerSearch('');
+        setCustomerSearchInput('');
         setServiceFilter('all');
         setMatchingStatusFilter('all');
-        setDateFilter('');
+        setStartDateFilter('');
+        setEndDateFilter('');
+        // 필터 초기화 후 데이터 새로고침
+        loadReservations();
     };
-
-    // Select 컴포넌트의 안전한 value 처리
-    const safeServiceFilter = serviceFilter || 'all';
-    const safeMatchingStatusFilter = matchingStatusFilter || 'all';
 
     // 서비스 유형 매핑 (현재 사용되지 않음)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -402,36 +358,74 @@ export const ManualMatching: React.FC = () => {
                 <p className="text-gray-600">매칭 전 예약들과 매칭 요청 현황을 확인하고 수동으로 매칭을 처리합니다.</p>
             </div>
 
-            {/* 빠른 통계 */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {/* 로딩 및 에러 상태 */}
+            {loading && (
                 <Card>
+                    <CardContent className="p-8 text-center">
+                        <div className="text-lg text-gray-600">데이터를 불러오는 중...</div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {error && (
+                <Card>
+                    <CardContent className="p-8 text-center">
+                        <div className="text-lg text-red-600 mb-4">{error}</div>
+                        <Button onClick={loadReservations} variant="outline">
+                            다시 시도
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* 빠른 필터 */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card 
+                    className={`cursor-pointer transition-colors ${matchingStatusFilter === 'all' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'}`}
+                    onClick={() => {
+                        setMatchingStatusFilter('all');
+                        loadReservations();
+                    }}
+                >
                     <CardContent className="p-4">
-                        <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
+                        <div className="text-2xl font-bold text-gray-800">{totalReservations}</div>
                         <div className="text-sm text-gray-600">전체 예약</div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card 
+                    className={`cursor-pointer transition-colors ${matchingStatusFilter === 'nothing' ? 'ring-2 ring-red-500 bg-red-50' : 'hover:bg-gray-50'}`}
+                    onClick={() => {
+                        setMatchingStatusFilter('nothing');
+                        loadReservations();
+                    }}
+                >
                     <CardContent className="p-4">
-                        <div className="text-2xl font-bold text-red-600">{stats.noRequest}</div>
+                        <div className="text-2xl font-bold text-red-600">{nothingCount}</div>
                         <div className="text-sm text-gray-600">요청 없음</div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card 
+                    className={`cursor-pointer transition-colors ${matchingStatusFilter === 'ing' ? 'ring-2 ring-yellow-500 bg-yellow-50' : 'hover:bg-gray-50'}`}
+                    onClick={() => {
+                        setMatchingStatusFilter('ing');
+                        loadReservations();
+                    }}
+                >
                     <CardContent className="p-4">
-                        <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+                        <div className="text-2xl font-bold text-yellow-600">{ingCount}</div>
                         <div className="text-sm text-gray-600">매칭 중</div>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card 
+                    className={`cursor-pointer transition-colors ${matchingStatusFilter === 'fail' ? 'ring-2 ring-red-500 bg-red-50' : 'hover:bg-gray-50'}`}
+                    onClick={() => {
+                        setMatchingStatusFilter('fail');
+                        loadReservations();
+                    }}
+                >
                     <CardContent className="p-4">
-                        <div className="text-2xl font-bold text-red-600">{stats.failed}</div>
+                        <div className="text-2xl font-bold text-red-600">{failCount}</div>
                         <div className="text-sm text-gray-600">매칭 실패</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="p-4">
-                        <div className="text-2xl font-bold text-blue-600">{stats.needAction}</div>
-                        <div className="text-sm text-gray-600">조치 필요</div>
                     </CardContent>
                 </Card>
             </div>
@@ -443,83 +437,94 @@ export const ManualMatching: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-12 gap-4 items-end">
-                        <div className="col-span-4">
+                        <div className="col-span-3">
                             <Label htmlFor="customer-search">고객명 검색</Label>
                             <Input 
                                 id="customer-search" 
                                 placeholder="고객명 또는 ID를 입력하세요" 
-                                value={customerSearch} 
-                                onChange={(e) => setCustomerSearch(e.target.value)}
+                                value={customerSearchInput} 
+                                onChange={(e) => setCustomerSearchInput(e.target.value)}
+                                onKeyPress={handleKeyPress}
                                 className="mt-1 h-10"
                             />
                         </div>
                         {/* 서비스 유형 필터 */}
                         <div className="col-span-2">
                             <Label htmlFor="service-filter">서비스 유형</Label>
-                            <select 
-                                id="service-filter"
-                                value={safeServiceFilter} 
-                                onChange={(e) => setServiceFilter(e.target.value)}
-                                className="
-                                    mt-1 h-10 w-full 
-                                    rounded-md border border-input bg-background 
-                                    px-3 py-2 text-sm 
-                                    appearance-none 
-                                    bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0xIDFMNiA2TDExIDEiIHN0cm9rZT0iIzY2NjY2NiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K')] 
-                                    bg-no-repeat bg-center
-                                    bg-[position:calc(100%-8px)_center]
-                                    focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
-                                "
-                            >
-                                <option value="all">전체</option>
-                                <option value="cleaning">청소</option>
-                                <option value="laundry">세탁</option>
-                                <option value="organization">정리정돈</option>
-                            </select>
+                            <Select value={serviceFilter} onValueChange={(value) => setServiceFilter(value)}>
+                                <SelectTrigger className="w-full h-10">
+                                    <SelectValue placeholder="서비스 유형을 선택하세요" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">전체</SelectItem>
+                                    <SelectItem value="cleaning">청소</SelectItem>
+                                    <SelectItem value="laundry">세탁</SelectItem>
+                                    <SelectItem value="organization">정리정돈</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         
                         {/* 매칭상태 필터 */}
                         <div className="col-span-2">
                             <Label htmlFor="matching-status-filter">매칭상태</Label>
-                            <select 
-                                id="matching-status-filter"
-                                value={safeMatchingStatusFilter} 
-                                onChange={(e) => setMatchingStatusFilter(e.target.value)}
-                                className="
-                                    mt-1 h-10 w-full 
-                                    rounded-md border border-input bg-background 
-                                    px-3 py-2 text-sm 
-                                    appearance-none 
-                                    bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOCIgdmlld0JveD0iMCAwIDEyIDgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0xIDFMNiA2TDExIDEiIHN0cm9rZT0iIzY2NjY2NiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K')] 
-                                    bg-no-repeat bg-center
-                                    bg-[position:calc(100%-8px)_center]
-                                    focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
-                                "
-                            >
-                                <option value="all">전체</option>
-                                <option value="none">요청 없음</option>
-                                <option value="pending">매칭 중</option>
-                                <option value="failed">매칭 실패</option>
-                            </select>
+                            <Select value={matchingStatusFilter} onValueChange={(value) => setMatchingStatusFilter(value)}>
+                                <SelectTrigger className="w-full h-10">
+                                    <SelectValue placeholder="매칭상태를 선택하세요" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">전체</SelectItem>
+                                    <SelectItem value="nothing">요청 없음</SelectItem>
+                                    <SelectItem value="ing">매칭 중</SelectItem>
+                                    <SelectItem value="fail">매칭 실패</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         
-                        {/* 예약일 필터 */}
+                        {/* 시작일 필터 */}
                         <div className="col-span-2">
-                            <Label htmlFor="date-filter">예약일</Label>
+                            <Label htmlFor="start-date-filter">시작일</Label>
                             <Input 
-                                id="date-filter" 
+                                id="start-date-filter" 
                                 type="date" 
-                                value={dateFilter} 
-                                onChange={(e) => setDateFilter(e.target.value)}
-                                className="
-                                    mt-1 h-10
-                                    [&::-webkit-calendar-picker-indicator]:ml-auto
-                                    [&::-webkit-calendar-picker-indicator]:mr-2
-                                    [&::-webkit-calendar-picker-indicator]:cursor-pointer
-                                "
+                                value={startDateFilter} 
+                                onChange={(e) => setStartDateFilter(e.target.value)}
+                                className="mt-1 h-10 cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-blue-500"
+                                style={{
+                                    cursor: 'pointer',
+                                    WebkitAppearance: 'none',
+                                    MozAppearance: 'none',
+                                    appearance: 'none',
+                                    position: 'relative',
+                                    zIndex: 1
+                                }}
+                                onFocus={(e) => {
+                                    e.target.showPicker && e.target.showPicker();
+                                }}
                             />
                         </div>
+                        {/* 종료일 필터 */}
                         <div className="col-span-2">
+                            <Label htmlFor="end-date-filter">종료일</Label>
+                            <Input 
+                                id="end-date-filter" 
+                                type="date" 
+                                value={endDateFilter} 
+                                onChange={(e) => setEndDateFilter(e.target.value)}
+                                className="mt-1 h-10 cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-blue-500"
+                                style={{
+                                    cursor: 'pointer',
+                                    WebkitAppearance: 'none',
+                                    MozAppearance: 'none',
+                                    appearance: 'none',
+                                    position: 'relative',
+                                    zIndex: 1
+                                }}
+                                onFocus={(e) => {
+                                    e.target.showPicker && e.target.showPicker();
+                                }}
+                            />
+                        </div>
+                        <div className="col-span-1">
                             <Button 
                                 variant="outline" 
                                 onClick={handleResetFilters}
@@ -535,19 +540,9 @@ export const ManualMatching: React.FC = () => {
             {/* 예약 및 매칭 현황 목록 */}
             <Card>
                 <CardHeader>
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <CardTitle>매칭 대기 예약 목록</CardTitle>
-                            <p className="text-sm text-gray-600">매칭이 필요한 예약들만 표시됩니다. (매칭 완료된 예약 제외)</p>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-lg font-bold text-blue-600">{reservations.length}건</div>
-                            <div className="text-sm text-gray-500">
-                                {allFilteredReservations.length > reservations.length && 
-                                    `전체 ${allFilteredReservations.length}건 중`
-                                }
-                            </div>
-                        </div>
+                    <div>
+                        <CardTitle>매칭 대기 예약 목록</CardTitle>
+                        <p className="text-sm text-gray-600">매칭이 필요한 예약들만 표시됩니다. (매칭 완료된 예약 제외)</p>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -557,75 +552,65 @@ export const ManualMatching: React.FC = () => {
                                 <TableHead>예약ID</TableHead>
                                 <TableHead>고객정보</TableHead>
                                 <TableHead>서비스</TableHead>
-                                <TableHead>예약일시</TableHead>
+                                <TableHead>서비스요청일</TableHead>
                                 <TableHead>매칭상태</TableHead>
                                 <TableHead>시도횟수</TableHead>
-                                <TableHead>최신현황</TableHead>
+                                <TableHead>매니저 현황</TableHead>
                                 <TableHead>작업</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {reservations?.map((reservation) => {
+                            {currentReservations?.map((reservation) => {
                                 const currentStatus = getCurrentMatchingStatus(reservation);
-                                const latestRequest = getLatestMatchingRequest(reservation);
-                                const matchingRequestsLength = reservation?.matchingRequests?.length || 0;
                                 
                                 return (
                                     <TableRow 
-                                        key={reservation?.id}
+                                        key={reservation?.reservationId}
                                         className={
-                                            ['none', 'failed'].includes(currentStatus) 
+                                            ['nothing', 'fail'].includes(currentStatus) 
                                                 ? 'bg-red-50' 
-                                                : currentStatus === 'pending'
+                                                : currentStatus === 'ing'
                                                 ? 'bg-yellow-50'
                                                 : ''
                                         }
                                     >
-                                        <TableCell className="font-mono">{reservation?.id}</TableCell>
+                                        <TableCell className="font-mono">{reservation?.reservationId}</TableCell>
                                         <TableCell>
                                             <div>
                                                 <div className="font-medium">{reservation?.customerName}</div>
-                                                <div className="text-sm text-gray-500">{reservation?.customerId}</div>
-                                                <div className="text-xs text-gray-400">{reservation?.address}</div>
+                                                <div className="text-sm text-gray-500">고객 ID: {reservation?.customerId}</div>
                                             </div>
                                         </TableCell>
-                                        <TableCell>{reservation?.serviceType}</TableCell>
+                                        <TableCell>{reservation?.categoryName}</TableCell>
                                         <TableCell>
                                             <div className="text-sm">
-                                                <div className="font-medium">{reservation?.scheduledTime}</div>
-                                                <div className="text-gray-500">생성: {reservation?.createdAt}</div>
+                                                <div className="font-medium">{reservation?.reservationDate} {reservation?.reservationTime}</div>
                                             </div>
                                         </TableCell>
                                         <TableCell>{getMatchingStatusBadge(currentStatus)}</TableCell>
                                         <TableCell>
                                             <div className="text-sm">
                                                 <div className="font-medium text-blue-600">
-                                                    {matchingRequestsLength}차 시도
+                                                    {reservation?.totalRequests}차 시도
                                                 </div>
                                                 <div className="text-xs text-gray-500">
-                                                    {matchingRequestsLength > 0 
-                                                        ? `총 ${matchingRequestsLength}회 요청`
-                                                        : '요청 없음'
-                                                    }
+                                                    {reservation?.totalRequests > 0 ? `${reservation.totalRequests}회 요청` : '요청 없음'}
                                                 </div>
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            {latestRequest ? (
-                                                <div className="text-sm">
-                                                    <div className="font-mono text-xs">{latestRequest.id}</div>
-                                                    <div>후보: {latestRequest.candidateCount}명</div>
-                                                    <div className="text-gray-500 text-xs">
-                                                        {latestRequest.requestedAt}
-                                                    </div>
+                                            <div className="text-sm">
+                                                <div className="font-medium text-green-600">
+                                                    응답: {reservation?.totalManagerResponses}명
                                                 </div>
-                                            ) : (
-                                                <span className="text-gray-400 text-sm">-</span>
-                                            )}
+                                                <div className="text-xs text-gray-500">
+                                                    수락: {reservation?.totalManagerAccepts}명
+                                                </div>
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex gap-2">
-                                                {currentStatus === 'none' && (
+                                                {currentStatus === 'nothing' && (
                                                     <Button 
                                                         size="sm" 
                                                         onClick={() => openMatchingRequestModal(reservation)}
@@ -634,10 +619,10 @@ export const ManualMatching: React.FC = () => {
                                                         매칭요청
                                                     </Button>
                                                 )}
-                                                {currentStatus === 'failed' && (
+                                                {currentStatus === 'fail' && (
                                                     <Button 
                                                         size="sm" 
-                                                        onClick={() => handleRetryMatchingRequest(reservation?.id)}
+                                                        onClick={() => handleRetryMatchingRequest(reservation?.reservationId)}
                                                         className="bg-orange-600 hover:bg-orange-700"
                                                     >
                                                         재시도
@@ -650,6 +635,14 @@ export const ManualMatching: React.FC = () => {
                                                 >
                                                     상세보기
                                                 </Button>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm"
+                                                    onClick={() => openCancelModal(reservation)}
+                                                    className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 hover:text-red-700"
+                                                >
+                                                    취소
+                                                </Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -657,8 +650,85 @@ export const ManualMatching: React.FC = () => {
                             })}
                         </TableBody>
                     </Table>
+                    
+                    {!loading && !error && reservations.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                            조건에 맞는 예약이 없습니다.
+                        </div>
+                    )}
                 </CardContent>
             </Card>
+
+            {/* 페이지네이션 */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 px-4">
+                    <div className="text-sm text-gray-500">
+                        {startIndex + 1}-{Math.min(endIndex, reservations.length)} / {reservations.length}개
+                    </div>
+                    <div className="flex items-center space-x-1">
+                        {/* 첫 페이지 버튼 */}
+                        <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={goToFirstPage} 
+                            disabled={currentPage === 1}
+                            className="h-8 w-8 p-0"
+                        >
+                            <SkipBack className="h-4 w-4" />
+                        </Button>
+                        
+                        {/* 이전 그룹 버튼 */}
+                        <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={goToPreviousGroup} 
+                            disabled={currentPage <= 5}
+                            className="h-8 w-8 p-0"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                        
+                        {/* 페이지 번호들 */}
+                        {getPageNumbers().map((page) => (
+                            <Button
+                                key={page}
+                                variant={page === currentPage ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => goToPage(page)}
+                                className={`h-8 w-8 p-0 ${
+                                    page === currentPage 
+                                        ? 'border-2 border-blue-600 bg-blue-600 text-white' 
+                                        : 'border border-gray-300 hover:border-gray-400'
+                                }`}
+                            >
+                                {page}
+                            </Button>
+                        ))}
+                        
+                        {/* 다음 그룹 버튼 */}
+                        <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={goToNextGroup} 
+                            disabled={currentPage > totalPages - 5}
+                            className="h-8 w-8 p-0"
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                        
+                        {/* 마지막 페이지 버튼 */}
+                        <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={goToLastPage} 
+                            disabled={currentPage === totalPages}
+                            className="h-8 w-8 p-0"
+                        >
+                            <SkipForward className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             {/* 매칭 요청 생성 모달 */}
             <Dialog open={isMatchingRequestModalOpen} onOpenChange={setIsMatchingRequestModalOpen}>
@@ -668,15 +738,16 @@ export const ManualMatching: React.FC = () => {
                     </DialogHeader>
                     {selectedReservation && (
                         <div className="space-y-6">
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                                <h3 className="font-medium mb-2">예약 정보</h3>
-                                <div className="text-sm space-y-1">
-                                    <div><span className="font-medium">예약 ID:</span> {selectedReservation.id}</div>
-                                    <div><span className="font-medium">고객:</span> {selectedReservation.customerName}</div>
-                                    <div><span className="font-medium">서비스:</span> {selectedReservation.serviceType}</div>
-                                    <div><span className="font-medium">예약일시:</span> {selectedReservation.scheduledTime}</div>
+                                                            <div className="bg-gray-50 p-4 rounded-lg">
+                                    <h3 className="font-medium mb-2">예약 정보</h3>
+                                    <div className="text-sm space-y-1">
+                                        <div><span className="font-medium">예약 ID:</span> {selectedReservation.reservationId}</div>
+                                        <div><span className="font-medium">고객명:</span> {selectedReservation.customerName}</div>
+                                        <div><span className="font-medium">고객 ID:</span> {selectedReservation.customerId}</div>
+                                        <div><span className="font-medium">서비스:</span> {selectedReservation.categoryName}</div>
+                                        <div><span className="font-medium">서비스요청일:</span> {selectedReservation.reservationDate} {selectedReservation.reservationTime}</div>
+                                    </div>
                                 </div>
-                            </div>
                             
                             <div>
                                 <Label className="text-base font-medium">매칭 방식 선택</Label>
@@ -839,32 +910,36 @@ export const ManualMatching: React.FC = () => {
                                     <CardContent className="space-y-4">
                                         <div>
                                             <Label className="text-sm font-medium text-gray-500">예약 ID</Label>
-                                            <div className="font-mono">{selectedReservation?.id}</div>
+                                            <div className="font-mono">{selectedReservation?.reservationId}</div>
                                         </div>
                                         <div>
                                             <Label className="text-sm font-medium text-gray-500">고객 정보</Label>
                                             <div className="font-medium">{selectedReservation?.customerName}</div>
-                                            <div className="text-sm text-gray-600">{selectedReservation?.customerId}</div>
+                                            <div className="text-sm text-gray-600">고객 ID: {selectedReservation?.customerId}</div>
                                         </div>
                                         <div>
                                             <Label className="text-sm font-medium text-gray-500">서비스 유형</Label>
-                                            <div>{selectedReservation?.serviceType}</div>
-                                        </div>
-                                        <div>
-                                            <Label className="text-sm font-medium text-gray-500">서비스 주소</Label>
-                                            <div>{selectedReservation?.address}</div>
+                                            <div>{selectedReservation?.categoryName}</div>
                                         </div>
                                         <div>
                                             <Label className="text-sm font-medium text-gray-500">예약 일시</Label>
-                                            <div className="font-medium">{selectedReservation?.scheduledTime}</div>
+                                            <div className="font-medium">{selectedReservation?.reservationDate} {selectedReservation?.reservationTime}</div>
                                         </div>
                                         <div>
-                                            <Label className="text-sm font-medium text-gray-500">예약 생성일</Label>
-                                            <div>{selectedReservation?.createdAt}</div>
+                                            <Label className="text-sm font-medium text-gray-500">매칭 상태</Label>
+                                            <div>{getMatchingStatusBadge(selectedReservation?.matchingStatus)}</div>
                                         </div>
                                         <div>
-                                            <Label className="text-sm font-medium text-gray-500">예약 상태</Label>
-                                            <div>{getReservationStatusBadge(selectedReservation?.status)}</div>
+                                            <Label className="text-sm font-medium text-gray-500">매칭 요청 횟수</Label>
+                                            <div>{selectedReservation?.totalRequests}회</div>
+                                        </div>
+                                        <div>
+                                            <Label className="text-sm font-medium text-gray-500">매니저 응답</Label>
+                                            <div>{selectedReservation?.totalManagerResponses}명</div>
+                                        </div>
+                                        <div>
+                                            <Label className="text-sm font-medium text-gray-500">매니저 수락</Label>
+                                            <div>{selectedReservation?.totalManagerAccepts}명</div>
                                         </div>
                                         <div>
                                             <Label className="text-sm font-medium text-gray-500">현재 매칭 상태</Label>
@@ -874,8 +949,8 @@ export const ManualMatching: React.FC = () => {
                                         {/* 수동 작업 버튼들 */}
                                         <div className="pt-4 space-y-2">
                                             <Label className="text-sm font-medium text-gray-500">수동 작업</Label>
-                                            <div className="flex gap-2">
-                                                {getCurrentMatchingStatus(selectedReservation) === 'none' && (
+                                            <div className="flex gap-2 flex-wrap">
+                                                {getCurrentMatchingStatus(selectedReservation) === 'nothing' && (
                                                     <Button 
                                                         onClick={() => {
                                                             setIsDetailModalOpen(false);
@@ -886,7 +961,7 @@ export const ManualMatching: React.FC = () => {
                                                         첫 매칭 요청 생성
                                                     </Button>
                                                 )}
-                                                {getCurrentMatchingStatus(selectedReservation) === 'failed' && (
+                                                {getCurrentMatchingStatus(selectedReservation) === 'fail' && (
                                                     <Button 
                                                         onClick={() => {
                                                             setIsDetailModalOpen(false);
@@ -897,11 +972,21 @@ export const ManualMatching: React.FC = () => {
                                                         새 매칭 요청 생성
                                                     </Button>
                                                 )}
-                                                {getCurrentMatchingStatus(selectedReservation) === 'pending' && (
+                                                {getCurrentMatchingStatus(selectedReservation) === 'ing' && (
                                                     <Button variant="outline">
                                                         매칭 진행 중...
                                                     </Button>
                                                 )}
+                                                <Button 
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        setIsDetailModalOpen(false);
+                                                        openCancelModal(selectedReservation);
+                                                    }}
+                                                    className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 hover:text-red-700"
+                                                >
+                                                    예약 취소
+                                                </Button>
                                             </div>
                                         </div>
                                     </CardContent>
@@ -912,71 +997,186 @@ export const ManualMatching: React.FC = () => {
                                     <CardHeader>
                                         <CardTitle className="text-lg">
                                             매칭 요청 히스토리 
-                                            <Badge className="ml-2">{selectedReservation?.matchingRequests?.length || 0}건</Badge>
+                                            <Badge className="ml-2">{selectedReservation?.totalRequests || 0}건</Badge>
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        {!selectedReservation?.matchingRequests || selectedReservation.matchingRequests.length === 0 ? (
+                                        {!selectedReservation?.totalRequests || selectedReservation.totalRequests === 0 ? (
                                             <div className="text-center py-8 text-gray-500">
                                                 아직 매칭 요청이 없습니다.
                                             </div>
                                         ) : (
                                             <div className="space-y-4 max-h-96 overflow-y-auto">
-                                                {selectedReservation.matchingRequests.map((request: any, index: number) => (
-                                                    <div key={request?.id || index} className="border rounded-lg p-4">
-                                                        <div className="flex justify-between items-start mb-2">
-                                                            <div>
-                                                                <div className="font-medium flex items-center gap-2">
-                                                                    <span className="text-sm bg-gray-100 px-2 py-1 rounded">
-                                                                        {index + 1}차 시도
-                                                                    </span>
-                                                                    <span className="font-mono text-sm">{request?.id}</span>
-                                                                </div>
-                                                            </div>
-                                                            <div>{getMatchingStatusBadge(request?.status)}</div>
-                                                        </div>
-                                                        
-                                                        <div className="grid grid-cols-2 gap-4 text-sm">
-                                                            <div>
-                                                                <Label className="text-xs text-gray-500">요청 시간</Label>
-                                                                <div>{request?.requestedAt}</div>
-                                                            </div>
-                                                            <div>
-                                                                <Label className="text-xs text-gray-500">후보 매니저</Label>
-                                                                <div>{request?.candidateCount || 0}명</div>
+                                                <div className="border rounded-lg p-4">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div>
+                                                            <div className="font-medium flex items-center gap-2">
+                                                                <span className="text-sm bg-gray-100 px-2 py-1 rounded">
+                                                                    {selectedReservation.totalRequests}차 시도
+                                                                </span>
                                                             </div>
                                                         </div>
-                                                        
-                                                        <div className="mt-2">
-                                                            <Label className="text-xs text-gray-500">상태 설명</Label>
-                                                            <div className="text-sm">{request?.reason}</div>
-                                                        </div>
-                                                        
-                                                        {request?.managerIds && request.managerIds.length > 0 && (
-                                                            <div className="mt-2">
-                                                                <Label className="text-xs text-gray-500">매니저 ID 목록</Label>
-                                                                <div className="text-sm font-mono">
-                                                                    {request.managerIds.join(', ')}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                        
-                                                        {request?.matchedManagerId && (
-                                                            <div className="mt-2">
-                                                                <Label className="text-xs text-gray-500">매칭된 매니저</Label>
-                                                                <div className="text-sm font-mono text-green-600">
-                                                                    {request.matchedManagerId}
-                                                                </div>
-                                                            </div>
-                                                        )}
+                                                        <div>{getMatchingStatusBadge(selectedReservation.matchingStatus)}</div>
                                                     </div>
-                                                ))}
+                                                    
+                                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                                        <div>
+                                                            <Label className="text-xs text-gray-500">매니저 응답</Label>
+                                                            <div>{selectedReservation.totalManagerResponses}명</div>
+                                                        </div>
+                                                        <div>
+                                                            <Label className="text-xs text-gray-500">매니저 수락</Label>
+                                                            <div>{selectedReservation.totalManagerAccepts}명</div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="mt-2">
+                                                        <Label className="text-xs text-gray-500">현재 상태</Label>
+                                                        <div className="text-sm">
+                                                            {selectedReservation.matchingStatus === 'ing' && '매칭 진행 중'}
+                                                            {selectedReservation.matchingStatus === 'fail' && '매칭 실패'}
+                                                            {selectedReservation.matchingStatus === 'nothing' && '매칭 요청 없음'}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
                                     </CardContent>
                                 </Card>
                             </div>
                         </>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* 예약 취소 모달 */}
+            <Dialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>예약 취소</DialogTitle>
+                    </DialogHeader>
+                    {selectedReservation && (
+                        <div className="space-y-6">
+                            <div className="bg-red-50 p-4 rounded-lg">
+                                <h3 className="font-medium text-red-900 mb-2">취소할 예약 정보</h3>
+                                <div className="text-sm space-y-1 text-red-800">
+                                    <div><span className="font-medium">예약 ID:</span> {selectedReservation.reservationId}</div>
+                                    <div><span className="font-medium">고객명:</span> {selectedReservation.customerName}</div>
+                                    <div><span className="font-medium">서비스:</span> {selectedReservation.categoryName}</div>
+                                    <div><span className="font-medium">서비스요청일:</span> {selectedReservation.reservationDate} {selectedReservation.reservationTime}</div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <Label className="text-base font-medium">
+                                    취소 사유 선택 <span className="text-red-500">*</span>
+                                </Label>
+                                <div className="mt-3 space-y-3">
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="radio"
+                                            id="preset1"
+                                            name="cancelReasonType"
+                                            value="preset1"
+                                            checked={cancelReasonType === 'preset1'}
+                                            onChange={(e) => setCancelReasonType('preset1')}
+                                            className="w-4 h-4"
+                                        />
+                                        <label htmlFor="preset1" className="text-sm">
+                                            <span className="font-medium">예약날까지 매칭안됨</span>
+                                            <div className="text-gray-500">예약 신청한 날이 지났는데도 매칭이 진행되지 않은 경우</div>
+                                        </label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="radio"
+                                            id="preset2"
+                                            name="cancelReasonType"
+                                            value="preset2"
+                                            checked={cancelReasonType === 'preset2'}
+                                            onChange={(e) => setCancelReasonType('preset2')}
+                                            className="w-4 h-4"
+                                        />
+                                        <label htmlFor="preset2" className="text-sm">
+                                            <span className="font-medium">매칭할 매니저 없음</span>
+                                            <div className="text-gray-500">해당 지역이나 서비스에 매칭 가능한 매니저가 없는 경우</div>
+                                        </label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <input
+                                            type="radio"
+                                            id="custom"
+                                            name="cancelReasonType"
+                                            value="custom"
+                                            checked={cancelReasonType === 'custom'}
+                                            onChange={(e) => setCancelReasonType('custom')}
+                                            className="w-4 h-4"
+                                        />
+                                        <label htmlFor="custom" className="text-sm">
+                                            <span className="font-medium">직접 입력</span>
+                                            <div className="text-gray-500">예약 취소 사유를 직접 입력합니다.</div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {cancelReasonType === 'custom' && (
+                                <div>
+                                    <Label htmlFor="cancel-reason" className="text-base font-medium">
+                                        취소 사유 입력 <span className="text-red-500">*</span>
+                                    </Label>
+                                    <Textarea
+                                        id="cancel-reason"
+                                        placeholder="예약 취소 사유를 입력해주세요..."
+                                        value={cancelReason}
+                                        onChange={(e) => setCancelReason(e.target.value)}
+                                        className="mt-2 min-h-[100px]"
+                                        maxLength={500}
+                                    />
+                                    <div className="text-xs text-gray-500 mt-1">
+                                        {cancelReason.length}/500자
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="bg-yellow-50 p-3 rounded-lg">
+                                <div className="text-sm text-yellow-800">
+                                    <strong>주의사항:</strong>
+                                    <ul className="mt-1 space-y-1">
+                                        <li>• 예약 취소 시 자동으로 환불 처리가 진행됩니다.</li>
+                                        <li>• 취소된 예약은 복구할 수 없습니다.</li>
+                                        <li>• 고객에게 취소 알림이 발송됩니다.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div className="flex justify-end gap-2">
+                                <Button 
+                                    variant="outline" 
+                                    onClick={() => {
+                                        setIsCancelModalOpen(false);
+                                        setCancelReason('');
+                                        setCancelReasonType('preset1');
+                                        setSelectedReservation(null);
+                                    }}
+                                >
+                                    취소
+                                </Button>
+                                <Button 
+                                    onClick={handleCancelReservation}
+                                    disabled={
+                                        cancelReasonType === 'preset1' 
+                                            ? false // 미리 정의된 사유는 항상 유효
+                                            : cancelReasonType === 'preset2'
+                                            ? false // 미리 정의된 사유는 항상 유효
+                                            : !cancelReason.trim()
+                                    }
+                                    className="bg-red-600 hover:bg-red-700"
+                                >
+                                    예약 취소
+                                </Button>
+                            </div>
+                        </div>
                     )}
                 </DialogContent>
             </Dialog>
