@@ -89,9 +89,8 @@ const ReservationForm = ({
     isRecommendedTimeLoading,
   } = useReservationForm({ initialCategory, initialOptions, addressId })
 
-  // 필수값 체크: 실제 필수값에 맞게 수정하세요
-  const isFormValid = !!selectedDate && !!selectedHours && !!selectedVisitTime
-  // ... 기타 필수값 체크 필요시 추가
+  // 필수값 체크: 주소, 날짜, 시간, 방문시간 모두 필수
+  const isFormValid = !!addressId && !!selectedDate && !!selectedHours && !!selectedVisitTime
 
   return (
     <div className="bg-gray-50">
