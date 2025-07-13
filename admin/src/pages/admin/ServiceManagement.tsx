@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -8,161 +8,27 @@ import {
 } from '../../components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { Label } from '../../components/ui/label';
-import { Plus, Edit, Trash2, Search, Settings } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Settings, ChevronDown, ChevronRight } from 'lucide-react';
+import { adminCategoryService } from '../../api/adminCategory';
+import { CategoryDto, CategoryOptionDto } from '../../api/types';
 
-// 목업 데이터
-const mockCategories = [
-  {
-    categoryId: 1,
-    categoryName: "가사 청소",
-    categoryPrice: 40000,
-    categoryTime: 2
-  },
-  {
-    categoryId: 3,
-    categoryName: "주방 청소",
-    categoryPrice: 20000,
-    categoryTime: 1
-  },
-  {
-    categoryId: 4,
-    categoryName: "사무실 청소",
-    categoryPrice: 25000,
-    categoryTime: 2
-  },
-  {
-    categoryId: 5,
-    categoryName: "입주 청소",
-    categoryPrice: 70000,
-    categoryTime: 4
-  },
-  {
-    categoryId: 6,
-    categoryName: "육아 서비스",
-    categoryPrice: 40000,
-    categoryTime: 2
-  }
-];
 
-const mockCategoryOptions = [
-  {
-    coId: 1,
-    coName: "세탁",
-    coPrice: 10000,
-    coTime: 60,
-    categoryId: 1  // 가사 청소
-  },
-  {
-    coId: 2,
-    coName: "창틀 청소",
-    coPrice: 10000,
-    coTime: 30,
-    categoryId: 1  // 가사 청소
-  },
-  {
-    coId: 3,
-    coName: "베란다 청소",
-    coPrice: 10000,
-    coTime: 60,
-    categoryId: 1  // 가사 청소
-  },
-  {
-    coId: 4,
-    coName: "화장실 청소",
-    coPrice: 20000,
-    coTime: 60,
-    categoryId: 1  // 가사 청소
-  },
-  {
-    coId: 5,
-    coName: "냉장실 청소",
-    coPrice: 10000,
-    coTime: 60,
-    categoryId: 3  // 주방 청소
-  },
-  {
-    coId: 6,
-    coName: "간단 요리",
-    coPrice: 10000,
-    coTime: 30,
-    categoryId: 3  // 주방 청소
-  },
-  {
-    coId: 7,
-    coName: "가구 옮기기",
-    coPrice: 30000,
-    coTime: 60,
-    categoryId: 4  // 사무실 청소
-  },
-  {
-    coId: 8,
-    coName: "서류 정리",
-    coPrice: 10000,
-    coTime: 30,
-    categoryId: 4  // 사무실 청소
-  },
-  {
-    coId: 9,
-    coName: "가구 버리기",
-    coPrice: 30000,
-    coTime: 60,
-    categoryId: 5  // 입주 청소
-  },
-  {
-    coId: 10,
-    coName: "물품 포장",
-    coPrice: 20000,
-    coTime: 60,
-    categoryId: 5  // 입주 청소
-  },
-  {
-    coId: 11,
-    coName: "의류 포장",
-    coPrice: 20000,
-    coTime: 60,
-    categoryId: 5  // 입주 청소
-  },
-  {
-    coId: 12,
-    coName: "아이 등하교",
-    coPrice: 10000,
-    coTime: 30,
-    categoryId: 6  // 육아 서비스
-  },
-  {
-    coId: 13,
-    coName: "간단 요리",
-    coPrice: 10000,
-    coTime: 30,
-    categoryId: 6  // 육아 서비스
-  }
-];
-
-interface Category {
-  categoryId: number;
-  categoryName: string;
-  categoryPrice: number;
-  categoryTime: number;
-}
-
-interface CategoryOption {
-  coId: number;
-  coName: string;
-  coPrice: number;
-  coTime: number;
-  categoryId: number;
-}
 
 export const ServiceManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'categories' | 'options'>('categories');
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
-  const [categoryOptions, setCategoryOptions] = useState<CategoryOption[]>(mockCategoryOptions);
+  const [categories, setCategories] = useState<CategoryDto[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOptionDto[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
+
+  // 로딩 및 에러 상태
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // 카테고리 관련 상태
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingCategory, setEditingCategory] = useState<CategoryDto | null>(null);
   const [categoryForm, setCategoryForm] = useState({
     categoryName: '',
     categoryPrice: '',
@@ -171,7 +37,7 @@ export const ServiceManagement: React.FC = () => {
 
   // 카테고리 옵션 관련 상태
   const [showOptionDialog, setShowOptionDialog] = useState(false);
-  const [editingOption, setEditingOption] = useState<CategoryOption | null>(null);
+  const [editingOption, setEditingOption] = useState<CategoryOptionDto | null>(null);
   const [optionForm, setOptionForm] = useState({
     coName: '',
     coPrice: '',
@@ -179,10 +45,66 @@ export const ServiceManagement: React.FC = () => {
     categoryId: ''
   });
 
+  // 초기 데이터 로딩
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const [categoriesData, optionsData] = await Promise.all([
+          adminCategoryService.getCategories(),
+          adminCategoryService.getCategoryOptions()
+        ]);
+
+        setCategories(categoriesData);
+        setCategoryOptions(optionsData);
+        
+        // 초기에 모든 카테고리를 확장된 상태로 설정
+        const allCategoryIds = new Set(categoriesData.map(cat => cat.categoryId));
+        setExpandedCategories(allCategoryIds);
+      } catch (err: any) {
+        console.error('데이터 로딩 실패:', err);
+        setError(err.message || '데이터를 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   // 헬퍼 함수: 카테고리 이름 가져오기
   const getCategoryName = (categoryId: number) => {
     const category = categories.find(cat => cat.categoryId === categoryId);
     return category ? category.categoryName : '알 수 없음';
+  };
+
+  // 카테고리별로 옵션 그룹화
+  const getGroupedOptions = () => {
+    const grouped: { [categoryId: number]: { category: CategoryDto; options: CategoryOptionDto[] } } = {};
+    
+    categories.forEach(category => {
+      grouped[category.categoryId] = {
+        category,
+        options: categoryOptions.filter(option => option.categoryId === category.categoryId)
+      };
+    });
+    
+    return grouped;
+  };
+
+  // 카테고리 확장/축소 토글
+  const toggleCategoryExpansion = (categoryId: number) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
   };
 
   // 검색 필터링
@@ -219,7 +141,7 @@ export const ServiceManagement: React.FC = () => {
   };
 
   // 카테고리 추가/수정
-  const handleCategorySubmit = () => {
+  const handleCategorySubmit = async () => {
     if (!categoryForm.categoryName || !categoryForm.categoryPrice || !categoryForm.categoryTime) {
       alert('모든 필드를 입력해주세요.');
       return;
@@ -231,28 +153,34 @@ export const ServiceManagement: React.FC = () => {
       categoryTime: parseInt(categoryForm.categoryTime)
     };
 
-    if (editingCategory) {
-      // 수정
-      setCategories(prev => prev.map(cat => 
-        cat.categoryId === editingCategory.categoryId 
-          ? { ...cat, ...categoryData }
-          : cat
-      ));
-    } else {
-      // 추가
-      const newCategory = {
-        categoryId: Math.max(...categories.map(c => c.categoryId)) + 1,
-        ...categoryData
-      };
-      setCategories(prev => [...prev, newCategory]);
-    }
+    try {
+      if (editingCategory) {
+        // 수정
+        const updatedCategory = await adminCategoryService.updateCategory(editingCategory.categoryId, categoryData);
+        setCategories(prev => prev.map(cat => 
+          cat.categoryId === editingCategory.categoryId 
+            ? updatedCategory
+            : cat
+        ));
+      } else {
+        // 추가
+        const newCategory = await adminCategoryService.createCategory(categoryData);
+        setCategories(prev => [...prev, newCategory]);
+        
+        // 새로 추가된 카테고리를 확장된 상태로 설정
+        setExpandedCategories(prev => new Set([...Array.from(prev), newCategory.categoryId]));
+      }
 
-    setShowCategoryDialog(false);
-    resetCategoryForm();
+      setShowCategoryDialog(false);
+      resetCategoryForm();
+    } catch (error: any) {
+      console.error('카테고리 저장 실패:', error);
+      alert(error.message || '카테고리 저장에 실패했습니다.');
+    }
   };
 
   // 카테고리 옵션 추가/수정
-  const handleOptionSubmit = () => {
+  const handleOptionSubmit = async () => {
     if (!optionForm.coName || !optionForm.coPrice || !optionForm.coTime || !optionForm.categoryId) {
       alert('모든 필드를 입력해주세요.');
       return;
@@ -265,42 +193,57 @@ export const ServiceManagement: React.FC = () => {
       categoryId: parseInt(optionForm.categoryId)
     };
 
-    if (editingOption) {
-      // 수정
-      setCategoryOptions(prev => prev.map(opt => 
-        opt.coId === editingOption.coId 
-          ? { ...opt, ...optionData }
-          : opt
-      ));
-    } else {
-      // 추가
-      const newOption = {
-        coId: Math.max(...categoryOptions.map(o => o.coId)) + 1,
-        ...optionData
-      };
-      setCategoryOptions(prev => [...prev, newOption]);
-    }
+    try {
+      if (editingOption) {
+        // 수정
+        const updatedOption = await adminCategoryService.updateCategoryOption(editingOption.coId, optionData);
+        setCategoryOptions(prev => prev.map(opt => 
+          opt.coId === editingOption.coId 
+            ? updatedOption
+            : opt
+        ));
+      } else {
+        // 추가
+        const newOption = await adminCategoryService.createCategoryOption(optionData);
+        setCategoryOptions(prev => [...prev, newOption]);
+      }
 
-    setShowOptionDialog(false);
-    resetOptionForm();
+      setShowOptionDialog(false);
+      resetOptionForm();
+    } catch (error: any) {
+      console.error('카테고리 옵션 저장 실패:', error);
+      alert(error.message || '카테고리 옵션 저장에 실패했습니다.');
+    }
   };
 
   // 카테고리 삭제
-  const handleDeleteCategory = (categoryId: number) => {
+  const handleDeleteCategory = async (categoryId: number) => {
     if (window.confirm('정말로 이 카테고리를 삭제하시겠습니까?')) {
-      setCategories(prev => prev.filter(cat => cat.categoryId !== categoryId));
+      try {
+        await adminCategoryService.deleteCategory(categoryId);
+        setCategories(prev => prev.filter(cat => cat.categoryId !== categoryId));
+      } catch (error: any) {
+        console.error('카테고리 삭제 실패:', error);
+        alert(error.message || '카테고리 삭제에 실패했습니다.');
+      }
     }
   };
 
   // 카테고리 옵션 삭제
-  const handleDeleteOption = (coId: number) => {
+  const handleDeleteOption = async (coId: number) => {
     if (window.confirm('정말로 이 카테고리 옵션을 삭제하시겠습니까?')) {
-      setCategoryOptions(prev => prev.filter(opt => opt.coId !== coId));
+      try {
+        await adminCategoryService.deleteCategoryOption(coId);
+        setCategoryOptions(prev => prev.filter(opt => opt.coId !== coId));
+      } catch (error: any) {
+        console.error('카테고리 옵션 삭제 실패:', error);
+        alert(error.message || '카테고리 옵션 삭제에 실패했습니다.');
+      }
     }
   };
 
   // 카테고리 수정 모달 열기
-  const openEditCategory = (category: Category) => {
+  const openEditCategory = (category: CategoryDto) => {
     setEditingCategory(category);
     setCategoryForm({
       categoryName: category.categoryName,
@@ -311,7 +254,7 @@ export const ServiceManagement: React.FC = () => {
   };
 
   // 카테고리 옵션 수정 모달 열기
-  const openEditOption = (option: CategoryOption) => {
+  const openEditOption = (option: CategoryOptionDto) => {
     setEditingOption(option);
     setOptionForm({
       coName: option.coName,
@@ -321,6 +264,42 @@ export const ServiceManagement: React.FC = () => {
     });
     setShowOptionDialog(true);
   };
+
+  // 로딩 상태
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+            <Settings className="mr-3 h-8 w-8" />
+            서비스 관리
+          </h1>
+          <p className="text-gray-600 mt-2">서비스 카테고리와 옵션을 관리합니다.</p>
+        </div>
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg text-gray-600">데이터를 불러오는 중...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+            <Settings className="mr-3 h-8 w-8" />
+            서비스 관리
+          </h1>
+          <p className="text-gray-600 mt-2">서비스 카테고리와 옵션을 관리합니다.</p>
+        </div>
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg text-red-600">오류: {error}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -612,71 +591,198 @@ export const ServiceManagement: React.FC = () => {
 
       {/* 카테고리 옵션 목록 */}
       {activeTab === 'options' && (
-        <Card>
-          <CardHeader>
-            <CardTitle>카테고리 옵션 목록 ({filteredOptions.length}개)</CardTitle>
-            <CardDescription>등록된 카테고리 옵션을 관리할 수 있습니다.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[8%]">ID</TableHead>
-                    <TableHead className="w-[25%]">옵션명</TableHead>
-                    <TableHead className="w-[20%]">소속 카테고리</TableHead>
-                    <TableHead className="w-[15%]">추가 가격</TableHead>
-                    <TableHead className="w-[15%]">추가 시간</TableHead>
-                    <TableHead className="w-[17%]">관리</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredOptions.map((option) => (
-                    <TableRow key={option.coId}>
-                      <TableCell className="font-medium">{option.coId}</TableCell>
-                      <TableCell>{option.coName}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="text-gray-700 bg-gray-100">
-                          {getCategoryName(option.categoryId)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-blue-600">
-                          +₩{option.coPrice.toLocaleString()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-green-600">
-                          +{option.coTime}분
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openEditOption(option)}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteOption(option.coId)}
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+        <>
+          {/* 검색 결과가 있을 때는 기존 테이블 형태로 표시 */}
+          {(searchTerm || selectedCategoryFilter) ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>검색 결과 ({filteredOptions.length}개)</CardTitle>
+                <CardDescription>검색된 카테고리 옵션 목록입니다.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[8%]">ID</TableHead>
+                        <TableHead className="w-[25%]">옵션명</TableHead>
+                        <TableHead className="w-[20%]">소속 카테고리</TableHead>
+                        <TableHead className="w-[15%]">추가 가격</TableHead>
+                        <TableHead className="w-[15%]">추가 시간</TableHead>
+                        <TableHead className="w-[17%]">관리</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredOptions.map((option) => (
+                        <TableRow key={option.coId}>
+                          <TableCell className="font-medium">{option.coId}</TableCell>
+                          <TableCell>{option.coName}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="text-gray-700 bg-gray-100">
+                              {getCategoryName(option.categoryId)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-blue-600">
+                              +₩{option.coPrice.toLocaleString()}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-green-600">
+                              +{option.coTime}분
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openEditOption(option)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteOption(option.coId)}
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            /* 카테고리별 그룹화된 뷰 */
+            <div className="space-y-4">
+              {Object.values(getGroupedOptions()).map(({ category, options }) => (
+                <Card key={category.categoryId} className="overflow-hidden">
+                  {/* 카테고리 헤더 */}
+                  <div 
+                    className="p-4 bg-gray-50 border-b cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => toggleCategoryExpansion(category.categoryId)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {expandedCategories.has(category.categoryId) ? (
+                          <ChevronDown className="h-5 w-5 text-gray-500" />
+                        ) : (
+                          <ChevronRight className="h-5 w-5 text-gray-500" />
+                        )}
+                        <div>
+                          <h3 className="font-semibold text-lg">{category.categoryName}</h3>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant="outline" className="text-blue-600">
+                              기본 ₩{category.categoryPrice.toLocaleString()}
+                            </Badge>
+                            <Badge variant="outline" className="text-green-600">
+                              {category.categoryTime}시간
+                            </Badge>
+                            <Badge variant="secondary">
+                              옵션 {options.length}개
+                            </Badge>
+                          </div>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOptionForm(prev => ({ ...prev, categoryId: category.categoryId.toString() }));
+                          setShowOptionDialog(true);
+                        }}
+                        className="shrink-0"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        옵션 추가
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* 옵션 목록 (확장된 경우에만 표시) */}
+                  {expandedCategories.has(category.categoryId) && (
+                    <CardContent className="p-0">
+                      {options.length === 0 ? (
+                        <div className="p-6 text-center text-gray-500">
+                          이 카테고리에는 아직 옵션이 없습니다.
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-[10%]">ID</TableHead>
+                                <TableHead className="w-[35%]">옵션명</TableHead>
+                                <TableHead className="w-[20%]">추가 가격</TableHead>
+                                <TableHead className="w-[20%]">추가 시간</TableHead>
+                                <TableHead className="w-[15%]">관리</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {options.map((option) => (
+                                <TableRow key={option.coId}>
+                                  <TableCell className="font-medium">{option.coId}</TableCell>
+                                  <TableCell>{option.coName}</TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline" className="text-blue-600">
+                                      +₩{option.coPrice.toLocaleString()}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline" className="text-green-600">
+                                      +{option.coTime}분
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => openEditOption(option)}
+                                        className="h-8 w-8 p-0"
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleDeleteOption(option.coId)}
+                                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                    </CardContent>
+                  )}
+                </Card>
+              ))}
+              
+              {/* 카테고리가 없는 경우 */}
+              {categories.length === 0 && (
+                <Card>
+                  <CardContent className="p-6 text-center text-gray-500">
+                    먼저 카테고리를 생성해주세요. 카테고리 탭에서 카테고리를 추가할 수 있습니다.
+                  </CardContent>
+                </Card>
+              )}
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </>
       )}
     </div>
   );

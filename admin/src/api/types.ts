@@ -175,3 +175,33 @@ export interface AdminCalculationDetailDto {
     totalReservationAmount: number;     // 총 예약 금액
     reservations: AdminCalculationReservationDto[];  // 예약 목록
 }
+
+// 카테고리 관련 타입
+export interface CategoryDto {
+    categoryId: number;                 // 카테고리 ID
+    categoryName: string;               // 카테고리명
+    categoryPrice: number;              // 기본 가격
+    categoryTime: number;               // 소요 시간 (시간)
+}
+
+export interface CategoryRequestDto {
+    categoryName: string;               // 카테고리명
+    categoryPrice: number;              // 기본 가격
+    categoryTime: number;               // 소요 시간 (시간)
+}
+
+// 카테고리 옵션 관련 타입
+export interface CategoryOptionDto {
+    categoryId: number;                 // 소속 카테고리 ID
+    coId: number;                       // 옵션 ID
+    coName: string;                     // 옵션명
+    coPrice: number;                    // 추가 가격
+    coTime: number;                     // 추가 시간 (분)
+}
+
+export interface CategoryOptionRequestDto {
+    categoryId: number;                 // 소속 카테고리 ID
+    coName: string;                     // 옵션명
+    coPrice: number;                    // 추가 가격
+    coTime: number;                     // 추가 시간 (분)
+}
