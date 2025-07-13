@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AdminRefundResponseDto, AdminRefundStatisticsResponseDto, AdminRefundReasonDto } from './types';
+import { AdminRefundResponseDto, AdminRefundStatisticsResponseDto, AdminRefundReasonDto, AdminRefundCustomerTopDto } from './types';
 import { getCookie, ADMIN_TOKEN_COOKIE } from '../lib/cookie';
 
 const API_BASE_URL = 'http://localhost:9093/api/v1';
@@ -91,6 +91,19 @@ export const adminRefundsService = {
     getRefundReasons: async (): Promise<AdminRefundReasonDto[]> => {
         try {
             const response = await refundsApi.get('/admin/statistics/refunds/reasons');
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+    
+    // 사용자별 환불률 TOP3 조회
+    getRefundCustomerTop: async (): Promise<AdminRefundCustomerTopDto[]> => {
+        try {
+            const response = await refundsApi.get('/admin/statistics/refunds/customers/top');
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 401) {

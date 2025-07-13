@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { adminRefundsService } from '../../api/adminRefunds';
-import { AdminRefundStatisticsResponseDto, AdminRefundReasonDto } from '../../api/types';
-
-// 사용자별 환불률 - 추후 API 연동 예정
-const userRefunds = [
-  { name: '홍길동', refunds: 3, total: 20, rate: 15 },
-  { name: '김철수', refunds: 2, total: 18, rate: 11 },
-  { name: '이영희', refunds: 1, total: 25, rate: 4 },
-  { name: '박민수', refunds: 1, total: 12, rate: 8 },
-];
+import { AdminRefundStatisticsResponseDto, AdminRefundReasonDto, AdminRefundCustomerTopDto } from '../../api/types';
 
 // 매니저별 환불률 - 추후 API 연동 예정
 const managerRefunds = [
@@ -29,6 +21,7 @@ const predefinedReasons = [
 export const StatRefund: React.FC = () => {
   const [refundStatistics, setRefundStatistics] = useState<AdminRefundStatisticsResponseDto | null>(null);
   const [refundReasons, setRefundReasons] = useState<AdminRefundReasonDto[]>([]);
+  const [customerTop, setCustomerTop] = useState<AdminRefundCustomerTopDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showOtherDetails, setShowOtherDetails] = useState(false);
@@ -37,15 +30,15 @@ export const StatRefund: React.FC = () => {
     const fetchRefundData = async () => {
       try {
         setLoading(true);
-        
-        // 통계와 사유 분포를 병렬로 가져오기
-        const [statisticsData, reasonsData] = await Promise.all([
+        // 통계, 사유 분포, 사용자별 환불률 top3를 병렬로 가져오기
+        const [statisticsData, reasonsData, customerTopData] = await Promise.all([
           adminRefundsService.getRefundStatistics(),
-          adminRefundsService.getRefundReasons()
+          adminRefundsService.getRefundReasons(),
+          adminRefundsService.getRefundCustomerTop()
         ]);
-        
         setRefundStatistics(statisticsData);
         setRefundReasons(reasonsData);
+        setCustomerTop(customerTopData.slice(0, 3)); // 혹시 3개 이상 와도 top3만
         setError(null);
       } catch (err: any) {
         console.error('환불 데이터 조회 실패:', err);
@@ -54,7 +47,6 @@ export const StatRefund: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchRefundData();
   }, []);
 
@@ -227,29 +219,29 @@ export const StatRefund: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* 사용자별 환불률 */}
+      {/* 고객별 환불금액 TOP3 */}
       <Card>
         <CardHeader>
-          <CardTitle>사용자별 환불률 TOP4</CardTitle>
-          <CardDescription>최근 30일 기준 (추후 API 연동 예정)</CardDescription>
+          <CardTitle>고객별 환불금액 TOP3</CardTitle>
+          <CardDescription>누적 기준, 환불금액 상위 3명</CardDescription>
         </CardHeader>
         <CardContent>
           <table className="min-w-full text-center text-sm">
             <thead>
               <tr className="bg-gray-50">
+                <th className="p-2">고객ID</th>
                 <th className="p-2">이름</th>
                 <th className="p-2">환불 건수</th>
-                <th className="p-2">총 이용 건수</th>
-                <th className="p-2">환불률(%)</th>
+                <th className="p-2">총 환불 금액</th>
               </tr>
             </thead>
             <tbody>
-              {userRefunds.map((u) => (
-                <tr key={u.name} className="border-b">
-                  <td className="p-2 font-medium">{u.name}</td>
-                  <td className="p-2">{u.refunds}</td>
-                  <td className="p-2">{u.total}</td>
-                  <td className="p-2 text-blue-600 font-bold">{u.rate}%</td>
+              {customerTop.map((u) => (
+                <tr key={u.customerId} className="border-b">
+                  <td className="p-2">{u.customerId}</td>
+                  <td className="p-2 font-semibold">{u.customerName}</td>
+                  <td className="p-2 text-blue-600 font-bold">{u.refundCount}</td>
+                  <td className="p-2">₩{u.totalRefundAmount.toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>

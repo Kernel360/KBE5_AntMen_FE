@@ -148,6 +148,14 @@ export interface AdminRefundReasonDto {
     count: number;                      // 건수
 }
 
+// 사용자별 환불률 TOP3 응답 타입
+export interface AdminRefundCustomerTopDto {
+    customerId: number;                 // 고객 ID
+    customerName: string;               // 고객명
+    refundCount: number;                // 환불 건수
+    totalRefundAmount: number;          // 총 환불 금액
+}
+
 // 정산 관련 타입
 export interface AdminCalculationItemDto {
     calculationId: number;              // 정산 ID
