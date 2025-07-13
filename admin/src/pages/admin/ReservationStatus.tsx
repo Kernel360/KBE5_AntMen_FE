@@ -19,22 +19,31 @@ import {
     SelectTrigger,
     SelectValue,
 } from '../../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { Textarea } from '../../components/ui/textarea';
 import { ChevronLeft, ChevronRight, SkipBack, SkipForward } from 'lucide-react';
 import { adminService } from '../../api/adminService';
-import { ReservationMatchingListDto, ReservationStats } from '../../api/types';
+import { ReservationAdminListDto, ReservationStatDto } from '../../api/types';
+import ReservationDetailModal from '../../components/modals/ReservationDetailModal';
 
 // API 타입을 그대로 사용
-type Reservation = ReservationMatchingListDto;
+type Reservation = ReservationAdminListDto;
 
 // API 상태값을 새로운 상태값으로 매핑
 const getStatusInfo = (status: string) => {
     switch (status) {
-        case 'ing':
-            return { label: '매칭중', color: 'bg-blue-100 text-blue-800' };
-        case 'fail':
-            return { label: '매칭실패', color: 'bg-red-100 text-red-800' };
-        case 'nothing':
-            return { label: '요청없음', color: 'bg-gray-100 text-gray-800' };
+        case 'WAITING':
+            return { label: '대기중', color: 'bg-yellow-100 text-yellow-800' };
+        case 'MATCHING':
+            return { label: '매칭완료', color: 'bg-blue-100 text-blue-800' };
+        // case 'PAY':
+        //     return { label: '결제완료', color: 'bg-purple-100 text-purple-800' };
+        case 'DONE':
+            return { label: '완료', color: 'bg-green-100 text-green-800' };
+        case 'CANCEL':
+            return { label: '취소', color: 'bg-red-100 text-red-800' };
+        case 'ERROR':
+            return { label: '에러', color: 'bg-orange-100 text-orange-800' };
         default:
             return { label: status, color: 'bg-gray-100 text-gray-800' };
     }
@@ -44,29 +53,46 @@ const ITEMS_PER_PAGE = 15;
 
 export const ReservationStatus: React.FC = () => {
     const [reservations, setReservations] = useState<Reservation[]>([]);
-    const [stats, setStats] = useState<ReservationStats[]>([]);
+    const [stats, setStats] = useState<ReservationStatDto[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchInput, setSearchInput] = useState(''); // 실제 입력값
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [categoryFilter, setCategoryFilter] = useState<string>('');
+    const [categoryInput, setCategoryInput] = useState<string>(''); // 실제 입력값
     const [startDateFilter, setStartDateFilter] = useState('');
     const [endDateFilter, setEndDateFilter] = useState('');
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    
+    // 모달 관련 상태
+    const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+    const [reservationDetail, setReservationDetail] = useState<any>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [detailLoading, setDetailLoading] = useState(false);
+    
+    // 매칭 수정 모달 상태
+    const [isMatchingRequestModalOpen, setIsMatchingRequestModalOpen] = useState(false);
+    
+    // 예약 취소 모달 상태
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    
+    // 매니저 변경 모달 상태
+    const [isManagerChangeModalOpen, setIsManagerChangeModalOpen] = useState(false);
 
     // 데이터 로드 함수
-    const loadReservations = useCallback(async () => {
+    const loadReservations = useCallback(async (selectedStatus?: string) => {
         setLoading(true);
         try {
+            const currentStatus = selectedStatus || statusFilter;
             const response = await adminService.getReservationStatus(
-                statusFilter === 'all' ? undefined : statusFilter,
+                currentStatus === 'all' ? undefined : currentStatus,
                 searchTerm || undefined,
                 categoryFilter || undefined,
                 startDateFilter || undefined,
                 endDateFilter || undefined
             );
-            setReservations(response.reservations);
-            setStats(response.stats);
+            setReservations(response.reservationAdminListDtos);
+            setStats(response.reservationStatDtoList);
             setCurrentPage(1); // 필터 변경 시 첫 페이지로 이동
         } catch (error: any) {
             console.error('예약 데이터 로드 실패:', error);
@@ -84,7 +110,8 @@ export const ReservationStatus: React.FC = () => {
     // 검색 실행 함수
     const handleSearch = useCallback(() => {
         setSearchTerm(searchInput);
-    }, [searchInput]);
+        setCategoryFilter(categoryInput);
+    }, [searchInput, categoryInput]);
 
     // 엔터키 처리
     const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
@@ -98,15 +125,68 @@ export const ReservationStatus: React.FC = () => {
         setSearchInput('');
         setStatusFilter('all');
         setCategoryFilter('');
+        setCategoryInput('');
         setStartDateFilter('');
         setEndDateFilter('');
-    }, []);
+        loadReservations('all');
+    }, [loadReservations]);
+
+    // 상세보기 모달 열기
+    const openDetailModal = async (reservation: Reservation) => {
+        setSelectedReservation(reservation);
+        setIsDetailModalOpen(true);
+        setDetailLoading(true);
+        try {
+            const detail = await adminService.getReservationDetail(reservation.reservationId.toString());
+            setReservationDetail(detail);
+        } catch (err: any) {
+            console.error('상세 정보 로드 오류:', err);
+            setReservationDetail(null);
+        } finally {
+            setDetailLoading(false);
+        }
+    };
+
+    // 상세보기 모달 새로고침
+    const refreshDetailModal = async () => {
+        if (selectedReservation) {
+            setDetailLoading(true);
+            try {
+                const detail = await adminService.getReservationDetail(selectedReservation.reservationId.toString());
+                setReservationDetail(detail);
+            } catch (err: any) {
+                console.error('상세 정보 로드 오류:', err);
+                setReservationDetail(null);
+            } finally {
+                setDetailLoading(false);
+            }
+        }
+    };
+
+    // 매칭 수정 모달 열기
+    const openMatchingRequestModal = (reservation: any) => {
+        setSelectedReservation(reservation);
+        setIsMatchingRequestModalOpen(true);
+    };
+
+    // 예약 취소 모달 열기
+    const openCancelModal = (reservation: any) => {
+        setSelectedReservation(reservation);
+        setIsCancelModalOpen(true);
+    };
+
+    // 매니저 변경 모달 열기
+    const openManagerChangeModal = (reservation: any) => {
+        setSelectedReservation(reservation);
+        setIsManagerChangeModalOpen(true);
+    };
 
     // 통계 계산
     const totalReservations = stats?.reduce((sum, stat) => sum + stat.count, 0) || 0;
-    const ingCount = stats?.find(s => s.status === 'ing')?.count || 0;
-    const failCount = stats?.find(s => s.status === 'fail')?.count || 0;
-    const nothingCount = stats?.find(s => s.status === 'nothing')?.count || 0;
+    const waitingCount = stats?.find(s => s.status === 'WAITING')?.count || 0;
+    const matchingCount = stats?.find(s => s.status === 'MATCHING')?.count || 0;
+    const doneCount = stats?.find(s => s.status === 'DONE')?.count || 0;
+    const cancelCount = stats?.find(s => s.status === 'CANCEL')?.count || 0;
 
     // 페이지네이션 계산
     const totalPages = Math.ceil((reservations?.length || 0) / ITEMS_PER_PAGE);
@@ -179,8 +259,14 @@ export const ReservationStatus: React.FC = () => {
             </div>
 
             {/* 통계 카드 */}
-            <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
-                <Card className="p-6">
+            <div className="grid grid-cols-6 gap-4">
+                <Card 
+                    className={`p-6 cursor-pointer transition-colors ${statusFilter === 'all' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'}`}
+                    onClick={() => {
+                        setStatusFilter('all');
+                        loadReservations('all');
+                    }}
+                >
                     <div className="text-center">
                         <div className="text-2xl font-bold text-gray-900">
                             {totalReservations}
@@ -188,50 +274,72 @@ export const ReservationStatus: React.FC = () => {
                         <div className="text-sm text-gray-500">전체예약</div>
                     </div>
                 </Card>
-                <Card className="p-6">
+                <Card 
+                    className={`p-6 cursor-pointer transition-colors ${statusFilter === 'WAITING' ? 'ring-2 ring-yellow-500 bg-yellow-50' : 'hover:bg-gray-50'}`}
+                    onClick={() => {
+                        setStatusFilter('WAITING');
+                        loadReservations('WAITING');
+                    }}
+                >
                     <div className="text-center">
                         <div className="text-2xl font-bold text-yellow-600">
-                            {ingCount}
+                            {waitingCount}
                         </div>
-                        <div className="text-sm text-gray-500">매칭중</div>
+                        <div className="text-sm text-gray-500">대기중</div>
                     </div>
                 </Card>
-                <Card className="p-6">
+                <Card 
+                    className={`p-6 cursor-pointer transition-colors ${statusFilter === 'MATCHING' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'}`}
+                    onClick={() => {
+                        setStatusFilter('MATCHING');
+                        loadReservations('MATCHING');
+                    }}
+                >
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-amber-600">
-                            0
+                        <div className="text-2xl font-bold text-blue-600">
+                            {matchingCount}
                         </div>
                         <div className="text-sm text-gray-500">매칭완료</div>
                     </div>
                 </Card>
-                <Card className="p-6">
+                <Card 
+                    className={`p-6 cursor-pointer transition-colors ${statusFilter === 'DONE' ? 'ring-2 ring-green-500 bg-green-50' : 'hover:bg-gray-50'}`}
+                    onClick={() => {
+                        setStatusFilter('DONE');
+                        loadReservations('DONE');
+                    }}
+                >
                     <div className="text-center">
                         <div className="text-2xl font-bold text-green-600">
-                            0
+                            {doneCount}
                         </div>
-                        <div className="text-sm text-gray-500">결제완료</div>
+                        <div className="text-sm text-gray-500">완료</div>
                     </div>
                 </Card>
-                <Card className="p-6">
-                    <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">
-                            0
-                        </div>
-                        <div className="text-sm text-gray-500">진행완료</div>
-                    </div>
-                </Card>
-                <Card className="p-6">
+                <Card 
+                    className={`p-6 cursor-pointer transition-colors ${statusFilter === 'CANCEL' ? 'ring-2 ring-red-500 bg-red-50' : 'hover:bg-gray-50'}`}
+                    onClick={() => {
+                        setStatusFilter('CANCEL');
+                        loadReservations('CANCEL');
+                    }}
+                >
                     <div className="text-center">
                         <div className="text-2xl font-bold text-red-600">
-                            0
+                            {cancelCount}
                         </div>
                         <div className="text-sm text-gray-500">취소</div>
                     </div>
                 </Card>
-                <Card className="p-6">
+                <Card 
+                    className={`p-6 cursor-pointer transition-colors ${statusFilter === 'ERROR' ? 'ring-2 ring-orange-500 bg-orange-50' : 'hover:bg-gray-50'}`}
+                    onClick={() => {
+                        setStatusFilter('ERROR');
+                        loadReservations('ERROR');
+                    }}
+                >
                     <div className="text-center">
                         <div className="text-2xl font-bold text-orange-600">
-                            0
+                            {stats?.find(s => s.status === 'ERROR')?.count || 0}
                         </div>
                         <div className="text-sm text-gray-500">에러</div>
                     </div>
@@ -261,8 +369,9 @@ export const ReservationStatus: React.FC = () => {
                                 id="category-filter"
                                 type="text"
                                 placeholder="카테고리 검색"
-                                value={categoryFilter}
-                                onChange={(e) => setCategoryFilter(e.target.value)}
+                                value={categoryInput}
+                                onChange={(e) => setCategoryInput(e.target.value)}
+                                onKeyPress={handleKeyPress}
                                 className="mt-1 h-10"
                             />
                         </div>
@@ -340,13 +449,12 @@ export const ReservationStatus: React.FC = () => {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>예약번호</TableHead>
-                                <TableHead>고객명</TableHead>
-                                <TableHead>카테고리</TableHead>
-                                <TableHead>예약일시</TableHead>
-                                <TableHead>매칭상태</TableHead>
-                                <TableHead>요청수</TableHead>
-                                <TableHead>응답수</TableHead>
-                                <TableHead>수락수</TableHead>
+                                <TableHead>고객정보</TableHead>
+                                <TableHead>서비스명</TableHead>
+                                <TableHead>예약상태</TableHead>
+                                <TableHead>예약생성일</TableHead>
+                                <TableHead>서비스 요청일</TableHead>
+                                <TableHead>작업</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -355,19 +463,29 @@ export const ReservationStatus: React.FC = () => {
                                     <TableCell className="font-medium">
                                         {reservation.reservationId}
                                     </TableCell>
-                                    <TableCell>{reservation.customerName}</TableCell>
+                                    <TableCell>
+                                        <div>
+                                            <div className="font-medium">{reservation.customerName}</div>
+                                            <div className="text-sm text-gray-500">고객 ID: {reservation.customerId}</div>
+                                        </div>
+                                    </TableCell>
                                     <TableCell>{reservation.categoryName}</TableCell>
                                     <TableCell>
-                                        {reservation.reservationDate} {reservation.reservationTime}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge className={getStatusInfo(reservation.matchingStatus).color}>
-                                            {getStatusInfo(reservation.matchingStatus).label}
+                                        <Badge className={getStatusInfo(reservation.reservationStatus).color}>
+                                            {getStatusInfo(reservation.reservationStatus).label}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>{reservation.totalRequests}</TableCell>
-                                    <TableCell>{reservation.totalManagerResponses}</TableCell>
-                                    <TableCell>{reservation.totalManagerAccepts}</TableCell>
+                                    <TableCell>{new Date(reservation.reservationCreatedAt).toLocaleDateString()}</TableCell>
+                                    <TableCell>{reservation.reservationDate} {reservation.reservationTime}</TableCell>
+                                    <TableCell>
+                                        <Button 
+                                            variant="outline" 
+                                            size="sm"
+                                            onClick={() => openDetailModal(reservation)}
+                                        >
+                                            상세보기
+                                        </Button>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -457,6 +575,79 @@ export const ReservationStatus: React.FC = () => {
                     </div>
                 )}
             </Card>
+
+            {/* 상세보기 모달 */}
+            <ReservationDetailModal
+                open={isDetailModalOpen}
+                onClose={() => setIsDetailModalOpen(false)}
+                reservation={selectedReservation}
+                reservationDetail={reservationDetail}
+                loading={detailLoading}
+                onRefresh={refreshDetailModal}
+                onOpenMatchingRequestModal={openMatchingRequestModal}
+                onOpenCancelModal={openCancelModal}
+                onOpenManagerChangeModal={openManagerChangeModal}
+            />
+
+            {/* 매칭 수정 모달 */}
+            <Dialog open={isMatchingRequestModalOpen} onOpenChange={setIsMatchingRequestModalOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>매칭 수정</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <p className="text-gray-600">매칭 수정 기능은 추후 구현 예정입니다.</p>
+                        <div className="flex justify-end gap-2">
+                            <Button 
+                                variant="outline" 
+                                onClick={() => setIsMatchingRequestModalOpen(false)}
+                            >
+                                닫기
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* 예약 취소 모달 */}
+            <Dialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>예약 취소</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <p className="text-gray-600">예약 취소 기능은 추후 구현 예정입니다.</p>
+                        <div className="flex justify-end gap-2">
+                            <Button 
+                                variant="outline" 
+                                onClick={() => setIsCancelModalOpen(false)}
+                            >
+                                닫기
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* 매니저 변경 모달 */}
+            <Dialog open={isManagerChangeModalOpen} onOpenChange={setIsManagerChangeModalOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>매니저 변경</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <p className="text-gray-600">매니저 변경 기능은 추후 구현 예정입니다.</p>
+                        <div className="flex justify-end gap-2">
+                            <Button 
+                                variant="outline" 
+                                onClick={() => setIsManagerChangeModalOpen(false)}
+                            >
+                                닫기
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }; 

@@ -7,11 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { Textarea } from '../../components/ui/textarea';
 import { ChevronLeft, ChevronRight, SkipBack, SkipForward, Calendar } from 'lucide-react';
 import { adminService } from '../../api/adminService';
 import { ReservationMatchingListDto, ManualMatchingRequest, ReservationStats } from '../../api/types';
 import ReservationDetailModal from '../../components/modals/ReservationDetailModal';
+import ReservationCancelModal from '../../components/modals/ReservationCancelModal';
+import MatchingRequestModal from '../../components/modals/MatchingRequestModal';
 
 const ITEMS_PER_PAGE = 15;
 
@@ -21,8 +22,8 @@ export const ManualMatching: React.FC = () => {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isMatchingRequestModalOpen, setIsMatchingRequestModalOpen] = useState(false);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-    const [cancelReason, setCancelReason] = useState('');
-    const [cancelReasonType, setCancelReasonType] = useState<'preset1' | 'preset2' | 'custom'>('preset1');
+    const [isManagerChangeModalOpen, setIsManagerChangeModalOpen] = useState(false);
+
     const [cancelModalSource, setCancelModalSource] = useState<'list' | 'detail'>('list');
     const [matchingType, setMatchingType] = useState<'auto' | 'manual'>('auto');
     const [selectedManagerId, setSelectedManagerId] = useState<string>('');
@@ -258,43 +259,12 @@ export const ManualMatching: React.FC = () => {
         }
     };
 
-    const handleCancelReservation = async () => {
-        let finalCancelReason = '';
-
-        if (cancelReasonType === 'preset1') {
-            finalCancelReason = '예약날까지 매칭안됨';
-        } else if (cancelReasonType === 'preset2') {
-            finalCancelReason = '매칭할 매니저 없음';
-        } else {
-            if (!cancelReason.trim()) {
-                alert('취소 사유를 입력해주세요.');
-                return;
-            }
-            finalCancelReason = cancelReason.trim();
-        }
-
-        if (!selectedReservation) {
-            alert('예약 정보를 찾을 수 없습니다.');
-            return;
-        }
-
+    const handleCancelReservation = async (reservationId: string, cancelData: { status: string; reason: string }) => {
         try {
-            await adminService.cancelReservation(
-                selectedReservation.reservationId.toString(),
-                {
-                    status: 'CANCEL',
-                    reason: finalCancelReason
-                }
-            );
-
-            // 백엔드에서 응답을 보내주지 않으므로 성공으로 처리
-            alert(`예약 ${selectedReservation.reservationId}이(가) 취소되었습니다.`);
+            await adminService.cancelReservation(reservationId, cancelData);
             
-            // 모달 닫기 및 상태 초기화
-            setIsCancelModalOpen(false);
-            setCancelReason('');
-            setCancelReasonType('preset1');
-            setSelectedReservation(null);
+            // 백엔드에서 응답을 보내주지 않으므로 성공으로 처리
+            alert(`예약 ${reservationId}이(가) 취소되었습니다.`);
             
             // 데이터 새로고침
             await loadReservations();
@@ -306,10 +276,13 @@ export const ManualMatching: React.FC = () => {
 
     const openCancelModal = (reservation: ReservationMatchingListDto, source: 'list' | 'detail' = 'list') => {
         setSelectedReservation(reservation);
-        setCancelReason('');
-        setCancelReasonType('preset1');
         setCancelModalSource(source);
         setIsCancelModalOpen(true);
+    };
+
+    const openManagerChangeModal = (reservation: any) => {
+        setSelectedReservation(reservation);
+        setIsManagerChangeModalOpen(true);
     };
 
     const refreshDetailModal = async () => {
@@ -811,145 +784,22 @@ export const ManualMatching: React.FC = () => {
                 </div>
             )}
 
-            {/* 매칭 요청 생성 모달 */}
-            <Dialog open={isMatchingRequestModalOpen} onOpenChange={setIsMatchingRequestModalOpen}>
-                <DialogContent className="max-w-4xl z-[70]">
-                    <DialogHeader>
-                        <DialogTitle>매칭 수정</DialogTitle>
-                    </DialogHeader>
-                    {selectedReservation && reservationDetail && (
-                        <div className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* 왼쪽: 매니저가 수락했는데 고객이 응답하지 않은 매칭 */}
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="text-base">고객 응답 대기 중</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-3 max-h-96 overflow-y-auto">
-                                            {reservationDetail.matchingDtoList?.filter((matching: any) => 
-                                                matching.isAccepted === true && matching.isFinal === null
-                                            ).map((matching: any) => (
-                                                <div key={matching.matchingId} className="border rounded-lg p-4 bg-gray-50">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-3">
-                                                            <img 
-                                                                src={matching.manager.profileImage} 
-                                                                alt={matching.manager.name}
-                                                                className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-                                                            />
-                                                            <div>
-                                                                <div className="font-semibold text-gray-900">
-                                                                    {matching.manager.name}
-                                                                </div>
-                                                                <div className="text-sm text-gray-600">
-                                                                    {matching.manager.gender} | {matching.manager.age}세 | ★ {matching.manager.avgRating || 0}
-                                                                </div>
-                                                                <div className="text-xs text-gray-500">
-                                                                    매니저 수락: {new Date(matching.updatedAt).toLocaleDateString('ko-KR')}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <Button 
-                                                            size="sm" 
-                                                            className="bg-green-600 hover:bg-green-700 text-white"
-                                                            onClick={() => handleAcceptMatching(matching.matchingId)}
-                                                        >
-                                                            고객 수락
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            {reservationDetail.matchingDtoList?.filter((matching: any) => 
-                                                matching.isAccepted === true && matching.isFinal === null
-                                            ).length === 0 && (
-                                                <div className="text-center py-8 text-gray-500">
-                                                    매니저가 수락하고 고객 응답 대기 중인 매칭이 없습니다.
-                                                </div>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-
-                                {/* 오른쪽: 요청이 가지 않은 매칭 */}
-                                <Card>
-                                    <CardHeader>
-                                        <div className="flex items-center justify-between">
-                                            <CardTitle className="text-base">요청 대기 중</CardTitle>
-                                            <Button 
-                                                size="sm" 
-                                                variant="outline"
-                                                onClick={() => {
-                                                    // 새 요청 만들기 처리
-                                                    console.log('새 요청 만들기');
-                                                }}
-                                            >
-                                                새 후보 만들기
-                                            </Button>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-3 max-h-96 overflow-y-auto">
-                                            {reservationDetail.matchingDtoList?.filter((matching: any) => 
-                                                !matching.isRequested
-                                            ).map((matching: any) => (
-                                                <div key={matching.matchingId} className="border rounded-lg p-4 bg-gray-50">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-3">
-                                                            <img 
-                                                                src={matching.manager.profileImage} 
-                                                                alt={matching.manager.name}
-                                                                className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-                                                            />
-                                                            <div>
-                                                                <div className="font-semibold text-gray-900">
-                                                                    {matching.manager.name}
-                                                                </div>
-                                                                <div className="text-sm text-gray-600">
-                                                                    {matching.manager.gender} | {matching.manager.age}세 | ★ {matching.manager.avgRating || 0}
-                                                                </div>
-                                                                <div className="text-xs text-gray-500">
-                                                                    후보 지정: {new Date(matching.updatedAt).toLocaleDateString('ko-KR')}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <Button 
-                                                            size="sm" 
-                                                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                                                            onClick={() => {
-                                                                // 매칭 요청 보내기
-                                                                console.log('매칭 요청 보내기:', matching.matchingId);
-                                                            }}
-                                                        >
-                                                            요청 보내기
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            {reservationDetail.matchingDtoList?.filter((matching: any) => 
-                                                !matching.isRequested
-                                            ).length === 0 && (
-                                                <div className="text-center py-8 text-gray-500">
-                                                    요청 대기 중인 매칭이 없습니다.
-                                                </div>
-                                            )}
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                            
-                            <div className="flex justify-end gap-2 pt-4 border-t">
-                                <Button 
-                                    variant="outline" 
-                                    onClick={() => setIsMatchingRequestModalOpen(false)}
-                                >
-                                    닫기
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
+            {/* 매칭 수정 모달 */}
+            <MatchingRequestModal
+                open={isMatchingRequestModalOpen}
+                onClose={() => setIsMatchingRequestModalOpen(false)}
+                reservation={selectedReservation}
+                reservationDetail={reservationDetail}
+                onAcceptMatching={handleAcceptMatching}
+                onSendMatchingRequest={async (matchingId: string) => {
+                    // 매칭 요청 보내기 로직
+                    console.log('매칭 요청 보내기:', matchingId);
+                }}
+                onCreateNewCandidate={() => {
+                    // 새 후보 만들기 로직
+                    console.log('새 후보 만들기');
+                }}
+            />
 
             {/* 상세보기 모달 */}
             <ReservationDetailModal
@@ -958,141 +808,48 @@ export const ManualMatching: React.FC = () => {
                 reservation={selectedReservation}
                 reservationDetail={reservationDetail}
                 loading={detailLoading}
-                mode="manual-matching"
                 onRefresh={refreshDetailModal}
                 onOpenMatchingRequestModal={openMatchingRequestModal}
                 onOpenCancelModal={openCancelModal}
+                onOpenManagerChangeModal={openManagerChangeModal}
+                onCancelReservation={handleCancelReservation}
+                onAcceptMatching={handleAcceptMatching}
+                onSendMatchingRequest={async (matchingId: string) => {
+                    // 매칭 요청 보내기 로직
+                    console.log('매칭 요청 보내기:', matchingId);
+                }}
+                onCreateNewCandidate={() => {
+                    // 새 후보 만들기 로직
+                    console.log('새 후보 만들기');
+                }}
             />
 
             {/* 예약 취소 모달 */}
-            <Dialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
-                <DialogContent className={`max-w-md ${cancelModalSource === 'detail' ? 'z-[60]' : 'z-[50]'}`}>
-                    <DialogHeader>
-                        <DialogTitle>예약 취소</DialogTitle>
-                    </DialogHeader>
-                    {selectedReservation && (
-                        <div className="space-y-6">
-                            <div className="bg-red-50 p-4 rounded-lg">
-                                <h3 className="font-medium text-red-900 mb-2">취소할 예약 정보</h3>
-                                <div className="text-sm space-y-1 text-red-800">
-                                    <div><span className="font-medium">예약 ID:</span> {selectedReservation.reservationId}</div>
-                                    <div><span className="font-medium">고객명:</span> {selectedReservation.customerName}</div>
-                                    <div><span className="font-medium">서비스:</span> {selectedReservation.categoryName}</div>
-                                    <div><span className="font-medium">서비스요청일:</span> {selectedReservation.reservationDate} {selectedReservation.reservationTime}</div>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <Label className="text-base font-medium">
-                                    취소 사유 선택 <span className="text-red-500">*</span>
-                                </Label>
-                                <div className="mt-3 space-y-3">
-                                    <div className="flex items-center space-x-2">
-                                        <input
-                                            type="radio"
-                                            id="preset1"
-                                            name="cancelReasonType"
-                                            value="preset1"
-                                            checked={cancelReasonType === 'preset1'}
-                                            onChange={(e) => setCancelReasonType('preset1')}
-                                            className="w-4 h-4"
-                                        />
-                                        <label htmlFor="preset1" className="text-sm">
-                                            <span className="font-medium">예약날까지 매칭안됨</span>
-                                            <div className="text-gray-500">예약 신청한 날이 지났는데도 매칭이 진행되지 않은 경우</div>
-                                        </label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <input
-                                            type="radio"
-                                            id="preset2"
-                                            name="cancelReasonType"
-                                            value="preset2"
-                                            checked={cancelReasonType === 'preset2'}
-                                            onChange={(e) => setCancelReasonType('preset2')}
-                                            className="w-4 h-4"
-                                        />
-                                        <label htmlFor="preset2" className="text-sm">
-                                            <span className="font-medium">매칭할 매니저 없음</span>
-                                            <div className="text-gray-500">해당 지역이나 서비스에 매칭 가능한 매니저가 없는 경우</div>
-                                        </label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <input
-                                            type="radio"
-                                            id="custom"
-                                            name="cancelReasonType"
-                                            value="custom"
-                                            checked={cancelReasonType === 'custom'}
-                                            onChange={(e) => setCancelReasonType('custom')}
-                                            className="w-4 h-4"
-                                        />
-                                        <label htmlFor="custom" className="text-sm">
-                                            <span className="font-medium">직접 입력</span>
-                                            <div className="text-gray-500">예약 취소 사유를 직접 입력합니다.</div>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            {cancelReasonType === 'custom' && (
-                                <div>
-                                    <Label htmlFor="cancel-reason" className="text-base font-medium">
-                                        취소 사유 입력 <span className="text-red-500">*</span>
-                                    </Label>
-                                    <Textarea
-                                        id="cancel-reason"
-                                        placeholder="예약 취소 사유를 입력해주세요..."
-                                        value={cancelReason}
-                                        onChange={(e) => setCancelReason(e.target.value)}
-                                        className="mt-2 min-h-[100px]"
-                                        maxLength={500}
-                                    />
-                                    <div className="text-xs text-gray-500 mt-1">
-                                        {cancelReason.length}/500자
-                                    </div>
-                                </div>
-                            )}
+            <ReservationCancelModal
+                open={isCancelModalOpen}
+                onClose={() => setIsCancelModalOpen(false)}
+                reservation={selectedReservation}
+                onCancel={handleCancelReservation}
+                source={cancelModalSource}
+            />
 
-                            <div className="bg-yellow-50 p-3 rounded-lg">
-                                <div className="text-sm text-yellow-800">
-                                    <strong>주의사항:</strong>
-                                    <ul className="mt-1 space-y-1">
-                                        <li>• 예약 취소 시 자동으로 환불 처리가 진행됩니다.</li>
-                                        <li>• 취소된 예약은 복구할 수 없습니다.</li>
-                                        <li>• 고객에게 취소 알림이 발송됩니다.</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            
-                            <div className="flex justify-end gap-2">
-                                <Button 
-                                    variant="outline" 
-                                    onClick={() => {
-                                        setIsCancelModalOpen(false);
-                                        setCancelReason('');
-                                        setCancelReasonType('preset1');
-                                        setSelectedReservation(null);
-                                    }}
-                                >
-                                    취소
-                                </Button>
-                                <Button 
-                                    onClick={handleCancelReservation}
-                                    disabled={
-                                        cancelReasonType === 'preset1' 
-                                            ? false // 미리 정의된 사유는 항상 유효
-                                            : cancelReasonType === 'preset2'
-                                            ? false // 미리 정의된 사유는 항상 유효
-                                            : !cancelReason.trim()
-                                    }
-                                    className="bg-red-600 hover:bg-red-700"
-                                >
-                                    예약 취소
-                                </Button>
-                            </div>
+            {/* 매니저 변경 모달 */}
+            <Dialog open={isManagerChangeModalOpen} onOpenChange={setIsManagerChangeModalOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>매니저 변경</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <p className="text-gray-600">매니저 변경 기능은 추후 구현 예정입니다.</p>
+                        <div className="flex justify-end gap-2">
+                            <Button 
+                                variant="outline" 
+                                onClick={() => setIsManagerChangeModalOpen(false)}
+                            >
+                                닫기
+                            </Button>
                         </div>
-                    )}
+                    </div>
                 </DialogContent>
             </Dialog>
         </div>

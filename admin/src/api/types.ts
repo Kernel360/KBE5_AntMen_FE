@@ -76,6 +76,30 @@ export interface ReservationStats {
     count: number;
 }
 
+// 새로운 예약 상태 통계 타입
+export interface ReservationStatDto {
+    status: 'CANCEL' | 'DONE' | 'MATCHING' | 'WAITING' | 'PAY' | 'ERROR';
+    count: number;
+}
+
+// 새로운 예약 관리자 목록 타입
+export interface ReservationAdminListDto {
+    reservationId: number;
+    customerId: number;
+    customerName: string;
+    categoryName: string;
+    reservationStatus: 'CANCEL' | 'DONE' | 'MATCHING' | 'WAITING' | 'PAY' | 'ERROR';
+    reservationCreatedAt: string;
+    reservationDate: string;
+    reservationTime: string;
+}
+
+// 새로운 통합 응답 타입
+export interface ReservationAdminResponse {
+    reservationStatDtoList: ReservationStatDto[];
+    reservationAdminListDtos: ReservationAdminListDto[];
+}
+
 // 통합 응답 타입
 export interface ReservationMatchingResponse {
     stats: ReservationStats[];

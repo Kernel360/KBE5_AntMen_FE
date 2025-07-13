@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AdminLoginRequest, AdminLoginResponse, AdminChangePasswordRequest, Admin, BoardRequestDto, ReservationMatchingListDto, ManualMatchingRequest, ReservationMatchingResponse, ReservationCancelRequest, ReservationCancelResponse } from './types';
+import { AdminLoginRequest, AdminLoginResponse, AdminChangePasswordRequest, Admin, BoardRequestDto, ReservationMatchingListDto, ManualMatchingRequest, ReservationMatchingResponse, ReservationCancelRequest, ReservationCancelResponse, ReservationAdminResponse } from './types';
 import { getCookie, ADMIN_TOKEN_COOKIE } from '../lib/cookie';
 
 // const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
@@ -384,19 +384,19 @@ export const adminService = {
 
     // 예약 현황 조회
     getReservationStatus: async (
-        matchingStatus?: string,
+        reservationStatus?: string,
         searchName?: string,
         category?: string,
-        reservatedStartDate?: string,
-        reservatedEndDate?: string
-    ): Promise<ReservationMatchingResponse> => {
+        startDate?: string,
+        endDate?: string
+    ): Promise<ReservationAdminResponse> => {
         try {
             const params: any = {};
-            if (matchingStatus) params.matchingStatus = matchingStatus;
+            if (reservationStatus) params.reservationStatus = reservationStatus;
             if (searchName) params.searchName = searchName;
             if (category) params.category = category;
-            if (reservatedStartDate) params.reservatedStartDate = reservatedStartDate;
-            if (reservatedEndDate) params.reservatedEndDate = reservatedEndDate;
+            if (startDate) params.startDate = startDate;
+            if (endDate) params.endDate = endDate;
 
             const response = await adminApi.get('/admin/reservations', { params });
             return response.data;
