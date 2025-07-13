@@ -382,6 +382,32 @@ export const adminService = {
         }
     },
 
+    // 예약 현황 조회
+    getReservationStatus: async (
+        matchingStatus?: string,
+        searchName?: string,
+        category?: string,
+        reservatedStartDate?: string,
+        reservatedEndDate?: string
+    ): Promise<ReservationMatchingResponse> => {
+        try {
+            const params: any = {};
+            if (matchingStatus) params.matchingStatus = matchingStatus;
+            if (searchName) params.searchName = searchName;
+            if (category) params.category = category;
+            if (reservatedStartDate) params.reservatedStartDate = reservatedStartDate;
+            if (reservatedEndDate) params.reservatedEndDate = reservatedEndDate;
+
+            const response = await adminApi.get('/admin/reservations', { params });
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
     // 수동 매칭 요청
     createManualMatching: async (data: ManualMatchingRequest): Promise<void> => {
         try {
@@ -424,6 +450,19 @@ export const adminService = {
     getReservationDetail: async (id: string): Promise<any> => {
         try {
             const response = await adminApi.get(`/admin/reservations/${id}/detail`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 고객 수락 API
+    acceptMatching: async (matchingId: string): Promise<void> => {
+        try {
+            const response = await adminApi.put(`/admin/reservations/matching/${matchingId}/accept`);
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 401) {

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Card } from '../../components/ui/card';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
+import { Label } from '../../components/ui/label';
 import {
     Table,
     TableBody,
@@ -18,27 +19,25 @@ import {
     SelectTrigger,
     SelectValue,
 } from '../../components/ui/select';
-import { Calendar, Search, Filter, Download, ChevronLeft, ChevronRight, SkipBack, SkipForward } from 'lucide-react';
+import { ChevronLeft, ChevronRight, SkipBack, SkipForward } from 'lucide-react';
 import { adminService } from '../../api/adminService';
 import { ReservationMatchingListDto, ReservationStats } from '../../api/types';
 
-interface Reservation {
-    reservationId: number;
-    customerId: number;
-    customerName: string;
-    categoryName: string;
-    reservationDate: string;
-    reservationTime: string;
-    totalRequests: number;
-    totalManagerResponses: number;
-    totalManagerAccepts: number;
-    matchingStatus: 'ing' | 'fail' | 'nothing';
-}
+// API 타입을 그대로 사용
+type Reservation = ReservationMatchingListDto;
 
-const statusMap = {
-    ing: { label: '매칭중', color: 'bg-blue-100 text-blue-800' },
-    fail: { label: '매칭실패', color: 'bg-red-100 text-red-800' },
-    nothing: { label: '요청없음', color: 'bg-gray-100 text-gray-800' }
+// API 상태값을 새로운 상태값으로 매핑
+const getStatusInfo = (status: string) => {
+    switch (status) {
+        case 'ing':
+            return { label: '매칭중', color: 'bg-blue-100 text-blue-800' };
+        case 'fail':
+            return { label: '매칭실패', color: 'bg-red-100 text-red-800' };
+        case 'nothing':
+            return { label: '요청없음', color: 'bg-gray-100 text-gray-800' };
+        default:
+            return { label: status, color: 'bg-gray-100 text-gray-800' };
+    }
 };
 
 const ITEMS_PER_PAGE = 15;
@@ -56,10 +55,10 @@ export const ReservationStatus: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
 
     // 데이터 로드 함수
-    const loadReservations = async () => {
+    const loadReservations = useCallback(async () => {
         setLoading(true);
         try {
-            const response = await adminService.getReservationMatchingList(
+            const response = await adminService.getReservationStatus(
                 statusFilter === 'all' ? undefined : statusFilter,
                 searchTerm || undefined,
                 categoryFilter || undefined,
@@ -75,55 +74,45 @@ export const ReservationStatus: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [statusFilter, searchTerm, categoryFilter, startDateFilter, endDateFilter]);
 
     // 컴포넌트 마운트 시 데이터 로드
     useEffect(() => {
         loadReservations();
-    }, []);
-
-    // 필터 변경 시 데이터 다시 로드
-    useEffect(() => {
-        loadReservations();
-    }, [statusFilter, searchTerm, categoryFilter, startDateFilter, endDateFilter]);
+    }, [loadReservations]);
 
     // 검색 실행 함수
-    const handleSearch = () => {
+    const handleSearch = useCallback(() => {
         setSearchTerm(searchInput);
-    };
+    }, [searchInput]);
 
     // 엔터키 처리
-    const handleKeyPress = (e: React.KeyboardEvent) => {
+    const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
             handleSearch();
         }
-    };
+    }, [handleSearch]);
 
-    const handleExport = () => {
-        // CSV 내보내기 로직
-        alert('예약현황을 CSV로 내보내기 기능은 준비 중입니다.');
-    };
-
-    const handleReset = () => {
+    const handleReset = useCallback(() => {
         setSearchTerm('');
         setSearchInput('');
         setStatusFilter('all');
         setCategoryFilter('');
         setStartDateFilter('');
         setEndDateFilter('');
-    };
+    }, []);
 
     // 통계 계산
-    const totalReservations = stats.reduce((sum, stat) => sum + stat.count, 0);
-    const ingCount = stats.find(s => s.status === 'ing')?.count || 0;
-    const failCount = stats.find(s => s.status === 'fail')?.count || 0;
-    const nothingCount = stats.find(s => s.status === 'nothing')?.count || 0;
+    const totalReservations = stats?.reduce((sum, stat) => sum + stat.count, 0) || 0;
+    const ingCount = stats?.find(s => s.status === 'ing')?.count || 0;
+    const failCount = stats?.find(s => s.status === 'fail')?.count || 0;
+    const nothingCount = stats?.find(s => s.status === 'nothing')?.count || 0;
 
     // 페이지네이션 계산
-    const totalPages = Math.ceil(reservations.length / ITEMS_PER_PAGE);
+    const totalPages = Math.ceil((reservations?.length || 0) / ITEMS_PER_PAGE);
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
-    const currentReservations = reservations.slice(startIndex, endIndex);
+    const currentReservations = reservations?.slice(startIndex, endIndex) || [];
 
     // 페이지 변경 함수
     const goToPage = (page: number) => {
@@ -187,117 +176,21 @@ export const ReservationStatus: React.FC = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-900">예약현황</h1>
-                <Button onClick={handleExport} className="flex items-center gap-2">
-                    <Download className="h-4 w-4" />
-                    내보내기
-                </Button>
             </div>
 
-            {/* 필터 섹션 */}
-            <Card className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            검색
-                        </label>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <Input
-                                type="text"
-                                placeholder="고객명 검색"
-                                value={searchInput}
-                                onChange={(e) => setSearchInput(e.target.value)}
-                                onKeyPress={handleKeyPress}
-                                className="pl-10"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            매칭상태
-                        </label>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="상태 선택" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">전체</SelectItem>
-                                <SelectItem value="ing">매칭중</SelectItem>
-                                <SelectItem value="fail">매칭실패</SelectItem>
-                                <SelectItem value="nothing">요청없음</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            카테고리
-                        </label>
-                        <Input
-                            type="text"
-                            placeholder="카테고리 검색"
-                            value={categoryFilter}
-                            onChange={(e) => setCategoryFilter(e.target.value)}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            시작일
-                        </label>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <Input
-                                type="date"
-                                value={startDateFilter}
-                                onChange={(e) => setStartDateFilter(e.target.value)}
-                                className="pl-10"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            종료일
-                        </label>
-                        <div className="relative">
-                            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <Input
-                                type="date"
-                                value={endDateFilter}
-                                onChange={(e) => setEndDateFilter(e.target.value)}
-                                className="pl-10"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex items-end">
-                        <Button 
-                            variant="outline" 
-                            onClick={handleReset}
-                            className="w-full"
-                        >
-                            <Filter className="h-4 w-4 mr-2" />
-                            초기화
-                        </Button>
-                    </div>
-                </div>
-            </Card>
-
             {/* 통계 카드 */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
                 <Card className="p-6">
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">
+                        <div className="text-2xl font-bold text-gray-900">
                             {totalReservations}
                         </div>
-                        <div className="text-sm text-gray-500">전체 예약</div>
+                        <div className="text-sm text-gray-500">전체예약</div>
                     </div>
                 </Card>
                 <Card className="p-6">
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">
+                        <div className="text-2xl font-bold text-yellow-600">
                             {ingCount}
                         </div>
                         <div className="text-sm text-gray-500">매칭중</div>
@@ -305,28 +198,140 @@ export const ReservationStatus: React.FC = () => {
                 </Card>
                 <Card className="p-6">
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-red-600">
-                            {failCount}
+                        <div className="text-2xl font-bold text-amber-600">
+                            0
                         </div>
-                        <div className="text-sm text-gray-500">매칭실패</div>
+                        <div className="text-sm text-gray-500">매칭완료</div>
                     </div>
                 </Card>
                 <Card className="p-6">
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-gray-600">
-                            {nothingCount}
+                        <div className="text-2xl font-bold text-green-600">
+                            0
                         </div>
-                        <div className="text-sm text-gray-500">요청없음</div>
+                        <div className="text-sm text-gray-500">결제완료</div>
+                    </div>
+                </Card>
+                <Card className="p-6">
+                    <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">
+                            0
+                        </div>
+                        <div className="text-sm text-gray-500">진행완료</div>
+                    </div>
+                </Card>
+                <Card className="p-6">
+                    <div className="text-center">
+                        <div className="text-2xl font-bold text-red-600">
+                            0
+                        </div>
+                        <div className="text-sm text-gray-500">취소</div>
+                    </div>
+                </Card>
+                <Card className="p-6">
+                    <div className="text-center">
+                        <div className="text-2xl font-bold text-orange-600">
+                            0
+                        </div>
+                        <div className="text-sm text-gray-500">에러</div>
                     </div>
                 </Card>
             </div>
+
+            {/* 검색 및 필터 */}
+            <Card>
+                <CardContent className="p-6">
+                    <div className="grid grid-cols-12 gap-4 items-end">
+                        <div className="col-span-4">
+                            <Label htmlFor="customer-search">고객명 검색</Label>
+                            <Input 
+                                id="customer-search" 
+                                placeholder="고객명 또는 ID를 입력하세요" 
+                                value={searchInput} 
+                                onChange={(e) => setSearchInput(e.target.value)}
+                                onKeyPress={handleKeyPress}
+                                className="mt-1 h-10"
+                            />
+                        </div>
+                        
+                        {/* 카테고리 필터 */}
+                        <div className="col-span-3">
+                            <Label htmlFor="category-filter">카테고리</Label>
+                            <Input
+                                id="category-filter"
+                                type="text"
+                                placeholder="카테고리 검색"
+                                value={categoryFilter}
+                                onChange={(e) => setCategoryFilter(e.target.value)}
+                                className="mt-1 h-10"
+                            />
+                        </div>
+                        
+                        {/* 시작일 필터 */}
+                        <div className="col-span-2">
+                            <Label htmlFor="start-date-filter">시작일</Label>
+                            <Input 
+                                id="start-date-filter" 
+                                type="date" 
+                                value={startDateFilter} 
+                                onChange={(e) => setStartDateFilter(e.target.value)}
+                                className="mt-1 h-10 cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-blue-500"
+                                style={{
+                                    cursor: 'pointer',
+                                    WebkitAppearance: 'none',
+                                    MozAppearance: 'none',
+                                    appearance: 'none',
+                                    position: 'relative',
+                                    zIndex: 1
+                                }}
+                                onFocus={(e) => {
+                                    e.target.showPicker && e.target.showPicker();
+                                }}
+                            />
+                        </div>
+                        
+                        {/* 종료일 필터 */}
+                        <div className="col-span-2">
+                            <Label htmlFor="end-date-filter">종료일</Label>
+                            <Input 
+                                id="end-date-filter" 
+                                type="date" 
+                                value={endDateFilter} 
+                                onChange={(e) => setEndDateFilter(e.target.value)}
+                                className="mt-1 h-10 cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-blue-500"
+                                style={{
+                                    cursor: 'pointer',
+                                    WebkitAppearance: 'none',
+                                    MozAppearance: 'none',
+                                    appearance: 'none',
+                                    position: 'relative',
+                                    zIndex: 1
+                                }}
+                                onFocus={(e) => {
+                                    e.target.showPicker && e.target.showPicker();
+                                }}
+                            />
+                        </div>
+                        
+                        <div className="col-span-1">
+                            <Button 
+                                variant="outline" 
+                                onClick={handleReset}
+                                className="w-full h-10"
+                            >
+                                초기화
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* 예약 목록 테이블 */}
             <Card className="p-6">
                 <div className="mb-4">
                     <h2 className="text-lg font-semibold">예약 목록</h2>
                     <p className="text-sm text-gray-500">
-                        총 {reservations.length}개의 예약
+                        총 {reservations?.length || 0}개의 예약
                     </p>
                 </div>
 
@@ -356,8 +361,8 @@ export const ReservationStatus: React.FC = () => {
                                         {reservation.reservationDate} {reservation.reservationTime}
                                     </TableCell>
                                     <TableCell>
-                                        <Badge className={statusMap[reservation.matchingStatus].color}>
-                                            {statusMap[reservation.matchingStatus].label}
+                                        <Badge className={getStatusInfo(reservation.matchingStatus).color}>
+                                            {getStatusInfo(reservation.matchingStatus).label}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>{reservation.totalRequests}</TableCell>
@@ -375,7 +380,7 @@ export const ReservationStatus: React.FC = () => {
                     </div>
                 )}
 
-                {!loading && reservations.length === 0 && (
+                {!loading && (reservations?.length === 0 || !reservations) && (
                     <div className="text-center py-8 text-gray-500">
                         조건에 맞는 예약이 없습니다.
                     </div>
@@ -385,7 +390,7 @@ export const ReservationStatus: React.FC = () => {
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between mt-6 px-4">
                         <div className="text-sm text-gray-500">
-                            {startIndex + 1}-{Math.min(endIndex, reservations.length)} / {reservations.length}개
+                            {startIndex + 1}-{Math.min(endIndex, reservations?.length || 0)} / {reservations?.length || 0}개
                         </div>
                         <div className="flex items-center space-x-1">
                             {/* 첫 페이지 버튼 */}

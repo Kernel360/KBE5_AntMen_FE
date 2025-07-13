@@ -114,7 +114,7 @@ export const FinanceSales: React.FC = () => {
                 <tr className="bg-gray-50">
                   <th className="p-2">날짜</th>
                   <th className="p-2">매출(₩)</th>
-                  <th className="p-2">수수료(₩)</th>
+                  <th className="p-2">비용(₩)</th>
                   <th className="p-2">순이익(₩)</th>
                 </tr>
               </thead>

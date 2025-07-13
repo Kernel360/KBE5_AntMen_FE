@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -32,7 +32,8 @@ export const ManualMatching: React.FC = () => {
     // 검색 및 필터 상태
     const [customerSearch, setCustomerSearch] = useState<string>('');
     const [customerSearchInput, setCustomerSearchInput] = useState<string>(''); // 실제 입력값
-    const [serviceFilter, setServiceFilter] = useState<string>('all');
+    const [serviceSearch, setServiceSearch] = useState<string>('');
+    const [serviceSearchInput, setServiceSearchInput] = useState<string>(''); // 실제 입력값
     const [matchingStatusFilter, setMatchingStatusFilter] = useState<string>('all');
     const [startDateFilter, setStartDateFilter] = useState<string>('');
     const [endDateFilter, setEndDateFilter] = useState<string>('');
@@ -45,18 +46,14 @@ export const ManualMatching: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
 
     // API에서 데이터 로드
-    useEffect(() => {
-        loadReservations();
-    }, [customerSearch, serviceFilter, matchingStatusFilter, startDateFilter, endDateFilter]);
-
-    const loadReservations = async () => {
+    const loadReservations = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
             const response = await adminService.getReservationMatchingList(
                 matchingStatusFilter !== 'all' ? matchingStatusFilter : undefined,
                 customerSearch || undefined,
-                serviceFilter !== 'all' ? serviceFilter : undefined,
+                serviceSearch || undefined,
                 startDateFilter || undefined,
                 endDateFilter || undefined
             );
@@ -70,19 +67,24 @@ export const ManualMatching: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [matchingStatusFilter, customerSearch, serviceSearch, startDateFilter, endDateFilter]);
+
+    useEffect(() => {
+        loadReservations();
+    }, [loadReservations]);
 
     // 검색 실행 함수
-    const handleSearch = () => {
+    const handleSearch = useCallback(() => {
         setCustomerSearch(customerSearchInput);
-    };
+        setServiceSearch(serviceSearchInput);
+    }, [customerSearchInput, serviceSearchInput]);
 
     // 엔터키 처리
-    const handleKeyPress = (e: React.KeyboardEvent) => {
+    const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
             handleSearch();
         }
-    };
+    }, [handleSearch]);
 
 
     // 현재는 API에서 필터링된 데이터를 받아오므로 그대로 사용
@@ -239,6 +241,22 @@ export const ManualMatching: React.FC = () => {
         }
     };
 
+    // 고객 수락 처리
+    const handleAcceptMatching = async (matchingId: string) => {
+        try {
+            await adminService.acceptMatching(matchingId);
+            alert('고객 수락이 완료되었습니다.');
+            // 상세 정보 새로고침
+            if (selectedReservation) {
+                const detail = await adminService.getReservationDetail(selectedReservation.reservationId.toString());
+                setReservationDetail(detail);
+            }
+        } catch (err: any) {
+            alert(err.message || '고객 수락 처리 중 오류가 발생했습니다.');
+            console.error('고객 수락 오류:', err);
+        }
+    };
+
     const handleCancelReservation = async () => {
         let finalCancelReason = '';
 
@@ -347,17 +365,41 @@ export const ManualMatching: React.FC = () => {
         return availableManagers.find(m => m.id === selectedManagerId);
     };
 
+    // 상세 모달에서 실제 매칭 상태 계산
+    const getActualMatchingStatus = (matchingList: any[]) => {
+        if (!matchingList || matchingList.length === 0) {
+            return 'nothing'; // 매칭 없음
+        }
+
+        // 요청이 보내진 매칭이 있는지 확인
+        const hasRequested = matchingList.some((matching: any) => matching.isRequested);
+        
+        if (!hasRequested) {
+            return 'nothing'; // 요청이 없음
+        }
+
+        // 모든 요청이 거절당했는지 확인
+        const allRejected = matchingList
+            .filter((matching: any) => matching.isRequested) // 요청이 보내진 것만
+            .every((matching: any) => matching.isAccepted === false); // 모두 거절
+
+        if (allRejected) {
+            return 'fail'; // 매칭 실패
+        }
+
+        return 'ing'; // 매칭 중
+    };
+
     // 검색/필터 초기화
-    const handleResetFilters = () => {
+    const handleResetFilters = useCallback(() => {
         setCustomerSearch('');
         setCustomerSearchInput('');
-        setServiceFilter('all');
+        setServiceSearch('');
+        setServiceSearchInput('');
         setMatchingStatusFilter('all');
         setStartDateFilter('');
         setEndDateFilter('');
-        // 필터 초기화 후 데이터 새로고침
-        loadReservations();
-    };
+    }, []);
 
     // 서비스 유형 매핑 (현재 사용되지 않음)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -375,27 +417,7 @@ export const ManualMatching: React.FC = () => {
                 <p className="text-gray-600">매칭 전 예약들과 매칭 요청 현황을 확인하고 수동으로 매칭을 처리합니다.</p>
             </div>
 
-            {/* 로딩 및 에러 상태 */}
-            {loading && (
-                <Card>
-                    <CardContent className="p-8 text-center">
-                        <div className="text-lg text-gray-600">데이터를 불러오는 중...</div>
-                    </CardContent>
-                </Card>
-            )}
-
-            {error && (
-                <Card>
-                    <CardContent className="p-8 text-center">
-                        <div className="text-lg text-red-600 mb-4">{error}</div>
-                        <Button onClick={loadReservations} variant="outline">
-                            다시 시도
-                        </Button>
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* 빠른 필터 */}
+            {/* 빠른 필터 카드 */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Card 
                     className={`cursor-pointer transition-colors ${matchingStatusFilter === 'all' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'}`}
@@ -447,6 +469,26 @@ export const ManualMatching: React.FC = () => {
                 </Card>
             </div>
 
+            {/* 로딩 및 에러 상태 */}
+            {loading && (
+                <Card>
+                    <CardContent className="p-8 text-center">
+                        <div className="text-lg text-gray-600">데이터를 불러오는 중...</div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {error && (
+                <Card>
+                    <CardContent className="p-8 text-center">
+                        <div className="text-lg text-red-600 mb-4">{error}</div>
+                        <Button onClick={loadReservations} variant="outline">
+                            다시 시도
+                        </Button>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* 검색 및 필터 */}
             <Card>
                 <CardHeader>
@@ -465,36 +507,17 @@ export const ManualMatching: React.FC = () => {
                                 className="mt-1 h-10"
                             />
                         </div>
-                        {/* 서비스 유형 필터 */}
-                        <div className="col-span-2">
-                            <Label htmlFor="service-filter">서비스 유형</Label>
-                            <Select value={serviceFilter} onValueChange={(value) => setServiceFilter(value)}>
-                                <SelectTrigger className="w-full h-10">
-                                    <SelectValue placeholder="서비스 유형을 선택하세요" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">전체</SelectItem>
-                                    <SelectItem value="cleaning">청소</SelectItem>
-                                    <SelectItem value="laundry">세탁</SelectItem>
-                                    <SelectItem value="organization">정리정돈</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        
-                        {/* 매칭상태 필터 */}
-                        <div className="col-span-2">
-                            <Label htmlFor="matching-status-filter">매칭상태</Label>
-                            <Select value={matchingStatusFilter} onValueChange={(value) => setMatchingStatusFilter(value)}>
-                                <SelectTrigger className="w-full h-10">
-                                    <SelectValue placeholder="매칭상태를 선택하세요" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">전체</SelectItem>
-                                    <SelectItem value="nothing">요청 없음</SelectItem>
-                                    <SelectItem value="ing">매칭 중</SelectItem>
-                                    <SelectItem value="fail">매칭 실패</SelectItem>
-                                </SelectContent>
-                            </Select>
+                        {/* 서비스 이름 검색 */}
+                        <div className="col-span-3">
+                            <Label htmlFor="service-search">서비스 이름</Label>
+                            <Input 
+                                id="service-search" 
+                                placeholder="서비스 이름을 입력하세요" 
+                                value={serviceSearchInput} 
+                                onChange={(e) => setServiceSearchInput(e.target.value)}
+                                onKeyPress={handleKeyPress}
+                                className="mt-1 h-10"
+                            />
                         </div>
                         
                         {/* 시작일 필터 */}
@@ -540,6 +563,14 @@ export const ManualMatching: React.FC = () => {
                                     e.target.showPicker && e.target.showPicker();
                                 }}
                             />
+                        </div>
+                        <div className="col-span-1">
+                            <Button 
+                                onClick={handleSearch}
+                                className="w-full h-10"
+                            >
+                                검색
+                            </Button>
                         </div>
                         <div className="col-span-1">
                             <Button 
@@ -624,19 +655,22 @@ export const ManualMatching: React.FC = () => {
                                         <TableCell>
                                             <div className="text-sm">
                                                 <div className="font-medium">
-                                                    {selectedReservation?.reservationDate ? 
-                                                        new Date(selectedReservation.reservationDate).toLocaleDateString('ko-KR', {
+                                                    {reservation?.reservationDate ? 
+                                                        new Date(reservation.reservationDate).toLocaleDateString('ko-KR', {
                                                             year: 'numeric',
                                                             month: '2-digit',
                                                             day: '2-digit'
                                                         }) : '-'
-                                                    } {selectedReservation?.reservationTime ? 
-                                                        `${selectedReservation.reservationTime.substring(0, 5)} ~ ${(() => {
-                                                            const startTime = selectedReservation.reservationTime;
-                                                            const [hours, minutes] = startTime.split(':').map(Number);
-                                                            const endHours = hours + reservationDetail.reservationDuration;
-                                                            return `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-                                                        })()}`
+                                                    }
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                    {reservation?.reservationTime ? 
+                                                        (() => {
+                                                            const [hours, minutes] = reservation.reservationTime.split(':').map(Number);
+                                                            const period = hours >= 12 ? '오후' : '오전';
+                                                            const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+                                                            return `${period} ${displayHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                                                        })()
                                                         : '-'
                                                     }
                                                 </div>
@@ -806,10 +840,7 @@ export const ManualMatching: React.FC = () => {
                                                         <Button 
                                                             size="sm" 
                                                             className="bg-green-600 hover:bg-green-700 text-white"
-                                                            onClick={() => {
-                                                                // 고객 수락 처리
-                                                                console.log('고객 수락 처리:', matching.matchingId);
-                                                            }}
+                                                            onClick={() => handleAcceptMatching(matching.matchingId)}
                                                         >
                                                             고객 수락
                                                         </Button>
@@ -840,7 +871,7 @@ export const ManualMatching: React.FC = () => {
                                                     console.log('새 요청 만들기');
                                                 }}
                                             >
-                                                새 요청 만들기
+                                                새 후보 만들기
                                             </Button>
                                         </div>
                                     </CardHeader>
@@ -968,7 +999,15 @@ export const ManualMatching: React.FC = () => {
                                         {reservationDetail && (
                                             <Card>
                                                 <CardHeader>
-                                                    <CardTitle className="text-lg">서비스 정보</CardTitle>
+                                                    <div className="flex items-center justify-between">
+                                                        <CardTitle className="text-lg">서비스 정보</CardTitle>
+                                                        <div>
+                                                            {reservationDetail?.matchingDtoList ? 
+                                                                getMatchingStatusBadge(getActualMatchingStatus(reservationDetail.matchingDtoList)) :
+                                                                getMatchingStatusBadge(selectedReservation?.matchingStatus || '')
+                                                            }
+                                                        </div>
+                                                    </div>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="space-y-4 text-sm">
