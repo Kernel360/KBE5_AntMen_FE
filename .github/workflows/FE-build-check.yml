@@ -1,0 +1,77 @@
+name: Frontend Build Check
+
+on:
+  pull_request:
+    branches: ["**"]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint check
+        run: yarn lint
+
+      - name: Build check
+        run: yarn build
+      
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const branch = context.payload.pull_request.head.ref;
+            const commit = context.sha;
+            const commitUrl = `https://github.com/${owner}/${repo}/commit/${commit}`;
+            let message = `❌ 프론트엔드 빌드 실패 알림\n\n`;
+            message += `브랜치: ${branch}\n`;
+            message += `커밋: ${commitUrl}\n`;
+            message += `작업자: ${context.actor}\n\n`;
+            message += `워크스페이스 전체 빌드(admin + apps) 중 실패가 발생했습니다.\n`;
+            message += `자세한 내용은 GitHub Actions 로그를 확인해주세요.`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: owner,
+              repo: repo,
+              body: message
+            });
+
+      - name: Notify on success
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const branch = context.payload.pull_request.head.ref;
+            const commit = context.sha;
+            const commitUrl = `https://github.com/${owner}/${repo}/commit/${commit}`;
+            let message = `✅ 프론트엔드 빌드 성공 알림\n\n`;
+            message += `브랜치: ${branch}\n`;
+            message += `커밋: ${commitUrl}\n`;
+            message += `작업자: ${context.actor}\n\n`;
+            message += `워크스페이스 전체(admin + apps) 빌드가 성공적으로 완료되었습니다.`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: owner,
+              repo: repo,
+              body: message
+            });
