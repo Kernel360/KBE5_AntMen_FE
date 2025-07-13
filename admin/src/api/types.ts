@@ -142,6 +142,12 @@ export interface AdminRefundStatisticsResponseDto {
     totalRefundAmount: number;          // 총 환불 금액
 }
 
+// 환불 사유 분포 응답 타입
+export interface AdminRefundReasonDto {
+    refundReason: string;               // 환불 사유
+    count: number;                      // 건수
+}
+
 // 정산 관련 타입
 export interface AdminCalculationItemDto {
     calculationId: number;              // 정산 ID

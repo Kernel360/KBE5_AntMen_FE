@@ -1,15 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { adminRefundsService } from '../../api/adminRefunds';
-import { AdminRefundStatisticsResponseDto } from '../../api/types';
-
-// 환불 사유 분포 - 추후 API 연동 예정
-const reasonData = [
-  { reason: '서비스 불만족', count: 38 },
-  { reason: '예약 실수', count: 24 },
-  { reason: '매니저 미배정', count: 18 },
-  { reason: '기타', count: 22 },
-];
+import { AdminRefundStatisticsResponseDto, AdminRefundReasonDto } from '../../api/types';
 
 // 사용자별 환불률 - 추후 API 연동 예정
 const userRefunds = [
@@ -26,27 +18,44 @@ const managerRefunds = [
   { name: '박매니저', refunds: 1, total: 30, rate: 3 },
 ];
 
+// 주요 환불 사유 정의
+const predefinedReasons = [
+  "개인 일정 변경",
+  "청소가 더 이상 필요하지 않음",
+  "서비스 불만족",
+  "매니저 불만족"
+];
+
 export const StatRefund: React.FC = () => {
   const [refundStatistics, setRefundStatistics] = useState<AdminRefundStatisticsResponseDto | null>(null);
+  const [refundReasons, setRefundReasons] = useState<AdminRefundReasonDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showOtherDetails, setShowOtherDetails] = useState(false);
 
   useEffect(() => {
-    const fetchRefundStatistics = async () => {
+    const fetchRefundData = async () => {
       try {
         setLoading(true);
-        const data = await adminRefundsService.getRefundStatistics();
-        setRefundStatistics(data);
+        
+        // 통계와 사유 분포를 병렬로 가져오기
+        const [statisticsData, reasonsData] = await Promise.all([
+          adminRefundsService.getRefundStatistics(),
+          adminRefundsService.getRefundReasons()
+        ]);
+        
+        setRefundStatistics(statisticsData);
+        setRefundReasons(reasonsData);
         setError(null);
       } catch (err: any) {
-        console.error('환불 통계 조회 실패:', err);
-        setError(err.message || '환불 통계를 불러오는데 실패했습니다.');
+        console.error('환불 데이터 조회 실패:', err);
+        setError(err.message || '환불 데이터를 불러오는데 실패했습니다.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRefundStatistics();
+    fetchRefundData();
   }, []);
 
   // 통계 카드 데이터 생성
@@ -77,6 +86,36 @@ export const StatRefund: React.FC = () => {
     ];
   };
 
+  // 환불 사유 데이터 처리 (기타 사유 그룹화)
+  const getProcessedReasonData = () => {
+    const 주요: AdminRefundReasonDto[] = [];
+    const 기타: AdminRefundReasonDto[] = [];
+
+    refundReasons.forEach(item => {
+      if (predefinedReasons.includes(item.refundReason)) {
+        주요.push(item);
+      } else {
+        기타.push(item);
+      }
+    });
+
+    // 기타 사유들을 하나로 합치기
+    const 기타Total = 기타.reduce((sum, item) => sum + item.count, 0);
+    
+    // 주요 사유들과 기타 사유 합쳐서 반환
+    const result = [...주요];
+    if (기타Total > 0) {
+      result.push({ refundReason: '기타', count: 기타Total });
+    }
+
+    return { processedData: result, otherReasons: 기타 };
+  };
+
+  // 전체 환불 건수 기준으로 비율 계산
+  const getTotalRefundCount = () => {
+    return refundReasons.reduce((sum, item) => sum + item.count, 0);
+  };
+
   if (loading) {
     return (
       <div className="space-y-8">
@@ -100,6 +139,8 @@ export const StatRefund: React.FC = () => {
   }
 
   const refundStatsCards = getRefundStatsCards();
+  const { processedData, otherReasons } = getProcessedReasonData();
+  const totalCount = getTotalRefundCount();
 
   return (
     <div className="space-y-8">
@@ -125,17 +166,61 @@ export const StatRefund: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle>환불 사유 분포</CardTitle>
-          <CardDescription>최근 30일 기준 (추후 API 연동 예정)</CardDescription>
+          <CardDescription>누적 기준 (총 {totalCount}건)</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-2">
-            {reasonData.map((r) => (
-              <div key={r.reason} className="flex items-center">
-                <div className="w-32 text-sm text-gray-700">{r.reason}</div>
-                <div className="flex-1 bg-gray-200 rounded h-3 mx-2">
-                  <div className="bg-red-400 h-3 rounded" style={{ width: `${r.count * 2}%` }} />
+          <div className="space-y-4">
+            {processedData.map((r) => (
+              <div key={r.refundReason} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-gray-700 min-w-0 flex-1">
+                      {r.refundReason}
+                    </span>
+                    {r.refundReason === '기타' && otherReasons.length > 0 && (
+                      <button
+                        onClick={() => setShowOtherDetails(!showOtherDetails)}
+                        className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 rounded-md border border-blue-200 transition-colors duration-200 whitespace-nowrap"
+                      >
+                        <span>{showOtherDetails ? '▲' : '▼'}</span>
+                        <span>세부내용 {showOtherDetails ? '숨기기' : '보기'}</span>
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-gray-500">
+                      {((r.count / totalCount) * 100).toFixed(1)}%
+                    </span>
+                    <span className="text-sm font-bold text-blue-600 min-w-[2rem] text-right">
+                      {r.count}건
+                    </span>
+                  </div>
                 </div>
-                <div className="w-10 text-right text-sm font-bold text-red-600">{r.count}건</div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-400 h-2 rounded-full transition-all duration-300" 
+                    style={{ width: `${(r.count / totalCount) * 100}%` }} 
+                  />
+                </div>
+                
+                {/* 기타 사유 세부내용 */}
+                {r.refundReason === '기타' && showOtherDetails && otherReasons.length > 0 && (
+                  <div className="ml-4 p-3 bg-gray-50 rounded-lg border-l-4 border-gray-300">
+                    <div className="text-xs font-medium text-gray-600 mb-2">기타 사유 세부내용:</div>
+                    <div className="space-y-1">
+                      {otherReasons.map((reason, index) => (
+                        <div key={index} className="flex justify-between items-center text-xs">
+                          <span className="text-gray-700 truncate pr-2" title={reason.refundReason}>
+                            • {reason.refundReason}
+                          </span>
+                          <span className="text-gray-600 font-medium whitespace-nowrap">
+                            {reason.count}건
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -164,7 +249,7 @@ export const StatRefund: React.FC = () => {
                   <td className="p-2 font-medium">{u.name}</td>
                   <td className="p-2">{u.refunds}</td>
                   <td className="p-2">{u.total}</td>
-                  <td className="p-2 text-red-600 font-bold">{u.rate}%</td>
+                  <td className="p-2 text-blue-600 font-bold">{u.rate}%</td>
                 </tr>
               ))}
             </tbody>
@@ -194,7 +279,7 @@ export const StatRefund: React.FC = () => {
                   <td className="p-2 font-medium">{m.name}</td>
                   <td className="p-2">{m.refunds}</td>
                   <td className="p-2">{m.total}</td>
-                  <td className="p-2 text-red-600 font-bold">{m.rate}%</td>
+                  <td className="p-2 text-blue-600 font-bold">{m.rate}%</td>
                 </tr>
               ))}
             </tbody>
