@@ -148,6 +148,22 @@ export interface AdminRefundReasonDto {
     count: number;                      // 건수
 }
 
+// 사용자별 환불률 TOP3 응답 타입
+export interface AdminRefundCustomerTopDto {
+    customerId: number;                 // 고객 ID
+    customerName: string;               // 고객명
+    refundCount: number;                // 환불 건수
+    totalRefundAmount: number;          // 총 환불 금액
+}
+
+// 매니저별 환불금액 TOP3 응답 타입
+export interface AdminRefundManagerTopDto {
+    managerId: number;                  // 매니저 ID
+    managerName: string;                // 매니저명
+    refundCount: number;                // 환불 건수
+    totalRefundAmount: number;          // 총 환불 금액
+}
+
 // 정산 관련 타입
 export interface AdminCalculationItemDto {
     calculationId: number;              // 정산 ID
@@ -218,4 +234,21 @@ export interface CategoryOptionRequestDto {
     coName: string;                     // 옵션명
     coPrice: number;                    // 추가 가격
     coTime: number;                     // 추가 시간 (분)
+}
+
+// 만족도 통계 응답 타입
+export interface AdminReviewStatisticsResponseDto {
+    totalReviewCount: number;
+    avgReviewSatisfaction: number;
+    avgCustomerReviewSatisfaction: number;
+    avgManagerReviewSatisfaction: number;
+    topCustomerList: AdminReviewUserStatDto[];
+    topManagerList: AdminReviewUserStatDto[];
+}
+
+export interface AdminReviewUserStatDto {
+    userId: number;
+    userName: string;
+    avgReview: number;
+    totalReviewCount: number;
 }
