@@ -10,7 +10,7 @@ export const StatReservation: React.FC = () => {
 
   useEffect(() => {
     setLoading(true);
-    adminReservationService.getReservationStatistics(7)
+    adminReservationService.getReservationStatistics()
       .then(setData)
       .catch((e) => setError(e.message || '에러 발생'))
       .finally(() => setLoading(false));

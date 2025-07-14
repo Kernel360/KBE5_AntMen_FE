@@ -10,7 +10,7 @@ export const StatSatisfaction: React.FC = () => {
 
   useEffect(() => {
     setLoading(true);
-    adminReviewService.getReviewStatistics(3)
+    adminReviewService.getReviewStatistics()
       .then(setData)
       .catch((e) => setError(e.message || '에러 발생'))
       .finally(() => setLoading(false));

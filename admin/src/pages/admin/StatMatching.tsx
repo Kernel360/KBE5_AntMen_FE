@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
-import { fetchAdminMatchingStatistics } from '../../api/adminMatching';
+import { adminMatchingService } from '../../api/adminMatching';
 import { AdminMatchingStatisticsResponseDto } from '../../api/types';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
@@ -11,7 +11,7 @@ export const StatMatching: React.FC = () => {
 
   useEffect(() => {
     setLoading(true);
-    fetchAdminMatchingStatistics()
+    adminMatchingService.getMatchingStatistics()
       .then(setData)
       .catch((e) => setError(e.message || '에러 발생'))
       .finally(() => setLoading(false));
