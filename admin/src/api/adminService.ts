@@ -475,7 +475,69 @@ export const adminService = {
     // 매칭 요청 보내기 API
     sendMatchingRequest: async (matchingId: string): Promise<void> => {
         try {
-            const response = await adminApi.post(`/admin/reservations/matching/${matchingId}/request`);
+            const response = await adminApi.put('/admin/reservations/matching-request', matchingId);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 매니저 변경 API (새 엔드포인트)
+    changeManager: async (reservationId: number, managerId: number): Promise<void> => {
+        try {
+            await axios.put(
+                `${API_BASE_URL}/admin/reservations/managerChange`,
+                reservationId,
+                {
+                    params: { managerId },
+                    headers: { 'Content-Type': 'application/json' },
+                }
+            );
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 자동 추천 새 후보 생성 API
+    createAutoCandidate: async (reservationId: string): Promise<void> => {
+        try {
+            const response = await adminApi.put('/admin/reservations/add-matching/auto', reservationId);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 직접 지정 새 후보 생성 API
+    createManualCandidate: async (reservationId: string, managerId: string): Promise<void> => {
+        try {
+            const response = await adminApi.put('/admin/reservations/add-matching', reservationId, {
+                params: { managerId }
+            });
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 매니저 검색 API
+    searchManagers: async (searchTerm: string): Promise<any[]> => {
+        try {
+            const response = await adminApi.get('/admin/managers/search', {
+                params: { searchTerm }
+            });
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 401) {

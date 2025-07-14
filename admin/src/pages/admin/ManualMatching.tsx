@@ -13,6 +13,7 @@ import { ReservationMatchingListDto, ManualMatchingRequest, ReservationStats } f
 import ReservationDetailModal from '../../components/modals/ReservationDetailModal';
 import ReservationCancelModal from '../../components/modals/ReservationCancelModal';
 import MatchingRequestModal from '../../components/modals/MatchingRequestModal';
+import NewCandidateModal from '../../components/modals/NewCandidateModal';
 
 const ITEMS_PER_PAGE = 15;
 
@@ -23,6 +24,7 @@ export const ManualMatching: React.FC = () => {
     const [isMatchingRequestModalOpen, setIsMatchingRequestModalOpen] = useState(false);
     const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
     const [isManagerChangeModalOpen, setIsManagerChangeModalOpen] = useState(false);
+    const [isNewCandidateModalOpen, setIsNewCandidateModalOpen] = useState(false);
 
     const [cancelModalSource, setCancelModalSource] = useState<'list' | 'detail'>('list');
     const [matchingType, setMatchingType] = useState<'auto' | 'manual'>('auto');
@@ -293,6 +295,49 @@ export const ManualMatching: React.FC = () => {
     const openManagerChangeModal = (reservation: any) => {
         setSelectedReservation(reservation);
         setIsManagerChangeModalOpen(true);
+    };
+
+    // 새 후보 만들기 모달 열기
+    const openNewCandidateModal = (reservation: any) => {
+        setSelectedReservation(reservation);
+        setIsNewCandidateModalOpen(true);
+    };
+
+    // 새 후보 만들기 처리
+    const handleCreateNewCandidate = async (type: 'manual' | 'auto', managerId?: string) => {
+        if (!selectedReservation) return;
+
+        try {
+            if (type === 'auto') {
+                await adminService.createAutoCandidate(selectedReservation.reservationId.toString());
+            } else {
+                if (!managerId) {
+                    alert('매니저를 선택해주세요.');
+                    return;
+                }
+                await adminService.createManualCandidate(selectedReservation.reservationId.toString(), managerId);
+            }
+            
+            const action = type === 'auto' ? '자동 추천으로 새 후보 3명' : '직접 지정으로 새 후보 1명';
+            alert(`예약 ${selectedReservation.reservationId}에 대한 ${action}을 생성했습니다.`);
+            
+            // 모달 닫기 및 상태 변경 플래그 설정
+            setIsNewCandidateModalOpen(false);
+            setNeedsRefresh(true);
+            
+            // 상세 정보 새로고침 (병렬 처리로 개선)
+            if (selectedReservation) {
+                try {
+                    const detail = await adminService.getReservationDetail(selectedReservation.reservationId.toString());
+                    setReservationDetail(detail);
+                } catch (err) {
+                    console.error('상세 정보 새로고침 실패:', err);
+                }
+            }
+        } catch (err: any) {
+            alert(err.message || '새 후보 생성 중 오류가 발생했습니다.');
+            console.error('새 후보 생성 오류:', err);
+        }
     };
 
     const refreshDetailModal = async () => {
@@ -806,12 +851,31 @@ export const ManualMatching: React.FC = () => {
                 reservationDetail={reservationDetail}
                 onAcceptMatching={handleAcceptMatching}
                 onSendMatchingRequest={async (matchingId: string) => {
-                    // 매칭 요청 보내기 로직
-                    console.log('매칭 요청 보내기:', matchingId);
+                    try {
+                        await adminService.sendMatchingRequest(matchingId);
+                        
+                        // 모달 닫기 및 상태 변경 플래그 설정
+                        setIsMatchingRequestModalOpen(false);
+                        setNeedsRefresh(true);
+                        
+                        // 상세 정보 새로고침 (병렬 처리로 개선)
+                        if (selectedReservation) {
+                            try {
+                                const detail = await adminService.getReservationDetail(selectedReservation.reservationId.toString());
+                                setReservationDetail(detail);
+                            } catch (err) {
+                                console.error('상세 정보 새로고침 실패:', err);
+                            }
+                        }
+                        
+                        alert('매칭 요청이 전송되었습니다.');
+                    } catch (err: any) {
+                        alert(err.message || '매칭 요청 전송 중 오류가 발생했습니다.');
+                        console.error('매칭 요청 오류:', err);
+                    }
                 }}
                 onCreateNewCandidate={() => {
-                    // 새 후보 만들기 로직
-                    console.log('새 후보 만들기');
+                    openNewCandidateModal(selectedReservation);
                 }}
             />
 
@@ -829,14 +893,30 @@ export const ManualMatching: React.FC = () => {
                 onCancelReservation={handleCancelReservation}
                 onAcceptMatching={handleAcceptMatching}
                 onSendMatchingRequest={async (matchingId: string) => {
-                    // 매칭 요청 보내기 로직
-                    console.log('매칭 요청 보내기:', matchingId);
-                    setNeedsRefresh(true);
+                    try {
+                        await adminService.sendMatchingRequest(matchingId);
+                        
+                        // 상태 변경 플래그 설정
+                        setNeedsRefresh(true);
+                        
+                        // 상세 정보 새로고침
+                        if (selectedReservation) {
+                            try {
+                                const detail = await adminService.getReservationDetail(selectedReservation.reservationId.toString());
+                                setReservationDetail(detail);
+                            } catch (err) {
+                                console.error('상세 정보 새로고침 실패:', err);
+                            }
+                        }
+                        
+                        alert('매칭 요청이 전송되었습니다.');
+                    } catch (err: any) {
+                        alert(err.message || '매칭 요청 전송 중 오류가 발생했습니다.');
+                        console.error('매칭 요청 오류:', err);
+                    }
                 }}
                 onCreateNewCandidate={() => {
-                    // 새 후보 만들기 로직
-                    console.log('새 후보 만들기');
-                    setNeedsRefresh(true);
+                    openNewCandidateModal(selectedReservation);
                 }}
             />
 
@@ -847,6 +927,14 @@ export const ManualMatching: React.FC = () => {
                 reservation={selectedReservation}
                 onCancel={handleCancelReservation}
                 source={cancelModalSource}
+            />
+
+            {/* 새 후보 만들기 모달 */}
+            <NewCandidateModal
+                open={isNewCandidateModalOpen}
+                onClose={() => setIsNewCandidateModalOpen(false)}
+                reservation={selectedReservation}
+                onConfirm={handleCreateNewCandidate}
             />
 
             {/* 매니저 변경 모달 */}
