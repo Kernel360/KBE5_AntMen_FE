@@ -269,7 +269,17 @@ export interface AdminMatchingTopManagerDto {
     successCount: number;
 }
 
+// 매칭 통계 일별 데이터 타입
+export interface AdminMatchingDailyDto {
+    date: string; // YYYY-MM-DD
+    requestCount: number;
+    successCount: number;
+    matchingRate: number;
+}
+
+// 매칭 통계 대시보드 및 매니저 TOP 리스트 타입 (dailyMatchingList 포함)
 export interface AdminMatchingStatisticsResponseDto {
     matchingSummary: AdminMatchingStatisticsSummaryDto;
     topManagerList: AdminMatchingTopManagerDto[];
+    dailyMatchingList: AdminMatchingDailyDto[];
 }

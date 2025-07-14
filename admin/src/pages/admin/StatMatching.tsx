@@ -74,6 +74,38 @@ export const StatMatching: React.FC = () => {
           </table>
         </CardContent>
       </Card>
+
+      {/* 일별 매칭률 트렌드 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>최근 7일간 매칭률 트렌드</CardTitle>
+          <CardDescription>일별 매칭률, 시도/성공 건수</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-center text-sm">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="p-2">날짜</th>
+                  <th className="p-2">매칭률(%)</th>
+                  <th className="p-2">시도 건수</th>
+                  <th className="p-2">성공 건수</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.dailyMatchingList.map((d) => (
+                  <tr key={d.date} className="border-b">
+                    <td className="p-2 font-medium">{d.date}</td>
+                    <td className="p-2 text-blue-700 font-bold">{d.matchingRate}</td>
+                    <td className="p-2">{d.requestCount}</td>
+                    <td className="p-2">{d.successCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }; 
