@@ -24,6 +24,7 @@ import {
     XCircle,
     Search
 } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, ComposedChart } from 'recharts';
 
 const stats = [
   { label: '전체 매칭률', value: '78%', desc: '지난 30일 기준' },
@@ -33,13 +34,13 @@ const stats = [
 ];
 
 const trendData = [
-  { date: '06-01', matching: 80 },
-  { date: '06-02', matching: 77 },
-  { date: '06-03', matching: 79 },
-  { date: '06-04', matching: 81 },
-  { date: '06-05', matching: 76 },
-  { date: '06-06', matching: 78 },
-  { date: '06-07', matching: 80 },
+  { date: '06-01', thisWeek: 80, lastWeek: 75 },
+  { date: '06-02', thisWeek: 77, lastWeek: 78 },
+  { date: '06-03', thisWeek: 79, lastWeek: 76 },
+  { date: '06-04', thisWeek: 81, lastWeek: 79 },
+  { date: '06-05', thisWeek: 76, lastWeek: 77 },
+  { date: '06-06', thisWeek: 78, lastWeek: 74 },
+  { date: '06-07', thisWeek: 80, lastWeek: 76 },
 ];
 
 const regionStats = [
@@ -178,30 +179,53 @@ export const StatMatching: React.FC = () => (
         ))}
     </div>
 
-    {/* 트렌드 테이블 */}
+    {/* 트렌드 그래프 영역 */}
     <Card>
       <CardHeader>
         <CardTitle>최근 7일간 매칭률 트렌드</CardTitle>
-        <CardDescription>일별 매칭률 변화</CardDescription>
+        <CardDescription>일별 매칭률 변화 (이번주: 꺾은선, 지난주: 막대)</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-center text-sm">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="p-2">날짜</th>
-                <th className="p-2">매칭률(%)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {trendData.map((d) => (
-                <tr key={d.date} className="border-b">
-                  <td className="p-2 font-medium">{d.date}</td>
-                  <td className="p-2">{d.matching}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-4">
+          <div className="h-[400px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
+                <YAxis domain={[0, 100]} />
+                <Tooltip 
+                  formatter={(value, name) => [`${value}%`, name === 'thisWeek' ? '이번주' : '지난주']}
+                  labelFormatter={(label) => `${label} 매칭률`}
+                />
+                <Bar 
+                  dataKey="lastWeek" 
+                  fill="#9CA3AF" 
+                  name="지난주"
+                  radius={[4, 4, 0, 0]}
+                  barSize={32}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="thisWeek" 
+                  stroke="#3B82F6" 
+                  strokeWidth={3}
+                  dot={{ fill: '#3B82F6', strokeWidth: 2, r: 5 }}
+                  name="이번주"
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+          {/* 범례 */}
+          <div className="flex items-center justify-center space-x-8 text-sm">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+              <span className="font-medium text-gray-700">이번주 (꺾은선)</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-gray-400 rounded"></div>
+              <span className="font-medium text-gray-700">지난주 (막대)</span>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -268,6 +292,7 @@ export const StatMatching: React.FC = () => (
     </Card>
 
     {/* 지역별 매칭률 */}
+    {/*
     <Card>
       <CardHeader>
         <CardTitle>지역별 매칭률</CardTitle>
@@ -287,8 +312,10 @@ export const StatMatching: React.FC = () => (
         </div>
       </CardContent>
     </Card>
+    */}
 
     {/* 매니저별 매칭 성공 TOP5 */}
+    {/*
     <Card>
       <CardHeader>
         <CardTitle>매니저별 매칭 성공 TOP5</CardTitle>
@@ -315,6 +342,7 @@ export const StatMatching: React.FC = () => (
         </table>
       </CardContent>
     </Card>
+    */}
 
     {/* 알고리즘 개선 제안 */}
     <Card>
