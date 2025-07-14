@@ -62,6 +62,7 @@ export const RecommendMatching: React.FC = () => {
         try {
             setIsLoading(true);
             const settings = await getCurrentMatchingRecommendationSettings();
+            console.log('현재 설정 API 응답:', settings); // 디버깅 로그
             setCurrentSettings(settings);
             
             // UI 상태 업데이트
@@ -138,6 +139,8 @@ export const RecommendMatching: React.FC = () => {
         setIsLoadingHistory(true);
         try {
             const history = await getMatchingRecommendationSettingsHistory();
+            console.log('히스토리 API 응답:', history); // 디버깅 로그
+            
             // 타입 변환
             const convertedHistory: SettingsHistory[] = history.map(item => ({
                 id: item.id,
@@ -145,11 +148,24 @@ export const RecommendMatching: React.FC = () => {
                 secondPriority: item.secondPriority,
                 thirdPriority: item.thirdPriority,
                 workloadPeriod: item.workloadPeriod,
-                isActive: item.isActive,
+                isActive: item.active, // API 응답의 'active' 필드를 'isActive'로 매핑
                 createdAt: item.updatedAt, // createdAt이 없으므로 updatedAt 사용
                 updatedAt: item.updatedAt
             }));
-            setSettingsHistory(convertedHistory);
+            
+            console.log('변환된 히스토리:', convertedHistory); // 디버깅 로그
+            
+            // updatedAt 기준으로 최신순 정렬 (활성 설정이 맨 위로)
+            const sortedHistory = convertedHistory.sort((a, b) => {
+                // 활성 설정을 맨 위로
+                if (a.isActive && !b.isActive) return -1;
+                if (!a.isActive && b.isActive) return 1;
+                
+                // 그 다음에는 updatedAt 기준 최신순
+                return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+            });
+            
+            setSettingsHistory(sortedHistory);
         } catch (error) {
             console.error('설정 히스토리 로드 실패:', error);
         } finally {
@@ -315,7 +331,7 @@ export const RecommendMatching: React.FC = () => {
                 <CardHeader className="bg-gray-50 border-b border-gray-200">
                     <CardTitle className="text-lg font-semibold text-gray-900">설정 미리보기</CardTitle>
                     <CardDescription className="text-sm text-gray-600">
-                        현재 설정된 정렬 우선순위입니다.
+                        변경할 정렬 우선순위입니다.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
@@ -373,9 +389,13 @@ export const RecommendMatching: React.FC = () => {
                                             <span className="text-sm font-medium text-gray-900">
                                                 설정 #{setting.id}
                                             </span>
-                                            {setting.isActive && (
-                                                <span className="px-1.5 py-0.5 bg-green-100 text-green-800 text-xs rounded-full font-medium">
-                                                    활성
+                                            {setting.isActive ? (
+                                                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium border border-green-200">
+                                                    현재 적용 중
+                                                </span>
+                                            ) : (
+                                                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium border border-gray-200">
+                                                    비활성
                                                 </span>
                                             )}
                                         </div>

@@ -11,7 +11,7 @@ export interface MatchingRecommendationSettingsResponseDto {
   secondPriority: string;
   thirdPriority: string;
   workloadPeriod: string;
-  isActive: boolean;
+  active: boolean;  // API 응답과 일치하도록 수정
   updatedAt: string;
 }
 
