@@ -285,3 +285,30 @@ export interface AdminMatchingStatisticsResponseDto {
     topManagerList: AdminMatchingTopManagerDto[];
     dailyMatchingList: AdminMatchingDailyDto[];
 }
+
+// 예약 통계 응답 타입
+export interface AdminReservationStatisticsSummaryDto {
+    totalCount: number;         // 전체 예약 건수
+    cancelCount: number;       // 취소 건수
+    completeCount: number;     // 완료 건수
+    cancelRate: number;        // 취소율 (%)
+    avgUser: number;           // 평균 이용자 수
+}
+
+export interface AdminReservationDailyDto {
+    date: string;                  // 날짜 (YYYY-MM-DD)
+    dailyReservationsCount: number;// 일별 예약 건수
+    dailyCancelCount: number;      // 일별 취소 건수
+    dailyCompletedCount: number;   // 일별 완료 건수
+}
+
+export interface AdminReservationCategoryDto {
+    categoryName: string;          // 카테고리명
+    categoryCount: number;         // 카테고리별 예약 건수
+}
+
+export interface AdminReservationStatisticsResponseDto {
+    reservationSummary: AdminReservationStatisticsSummaryDto;
+    dailyList: AdminReservationDailyDto[];
+    categoryList: AdminReservationCategoryDto[];
+}
