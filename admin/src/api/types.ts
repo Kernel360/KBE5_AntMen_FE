@@ -235,3 +235,20 @@ export interface CategoryOptionRequestDto {
     coPrice: number;                    // 추가 가격
     coTime: number;                     // 추가 시간 (분)
 }
+
+// 만족도 통계 응답 타입
+export interface AdminReviewStatisticsResponseDto {
+    totalReviewCount: number;
+    avgReviewSatisfaction: number;
+    avgCustomerReviewSatisfaction: number;
+    avgManagerReviewSatisfaction: number;
+    topCustomerList: AdminReviewUserStatDto[];
+    topManagerList: AdminReviewUserStatDto[];
+}
+
+export interface AdminReviewUserStatDto {
+    userId: number;
+    userName: string;
+    avgReview: number;
+    totalReviewCount: number;
+}
