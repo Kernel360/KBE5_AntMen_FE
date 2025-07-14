@@ -307,8 +307,15 @@ export interface AdminReservationCategoryDto {
     categoryCount: number;         // 카테고리별 예약 건수
 }
 
+// 예약 상태별 예약 건수 타입
+export interface AdminReservationStatusCountDto {
+    reservationStatus: string; // 예: 'CANCEL', 'DONE', 'MATCHING', 'WAITING'
+    count: number;
+}
+
 export interface AdminReservationStatisticsResponseDto {
     reservationSummary: AdminReservationStatisticsSummaryDto;
+    reservationStatus: AdminReservationStatusCountDto[]; // 예약 상태별 예약 건수
     dailyList: AdminReservationDailyDto[];
     categoryList: AdminReservationCategoryDto[];
 }
