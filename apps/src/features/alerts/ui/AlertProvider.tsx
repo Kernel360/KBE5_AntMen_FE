@@ -154,7 +154,7 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         onAlert: (alert) => {
           if (mountedRef.current) {
             // 매칭요청 알림이면 매칭요청수 +1
-            if (alert.redirectUrl?.startsWith('/manager/matching')) {
+            if (alert.trigger === 'MATCHING_REQUEST_TO_MANAGER') {
               incrementMatchingRequestCount();
             }
             showAlertToast(alert)
