@@ -48,6 +48,28 @@ export const StatMatching: React.FC = () => {
         ))}
       </div>
 
+      {/* 수요자/매니저 무응답·거절률 카드 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-medium">수요자 무응답·거절률</CardTitle>
+            <CardDescription className="text-xs">매칭 요청에 응답하지 않거나 거절한 비율</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{data.matchingSummary.customerRefuseRate}%</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-medium">매니저 무응답·거절률</CardTitle>
+            <CardDescription className="text-xs">매칭 요청에 응답하지 않거나 거절한 비율</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{data.matchingSummary.managerRefuseRate}%</div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* 매니저별 매칭 성공 TOP5 */}
       <Card>
         <CardHeader>

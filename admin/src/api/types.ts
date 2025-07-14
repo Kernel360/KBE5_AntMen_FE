@@ -261,6 +261,8 @@ export interface AdminMatchingStatisticsSummaryDto {
     totalMatchingCount: number; // 전체 매칭 건수
     successCount: number; // 성공 건수
     failCount: number; // 실패 건수
+    customerRefuseRate: number; // 수요자 무응답/거절률
+    managerRefuseRate: number; // 매니저 무응답/거절률
 }
 
 export interface AdminMatchingTopManagerDto {
