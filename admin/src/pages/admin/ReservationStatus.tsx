@@ -25,6 +25,8 @@ import { ChevronLeft, ChevronRight, SkipBack, SkipForward } from 'lucide-react';
 import { adminService } from '../../api/adminService';
 import { ReservationAdminListDto, ReservationStatDto } from '../../api/types';
 import ReservationDetailModal from '../../components/modals/ReservationDetailModal';
+import ReservationCancelModal from '../../components/modals/ReservationCancelModal';
+import MatchingRequestModal from '../../components/modals/MatchingRequestModal';
 
 // API 타입을 그대로 사용
 type Reservation = ReservationAdminListDto;
@@ -78,6 +80,9 @@ export const ReservationStatus: React.FC = () => {
     
     // 매니저 변경 모달 상태
     const [isManagerChangeModalOpen, setIsManagerChangeModalOpen] = useState(false);
+
+    // 상태 변경 추적을 위한 플래그
+    const [needsRefresh, setNeedsRefresh] = useState(false);
 
     // 데이터 로드 함수
     const loadReservations = useCallback(async (selectedStatus?: string) => {
@@ -164,15 +169,103 @@ export const ReservationStatus: React.FC = () => {
     };
 
     // 매칭 수정 모달 열기
-    const openMatchingRequestModal = (reservation: any) => {
+    const openMatchingRequestModal = async (reservation: any) => {
         setSelectedReservation(reservation);
         setIsMatchingRequestModalOpen(true);
+        
+        // 예약 상세 정보 로드
+        try {
+            const detail = await adminService.getReservationDetail(reservation.reservationId.toString());
+            setReservationDetail(detail);
+        } catch (err: any) {
+            console.error('예약 상세 정보 로드 오류:', err);
+            setReservationDetail(null);
+        }
     };
 
     // 예약 취소 모달 열기
     const openCancelModal = (reservation: any) => {
         setSelectedReservation(reservation);
         setIsCancelModalOpen(true);
+    };
+
+    // 고객 수락 처리
+    const handleAcceptMatching = async (matchingId: string) => {
+        try {
+            await adminService.acceptMatching(matchingId);
+            
+            // 모달 닫기 및 상태 변경 플래그 설정
+            setIsMatchingRequestModalOpen(false);
+            setNeedsRefresh(true);
+            
+            // 상세 정보 새로고침 (병렬 처리로 개선)
+            if (selectedReservation) {
+                try {
+                    const detail = await adminService.getReservationDetail(selectedReservation.reservationId.toString());
+                    setReservationDetail(detail);
+                } catch (err) {
+                    console.error('상세 정보 새로고침 실패:', err);
+                }
+            }
+            
+            alert('고객 수락 처리가 완료되었습니다.');
+        } catch (err: any) {
+            alert(err.message || '고객 수락 처리 중 오류가 발생했습니다.');
+            console.error('고객 수락 오류:', err);
+        }
+    };
+
+    // 매칭 요청 보내기
+    const handleSendMatchingRequest = async (matchingId: string) => {
+        try {
+            await adminService.sendMatchingRequest(matchingId);
+            
+            // 모달 닫기 및 상태 변경 플래그 설정
+            setIsMatchingRequestModalOpen(false);
+            setNeedsRefresh(true);
+            
+            // 상세 정보 새로고침 (병렬 처리로 개선)
+            if (selectedReservation) {
+                try {
+                    const detail = await adminService.getReservationDetail(selectedReservation.reservationId.toString());
+                    setReservationDetail(detail);
+                } catch (err) {
+                    console.error('상세 정보 새로고침 실패:', err);
+                }
+            }
+            
+            alert('매칭 요청이 전송되었습니다.');
+        } catch (err: any) {
+            alert(err.message || '매칭 요청 전송 중 오류가 발생했습니다.');
+            console.error('매칭 요청 오류:', err);
+        }
+    };
+
+    // 새 후보 만들기
+    const handleCreateNewCandidate = async () => {
+        try {
+            // 새 후보 만들기 로직 구현 필요
+            alert('새 후보 만들기 기능은 추후 구현 예정입니다.');
+            setNeedsRefresh(true);
+        } catch (err: any) {
+            alert(err.message || '새 후보 만들기 중 오류가 발생했습니다.');
+            console.error('새 후보 만들기 오류:', err);
+        }
+    };
+
+    // 예약 취소 처리
+    const handleCancelReservation = async (reservationId: string, cancelData: { status: string; reason: string }) => {
+        try {
+            await adminService.cancelReservation(reservationId, cancelData);
+            alert('예약이 취소되었습니다.');
+            
+            // 모달 닫기 및 상태 변경 플래그 설정
+            setIsCancelModalOpen(false);
+            setNeedsRefresh(true);
+        } catch (err: any) {
+            alert(err.message || '예약 취소 중 오류가 발생했습니다.');
+            console.error('예약 취소 오류:', err);
+        }
     };
 
     // 매니저 변경 모달 열기
@@ -250,6 +343,16 @@ export const ReservationStatus: React.FC = () => {
 
     const goToLastPage = () => {
         setCurrentPage(totalPages);
+    };
+
+    // 상세 모달 닫기 핸들러
+    const handleDetailModalClose = () => {
+        setIsDetailModalOpen(false);
+        // 상태 변경이 있었으면 목록 새로고침
+        if (needsRefresh) {
+            loadReservations();
+            setNeedsRefresh(false);
+        }
     };
 
     return (
@@ -393,9 +496,6 @@ export const ReservationStatus: React.FC = () => {
                                     position: 'relative',
                                     zIndex: 1
                                 }}
-                                onFocus={(e) => {
-                                    e.target.showPicker && e.target.showPicker();
-                                }}
                             />
                         </div>
                         
@@ -415,9 +515,6 @@ export const ReservationStatus: React.FC = () => {
                                     appearance: 'none',
                                     position: 'relative',
                                     zIndex: 1
-                                }}
-                                onFocus={(e) => {
-                                    e.target.showPicker && e.target.showPicker();
                                 }}
                             />
                         </div>
@@ -579,7 +676,7 @@ export const ReservationStatus: React.FC = () => {
             {/* 상세보기 모달 */}
             <ReservationDetailModal
                 open={isDetailModalOpen}
-                onClose={() => setIsDetailModalOpen(false)}
+                onClose={handleDetailModalClose}
                 reservation={selectedReservation}
                 reservationDetail={reservationDetail}
                 loading={detailLoading}
@@ -587,47 +684,31 @@ export const ReservationStatus: React.FC = () => {
                 onOpenMatchingRequestModal={openMatchingRequestModal}
                 onOpenCancelModal={openCancelModal}
                 onOpenManagerChangeModal={openManagerChangeModal}
+                onCancelReservation={handleCancelReservation}
+                onAcceptMatching={handleAcceptMatching}
+                onSendMatchingRequest={handleSendMatchingRequest}
+                onCreateNewCandidate={handleCreateNewCandidate}
             />
 
             {/* 매칭 수정 모달 */}
-            <Dialog open={isMatchingRequestModalOpen} onOpenChange={setIsMatchingRequestModalOpen}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>매칭 수정</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <p className="text-gray-600">매칭 수정 기능은 추후 구현 예정입니다.</p>
-                        <div className="flex justify-end gap-2">
-                            <Button 
-                                variant="outline" 
-                                onClick={() => setIsMatchingRequestModalOpen(false)}
-                            >
-                                닫기
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            <MatchingRequestModal
+                open={isMatchingRequestModalOpen}
+                onClose={() => setIsMatchingRequestModalOpen(false)}
+                reservation={selectedReservation}
+                reservationDetail={reservationDetail}
+                onAcceptMatching={handleAcceptMatching}
+                onSendMatchingRequest={handleSendMatchingRequest}
+                onCreateNewCandidate={handleCreateNewCandidate}
+            />
 
             {/* 예약 취소 모달 */}
-            <Dialog open={isCancelModalOpen} onOpenChange={setIsCancelModalOpen}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>예약 취소</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <p className="text-gray-600">예약 취소 기능은 추후 구현 예정입니다.</p>
-                        <div className="flex justify-end gap-2">
-                            <Button 
-                                variant="outline" 
-                                onClick={() => setIsCancelModalOpen(false)}
-                            >
-                                닫기
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            <ReservationCancelModal
+                open={isCancelModalOpen}
+                onClose={() => setIsCancelModalOpen(false)}
+                reservation={selectedReservation}
+                onCancel={handleCancelReservation}
+                source="list"
+            />
 
             {/* 매니저 변경 모달 */}
             <Dialog open={isManagerChangeModalOpen} onOpenChange={setIsManagerChangeModalOpen}>

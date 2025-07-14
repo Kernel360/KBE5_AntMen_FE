@@ -471,4 +471,17 @@ export const adminService = {
             throw error;
         }
     },
+
+    // 매칭 요청 보내기 API
+    sendMatchingRequest: async (matchingId: string): Promise<void> => {
+        try {
+            const response = await adminApi.post(`/admin/reservations/matching/${matchingId}/request`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
 }; 

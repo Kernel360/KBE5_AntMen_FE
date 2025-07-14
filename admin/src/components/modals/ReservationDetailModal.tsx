@@ -285,17 +285,6 @@ const ReservationDetailModal: React.FC<ReservationDetailModalProps> = ({
                               </Button>
                             </>
                           )}
-                          
-                          {/* DONE 상태: 새로고침만 */}
-                          {reservationDetail?.reservationStatus === 'DONE' && (
-                            <div className="text-sm text-gray-500">새로고침만</div>
-                          )}
-                          
-                          {/* CANCEL 상태: 수동 작업 없음 */}
-                          {reservationDetail?.reservationStatus === 'CANCEL' && (
-                            <div className="text-sm text-gray-500">취소된 예약입니다.</div>
-                          )}
-                          
                           {/* 새로고침 버튼은 모든 상태에서 표시 */}
                           {onRefresh && <Button variant="outline" onClick={onRefresh}>새로고침</Button>}
                         </div>

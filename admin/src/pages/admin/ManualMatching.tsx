@@ -47,6 +47,9 @@ export const ManualMatching: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
 
+    // 상태 변경 추적을 위한 플래그
+    const [needsRefresh, setNeedsRefresh] = useState(false);
+
     // API에서 데이터 로드
     const loadReservations = useCallback(async () => {
         try {
@@ -247,12 +250,19 @@ export const ManualMatching: React.FC = () => {
     const handleAcceptMatching = async (matchingId: string) => {
         try {
             await adminService.acceptMatching(matchingId);
-            alert('고객 수락이 완료되었습니다.');
-            // 상세 정보 새로고침
+            setNeedsRefresh(true);
+            
+            // 상세 정보 새로고침 (병렬 처리로 개선)
             if (selectedReservation) {
-                const detail = await adminService.getReservationDetail(selectedReservation.reservationId.toString());
-                setReservationDetail(detail);
+                try {
+                    const detail = await adminService.getReservationDetail(selectedReservation.reservationId.toString());
+                    setReservationDetail(detail);
+                } catch (err) {
+                    console.error('상세 정보 새로고침 실패:', err);
+                }
             }
+            
+            alert('고객 수락이 완료되었습니다.');
         } catch (err: any) {
             alert(err.message || '고객 수락 처리 중 오류가 발생했습니다.');
             console.error('고객 수락 오류:', err);
@@ -266,8 +276,8 @@ export const ManualMatching: React.FC = () => {
             // 백엔드에서 응답을 보내주지 않으므로 성공으로 처리
             alert(`예약 ${reservationId}이(가) 취소되었습니다.`);
             
-            // 데이터 새로고침
-            await loadReservations();
+            // 상태 변경 플래그 설정
+            setNeedsRefresh(true);
         } catch (err: any) {
             alert(err.message || '예약 취소 중 오류가 발생했습니다.');
             console.error('예약 취소 오류:', err);
@@ -393,6 +403,16 @@ export const ManualMatching: React.FC = () => {
             setReservationDetail(null);
         } finally {
             setDetailLoading(false);
+        }
+    };
+
+    // 상세 모달 닫기 핸들러
+    const handleDetailModalClose = () => {
+        setIsDetailModalOpen(false);
+        // 상태 변경이 있었으면 목록 새로고침
+        if (needsRefresh) {
+            loadReservations();
+            setNeedsRefresh(false);
         }
     };
 
@@ -523,9 +543,6 @@ export const ManualMatching: React.FC = () => {
                                     position: 'relative',
                                     zIndex: 1
                                 }}
-                                onFocus={(e) => {
-                                    e.target.showPicker && e.target.showPicker();
-                                }}
                             />
                         </div>
                         {/* 종료일 필터 */}
@@ -544,9 +561,6 @@ export const ManualMatching: React.FC = () => {
                                     appearance: 'none',
                                     position: 'relative',
                                     zIndex: 1
-                                }}
-                                onFocus={(e) => {
-                                    e.target.showPicker && e.target.showPicker();
                                 }}
                             />
                         </div>
@@ -804,7 +818,7 @@ export const ManualMatching: React.FC = () => {
             {/* 상세보기 모달 */}
             <ReservationDetailModal
                 open={isDetailModalOpen}
-                onClose={() => setIsDetailModalOpen(false)}
+                onClose={handleDetailModalClose}
                 reservation={selectedReservation}
                 reservationDetail={reservationDetail}
                 loading={detailLoading}
@@ -817,10 +831,12 @@ export const ManualMatching: React.FC = () => {
                 onSendMatchingRequest={async (matchingId: string) => {
                     // 매칭 요청 보내기 로직
                     console.log('매칭 요청 보내기:', matchingId);
+                    setNeedsRefresh(true);
                 }}
                 onCreateNewCandidate={() => {
                     // 새 후보 만들기 로직
                     console.log('새 후보 만들기');
+                    setNeedsRefresh(true);
                 }}
             />
 
