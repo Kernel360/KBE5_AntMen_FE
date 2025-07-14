@@ -1375,7 +1375,7 @@ export const ManagerSupport: React.FC = () => {
                                                     <div className="flex items-center gap-2">
                                                         <MessageCircle className="h-3 w-3" />
                                                         <span>{ticket.commentNum}</span>
-                                                        <span>{new Date(ticket.createdAt).toLocaleString('ko-KR')}</span>
+                                                        <span>{new Date(ticket.createdAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1402,12 +1402,12 @@ export const ManagerSupport: React.FC = () => {
                                             <div className="flex justify-between items-center text-sm text-gray-500">
                                                 <div className="flex items-center gap-3">
                                                     <span>{selectedTicketDetail?.userName || selectedTicket.userName}</span>
-                                                    <span>{new Date(selectedTicket.createdAt).toLocaleString('ko-KR')}</span>
+                                                    <span>{new Date(selectedTicket.createdAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</span>
                                                 </div>
                                                 <span className="text-xs">
                                                     {(selectedTicketDetail?.modifiedAt || selectedTicket.lastResponse) && 
                                                      new Date(selectedTicketDetail?.modifiedAt || selectedTicket.lastResponse).getTime() !== new Date(selectedTicket.createdAt).getTime()
-                                                        ? `수정: ${new Date(selectedTicketDetail?.modifiedAt || selectedTicket.lastResponse).toLocaleString('ko-KR')}`
+                                                        ? `수정: ${new Date(selectedTicketDetail?.modifiedAt || selectedTicket.lastResponse).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}`
                                                         : ''
                                                     }
                                                 </span>

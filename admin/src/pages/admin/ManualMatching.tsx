@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -7,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { ChevronLeft, ChevronRight, SkipBack, SkipForward, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, SkipBack, SkipForward, Calendar, Settings } from 'lucide-react';
 import { adminService } from '../../api/adminService';
 import { ReservationMatchingListDto, ManualMatchingRequest, ReservationStats } from '../../api/types';
 import ReservationDetailModal from '../../components/modals/ReservationDetailModal';
@@ -18,6 +19,7 @@ import NewCandidateModal from '../../components/modals/NewCandidateModal';
 const ITEMS_PER_PAGE = 15;
 
 export const ManualMatching: React.FC = () => {
+    const navigate = useNavigate();
     const [selectedReservation, setSelectedReservation] = useState<ReservationMatchingListDto | null>(null);
     const [reservationDetail, setReservationDetail] = useState<any>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -463,9 +465,18 @@ export const ManualMatching: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">수동매칭 관리</h1>
-                <p className="text-gray-600">매칭 전 예약들과 매칭 요청 현황을 확인하고 수동으로 매칭을 처리합니다.</p>
+            <div className="flex justify-between items-start">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">수동매칭 관리</h1>
+                    <p className="text-gray-600">매칭 전 예약들과 매칭 요청 현황을 확인하고 수동으로 매칭을 처리합니다.</p>
+                </div>
+                <Button 
+                    onClick={() => navigate('/admin/matching/recommend')}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                >
+                    <Settings className="w-4 h-4" />
+                    추천 기준 설정
+                </Button>
             </div>
 
             {/* 빠른 필터 카드 */}

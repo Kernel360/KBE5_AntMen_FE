@@ -41,7 +41,7 @@ export default function MatchingPageClient() {
         const data = await getRecommendedManagers(
           matchingRequest,
           true,        // useDistanceFilter
-          'distance'   // sortType
+          'custom'     // sortType - 매칭 추천 기준 설정 사용
         )
 
         // 데이터 구조 변환 - MatchingManagerListResponseDto에서 Manager로 변환

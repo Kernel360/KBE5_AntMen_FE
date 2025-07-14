@@ -177,12 +177,6 @@ export const AdminLayout: React.FC = () => {
     };
 
     const handleMenuClick = (item: MenuItem) => {
-        // 추천 기준 설정 메뉴는 준비중
-        if (item.id === 'algorithm-recommend') {
-            alert('추천 기준 설정 기능은 준비 중입니다.');
-            return;
-        }
-
         if (item.subItems) {
             setExpandedMenu(expandedMenu === item.id ? null : item.id);
             if (item.subItems.length > 0) {
@@ -196,12 +190,6 @@ export const AdminLayout: React.FC = () => {
     };
 
     const handleSubMenuClick = (path: string) => {
-        // 추천 기준 설정 메뉴는 준비중
-        if (path === '/admin/matching/recommend') {
-            alert('추천 기준 설정 기능은 준비 중입니다.');
-            return;
-        }
-
         navigate(path);
     };
 

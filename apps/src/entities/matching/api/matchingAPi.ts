@@ -165,10 +165,10 @@ export const getAutoMatchingManagers = async (
   request: MatchingRequestDto
 ): Promise<MatchingManagerListResponseDto[]> => {
   try {
-    // 거리 필터링 + 거리순 정렬로 자동 매칭
+    // 매칭 추천 기준 설정을 사용한 자동 매칭
     const queryParams = new URLSearchParams({
       useDistanceFilter: 'true',
-      sortType: 'distance',
+      sortType: 'custom',
     })
     
     const response = await fetch(
