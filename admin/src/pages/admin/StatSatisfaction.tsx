@@ -82,7 +82,7 @@ export const StatSatisfaction: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {data.topCustomerList.map((u) => (
+              {(data.topCustomerList || []).map((u) => (
                 <tr key={u.userId} className="border-b">
                   <td className="p-2">{u.userId}</td>
                   <td className="p-2 font-medium">{u.userName}</td>
@@ -112,7 +112,67 @@ export const StatSatisfaction: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {data.topManagerList.map((m) => (
+              {(data.topManagerList || []).map((m) => (
+                <tr key={m.userId} className="border-b">
+                  <td className="p-2">{m.userId}</td>
+                  <td className="p-2 font-medium">{m.userName}</td>
+                  <td className="p-2 text-blue-700 font-bold">{m.avgReview}</td>
+                  <td className="p-2">{m.totalReviewCount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+
+      {/* 리뷰 많은 사용자 TOP3 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>리뷰 많은 사용자 TOP3</CardTitle>
+          <CardDescription>누적 리뷰 수 기준</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <table className="min-w-full text-center text-sm">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="p-2">ID</th>
+                <th className="p-2">이름</th>
+                <th className="p-2">평균 평점</th>
+                <th className="p-2">리뷰 수</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data.topCustomerByReviewCount || []).map((u) => (
+                <tr key={u.userId} className="border-b">
+                  <td className="p-2">{u.userId}</td>
+                  <td className="p-2 font-medium">{u.userName}</td>
+                  <td className="p-2 text-blue-700 font-bold">{u.avgReview}</td>
+                  <td className="p-2">{u.totalReviewCount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+
+      {/* 리뷰 많은 매니저 TOP3 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>리뷰 많은 매니저 TOP3</CardTitle>
+          <CardDescription>누적 리뷰 수 기준</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <table className="min-w-full text-center text-sm">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="p-2">ID</th>
+                <th className="p-2">이름</th>
+                <th className="p-2">평균 평점</th>
+                <th className="p-2">리뷰 수</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data.topManagerByReviewCount || []).map((m) => (
                 <tr key={m.userId} className="border-b">
                   <td className="p-2">{m.userId}</td>
                   <td className="p-2 font-medium">{m.userName}</td>

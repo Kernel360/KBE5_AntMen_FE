@@ -244,6 +244,8 @@ export interface AdminReviewStatisticsResponseDto {
     avgManagerReviewSatisfaction: number;
     topCustomerList: AdminReviewUserStatDto[];
     topManagerList: AdminReviewUserStatDto[];
+    topCustomerByReviewCount: AdminReviewUserStatDto[];
+    topManagerByReviewCount: AdminReviewUserStatDto[];
 }
 
 export interface AdminReviewUserStatDto {
