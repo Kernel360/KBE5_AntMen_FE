@@ -27,6 +27,7 @@ import { ReservationAdminListDto, ReservationStatDto } from '../../api/types';
 import ReservationDetailModal from '../../components/modals/ReservationDetailModal';
 import ReservationCancelModal from '../../components/modals/ReservationCancelModal';
 import MatchingRequestModal from '../../components/modals/MatchingRequestModal';
+import ManagerChangeModal from '../../components/modals/ManagerChangeModal';
 
 // API 타입을 그대로 사용
 type Reservation = ReservationAdminListDto;
@@ -272,6 +273,31 @@ export const ReservationStatus: React.FC = () => {
     const openManagerChangeModal = (reservation: any) => {
         setSelectedReservation(reservation);
         setIsManagerChangeModalOpen(true);
+    };
+
+    // 매니저 변경 처리
+    const handleManagerChange = async (newManagerId: number) => {
+        if (!selectedReservation) return;
+        
+        try {
+            await adminService.changeManager(selectedReservation.reservationId.toString(), newManagerId);
+            
+            // 모달 닫기 및 상태 변경 플래그 설정
+            setIsManagerChangeModalOpen(false);
+            setNeedsRefresh(true);
+            
+            // 상세 정보 새로고침
+            if (selectedReservation) {
+                try {
+                    const detail = await adminService.getReservationDetail(selectedReservation.reservationId.toString());
+                    setReservationDetail(detail);
+                } catch (err) {
+                    console.error('상세 정보 새로고침 실패:', err);
+                }
+            }
+        } catch (err: any) {
+            throw new Error(err.message || '매니저 변경 중 오류가 발생했습니다.');
+        }
     };
 
     // 통계 계산
@@ -711,24 +737,13 @@ export const ReservationStatus: React.FC = () => {
             />
 
             {/* 매니저 변경 모달 */}
-            <Dialog open={isManagerChangeModalOpen} onOpenChange={setIsManagerChangeModalOpen}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>매니저 변경</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <p className="text-gray-600">매니저 변경 기능은 추후 구현 예정입니다.</p>
-                        <div className="flex justify-end gap-2">
-                            <Button 
-                                variant="outline" 
-                                onClick={() => setIsManagerChangeModalOpen(false)}
-                            >
-                                닫기
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            <ManagerChangeModal
+                open={isManagerChangeModalOpen}
+                onClose={() => setIsManagerChangeModalOpen(false)}
+                reservation={selectedReservation}
+                reservationDetail={reservationDetail}
+                onManagerChange={handleManagerChange}
+            />
         </div>
     );
 }; 
