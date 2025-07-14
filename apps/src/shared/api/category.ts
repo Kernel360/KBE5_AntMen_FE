@@ -44,6 +44,6 @@ export const getCategoryOptionsByCategoryId = async (
   categoryId: string,
 ): Promise<CategoryOption[]> => {
   return customFetch<CategoryOption[]>(
-    `https://api.antmen.site:9090/api/v1/common/categories/${categoryId}/options`,
+    `https://api.antmen.site:9091/api/v1/customer/categories/${categoryId}/options`,
   )
 }

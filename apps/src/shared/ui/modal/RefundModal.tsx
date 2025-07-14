@@ -9,7 +9,7 @@ interface RefundModalProps {
   onClose: () => void
   onSuccess: () => void
   refundData: {
-    payId: number
+    reservationId: number
     refundReason: string
     refundAmount: number
   }

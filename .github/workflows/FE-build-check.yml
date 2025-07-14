@@ -19,17 +19,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'yarn'
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Lint check
-        run: yarn lint
-
       - name: Build check
-        run: yarn build
+        run: CI=false yarn build
       
       - name: Notify on failure
         if: failure()

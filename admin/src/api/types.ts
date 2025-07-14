@@ -158,6 +158,36 @@ export interface AdminRefundResponseDto {
     refundProcessedAt: string | null;   // 환불 처리일 (ISO string or null)
 }
 
+// 환불 통계 응답 타입
+export interface AdminRefundStatisticsResponseDto {
+    refundRate: number;                 // 환불률 (%)
+    totalRefundCount: number;           // 총 환불 건수
+    approveRefundCount: number;         // 승인된 환불 건수
+    totalRefundAmount: number;          // 총 환불 금액
+}
+
+// 환불 사유 분포 응답 타입
+export interface AdminRefundReasonDto {
+    refundReason: string;               // 환불 사유
+    count: number;                      // 건수
+}
+
+// 사용자별 환불률 TOP3 응답 타입
+export interface AdminRefundCustomerTopDto {
+    customerId: number;                 // 고객 ID
+    customerName: string;               // 고객명
+    refundCount: number;                // 환불 건수
+    totalRefundAmount: number;          // 총 환불 금액
+}
+
+// 매니저별 환불금액 TOP3 응답 타입
+export interface AdminRefundManagerTopDto {
+    managerId: number;                  // 매니저 ID
+    managerName: string;                // 매니저명
+    refundCount: number;                // 환불 건수
+    totalRefundAmount: number;          // 총 환불 금액
+}
+
 // 정산 관련 타입
 export interface AdminCalculationItemDto {
     calculationId: number;              // 정산 ID
@@ -198,4 +228,51 @@ export interface AdminCalculationDetailDto {
     totalReservationCount: number;      // 총 예약 건수
     totalReservationAmount: number;     // 총 예약 금액
     reservations: AdminCalculationReservationDto[];  // 예약 목록
+}
+
+// 카테고리 관련 타입
+export interface CategoryDto {
+    categoryId: number;                 // 카테고리 ID
+    categoryName: string;               // 카테고리명
+    categoryPrice: number;              // 기본 가격
+    categoryTime: number;               // 소요 시간 (시간)
+}
+
+export interface CategoryRequestDto {
+    categoryName: string;               // 카테고리명
+    categoryPrice: number;              // 기본 가격
+    categoryTime: number;               // 소요 시간 (시간)
+}
+
+// 카테고리 옵션 관련 타입
+export interface CategoryOptionDto {
+    categoryId: number;                 // 소속 카테고리 ID
+    coId: number;                       // 옵션 ID
+    coName: string;                     // 옵션명
+    coPrice: number;                    // 추가 가격
+    coTime: number;                     // 추가 시간 (분)
+}
+
+export interface CategoryOptionRequestDto {
+    categoryId: number;                 // 소속 카테고리 ID
+    coName: string;                     // 옵션명
+    coPrice: number;                    // 추가 가격
+    coTime: number;                     // 추가 시간 (분)
+}
+
+// 만족도 통계 응답 타입
+export interface AdminReviewStatisticsResponseDto {
+    totalReviewCount: number;
+    avgReviewSatisfaction: number;
+    avgCustomerReviewSatisfaction: number;
+    avgManagerReviewSatisfaction: number;
+    topCustomerList: AdminReviewUserStatDto[];
+    topManagerList: AdminReviewUserStatDto[];
+}
+
+export interface AdminReviewUserStatDto {
+    userId: number;
+    userName: string;
+    avgReview: number;
+    totalReviewCount: number;
 }

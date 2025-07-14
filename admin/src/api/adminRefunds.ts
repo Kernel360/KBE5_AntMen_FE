@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AdminRefundResponseDto } from './types';
+import { AdminRefundResponseDto, AdminRefundStatisticsResponseDto, AdminRefundReasonDto, AdminRefundCustomerTopDto, AdminRefundManagerTopDto } from './types';
 import { getCookie, ADMIN_TOKEN_COOKIE } from '../lib/cookie';
 
 const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
@@ -65,6 +65,58 @@ export const adminRefundsService = {
     getWaitingRefunds: async (): Promise<AdminRefundResponseDto[]> => {
         try {
             const response = await refundsApi.get('/admin/refunds/waiting');
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 환불 통계 조회
+    getRefundStatistics: async (): Promise<AdminRefundStatisticsResponseDto> => {
+        try {
+            const response = await refundsApi.get('/admin/statistics/refunds');
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 환불 사유 분포 조회
+    getRefundReasons: async (): Promise<AdminRefundReasonDto[]> => {
+        try {
+            const response = await refundsApi.get('/admin/statistics/refunds/reasons');
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+    
+    // 사용자별 환불률 TOP3 조회
+    getRefundCustomerTop: async (): Promise<AdminRefundCustomerTopDto[]> => {
+        try {
+            const response = await refundsApi.get('/admin/statistics/refunds/customers/top');
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 매니저별 환불금액 TOP3 조회
+    getRefundManagerTop: async (): Promise<AdminRefundManagerTopDto[]> => {
+        try {
+            const response = await refundsApi.get('/admin/statistics/refunds/managers/top');
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 401) {

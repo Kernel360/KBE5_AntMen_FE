@@ -777,35 +777,6 @@ export const ReservationDetailPageClient = ({
           )
         }
         
-        // 매칭 완료 후: 취소 버튼
-        if (reservation.reservationStatus === 'MATCHING') {
-          return (
-            <>
-              <CancelActionSection
-                onCancel={handleCancelReservation}
-                isProcessing={isProcessing}
-              />
-              <CancellationModal
-                isOpen={showCancelModal}
-                onClose={() => setShowCancelModal(false)}
-                onConfirm={handleCancelReservation}
-                title="예약 취소"
-                description="정말 예약을 취소하시겠습니까?"
-              />
-              <RefundModal
-                isOpen={showRefundModal}
-                onClose={() => setShowRefundModal(false)}
-                onSuccess={handleRefundConfirm}
-                refundData={{
-                  payId: reservation.reservationId || 0,
-                  refundReason: cancelReason || "예약 취소", // 실제 취소 사유 전달
-                  refundAmount: reservation.totalAmount || 0 // 예약 가격 동일하게 전달
-                }}
-              />
-            </>
-          )
-        }
-        
         // 모든 매니저가 거절한 경우
         if (allManagersRejected()) {
           return (
@@ -828,6 +799,33 @@ export const ReservationDetailPageClient = ({
         
         return null
       })()}
+
+      {/* 예약 취소 버튼 - CANCEL 상태가 아니고 매니저 수락 대기 상태가 아닐 때만 표시 */}
+      {reservation.reservationStatus !== 'CANCEL' && !getAcceptedMatching() && (
+        <>
+          <CancelActionSection
+            onCancel={handleCancelReservation}
+            isProcessing={isProcessing}
+          />
+          <CancellationModal
+            isOpen={showCancelModal}
+            onClose={() => setShowCancelModal(false)}
+            onConfirm={handleCancelReservation}
+            title="예약 취소"
+            description="정말 예약을 취소하시겠습니까?"
+          />
+          <RefundModal
+            isOpen={showRefundModal}
+            onClose={() => setShowRefundModal(false)}
+            onSuccess={handleRefundConfirm}
+            refundData={{
+              reservationId: reservation.reservationId || 0, // 백엔드에서 reservationId로 결제 정보를 찾아서 환불 처리
+              refundReason: cancelReason || "예약 취소",
+              refundAmount: reservation.totalAmount || 0
+            }}
+          />
+        </>
+      )}
     </div>
   )
 } 

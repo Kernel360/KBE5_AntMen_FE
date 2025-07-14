@@ -165,7 +165,7 @@ const ActionButtonsSection = ({
         onClose={() => setShowRefundModal(false)}
         onSuccess={handleRefundConfirm}
         refundData={{
-          payId: parseInt(reservation.id) || 0,
+          reservationId: parseInt(reservation.id) || 0,
           refundReason: cancelReason || "예약 취소", // 실제 취소 사유 전달
           refundAmount: reservation.amount || 0 // 예약 가격 동일하게 전달
         }}
