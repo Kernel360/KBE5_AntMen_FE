@@ -254,3 +254,22 @@ export interface AdminReviewUserStatDto {
     avgReview: number;
     totalReviewCount: number;
 }
+
+// 매칭 통계 대시보드 및 매니저 TOP 리스트 타입
+export interface AdminMatchingStatisticsSummaryDto {
+    matchingRating: number; // 매칭 성공률 (%)
+    totalMatchingCount: number; // 전체 매칭 건수
+    successCount: number; // 성공 건수
+    failCount: number; // 실패 건수
+}
+
+export interface AdminMatchingTopManagerDto {
+    managerId: number;
+    managerName: string;
+    successCount: number;
+}
+
+export interface AdminMatchingStatisticsResponseDto {
+    matchingSummary: AdminMatchingStatisticsSummaryDto;
+    topManagerList: AdminMatchingTopManagerDto[];
+}
