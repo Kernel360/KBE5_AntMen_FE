@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { fetchAdminMatchingStatistics } from '../../api/adminMatching';
 import { AdminMatchingStatisticsResponseDto } from '../../api/types';
+import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 export const StatMatching: React.FC = () => {
   const [data, setData] = useState<AdminMatchingStatisticsResponseDto | null>(null);
@@ -83,7 +84,7 @@ export const StatMatching: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="min-w-full text-center text-sm">
+            <table className="min-w-full text-center text-sm mb-6">
               <thead>
                 <tr className="bg-gray-50">
                   <th className="p-2">날짜</th>
@@ -103,6 +104,21 @@ export const StatMatching: React.FC = () => {
                 ))}
               </tbody>
             </table>
+            {/* 막대+선 그래프 */}
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.dailyMatchingList} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis yAxisId="left" orientation="left" />
+                  <YAxis yAxisId="right" orientation="right" domain={[0, 100]} />
+                  <Tooltip />
+                  <Bar yAxisId="left" dataKey="requestCount" fill="#a3a3a3" name="시도 건수" barSize={24} />
+                  <Bar yAxisId="left" dataKey="successCount" fill="#3b82f6" name="성공 건수" barSize={24} />
+                  <Line yAxisId="right" type="monotone" dataKey="matchingRate" stroke="#2563eb" strokeWidth={3} dot={{ r: 5, fill: '#2563eb' }} name="매칭률(%)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </CardContent>
       </Card>
