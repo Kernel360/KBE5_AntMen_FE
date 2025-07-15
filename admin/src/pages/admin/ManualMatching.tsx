@@ -40,7 +40,7 @@ export const ManualMatching: React.FC = () => {
     const [customerSearchInput, setCustomerSearchInput] = useState<string>(''); // 실제 입력값
     const [serviceSearch, setServiceSearch] = useState<string>('');
     const [serviceSearchInput, setServiceSearchInput] = useState<string>(''); // 실제 입력값
-    const [matchingStatusFilter, setMatchingStatusFilter] = useState<string>('all');
+    const [matchingStatusFilter, setMatchingStatusFilter] = useState<string>('needAction');
     const [startDateFilter, setStartDateFilter] = useState<string>('');
     const [endDateFilter, setEndDateFilter] = useState<string>('');
 
@@ -59,15 +59,32 @@ export const ManualMatching: React.FC = () => {
         try {
             setLoading(true);
             setError(null);
+            
+            let statusFilter = matchingStatusFilter;
+            if (matchingStatusFilter === 'needAction') {
+                // 조치 필요 필터의 경우 API에서 모든 데이터를 가져온 후 클라이언트에서 필터링
+                statusFilter = 'all';
+            }
+            
             const response = await adminService.getReservationMatchingList(
-                matchingStatusFilter !== 'all' ? matchingStatusFilter : undefined,
+                statusFilter !== 'all' ? statusFilter : undefined,
                 customerSearch || undefined,
                 serviceSearch || undefined,
                 startDateFilter || undefined,
                 endDateFilter || undefined
             );
             
-            setAllReservations(response.reservations);
+            let filteredReservations = response.reservations;
+            
+            // 조치 필요 필터인 경우 클라이언트에서 필터링
+            if (matchingStatusFilter === 'needAction') {
+                filteredReservations = response.reservations.filter(
+                    (reservation: ReservationMatchingListDto) => 
+                        reservation.matchingStatus === 'nothing' || reservation.matchingStatus === 'fail'
+                );
+            }
+            
+            setAllReservations(filteredReservations);
             setStats(response.stats);
             setCurrentPage(1); // 필터 변경 시 첫 페이지로 이동
         } catch (err: any) {
@@ -472,7 +489,7 @@ export const ManualMatching: React.FC = () => {
                 </div>
                 <Button 
                     onClick={() => navigate('/admin/matching/recommend')}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
                 >
                     <Settings className="w-4 h-4" />
                     추천 기준 설정
@@ -480,7 +497,7 @@ export const ManualMatching: React.FC = () => {
             </div>
 
             {/* 빠른 필터 카드 */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <Card 
                     className={`cursor-pointer transition-colors ${matchingStatusFilter === 'all' ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'}`}
                     onClick={() => {
@@ -527,6 +544,18 @@ export const ManualMatching: React.FC = () => {
                     <CardContent className="p-4">
                         <div className="text-2xl font-bold text-red-600">{failCount}</div>
                         <div className="text-sm text-gray-600">매칭 실패</div>
+                    </CardContent>
+                </Card>
+                <Card 
+                    className={`cursor-pointer transition-colors ${matchingStatusFilter === 'needAction' ? 'ring-2 ring-orange-500 bg-orange-50' : 'hover:bg-gray-50'}`}
+                    onClick={() => {
+                        setMatchingStatusFilter('needAction');
+                        loadReservations();
+                    }}
+                >
+                    <CardContent className="p-4">
+                        <div className="text-2xl font-bold text-orange-600">{needActionCount}</div>
+                        <div className="text-sm text-gray-600">조치 필요</div>
                     </CardContent>
                 </Card>
             </div>

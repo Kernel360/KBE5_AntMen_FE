@@ -324,6 +324,14 @@ export interface AdminReservationDailyDto {
     dailyReservationsCount: number;// 일별 예약 건수
     dailyCancelCount: number;      // 일별 취소 건수
     dailyCompletedCount: number;   // 일별 완료 건수
+    dailyMatchingCount: number;    // 일별 매칭완료 건수
+}
+
+export interface AdminInquiryRefundDailyDto {
+    date: string;                  // 날짜 (YYYY-MM-DD)
+    dailyCustomerInquiries: number;// 일별 고객 상담 건수
+    dailyManagerInquiries: number; // 일별 매니저 상담 건수
+    dailyRefunds: number;          // 일별 환불 건수
 }
 
 export interface AdminReservationCategoryDto {

@@ -17,9 +17,9 @@ function getAuthTokenFromCookie() {
 const transformAlert = (response: AlertResponse): Alert => ({
   id: response.alertId,
   content: response.alertContent,
+  trigger: response.alertTrigger,
   redirectUrl: response.redirectUrl,
-  createdAt: response.createdAt,
-  isRead: response.read
+  createdAt: response.createdAt
 });
 
 export const subscribeToAlerts = async (handlers: {
@@ -67,8 +67,12 @@ export const subscribeToAlerts = async (handlers: {
         }
 
         if (event.event === 'alert' && event.data) {
+          // ★ 원본 event.data를 바로 출력
+          console.log('[DEBUG] raw event.data:', event.data);
           try {
             const alertResponse: AlertResponse = JSON.parse(event.data);
+            // ★ 파싱된 객체도 출력
+            console.log('[DEBUG] parsed alertResponse:', alertResponse);
             const alert = transformAlert(alertResponse);
             handlers.onAlert?.(alert);
           } catch (error) {

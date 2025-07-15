@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Textarea } from '../../components/ui/textarea';
@@ -177,6 +178,7 @@ const getStatusBadge = (status: string) => {
 };
 
 export const ManagerSupport: React.FC = () => {
+    const [searchParams] = useSearchParams();
     const [tickets, setTickets] = useState<ManagerTicket[]>([]);
     const [notices, setNotices] = useState<Notice[]>([]);
     const [selectedTicket, setSelectedTicket] = useState<ManagerTicket | null>(null);
@@ -279,16 +281,22 @@ export const ManagerSupport: React.FC = () => {
                 'personal'
             );
             
+            if (!response || !Array.isArray(response)) {
+                console.error('매니저 문의 데이터가 배열이 아님:', response);
+                setTickets([]);
+                return;
+            }
+            
             const transformedTickets: ManagerTicket[] = response.map((inquiry: any) => {
                 // isDeleted가 true면 무조건 closed 상태
                 if (inquiry.isDeleted) {
                     return {
-                        id: inquiry.boardId,
-                        userName: inquiry.userName,
-                        title: inquiry.boardTitle,
-                        createdAt: inquiry.createdAt,
-                        lastResponse: inquiry.modifiedAt,
-                        commentNum: inquiry.commentNum,
+                        id: inquiry.boardId || inquiry.id,
+                        userName: inquiry.userName || '매니저',
+                        title: inquiry.boardTitle || inquiry.title || '제목 없음',
+                        createdAt: inquiry.createdAt || inquiry.boardCreatedAt || new Date().toISOString(),
+                        lastResponse: inquiry.modifiedAt || inquiry.boardModifiedAt || inquiry.createdAt || new Date().toISOString(),
+                        commentNum: inquiry.commentNum || 0,
                         boardStatus: inquiry.boardStatus,
                         isDeleted: inquiry.isDeleted,
                         category: 'system',
@@ -309,26 +317,28 @@ export const ManagerSupport: React.FC = () => {
                     case 'New':
                         status = 'new';
                         break;
+                    case 'InProgress':
                     case 'IN_PROGRESS':
                         status = 'in_progress';
                         break;
                     case 'COMPLETED':
                     case 'Resolved':
+                    case 'Completed':
                         status = 'resolved';
                         break;
                     default:
-                        status = 'in_progress'; // 기본값
+                        status = 'new'; // 기본값을 new로 변경
                 }
 
                 return {
-                    id: inquiry.boardId,
-                    userName: inquiry.userName,
-                    title: inquiry.boardTitle,
-                    createdAt: inquiry.createdAt,
-                    lastResponse: inquiry.modifiedAt,
-                    commentNum: inquiry.commentNum,
+                    id: inquiry.boardId || inquiry.id,
+                    userName: inquiry.userName || '매니저',
+                    title: inquiry.boardTitle || inquiry.title || '제목 없음',
+                    createdAt: inquiry.createdAt || inquiry.boardCreatedAt || new Date().toISOString(),
+                    lastResponse: inquiry.modifiedAt || inquiry.boardModifiedAt || inquiry.createdAt || new Date().toISOString(),
+                    commentNum: inquiry.commentNum || 0,
                     boardStatus: inquiry.boardStatus,
-                    isDeleted: inquiry.isDeleted,
+                    isDeleted: inquiry.isDeleted || false,
                     category: 'system',
                     priority: 'medium',
                     status,
@@ -408,10 +418,16 @@ export const ManagerSupport: React.FC = () => {
         }
     };
 
-    // 초기 로드 (defaultValue가 "notices"이므로 공지사항 먼저 로드)
+    // 초기 로드 및 URL 파라미터 처리
     useEffect(() => {
-        loadNotices();
-    }, []);
+        const tab = searchParams.get('tab');
+        
+        if (tab === 'tickets') {
+            loadManagerInquiries();
+        } else {
+            loadNotices();
+        }
+    }, [searchParams]);
 
     // 필터가 변경될 때마다 공지사항 다시 로드
     useEffect(() => {
@@ -475,6 +491,19 @@ export const ManagerSupport: React.FC = () => {
     useEffect(() => {
         loadNotices();
     }, [noticeSearchTerm, noticeSortBy]);
+
+    // URL 파라미터 처리
+    useEffect(() => {
+        const inquiryId = searchParams.get('inquiry');
+        if (inquiryId && searchParams.get('tab') === 'tickets') {
+            // 문의 상세보기 모달 열기
+            const inquiry = tickets.find(ticket => ticket.id === parseInt(inquiryId));
+            if (inquiry) {
+                setSelectedTicket(inquiry);
+                loadTicketDetail(parseInt(inquiryId));
+            }
+        }
+    }, [searchParams, tickets]);
 
     // 필터링된 티켓 목록
     const filteredTickets = tickets.filter(ticket => {
@@ -719,7 +748,11 @@ export const ManagerSupport: React.FC = () => {
                 <p className="text-gray-600">매니저 문의와 공지사항을 관리합니다</p>
             </div>
 
-            <Tabs defaultValue="notices" className="space-y-4" onValueChange={handleTabChange}>
+            <Tabs 
+                defaultValue={searchParams.get('tab') || "notices"} 
+                className="space-y-4" 
+                onValueChange={handleTabChange}
+            >
                 <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-gray-100 p-1 text-gray-500">
                     <TabsTrigger 
                         value="notices" 

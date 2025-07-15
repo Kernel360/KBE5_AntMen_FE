@@ -45,7 +45,7 @@ export const userService = {
     },
 
     // 승인 대기 중인 매니저 목록 조회
-    getWaitingManagers: async (name?: string, page = 0, size = 20): Promise<any[]> => {
+    getWaitingManagers: async (name?: string, page = 0, size = 20): Promise<any> => {
         const response = await userApi.get('/admin/users/waiting-managers', {
             params: {
                 name,
@@ -69,7 +69,6 @@ export const userService = {
 
     // 매니저 거절
     rejectManager: async (userId: number, reason: string): Promise<void> => {
-        console.log('rejectManager 호출:', { userId, reason });
         await userApi.post(`/admin/users/${userId}/reject`, null, {
             params: { reason }
         });

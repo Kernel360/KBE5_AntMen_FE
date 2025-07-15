@@ -37,7 +37,7 @@ export function useLoginOrigin() {
   const [isLoading, setIsLoading] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
   const router = useRouter()
-  const { login: loginToStore } = useAuthStore()
+  const { login: loginToStore, fetchMatchingRequestCount } = useAuthStore()
 
   const login = async (data: LoginFormData) => {
     // console.log('Login attempt with:', data)
@@ -132,8 +132,6 @@ export function useLoginOrigin() {
 
         // 5. 쿠키에 토큰 저장 (7일 만료)
         const formattedToken = formatTokenForServer(result.token)
-        // console.log('🍪 쿠키에 저장될 토큰:', formattedToken)
-
         Cookies.set('auth-token', formattedToken, {
           expires: 7,
           secure: false,
@@ -149,7 +147,12 @@ export function useLoginOrigin() {
           path: '/',
         })
 
-        // 6. userRole에 따라 리다이렉트 경로 설정
+        // 6. 매니저라면 매칭요청 개수 fetch (쿠키 저장 후)
+        if (user.userRole === 'MANAGER') {
+          await fetchMatchingRequestCount()
+        }
+
+        // 7. userRole에 따라 리다이렉트 경로 설정
         const redirectPath = user.userRole === 'MANAGER' ? '/manager' : '/'
         console.log(`🏠 ${user.userRole} 권한으로 ${redirectPath}로 이동`)
         router.push(redirectPath)

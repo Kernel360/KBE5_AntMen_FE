@@ -46,37 +46,39 @@ export default function ManagerMatchingDetailPage() {
     fetchReservation()
   }, [reservationId])
 
+  // 현재 응답해야 할 매칭 찾기
+  const currentMatching = reservation?.matchings.find(
+    m => m.isRequested && m.isAccepted === null
+  );
+
   const handleAccept = async () => {
-    if (!reservation?.matchings[0]?.matchingId || isProcessing) return
-    setIsProcessing(true)
+    if (!currentMatching?.matchingId || isProcessing) return;
+    setIsProcessing(true);
     try {
-      await acceptMatchingRequest(String(reservation.matchings[0].matchingId))
-      alert('매칭을 수락했습니다.')
-      router.push('/manager/matching')
+      await acceptMatchingRequest(String(currentMatching.matchingId));
+      alert('매칭을 수락했습니다.');
+      router.push('/manager/matching');
     } catch (e: any) {
-      setError(e.message || '매칭 수락 중 오류가 발생했습니다.')
-      alert(e.message || '매칭 수락 중 오류가 발생했습니다.')
+      setError(e.message || '매칭 수락 중 오류가 발생했습니다.');
+      alert(e.message || '매칭 수락 중 오류가 발생했습니다.');
     } finally {
       setIsProcessing(false)
     }
   }
 
   const handleReject = async (reason: string) => {
-    if (!reservation?.matchings[0]?.matchingId || isProcessing) return
-    setIsProcessing(true)
+    if (!currentMatching?.matchingId || isProcessing) return;
+    setIsProcessing(true);
     try {
-      await rejectMatchingRequest(
-        String(reservation.matchings[0].matchingId),
-        reason,
-      )
-      alert('매칭을 거절했습니다.')
-      router.push('/manager/matching')
+      await rejectMatchingRequest(String(currentMatching.matchingId), reason);
+      alert('매칭을 거절했습니다.');
+      router.push('/manager/matching');
     } catch (e: any) {
-      setError(e.message || '매칭 거절 중 오류가 발생했습니다.')
-      alert(e.message || '매칭 거절 중 오류가 발생했습니다.')
+      setError(e.message || '매칭 거절 중 오류가 발생했습니다.');
+      alert(e.message || '매칭 거절 중 오류가 발생했습니다.');
     } finally {
-      setIsProcessing(false)
-      setIsRejectModalOpen(false)
+      setIsProcessing(false);
+      setIsRejectModalOpen(false);
     }
   }
 
@@ -204,8 +206,8 @@ export default function ManagerMatchingDetailPage() {
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                         {reservation.customer.profileImage ? (
-                          <img 
-                            src={reservation.customer.profileImage} 
+                          <img
+                            src={reservation.customer.profileImage}
                             alt={reservation.customer.name}
                             className="w-full h-full object-cover"
                           />
@@ -282,14 +284,14 @@ export default function ManagerMatchingDetailPage() {
           <div className="flex gap-3">
             <button
               onClick={handleAccept}
-              disabled={isProcessing}
+              disabled={isProcessing || !currentMatching?.matchingId}
               className="flex-1 bg-primary text-white rounded-2xl py-3 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors hover:bg-primary/90"
             >
               {isProcessing ? '처리 중...' : '매칭 수락'}
             </button>
             <button
               onClick={() => setIsRejectModalOpen(true)}
-              disabled={isProcessing}
+              disabled={isProcessing || !currentMatching?.matchingId}
               className="flex-1 bg-gray-100 text-gray-700 rounded-2xl py-3 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors hover:bg-gray-200 border border-gray-300"
             >
               매칭 거절

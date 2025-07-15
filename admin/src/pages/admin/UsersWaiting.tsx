@@ -101,9 +101,9 @@ export const UsersWaiting: React.FC = () => {
   }, [managerDetailData, selectedUserId]);
 
   // API 응답에서 페이지네이션 정보와 데이터 추출
-  const users = (userResponse as any)?.content || [];
-  const totalPages = (userResponse as any)?.totalPages || 0;
-  const totalElements = (userResponse as any)?.totalElements || 0;
+  const users = userResponse?.content || [];
+  const totalPages = userResponse?.totalPages || 0;
+  const totalElements = userResponse?.totalElements || 0;
 
   const handleOpenModal = (userId: number) => {
     setSelectedUserId(userId);
