@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { User } from './types';
 
-// const API_BASE_URL = 'http://localhost:9093/api/v1';
-const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
+const API_BASE_URL = 'http://localhost:9093/api/v1';
+// const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
 
 const userApi = axios.create({
     baseURL: API_BASE_URL,
@@ -72,6 +72,31 @@ export const userService = {
         await userApi.post(`/admin/users/${userId}/reject`, null, {
             params: { reason }
         });
+    },
+
+    // 블랙리스트 회원 목록 조회
+    getBlacklistUsers: async (name?: string, userRole?: string, page = 0, size = 20): Promise<any> => {
+        const response = await userApi.get('/admin/users/blacklist', {
+            params: {
+                name,
+                userRole,
+                page,
+                size
+            }
+        });
+        return response.data;
+    },
+
+    // 회원을 블랙리스트에 추가
+    addToBlacklist: async (userId: number, reason: string): Promise<void> => {
+        await userApi.post(`/admin/users/${userId}/blacklist`, null, {
+            params: { reason }
+        });
+    },
+
+    // 회원을 블랙리스트에서 제거
+    removeFromBlacklist: async (userId: number): Promise<void> => {
+        await userApi.delete(`/admin/users/${userId}/blacklist`);
     },
 
     // // 사용자 생성

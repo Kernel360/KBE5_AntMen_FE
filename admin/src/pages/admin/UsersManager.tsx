@@ -20,6 +20,7 @@ export const UsersManager: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [blacklistReason, setBlacklistReason] = useState('');
+  const [showBlacklistForm, setShowBlacklistForm] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
   
@@ -182,21 +183,80 @@ export const UsersManager: React.FC = () => {
       {/* 상세정보 모달 */}
       <Dialog open={showDetail} onOpenChange={setShowDetail}>
         <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 [&>button]:hidden bg-white">
-          <DialogHeader className="border-b border-gray-200 px-6 py-4 bg-white flex-shrink-0 space-y-0">
+          <DialogHeader className="px-6 py-4 bg-white flex-shrink-0 space-y-0 border-b border-gray-200">
             <div className="flex justify-between items-center">
               <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2 m-0 p-0">
                 <div className="w-1.5 h-6 bg-blue-500 rounded-full"></div>
                 매니저 상세 정보
               </DialogTitle>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowDetail(false)}
-                className="h-7 w-7 p-0 rounded-full hover:bg-gray-100"
-              >
-                ✕
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowBlacklistForm(!showBlacklistForm)}
+                  className="h-8 px-3 text-sm bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+                >
+                  블랙리스트 설정
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowDetail(false)}
+                  className="h-7 w-7 p-0 rounded-full hover:bg-gray-100"
+                >
+                  ✕
+                </Button>
+              </div>
             </div>
+            
+            {/* 블랙리스트 폼 */}
+            {showBlacklistForm && (
+              <div className="mt-4 pt-4 space-y-3">
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-700 mb-2">블랙리스트 사유</label>
+                  <Input 
+                    value={blacklistReason} 
+                    onChange={e => setBlacklistReason(e.target.value)} 
+                    placeholder="블랙리스트 처리 사유를 입력하세요"
+                    className="bg-white"
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setShowBlacklistForm(false);
+                      setBlacklistReason('');
+                    }}
+                    className="px-4"
+                  >
+                    취소
+                  </Button>
+                  <Button 
+                    size="sm"
+                    className="bg-red-600 hover:bg-red-700 text-white px-4"
+                    disabled={!blacklistReason.trim()}
+                    onClick={async () => {
+                      try {
+                        await userService.addToBlacklist(selectedUser.userId, blacklistReason);
+                        alert('블랙리스트에 추가되었습니다.');
+                        setShowBlacklistForm(false);
+                        setBlacklistReason('');
+                        setShowDetail(false);
+                        // 목록 새로고침
+                        window.location.reload();
+                      } catch (error) {
+                        console.error('블랙리스트 추가 실패:', error);
+                        alert('블랙리스트 추가 중 오류가 발생했습니다.');
+                      }
+                    }}
+                  >
+                    완료
+                  </Button>
+                </div>
+              </div>
+            )}
           </DialogHeader>
           
           <div className="flex-1 overflow-y-auto min-h-0">
@@ -412,39 +472,7 @@ export const UsersManager: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 관리 액션 섹션 */}
-                <div className="bg-red-50 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <div className="w-1.5 h-6 bg-red-400 rounded-full"></div>
-                    관리 액션
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex flex-col">
-                      <label className="text-sm font-medium text-gray-500 mb-2">블랙리스트 사유</label>
-                      <Input 
-                        value={blacklistReason} 
-                        onChange={e => setBlacklistReason(e.target.value)} 
-                        placeholder="블랙리스트 처리 사유를 입력하세요"
-                        className="bg-white"
-                      />
-                    </div>
-                    <div className="flex justify-end gap-3 pt-2">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setShowDetail(false)}
-                        className="px-6"
-                      >
-                        취소
-                      </Button>
-                      <Button 
-                        className="bg-red-600 hover:bg-red-700 text-white px-6"
-                        disabled={!blacklistReason.trim()}
-                      >
-                        블랙리스트 설정
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+
               </div>
             )}
           </div>

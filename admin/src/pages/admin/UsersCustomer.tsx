@@ -263,6 +263,20 @@ export const UsersCustomer: React.FC = () => {
                     size="sm"
                     className="bg-red-600 hover:bg-red-700 text-white px-4"
                     disabled={!blacklistReason.trim()}
+                    onClick={async () => {
+                      try {
+                        await userService.addToBlacklist(selectedUser.userId, blacklistReason);
+                        alert('블랙리스트에 추가되었습니다.');
+                        setShowBlacklistForm(false);
+                        setBlacklistReason('');
+                        setShowDetail(false);
+                        // 목록 새로고침
+                        window.location.reload();
+                      } catch (error) {
+                        console.error('블랙리스트 추가 실패:', error);
+                        alert('블랙리스트 추가 중 오류가 발생했습니다.');
+                      }
+                    }}
                   >
                     완료
                   </Button>
