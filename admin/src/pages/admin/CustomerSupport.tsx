@@ -251,15 +251,12 @@ export const CustomerSupport: React.FC = () => {
     // 고객 1:1 문의 목록 로드 (전체 데이터)
     const loadCustomerInquiries = async () => {
         try {
-            console.log('고객 문의 데이터 로드 시작');
             const response: any = await adminService.getBoardList(
                 'customer',
                 'personal',
                 ticketSearchTerm,
                 ticketSortBy
             );
-            
-            console.log('고객 문의 원본 데이터:', response);
             
             if (!response || !Array.isArray(response)) {
                 console.error('고객 문의 데이터가 배열이 아님:', response);
@@ -268,7 +265,6 @@ export const CustomerSupport: React.FC = () => {
             }
             
             const transformedTickets: CustomerTicket[] = response.map((inquiry: any) => {
-                console.log('변환 중인 고객 문의:', inquiry);
                 
                 // isDeleted가 true면 무조건 closed 상태
                 if (inquiry.isDeleted) {
@@ -326,8 +322,6 @@ export const CustomerSupport: React.FC = () => {
                     responses: [],
                 };
             });
-            
-            console.log('변환된 고객 문의 데이터:', transformedTickets);
             setTickets(transformedTickets);
         } catch (error) {
             console.error('고객 문의 로드 실패:', error);
@@ -672,7 +666,6 @@ export const CustomerSupport: React.FC = () => {
     // 초기 로드 및 URL 파라미터 처리
     useEffect(() => {
         const tab = searchParams.get('tab');
-        console.log('초기 로드, URL 탭:', tab);
         
         if (tab === 'tickets') {
             loadCustomerInquiries();

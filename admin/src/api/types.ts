@@ -327,6 +327,13 @@ export interface AdminReservationDailyDto {
     dailyMatchingCount: number;    // 일별 매칭완료 건수
 }
 
+export interface AdminInquiryRefundDailyDto {
+    date: string;                  // 날짜 (YYYY-MM-DD)
+    dailyCustomerInquiries: number;// 일별 고객 상담 건수
+    dailyManagerInquiries: number; // 일별 매니저 상담 건수
+    dailyRefunds: number;          // 일별 환불 건수
+}
+
 export interface AdminReservationCategoryDto {
     categoryName: string;          // 카테고리명
     categoryCount: number;         // 카테고리별 예약 건수

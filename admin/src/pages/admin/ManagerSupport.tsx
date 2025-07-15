@@ -276,13 +276,10 @@ export const ManagerSupport: React.FC = () => {
     // 매니저 1:1 문의 목록 로드 (전체 데이터)
     const loadManagerInquiries = async () => {
         try {
-            console.log('매니저 문의 데이터 로드 시작');
             const response: any = await adminService.getBoardList(
                 'manager', 
                 'personal'
             );
-            
-            console.log('매니저 문의 원본 데이터:', response);
             
             if (!response || !Array.isArray(response)) {
                 console.error('매니저 문의 데이터가 배열이 아님:', response);
@@ -291,8 +288,6 @@ export const ManagerSupport: React.FC = () => {
             }
             
             const transformedTickets: ManagerTicket[] = response.map((inquiry: any) => {
-                console.log('변환 중인 문의:', inquiry);
-                
                 // isDeleted가 true면 무조건 closed 상태
                 if (inquiry.isDeleted) {
                     return {
@@ -356,7 +351,6 @@ export const ManagerSupport: React.FC = () => {
                 };
             });
             
-            console.log('변환된 매니저 문의 데이터:', transformedTickets);
             setTickets(transformedTickets);
         } catch (error) {
             console.error('매니저 문의 로드 실패:', error);
@@ -417,11 +411,9 @@ export const ManagerSupport: React.FC = () => {
 
     // 탭 변경 핸들러
     const handleTabChange = (value: string) => {
-        console.log('탭 변경:', value);
         if (value === 'notices') {
             loadNotices();
         } else if (value === 'tickets') {
-            console.log('매니저 문의 탭 선택됨');
             loadManagerInquiries();
         }
     };
@@ -429,7 +421,6 @@ export const ManagerSupport: React.FC = () => {
     // 초기 로드 및 URL 파라미터 처리
     useEffect(() => {
         const tab = searchParams.get('tab');
-        console.log('초기 로드, URL 탭:', tab);
         
         if (tab === 'tickets') {
             loadManagerInquiries();

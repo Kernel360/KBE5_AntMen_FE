@@ -23,7 +23,8 @@ import { adminRefundsService } from '../../api/adminRefunds';
 import { fetchAdminMatchingStatistics } from '../../api/adminMatching';
 import { adminReservationService } from '../../api/adminReservation';
 import { adminReviewService } from '../../api/adminReview';
-import { ReservationStats, AdminSalesSummaryResponseDto, AdminRefundStatisticsResponseDto, AdminMatchingStatisticsResponseDto, AdminReservationStatisticsResponseDto, AdminReviewStatisticsResponseDto } from '../../api/types';
+import { adminInquiryRefundService } from '../../api/adminInquiryRefund';
+import { ReservationStats, AdminSalesSummaryResponseDto, AdminRefundStatisticsResponseDto, AdminMatchingStatisticsResponseDto, AdminReservationStatisticsResponseDto, AdminReviewStatisticsResponseDto, AdminInquiryRefundDailyDto } from '../../api/types';
 
 // 샘플 데이터 (API 데이터가 없을 때 사용)
 const dailyStats = [
@@ -62,6 +63,7 @@ export const Dashboard: React.FC = () => {
     const [matchingData, setMatchingData] = useState<AdminMatchingStatisticsResponseDto | null>(null);
     const [reservationData, setReservationData] = useState<AdminReservationStatisticsResponseDto | null>(null);
     const [reviewData, setReviewData] = useState<AdminReviewStatisticsResponseDto | null>(null);
+    const [inquiryRefundStats, setInquiryRefundStats] = useState<AdminInquiryRefundDailyDto[]>([]);
     const [userCounts, setUserCounts] = useState({ customers: 0, managers: 0, waiting: 0 });
     const [waitingRefunds, setWaitingRefunds] = useState<number>(0);
     const [recentInquiries, setRecentInquiries] = useState<any[]>([]);
@@ -84,6 +86,7 @@ export const Dashboard: React.FC = () => {
                 matchingStatsResponse,
                 reservationResponse,
                 reviewResponse,
+                inquiryRefundResponse,
                 customersResponse,
                 managersResponse,
                 waitingResponse,
@@ -97,6 +100,7 @@ export const Dashboard: React.FC = () => {
                 fetchAdminMatchingStatistics(),
                 adminReservationService.getReservationStatistics(),
                 adminReviewService.getReviewStatistics(),
+                adminInquiryRefundService.getInquiryRefundStatistics(),
                 userService.getCustomers(),
                 userService.getManagers(),
                 userService.getWaitingManagers(),
@@ -133,6 +137,11 @@ export const Dashboard: React.FC = () => {
             // 리뷰 통계
             if (reviewResponse.status === 'fulfilled') {
                 setReviewData(reviewResponse.value);
+            }
+
+            // 상담 및 환불 통계
+            if (inquiryRefundResponse.status === 'fulfilled') {
+                setInquiryRefundStats(inquiryRefundResponse.value);
             }
 
             // 사용자 수
@@ -219,14 +228,14 @@ export const Dashboard: React.FC = () => {
 
     // 상담 및 환불 현황 그래프 데이터 생성
     const getInquiryRefundData = () => {
-        if (!reservationData?.dailyList) {
+        if (!inquiryRefundStats || inquiryRefundStats.length === 0) {
             return dailyStats; // API 데이터가 없으면 샘플 데이터 사용
         }
 
-        return reservationData.dailyList.map(item => ({
+        return inquiryRefundStats.map(item => ({
             date: item.date.slice(5), // MM-DD 형태로 변환
-            inquiries: item.dailyReservationsCount, // 일별 예약 건수
-            refunds: item.dailyCancelCount // 일별 취소 건수
+            inquiries: item.dailyCustomerInquiries + item.dailyManagerInquiries, // 고객 + 매니저 상담 건수
+            refunds: item.dailyRefunds // 일별 환불 건수
         }));
     };
 

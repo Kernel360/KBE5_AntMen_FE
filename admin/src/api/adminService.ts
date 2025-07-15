@@ -8,7 +8,7 @@ const API_BASE_URL_9090 = 'https://api.antmen.site:9090/api/v1';
 // const API_BASE_URL_9090 = 'http://localhost:9090/api/v1';
 
 // 관리자 API 인스턴스
-const adminApi = axios.create({
+export const adminApi = axios.create({
     baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
