@@ -45,7 +45,7 @@ export const userService = {
     },
 
     // 승인 대기 중인 매니저 목록 조회
-    getWaitingManagers: async (name?: string, page = 0, size = 20): Promise<any[]> => {
+    getWaitingManagers: async (name?: string, page = 0, size = 20): Promise<any> => {
         const response = await userApi.get('/admin/users/waiting-managers', {
             params: {
                 name,

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Textarea } from '../../components/ui/textarea';
@@ -161,6 +162,7 @@ const getStatusBadge = (status: string) => {
 };
 
 export const CustomerSupport: React.FC = () => {
+    const [searchParams] = useSearchParams();
     const [tickets, setTickets] = useState<CustomerTicket[]>([]);
     const [notices, setNotices] = useState<Notice[]>([]);
     const [selectedTicket, setSelectedTicket] = useState<CustomerTicket | null>(null);
@@ -249,22 +251,36 @@ export const CustomerSupport: React.FC = () => {
     // 고객 1:1 문의 목록 로드 (전체 데이터)
     const loadCustomerInquiries = async () => {
         try {
+            console.log('고객 문의 데이터 로드 시작');
             const response: any = await adminService.getBoardList(
                 'customer',
                 'personal',
                 ticketSearchTerm,
                 ticketSortBy
             );
+            
+            console.log('고객 문의 원본 데이터:', response);
+            
+            if (!response || !Array.isArray(response)) {
+                console.error('고객 문의 데이터가 배열이 아님:', response);
+                setTickets([]);
+                return;
+            }
+            
             const transformedTickets: CustomerTicket[] = response.map((inquiry: any) => {
+                console.log('변환 중인 고객 문의:', inquiry);
+                
                 // isDeleted가 true면 무조건 closed 상태
                 if (inquiry.isDeleted) {
                     return {
-                        id: inquiry.boardId,
-                        title: inquiry.boardTitle,
+                        id: inquiry.boardId || inquiry.id,
+                        title: inquiry.boardTitle || inquiry.title || '제목 없음',
+                        category: 'general',
+                        priority: 'medium',
                         status: 'closed' as const,
-                        content: inquiry.boardContent || '',
-                        createdAt: inquiry.createdAt,
-                        lastResponse: inquiry.modifiedAt,
+                        content: inquiry.boardContent || inquiry.content || '',
+                        createdAt: inquiry.createdAt || inquiry.boardCreatedAt || new Date().toISOString(),
+                        lastResponse: inquiry.modifiedAt || inquiry.boardModifiedAt || inquiry.createdAt || new Date().toISOString(),
                         commentNum: inquiry.commentNum || inquiry.commentCount || 0,
                         customerInfo: {
                             name: inquiry.userName || '고객',
@@ -280,24 +296,28 @@ export const CustomerSupport: React.FC = () => {
                     case 'New':
                         status = 'new';
                         break;
+                    case 'InProgress':
                     case 'IN_PROGRESS':
                         status = 'in_progress';
                         break;
                     case 'COMPLETED':
                     case 'Resolved':
+                    case 'Completed':
                         status = 'resolved';
                         break;
                     default:
-                        status = 'in_progress'; // 기본값
+                        status = 'new'; // 기본값을 new로 변경
                 }
 
                 return {
-                    id: inquiry.boardId,
-                    title: inquiry.boardTitle,
+                    id: inquiry.boardId || inquiry.id,
+                    title: inquiry.boardTitle || inquiry.title || '제목 없음',
+                    category: 'general',
+                    priority: 'medium',
                     status,
-                    content: inquiry.boardContent || '',
-                    createdAt: inquiry.createdAt,
-                    lastResponse: inquiry.modifiedAt,
+                    content: inquiry.boardContent || inquiry.content || '',
+                    createdAt: inquiry.createdAt || inquiry.boardCreatedAt || new Date().toISOString(),
+                    lastResponse: inquiry.modifiedAt || inquiry.boardModifiedAt || inquiry.createdAt || new Date().toISOString(),
                     commentNum: inquiry.commentNum || inquiry.commentCount || 0,
                     customerInfo: {
                         name: inquiry.userName || '고객',
@@ -306,6 +326,8 @@ export const CustomerSupport: React.FC = () => {
                     responses: [],
                 };
             });
+            
+            console.log('변환된 고객 문의 데이터:', transformedTickets);
             setTickets(transformedTickets);
         } catch (error) {
             console.error('고객 문의 로드 실패:', error);
@@ -647,10 +669,17 @@ export const CustomerSupport: React.FC = () => {
         setCurrentPage(0);
     }, [noticeFilter, noticeSearchTerm, noticeSortBy, ticketFilter, ticketSearchTerm, ticketSortBy]);
 
-    // 컴포넌트 마운트 시 공지사항 목록 로드
+    // 초기 로드 및 URL 파라미터 처리
     useEffect(() => {
-        loadNotices();
-    }, []);
+        const tab = searchParams.get('tab');
+        console.log('초기 로드, URL 탭:', tab);
+        
+        if (tab === 'tickets') {
+            loadCustomerInquiries();
+        } else {
+            loadNotices();
+        }
+    }, [searchParams]);
 
     // 통계 정보 계산 (전체 데이터 기준)
     const noticeStats = {
@@ -673,6 +702,19 @@ export const CustomerSupport: React.FC = () => {
         loadCustomerInquiries();
     }, [ticketSortBy, ticketSearchTerm, ticketFilter]);
 
+    // URL 파라미터 처리
+    useEffect(() => {
+        const inquiryId = searchParams.get('inquiry');
+        if (inquiryId && searchParams.get('tab') === 'tickets') {
+            // 문의 상세보기 모달 열기
+            const inquiry = tickets.find(ticket => ticket.id === parseInt(inquiryId));
+            if (inquiry) {
+                setSelectedTicket(inquiry);
+                loadTicketDetail(parseInt(inquiryId));
+            }
+        }
+    }, [searchParams, tickets]);
+
     return (
         <div className="space-y-6">
             {/* Page Header */}
@@ -684,11 +726,15 @@ export const CustomerSupport: React.FC = () => {
                 <p className="text-gray-600">고객 문의와 공지사항을 관리합니다</p>
             </div>
 
-            <Tabs defaultValue="notices" className="space-y-4" onValueChange={(value) => {
-                if (value === 'tickets') {
-                    loadCustomerInquiries();
-                }
-            }}>
+            <Tabs 
+                defaultValue={searchParams.get('tab') || "notices"} 
+                className="space-y-4" 
+                onValueChange={(value) => {
+                    if (value === 'tickets') {
+                        loadCustomerInquiries();
+                    }
+                }}
+            >
                 <TabsList className="inline-flex h-10 items-center justify-center rounded-md bg-gray-100 p-1 text-gray-500">
                     <TabsTrigger 
                         value="notices" 

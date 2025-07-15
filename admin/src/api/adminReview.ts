@@ -46,7 +46,7 @@ export const adminReviewService = {
     // 만족도 통계 조회
     getReviewStatistics: async (topN: number = 3): Promise<AdminReviewStatisticsResponseDto> => {
         try {
-            const response = await reviewApi.get(`/admin/statistics/reviews/?topN=${topN}`);
+            const response = await reviewApi.get(`/admin/statistics/reviews?topN=${topN}`);
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 401) {
