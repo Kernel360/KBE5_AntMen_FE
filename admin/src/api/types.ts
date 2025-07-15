@@ -268,6 +268,8 @@ export interface AdminReviewStatisticsResponseDto {
     avgManagerReviewSatisfaction: number;
     topCustomerList: AdminReviewUserStatDto[];
     topManagerList: AdminReviewUserStatDto[];
+    topCustomerByReviewCount: AdminReviewUserStatDto[];
+    topManagerByReviewCount: AdminReviewUserStatDto[];
 }
 
 export interface AdminReviewUserStatDto {
@@ -275,4 +277,69 @@ export interface AdminReviewUserStatDto {
     userName: string;
     avgReview: number;
     totalReviewCount: number;
+}
+
+// 매칭 통계 대시보드 및 매니저 TOP 리스트 타입
+export interface AdminMatchingStatisticsSummaryDto {
+    matchingRating: number; // 매칭 성공률 (%)
+    totalMatchingCount: number; // 전체 매칭 건수
+    successCount: number; // 성공 건수
+    failCount: number; // 실패 건수
+    customerRefuseRate: number; // 수요자 무응답/거절률
+    managerRefuseRate: number; // 매니저 무응답/거절률
+}
+
+export interface AdminMatchingTopManagerDto {
+    managerId: number;
+    managerName: string;
+    successCount: number;
+}
+
+// 매칭 통계 일별 데이터 타입
+export interface AdminMatchingDailyDto {
+    date: string; // YYYY-MM-DD
+    requestCount: number;
+    successCount: number;
+    matchingRate: number;
+}
+
+// 매칭 통계 대시보드 및 매니저 TOP 리스트 타입 (dailyMatchingList 포함)
+export interface AdminMatchingStatisticsResponseDto {
+    matchingSummary: AdminMatchingStatisticsSummaryDto;
+    topManagerList: AdminMatchingTopManagerDto[];
+    dailyMatchingList: AdminMatchingDailyDto[];
+}
+
+// 예약 통계 응답 타입
+export interface AdminReservationStatisticsSummaryDto {
+    totalCount: number;         // 전체 예약 건수
+    cancelCount: number;       // 취소 건수
+    completeCount: number;     // 완료 건수
+    cancelRate: number;        // 취소율 (%)
+    avgUser: number;           // 평균 이용자 수
+}
+
+export interface AdminReservationDailyDto {
+    date: string;                  // 날짜 (YYYY-MM-DD)
+    dailyReservationsCount: number;// 일별 예약 건수
+    dailyCancelCount: number;      // 일별 취소 건수
+    dailyCompletedCount: number;   // 일별 완료 건수
+}
+
+export interface AdminReservationCategoryDto {
+    categoryName: string;          // 카테고리명
+    categoryCount: number;         // 카테고리별 예약 건수
+}
+
+// 예약 상태별 예약 건수 타입
+export interface AdminReservationStatusCountDto {
+    reservationStatus: string; // 예: 'CANCEL', 'DONE', 'MATCHING', 'WAITING'
+    count: number;
+}
+
+export interface AdminReservationStatisticsResponseDto {
+    reservationSummary: AdminReservationStatisticsSummaryDto;
+    reservationStatus: AdminReservationStatusCountDto[]; // 예약 상태별 예약 건수
+    dailyList: AdminReservationDailyDto[];
+    categoryList: AdminReservationCategoryDto[];
 }
