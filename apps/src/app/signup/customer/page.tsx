@@ -101,7 +101,6 @@ const CustomerSignUpPage = () => {
 
     // 필수 항목이 모두 채워지지 않은 경우
     if (Object.keys(newErrors).length > 0) {
-      alert('모든 필수 항목을 입력해주세요')
       return false
     }
 

@@ -127,6 +127,7 @@ const ReservationForm = ({
             recommendedTime={recommendedTime}
             showTimeWarning={showTimeWarning}
             isRecommendedTimeLoading={isRecommendedTimeLoading}
+            categoryId={initialCategory.categoryId}
           />
 
           <AdditionalOptions
@@ -166,6 +167,7 @@ const ReservationForm = ({
         basePrice={basePrice}
         pricePerHour={pricePerHour}
         showTimeWarning={showTimeWarning}
+        categoryId={initialCategory.categoryId}
       />
 
       <VisitTimePickerModal

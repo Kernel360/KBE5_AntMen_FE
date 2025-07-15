@@ -14,6 +14,7 @@ interface TimeSelectorProps {
   recommendedTime: RecommendedTime | null;
   showTimeWarning: boolean;
   isRecommendedTimeLoading?: boolean;
+  categoryId: number;
 }
 
 export const TimeSelector = ({
@@ -27,6 +28,7 @@ export const TimeSelector = ({
   recommendedTime,
   showTimeWarning,
   isRecommendedTimeLoading = false,
+  categoryId,
 }: TimeSelectorProps) => {
   return (
     <div className="mb-8">
@@ -42,7 +44,7 @@ export const TimeSelector = ({
                 </span>
               </div>
             )}
-            {!isRecommendedTimeLoading && recommendedTime && (
+            {!isRecommendedTimeLoading && recommendedTime && categoryId !== 6 && (
               <div className="flex items-center">
                 <span className="text-xs text-primary-500 font-medium">
                   알고리즘 기반 &middot; {recommendedTime.area}평 {recommendedTime.time}시간 추천
@@ -50,7 +52,7 @@ export const TimeSelector = ({
               </div>
             )}
           </div>
-          {showTimeWarning && recommendedTime && (
+          {showTimeWarning && recommendedTime && categoryId !== 6 && (
             <div className="mb-2 pl-2">
               <p className="text-xs text-[#FF4444]">
                 {recommendedTime.area}평 기준 {recommendedTime.time}시간이 추천됩니다.

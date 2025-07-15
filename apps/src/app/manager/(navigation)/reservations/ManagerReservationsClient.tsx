@@ -202,19 +202,17 @@ export const ManagerReservationsClient = ({
     const token = decodedToken.replace(/^Bearer\s+/, '')
     const authHeader = `Bearer ${token}`
 
-    const checkinTime = new Date().toISOString()
-
     // Optimistic Update
     setReservations(prev =>
       prev.map(r =>
         r.reservationId.toString() === id
-          ? { ...r, checkinAt: checkinTime }
+          ? { ...r, checkinAt: new Date().toISOString() }
           : r,
       ),
     )
 
     try {
-      await checkIn(Number(id), checkinTime, authHeader)
+      await checkIn(Number(id), authHeader)
     } catch (error) {
       console.error('Check-in failed:', error)
       alert('체크인에 실패했습니다. 다시 시도해주세요.')
@@ -246,17 +244,13 @@ export const ManagerReservationsClient = ({
     const decodedToken = decodeURIComponent(rawToken)
     const token = decodedToken.replace(/^Bearer\s+/, '')
     const authHeader = `Bearer ${token}`
-
-    const checkoutTime = new Date().toISOString()
     
     try {
-      await checkOut(id, { checkoutAt: checkoutTime, comment }, authHeader)
-      
+      await checkOut(id, { comment }, authHeader)
       // 로컬 상태 DONE으로 변경
       await updateReservationStatus(id.toString(), {
         reservationStatus: 'DONE',
       })
-
       // 리뷰 모달 열기
       setReviewModal({
         isOpen: true,

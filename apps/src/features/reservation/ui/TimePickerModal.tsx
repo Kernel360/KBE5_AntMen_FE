@@ -15,6 +15,7 @@ interface TimePickerModalProps {
   basePrice: number
   pricePerHour: number
   showTimeWarning: boolean
+  categoryId: number
 }
 
 export const TimePickerModal = ({
@@ -27,6 +28,7 @@ export const TimePickerModal = ({
   basePrice,
   pricePerHour,
   showTimeWarning,
+  categoryId,
 }: TimePickerModalProps) => {
   return (
     <Transition show={isOpen} as={React.Fragment}>
@@ -78,7 +80,7 @@ export const TimePickerModal = ({
 
             {/* Content */}
             <div className="p-4">
-              {recommendedTime && (
+              {recommendedTime && categoryId !== 6 && (
                 <div className="mb-6 bg-primary-200/50 text-primary-700 p-4 rounded-xl">
                   <div className="mb-2">
                     <span className="text-sm font-semibold">
@@ -98,11 +100,11 @@ export const TimePickerModal = ({
                   onClick={() => onTimeChange(false)}
                   className={`w-12 h-12 rounded-full flex items-center justify-center transition-all
                     ${
-                      selectedHours <= 2
+                      selectedHours <= standardHours
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-white border-2 border-primary-500 text-primary-500 active:bg-white'
                     }`}
-                  disabled={selectedHours <= 2}
+                  disabled={selectedHours <= standardHours}
                 >
                   <svg 
                     width="16" 
@@ -124,7 +126,7 @@ export const TimePickerModal = ({
                     {selectedHours}시간
                   </p>
                   <p className="text-xs text-gray-500 mt-2">
-                    최소 2시간, 
+                    최소 {standardHours}시간, 
                     최대 {12}시간
                   </p>
                 </div>
@@ -160,7 +162,7 @@ export const TimePickerModal = ({
                 <div className="flex flex-col gap-2 mb-4">
                   <div className="flex justify-between items-center">
                     <p className="text-sm text-gray-600">
-                      기본 요금 (2시간)
+                      기본 요금 ({standardHours}시간)
                     </p>
                     <p className="text-base font-medium text-gray-800">
                       {basePrice.toLocaleString()}원

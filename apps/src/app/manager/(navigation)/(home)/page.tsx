@@ -52,7 +52,7 @@ const ManagerTodaySchedule = () => {
       const token = getAuthToken()
       if (!token) return
       
-      await checkIn(Number(id), new Date().toISOString(), token)
+      await checkIn(Number(id), token)
       setReservations((prev) => prev.map(r => r.reservationId.toString() === id ? { ...r, checkinAt: new Date().toISOString() } : r))
     } finally {
       setProcessingId(null)
@@ -65,7 +65,7 @@ const ManagerTodaySchedule = () => {
       const token = getAuthToken()
       if (!token) return
       
-      await checkOut(Number(id), { checkoutAt: new Date().toISOString(), comment: '' }, token)
+      await checkOut(Number(id), { comment: '' }, token)
       setReservations((prev) => prev.map(r => 
         r.reservationId.toString() === id 
           ? { ...r, checkoutAt: new Date().toISOString(), reservationStatus: 'DONE' } 
