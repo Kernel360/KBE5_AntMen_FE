@@ -35,7 +35,15 @@ const getStatusBadge = (status: string) => {
 
 const formatDateTime = (dateString: string) => {
   if (!dateString) return '-';
-  return dateString.slice(0, 16).replace('T', ' '); // YYYY-MM-DD HH:mm
+  const date = new Date(dateString);
+  return date.toLocaleString('ko-KR', { 
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).replace(/\./g, '-').replace(',', '');
 };
 
 export const UsersWaiting: React.FC = () => {

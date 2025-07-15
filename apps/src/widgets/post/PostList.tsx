@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp, Pin, Plus } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { BoardSortModal } from './BoardSortModal';
 import { NoticeSortOption, InquirySortOption } from '@/shared/types/board';
-import { formatDate } from '@/shared/lib/utils/date';
+import { formatDate } from '@/shared/utils/date';
 import { BoardHeader } from './BoardHeader';
 import { useAuthStore } from '@/shared/stores/authStore';
 import { boardService, BoardPost } from './api/boardService';

@@ -35,10 +35,7 @@ export default function SelectAddressPage() {
   }, []);
 
   const handleNext = () => {
-    if (!selectedAddressId) {
-      alert('주소를 선택해주세요.');
-      return;
-    }
+    // 버튼이 이미 disabled 상태이므로 추가 검증 불필요
     router.push(`/reservation/form?categoryId=${categoryId}&addressId=${selectedAddressId}`);
   };
 

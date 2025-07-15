@@ -8,9 +8,7 @@ import type { Manager } from '@/widgets/manager/model/manager'
 
 // 매니저 매칭 알고리즘 함수 (추후 확장 가능)
 function getMatchedManagers(managers: Manager[], count: number = 5): Manager[] {
-  
-  // return managers.slice(0, count)
-  return managers // 임시: 전체 매니저 반환 (테스트용)
+  return managers.slice(0, count)
 }
 
 export default function MatchingPageClient() {
@@ -38,11 +36,15 @@ export default function MatchingPageClient() {
           addressId: reservationInfo.addressId,
         }
 
+        console.log('매니저 추천 요청:', { matchingRequest, useDistanceFilter: true, sortType: 'custom' });
+        
         const data = await getRecommendedManagers(
           matchingRequest,
           true,        // useDistanceFilter
-          'distance'   // sortType
+          'custom'     // sortType - 매칭 추천 기준 설정 사용
         )
+        
+        console.log('매니저 추천 응답:', data);
 
         // 데이터 구조 변환 - MatchingManagerListResponseDto에서 Manager로 변환
         const formattedManagers: Manager[] = Array.isArray(data)

@@ -131,13 +131,15 @@ export const useReservationForm = ({ initialCategory, initialOptions, addressId 
   };
   
   const handleNext = async () => {
-    if (!selectedDate || !selectedVisitTime || !initialCategory.categoryId) {
+    if (!addressId || !selectedDate || !selectedVisitTime || !initialCategory.categoryId) {
       setWarningMessage(
-        !initialCategory.categoryId
-          ? '서비스를 선택해주세요.'
-          : !selectedDate
-            ? '날짜를 선택해주세요.'
-            : '방문 시간을 선택해주세요.',
+        !addressId
+          ? '주소를 선택해주세요.'
+          : !initialCategory.categoryId
+            ? '서비스를 선택해주세요.'
+            : !selectedDate
+              ? '날짜를 선택해주세요.'
+              : '방문 시간을 선택해주세요.',
       );
       setShowWarning(true);
       setTimeout(() => setShowWarning(false), 3000);
