@@ -11,7 +11,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '../../components/ui/table';
 import { Search } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { ManagerListDetailModal } from '../../components/modals/ManagerListDetailModal';
 
 export const UsersManager: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,8 +19,8 @@ export const UsersManager: React.FC = () => {
   const [sortBy, setSortBy] = useState('userId'); // 기본값: userId 오름차순
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [showDetail, setShowDetail] = useState(false);
-  const [blacklistReason, setBlacklistReason] = useState('');
-  const [showBlacklistForm, setShowBlacklistForm] = useState(false);
+  const [managerDetail, setManagerDetail] = useState<any | null>(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
   
@@ -50,6 +50,29 @@ export const UsersManager: React.FC = () => {
     setCurrentPage(0); // 페이지 초기화
     setIsInitialized(true); // 초기화 완료
   }, []);
+
+  // 매니저 상세 정보 모달 열기
+  const openDetailModal = async (user: any) => {
+    setSelectedUser(user);
+    setShowDetail(true);
+    setIsDetailLoading(true);
+    try {
+      const detail = await userService.getManagerDetail(user.userId);
+      setManagerDetail(detail);
+    } catch (err: any) {
+      console.error('상세 정보 로드 오류:', err);
+      setManagerDetail(null);
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
+
+  // 매니저 상세 정보 모달 닫기
+  const handleCloseModal = () => {
+    setShowDetail(false);
+    setSelectedUser(null);
+    setManagerDetail(null);
+  };
 
   // API 응답에서 페이지네이션 정보와 데이터 추출
   const users = userResponse?.content || [];
@@ -118,7 +141,7 @@ export const UsersManager: React.FC = () => {
               </TableHeader>
               <TableBody>
                 {users.map((user: any) => (
-                  <TableRow key={user.userId} className="cursor-pointer hover:bg-gray-50" onClick={() => { setSelectedUser(user); setShowDetail(true); }}>
+                  <TableRow key={user.userId} className="cursor-pointer hover:bg-gray-50" onClick={() => openDetailModal(user)}>
                     <TableCell className="w-[20%] min-w-[100px] truncate">{user.userName}</TableCell>
                     <TableCell className="w-[30%] min-w-[180px] truncate">{user.userEmail}</TableCell>
                     <TableCell className="w-[20%] min-w-[120px] truncate">{user.userTel ?? '-'}</TableCell>
@@ -180,304 +203,15 @@ export const UsersManager: React.FC = () => {
           )}
         </CardContent>
       </Card>
-      {/* 상세정보 모달 */}
-      <Dialog open={showDetail} onOpenChange={setShowDetail}>
-        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 [&>button]:hidden bg-white">
-          <DialogHeader className="px-6 py-4 bg-white flex-shrink-0 space-y-0 border-b border-gray-200">
-            <div className="flex justify-between items-center">
-              <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-2 m-0 p-0">
-                <div className="w-1.5 h-6 bg-blue-500 rounded-full"></div>
-                매니저 상세 정보
-              </DialogTitle>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowBlacklistForm(!showBlacklistForm)}
-                  className="h-8 px-3 text-sm bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
-                >
-                  블랙리스트 설정
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setShowDetail(false)}
-                  className="h-7 w-7 p-0 rounded-full hover:bg-gray-100"
-                >
-                  ✕
-                </Button>
-              </div>
-            </div>
-            
-            {/* 블랙리스트 폼 */}
-            {showBlacklistForm && (
-              <div className="mt-4 pt-4 space-y-3">
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium text-gray-700 mb-2">블랙리스트 사유</label>
-                  <Input 
-                    value={blacklistReason} 
-                    onChange={e => setBlacklistReason(e.target.value)} 
-                    placeholder="블랙리스트 처리 사유를 입력하세요"
-                    className="bg-white"
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setShowBlacklistForm(false);
-                      setBlacklistReason('');
-                    }}
-                    className="px-4"
-                  >
-                    취소
-                  </Button>
-                  <Button 
-                    size="sm"
-                    className="bg-red-600 hover:bg-red-700 text-white px-4"
-                    disabled={!blacklistReason.trim()}
-                    onClick={async () => {
-                      try {
-                        await userService.addToBlacklist(selectedUser.userId, blacklistReason);
-                        alert('블랙리스트에 추가되었습니다.');
-                        setShowBlacklistForm(false);
-                        setBlacklistReason('');
-                        setShowDetail(false);
-                        // 목록 새로고침
-                        window.location.reload();
-                      } catch (error) {
-                        console.error('블랙리스트 추가 실패:', error);
-                        alert('블랙리스트 추가 중 오류가 발생했습니다.');
-                      }
-                    }}
-                  >
-                    완료
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogHeader>
-          
-          <div className="flex-1 overflow-y-auto min-h-0">
-            {selectedUser && (
-              <div className="space-y-6 px-6 pt-0 pb-8">
-                {/* 기본 정보 섹션 */}
-                <div className="bg-gray-50 rounded-lg p-4 mt-6">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <div className="w-1.5 h-6 bg-blue-400 rounded-full"></div>
-                    기본 정보
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex flex-col">
-                        <label className="text-sm font-medium text-gray-500">이름</label>
-                        <span className="text-base text-gray-900 font-medium">{selectedUser.userName}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <label className="text-sm font-medium text-gray-500">이메일</label>
-                        <span className="text-base text-gray-900">{selectedUser.userEmail}</span>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex flex-col">
-                        <label className="text-sm font-medium text-gray-500">전화번호</label>
-                        <span className="text-base text-gray-900">{selectedUser.userTel ?? '-'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <label className="text-sm font-medium text-gray-500">가입승인일</label>
-                        <span className="text-base text-gray-900">{selectedUser.approvedAt?.slice(0, 10) ?? selectedUser.userCreatedDate?.slice(0, 10) ?? '-'}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 개인 통계 섹션 */}
-                <div className="bg-green-50 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <div className="w-1.5 h-6 bg-green-400 rounded-full"></div>
-                    매칭 통계 (전체 기간)
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                    <div className="bg-white rounded-lg p-3 text-center">
-                      <div className="text-xl font-bold text-blue-600">156건</div>
-                      <div className="text-xs text-gray-500">총 매칭</div>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 text-center">
-                      <div className="text-xl font-bold text-green-600">142건</div>
-                      <div className="text-xs text-gray-500">성공 완료</div>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 text-center">
-                      <div className="text-xl font-bold text-orange-600">8건</div>
-                      <div className="text-xs text-gray-500">진행 중</div>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 text-center">
-                      <div className="text-xl font-bold text-red-600">5건</div>
-                      <div className="text-xs text-gray-500">고객 취소</div>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 text-center">
-                      <div className="text-xl font-bold text-gray-600">1건</div>
-                      <div className="text-xs text-gray-500">매니저 취소</div>
-                    </div>
-                  </div>
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white rounded-lg p-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-500">성공률</span>
-                        <span className="text-lg font-bold text-green-600">91%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '91%' }}></div>
-                      </div>
-                    </div>
-                    <div className="bg-white rounded-lg p-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-500">고객 만족도</span>
-                        <span className="text-lg font-bold text-yellow-600">4.7/5</span>
-                      </div>
-                      <div className="flex mt-2">
-                        {[1,2,3,4,5].map(star => (
-                          <span key={star} className={`text-lg ${star <= 5 ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="bg-white rounded-lg p-3">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-gray-500">이번 달 순위</span>
-                        <span className="text-lg font-bold text-blue-600">#2</span>
-                      </div>
-                      <div className="text-xs text-gray-400">전체 매니저 중</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 최근 매칭 내역 */}
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                      <div className="w-1.5 h-6 bg-blue-400 rounded-full"></div>
-                      최근 매칭 내역
-                    </h3>
-                    <Button variant="outline" size="sm" onClick={() => {/* 전체보기 모달 */}}>
-                      전체보기
-                    </Button>
-                  </div>
-                  <div className="space-y-3">
-                    {[
-                      { date: '2024-06-25', customer: '김고객', service: '청소 서비스', status: '완료', amount: '150,000원', rating: 5, review: '깔끔하게 잘해주셨어요' },
-                      { date: '2024-06-23', customer: '이고객', service: '정리정돈', status: '진행중', amount: '80,000원', rating: null, review: null },
-                      { date: '2024-06-20', customer: '박고객', service: '청소 서비스', status: '고객취소', amount: '120,000원', reason: '일정 변경', rating: null }
-                    ].map((item, idx) => (
-                      <div key={idx} className="bg-white rounded-lg p-3 border border-gray-100">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-gray-900">{item.customer}</span>
-                              <span className="text-gray-500">•</span>
-                              <span className="text-gray-700">{item.service}</span>
-                              <span className={`px-2 py-1 text-xs rounded-full ${
-                                item.status === '완료' ? 'bg-green-100 text-green-700' :
-                                item.status === '진행중' ? 'bg-blue-100 text-blue-700' :
-                                item.status === '고객취소' ? 'bg-red-100 text-red-700' :
-                                'bg-gray-100 text-gray-700'
-                              }`}>
-                                {item.status}
-                              </span>
-                            </div>
-                            <div className="text-sm text-gray-500">{item.date} • {item.amount}</div>
-                            {item.reason && (
-                              <div className="text-xs text-red-600 mt-1">취소사유: {item.reason}</div>
-                            )}
-                            {item.rating && (
-                              <div className="flex items-center gap-1 mt-1">
-                                <span className="text-xs text-gray-500">평가:</span>
-                                <div className="flex">
-                                  {[1,2,3,4,5].map(star => (
-                                    <span key={star} className={`text-xs ${star <= item.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
-                                  ))}
-                                </div>
-                                {item.review && <span className="text-xs text-gray-600 ml-1">"{item.review}"</span>}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 리뷰 정보 */}
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                      <div className="w-1.5 h-6 bg-purple-400 rounded-full"></div>
-                      리뷰 정보
-                    </h3>
-                    <Button variant="outline" size="sm" onClick={() => {/* 전체 리뷰 모달 */}}>
-                      전체보기
-                    </Button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* 받은 리뷰 (고객이 매니저에게) */}
-                    <div className="bg-white rounded-lg p-3">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium text-gray-700">고객 평가</h4>
-                        <span className="text-sm text-gray-500">총 89개</span>
-                      </div>
-                      <div className="space-y-2">
-                        {[
-                          { customer: '김고객', rating: 5, comment: '정말 깔끔하게 잘해주셨어요! 추천합니다' },
-                          { customer: '이고객', rating: 5, comment: '시간 약속 잘 지키시고 꼼꼼해요' }
-                        ].map((review, idx) => (
-                          <div key={idx} className="p-2 bg-gray-50 rounded text-sm">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="font-medium">{review.customer}</span>
-                              <div className="flex">
-                                {[1,2,3,4,5].map(star => (
-                                  <span key={star} className={`text-xs ${star <= review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
-                                ))}
-                              </div>
-                            </div>
-                            <p className="text-gray-600 text-xs">{review.comment}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {/* 작성한 리뷰 (매니저가 고객에게) */}
-                    <div className="bg-white rounded-lg p-3">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium text-gray-700">고객 평가 작성</h4>
-                        <span className="text-sm text-gray-500">총 76개</span>
-                      </div>
-                      <div className="space-y-2">
-                        {[
-                          { customer: '박고객', rating: 5, comment: '친절하고 배려 깊으신 고객님입니다' },
-                          { customer: '최고객', rating: 4, comment: '약속 시간 잘 지키시는 분이에요' }
-                        ].map((review, idx) => (
-                          <div key={idx} className="p-2 bg-gray-50 rounded text-sm">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="font-medium">{review.customer}</span>
-                              <div className="flex">
-                                {[1,2,3,4,5].map(star => (
-                                  <span key={star} className={`text-xs ${star <= review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
-                                ))}
-                              </div>
-                            </div>
-                            <p className="text-gray-600 text-xs">{review.comment}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      
+      {/* 매니저 상세정보 모달 */}
+      <ManagerListDetailModal
+        isOpen={showDetail}
+        onClose={handleCloseModal}
+        managerData={managerDetail}
+        loading={isDetailLoading}
+        selectedUser={selectedUser}
+      />
     </div>
   );
 }; 

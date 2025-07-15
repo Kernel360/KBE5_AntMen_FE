@@ -10,6 +10,7 @@ export interface User {
     userProfile: string;
     userType: string;
     userCreatedAt: string;
+    age?: number;  // 나이 필드 추가
 }
 
 // 관리자 관련 타입 추가
@@ -350,4 +351,35 @@ export interface AdminReservationStatisticsResponseDto {
     reservationStatus: AdminReservationStatusCountDto[]; // 예약 상태별 예약 건수
     dailyList: AdminReservationDailyDto[];
     categoryList: AdminReservationCategoryDto[];
+}
+
+// 수요자별 예약 통계 타입
+export interface CustomerReservationStatistics {
+  totalReservations: number;      // 총 예약 건수
+  completedReservations: number;  // 완료된 예약 건수
+  pendingReservations: number;    // 진행 예정 건수
+  refundRequests: number;         // 환불 신청 건수
+  cancelledReservations: number;  // 취소된 예약 건수
+  successRate: number;            // 성공률 (%)
+  averageSatisfaction: number;    // 평균 만족도 (1-5)
+}
+
+// 수요자별 리뷰 정보 타입
+export interface CustomerReviewInfo {
+  writtenReviews: CustomerReview[];  // 작성한 리뷰 목록
+  receivedReviews: CustomerReview[]; // 받은 리뷰 목록
+  totalWrittenReviews: number;       // 작성한 리뷰 총 개수
+  totalReceivedReviews: number;      // 받은 리뷰 총 개수
+  averageWrittenRating: number;      // 작성한 리뷰 평균 평점
+  averageReceivedRating: number;     // 받은 리뷰 평균 평점
+}
+
+// 리뷰 정보 타입
+export interface CustomerReview {
+  reviewId: number;
+  rating: number;
+  comment: string;
+  reviewDate: string;
+  targetName: string;  // 매니저 이름 또는 고객 이름
+  targetProfile?: string;
 }
