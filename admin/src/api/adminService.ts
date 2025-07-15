@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AdminLoginRequest, AdminLoginResponse, AdminChangePasswordRequest, Admin, BoardRequestDto, ReservationMatchingListDto, ManualMatchingRequest, ReservationMatchingResponse, ReservationCancelRequest, ReservationCancelResponse } from './types';
+import { AdminLoginRequest, AdminLoginResponse, AdminChangePasswordRequest, Admin, BoardRequestDto, ReservationMatchingListDto, ManualMatchingRequest, ReservationMatchingResponse, ReservationCancelRequest, ReservationCancelResponse, ReservationAdminResponse } from './types';
 import { getCookie, ADMIN_TOKEN_COOKIE } from '../lib/cookie';
 
 const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
@@ -382,6 +382,32 @@ export const adminService = {
         }
     },
 
+    // 예약 현황 조회
+    getReservationStatus: async (
+        reservationStatus?: string,
+        searchName?: string,
+        category?: string,
+        startDate?: string,
+        endDate?: string
+    ): Promise<ReservationAdminResponse> => {
+        try {
+            const params: any = {};
+            if (reservationStatus) params.reservationStatus = reservationStatus;
+            if (searchName) params.searchName = searchName;
+            if (category) params.category = category;
+            if (startDate) params.startDate = startDate;
+            if (endDate) params.endDate = endDate;
+
+            const response = await adminApi.get('/admin/reservations', { params });
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
     // 수동 매칭 요청
     createManualMatching: async (data: ManualMatchingRequest): Promise<void> => {
         try {
@@ -421,9 +447,97 @@ export const adminService = {
     },
 
     // 예약 상세 정보 조회
-    getReservationDetail: async (reservationId: string): Promise<any> => {
+    getReservationDetail: async (id: string): Promise<any> => {
         try {
-            const response = await adminApi.get(`/admin/reservations/${reservationId}/detail`);
+            const response = await adminApi.get(`/admin/reservations/${id}/detail`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 고객 수락 API
+    acceptMatching: async (matchingId: string): Promise<void> => {
+        try {
+            const response = await adminApi.put(`/admin/reservations/matching/${matchingId}/accept`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 매칭 요청 보내기 API
+    sendMatchingRequest: async (matchingId: string): Promise<void> => {
+        try {
+            const response = await adminApi.put('/admin/reservations/matching-request', matchingId);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 매니저 변경 API (새 엔드포인트)
+    changeManager: async (reservationId: number, managerId: number): Promise<void> => {
+        try {
+            await axios.put(
+                `${API_BASE_URL}/admin/reservations/managerChange`,
+                reservationId,
+                {
+                    params: { managerId },
+                    headers: { 'Content-Type': 'application/json' },
+                }
+            );
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 자동 추천 새 후보 생성 API
+    createAutoCandidate: async (reservationId: string): Promise<void> => {
+        try {
+            const response = await adminApi.put('/admin/reservations/add-matching/auto', reservationId);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 직접 지정 새 후보 생성 API
+    createManualCandidate: async (reservationId: string, managerId: string): Promise<void> => {
+        try {
+            const response = await adminApi.put('/admin/reservations/add-matching', reservationId, {
+                params: { managerId }
+            });
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 매니저 검색 API
+    searchManagers: async (searchTerm: string): Promise<any[]> => {
+        try {
+            const response = await adminApi.get('/admin/managers/search', {
+                params: { searchTerm }
+            });
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 401) {

@@ -16,7 +16,6 @@ import { FinanceSales } from './pages/admin/FinanceSales';
 import { FinanceSettlement } from './pages/admin/FinanceSettlement';
 import { FinanceRefund } from './pages/admin/FinanceRefund';
 import { ManualMatching } from './pages/admin/ManualMatching';
-import { MatchingAlgorithm } from './pages/admin/MatchingAlgorithm';
 import { RecommendMatching } from './pages/admin/RecommendMatching';
 import { ReservationStatus } from './pages/admin/ReservationStatus';
 import { StatMatching } from './pages/admin/StatMatching';
@@ -63,7 +62,6 @@ function App() {
               <Route path="support/customer" element={<CustomerSupport />} />
               <Route path="support/manager" element={<ManagerSupport />} />
               <Route path="matching/manual" element={<ManualMatching />} />
-              <Route path="matching/algorithm" element={<MatchingAlgorithm />} />
               <Route path="matching/recommend" element={<RecommendMatching />} />
               <Route path="matching/reservation" element={<ReservationStatus />} />
               <Route path="statistics" element={<Navigate to="/admin/statistics/matching" replace />} />
