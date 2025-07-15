@@ -15,6 +15,7 @@ interface TimePickerModalProps {
   basePrice: number
   pricePerHour: number
   showTimeWarning: boolean
+  categoryId: number
 }
 
 export const TimePickerModal = ({
@@ -27,6 +28,7 @@ export const TimePickerModal = ({
   basePrice,
   pricePerHour,
   showTimeWarning,
+  categoryId,
 }: TimePickerModalProps) => {
   return (
     <Transition show={isOpen} as={React.Fragment}>
@@ -78,7 +80,7 @@ export const TimePickerModal = ({
 
             {/* Content */}
             <div className="p-4">
-              {recommendedTime && (
+              {recommendedTime && categoryId !== 6 && (
                 <div className="mb-6 bg-primary-200/50 text-primary-700 p-4 rounded-xl">
                   <div className="mb-2">
                     <span className="text-sm font-semibold">
