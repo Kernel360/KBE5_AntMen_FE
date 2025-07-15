@@ -26,23 +26,7 @@ import { adminReviewService } from '../../api/adminReview';
 import { adminInquiryRefundService } from '../../api/adminInquiryRefund';
 import { ReservationStats, AdminSalesSummaryResponseDto, AdminRefundStatisticsResponseDto, AdminMatchingStatisticsResponseDto, AdminReservationStatisticsResponseDto, AdminReviewStatisticsResponseDto, AdminInquiryRefundDailyDto } from '../../api/types';
 
-// 샘플 데이터 (API 데이터가 없을 때 사용)
-const dailyStats = [
-    { date: '01/01', users: 1200, inquiries: 45, refunds: 12 },
-    { date: '01/02', users: 1350, inquiries: 52, refunds: 8 },
-    { date: '01/03', users: 1180, inquiries: 38, refunds: 15 },
-    { date: '01/04', users: 1420, inquiries: 61, refunds: 10 },
-    { date: '01/05', users: 1380, inquiries: 48, refunds: 7 },
-    { date: '01/06', users: 1520, inquiries: 55, refunds: 9 },
-    { date: '01/07', users: 1460, inquiries: 43, refunds: 11 },
-];
 
-const recentInquiries = [
-    { id: 1, type: '고객상담', content: '결제 관련 문의', status: 'pending', time: '10분 전' },
-    { id: 2, type: '운영상담', content: '서비스 장애 신고', status: 'processing', time: '25분 전' },
-    { id: 3, type: '고객상담', content: '환불 요청', status: 'completed', time: '1시간 전' },
-    { id: 4, type: '운영상담', content: '계정 복구 요청', status: 'pending', time: '2시간 전' },
-];
 
 const getStatusBadge = (status: string) => {
     switch (status) {
@@ -229,7 +213,7 @@ export const Dashboard: React.FC = () => {
     // 상담 및 환불 현황 그래프 데이터 생성
     const getInquiryRefundData = () => {
         if (!inquiryRefundStats || inquiryRefundStats.length === 0) {
-            return dailyStats; // API 데이터가 없으면 샘플 데이터 사용
+            return []; // API 데이터가 없으면 빈 배열 반환
         }
 
         return inquiryRefundStats.map(item => ({
@@ -241,16 +225,7 @@ export const Dashboard: React.FC = () => {
 
     const getReservationData = () => {
         if (!reservationData?.dailyList) {
-            // 샘플 데이터
-            return [
-                { date: '12-01', requests: 15, completed: 12, matching: 8 },
-                { date: '12-02', requests: 18, completed: 14, matching: 10 },
-                { date: '12-03', requests: 12, completed: 10, matching: 6 },
-                { date: '12-04', requests: 20, completed: 16, matching: 12 },
-                { date: '12-05', requests: 16, completed: 13, matching: 9 },
-                { date: '12-06', requests: 14, completed: 11, matching: 7 },
-                { date: '12-07', requests: 19, completed: 15, matching: 11 }
-            ];
+            return []; // API 데이터가 없으면 빈 배열 반환
         }
 
         return reservationData.dailyList.map(item => ({
