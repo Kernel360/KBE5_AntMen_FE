@@ -370,16 +370,16 @@ export const Dashboard: React.FC = () => {
                     onClick={() => navigate('/admin/matching/manual')}
                 >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">매칭 성공률</CardTitle>
-                        <GitBranch className="h-4 w-4 text-orange-600" />
+                        <CardTitle className="text-sm font-medium">매칭 조치 필요</CardTitle>
+                        <AlertCircle className="h-4 w-4 text-red-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-orange-600">
-                            {loading ? '...' : `${matchingRate.toFixed(1)}%`}
+                        <div className="text-2xl font-bold text-red-600">
+                            {loading ? '...' : needActionCount}
                         </div>
-                        <p className="text-xs text-orange-600 flex items-center mt-1">
+                        <p className="text-xs text-red-600 flex items-center mt-1">
                             <AlertCircle className="h-3 w-3 mr-1" />
-                            조치 필요: {needActionCount}
+                            조치 필요 건수
                         </p>
                     </CardContent>
                 </Card>
