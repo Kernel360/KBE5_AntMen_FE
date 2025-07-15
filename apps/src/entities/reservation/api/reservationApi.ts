@@ -84,7 +84,6 @@ export async function changeReservationStatus(
 
 export const checkIn = async (
   reservationId: number,
-  checkinAt: string,
   token: string,
 ): Promise<void> => {
   await customFetch<void>(
@@ -95,14 +94,13 @@ export const checkIn = async (
         'Content-Type': 'application/json',
         Authorization: token,
       },
-      body: JSON.stringify({ checkinAt }),
     },
   )
 }
 
 export const checkOut = async (
   reservationId: number,
-  data: { checkoutAt: string; comment: string },
+  data: { comment: string },
   token: string,
 ): Promise<void> => {
   await customFetch<void>(
