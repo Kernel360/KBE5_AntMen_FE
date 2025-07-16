@@ -2,7 +2,7 @@ import axios from 'axios';
 import { AdminRefundResponseDto, AdminRefundStatisticsResponseDto, AdminRefundReasonDto, AdminRefundCustomerTopDto, AdminRefundManagerTopDto } from './types';
 import { getCookie, ADMIN_TOKEN_COOKIE } from '../lib/cookie';
 
-const API_BASE_URL = 'https://api.antmen.site:9093/api/v1';
+const API_BASE_URL = 'http://localhost:9093/api/v1';
 
 // 환불 API 인스턴스
 const refundsApi = axios.create({
@@ -91,6 +91,32 @@ export const adminRefundsService = {
     getRefundReasons: async (): Promise<AdminRefundReasonDto[]> => {
         try {
             const response = await refundsApi.get('/admin/statistics/refunds/reasons');
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 상위 환불 사유 조회
+    getTopRefundReasons: async (topCount: number = 5): Promise<AdminRefundReasonDto[]> => {
+        try {
+            const response = await refundsApi.get(`/admin/statistics/refunds/reasons/top?topCount=${topCount}`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 자동환불 세부 사유 조회
+    getAutoRefundDetails: async (): Promise<AdminRefundReasonDto[]> => {
+        try {
+            const response = await refundsApi.get('/admin/statistics/refunds/reasons/auto-refund-details');
             return response.data;
         } catch (error: any) {
             if (error.response?.status === 401) {
