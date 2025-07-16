@@ -106,28 +106,20 @@ const getCategoryBadge = (notice: Notice) => {
         );
     }
     
-    // 상태 배지
+    // 상태 배지 - 임시저장 제거, 예약만 표시
     if (notice.boardStatus) {
         const statusLabels = {
             'Reserved': '예약',
-            'reserved': '예약',
-            'Draft': '임시저장',
-            'Published': '발행됨',
-            'null': '임시저장'
+            'reserved': '예약'
         };
-        const statusLabel = statusLabels[notice.boardStatus as keyof typeof statusLabels] || notice.boardStatus;
-        badges.push(
-            <Badge key="status" className="bg-yellow-100 text-yellow-800">
-                {statusLabel}
-            </Badge>
-        );
-    } else {
-        // boardStatus가 null인 경우
-        badges.push(
-            <Badge key="status" className="bg-yellow-100 text-yellow-800">
-                임시저장
-            </Badge>
-        );
+        const statusLabel = statusLabels[notice.boardStatus as keyof typeof statusLabels];
+        if (statusLabel) {
+            badges.push(
+                <Badge key="status" className="bg-yellow-100 text-yellow-800">
+                    {statusLabel}
+                </Badge>
+            );
+        }
     }
     
     // 삭제됨 배지
@@ -434,29 +426,31 @@ export const ManagerSupport: React.FC = () => {
         loadNotices();
     }, [noticeFilter]);
 
-    // 필터링된 공지사항
+    // 필터링된 공지사항 - 탭별 필터링 적용
     const filteredNotices = notices.filter(notice => {
         // 카테고리/필터 매칭
         let matchesFilter = false;
         switch (noticeFilter) {
             case 'all':
+                // 전체 탭에서는 모든 게시글 표시
                 matchesFilter = true;
                 break;
             case 'notice':
-                matchesFilter = notice.category === 'notice' && !notice.isDeleted;
+                matchesFilter = notice.category === 'notice' && !notice.isDeleted && (notice.boardStatus !== 'Reserved' && notice.boardStatus !== 'reserved');
                 break;
             case 'faq':
-                matchesFilter = notice.category === 'faq' && !notice.isDeleted;
+                matchesFilter = notice.category === 'faq' && !notice.isDeleted && (notice.boardStatus !== 'Reserved' && notice.boardStatus !== 'reserved');
                 break;
             case 'reservation':
-                // Reserved 또는 reserved 상태인 경우
+                // 예약 탭에서는 예약된 게시글만 표시
                 matchesFilter = (notice.boardStatus === 'Reserved' || notice.boardStatus === 'reserved') && !notice.isDeleted;
                 break;
             case 'deleted':
+                // 삭제 탭에서는 삭제된 게시글만 표시
                 matchesFilter = notice.isDeleted === true;
                 break;
             default:
-                matchesFilter = notice.category === noticeFilter;
+                matchesFilter = true;
         }
         
         const matchesSearch = !noticeSearchTerm || 

@@ -68,9 +68,11 @@ export function Login() {
     <div className="w-full h-full">
       {/* 헤더 섹션 - 간격 최소화 */}
       <div className="text-center mb-4">
-        <div className="w-14 h-14 bg-primary-500 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm">
-          <span className="text-xl text-white font-bold">🏠</span>
-        </div>
+        <Link href="/" className="inline-block">
+          <div className="w-14 h-14 bg-primary-500 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm hover:bg-primary-600 transition-colors duration-200 cursor-pointer">
+            <span className="text-xl text-white font-bold">🏠</span>
+          </div>
+        </Link>
         <h1 className="text-xl font-bold text-gray-900 mb-1">AntWork</h1>
         <p className="text-gray-600 text-xs">편리한 생활 서비스의 시작</p>
       </div>

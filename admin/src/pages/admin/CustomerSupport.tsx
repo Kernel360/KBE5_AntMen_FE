@@ -94,28 +94,20 @@ const getCategoryBadge = (notice: Notice) => {
         );
     }
     
-    // 상태 배지
+    // 상태 배지 - 임시저장 제거, 예약만 표시
     if (notice.boardStatus) {
         const statusLabels = {
             'Reserved': '예약',
-            'reserved': '예약',
-            'Draft': '임시저장',
-            'Published': '발행됨',
-            'null': '임시저장'
+            'reserved': '예약'
         };
-        const statusLabel = statusLabels[notice.boardStatus as keyof typeof statusLabels] || notice.boardStatus;
-        badges.push(
-            <Badge key="status" className="bg-yellow-100 text-yellow-800">
-                {statusLabel}
-            </Badge>
-        );
-    } else {
-        // boardStatus가 null인 경우
-        badges.push(
-            <Badge key="status" className="bg-yellow-100 text-yellow-800">
-                임시저장
-            </Badge>
-        );
+        const statusLabel = statusLabels[notice.boardStatus as keyof typeof statusLabels];
+        if (statusLabel) {
+            badges.push(
+                <Badge key="status" className="bg-yellow-100 text-yellow-800">
+                    {statusLabel}
+                </Badge>
+            );
+        }
     }
     
     // 삭제됨 배지
@@ -219,6 +211,9 @@ export const CustomerSupport: React.FC = () => {
     
     // 페이지네이션 상태 추가
     const [currentPage, setCurrentPage] = useState(0);
+    
+    // 탭별 필터링 상태 추가
+    const [activeTab, setActiveTab] = useState<'all' | 'deleted' | 'reserved'>('all');
 
     // 공지사항 목록 로드 (전체 데이터)
     const loadNotices = async () => {
@@ -384,6 +379,8 @@ export const CustomerSupport: React.FC = () => {
     useEffect(() => {
         loadNotices();
     }, [noticeSearchTerm, noticeSortBy]);
+
+
 
     const filteredTickets = tickets.filter(ticket => {
         const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
@@ -611,25 +608,27 @@ export const CustomerSupport: React.FC = () => {
         }
     };
 
-    // 필터링된 공지사항
+    // 필터링된 공지사항 - 탭별 필터링 적용
     const filteredNotices = notices.filter(notice => {
         let matchesFilter = false;
         
         switch (noticeFilter) {
             case 'all':
+                // 전체 탭에서는 모든 게시글 표시
                 matchesFilter = true;
                 break;
             case 'notice':
-                matchesFilter = notice.category === 'notice' && !notice.isDeleted;
+                matchesFilter = notice.category === 'notice' && !notice.isDeleted && (notice.boardStatus !== 'Reserved' && notice.boardStatus !== 'reserved');
                 break;
             case 'faq':
-                matchesFilter = notice.category === 'faq' && !notice.isDeleted;
+                matchesFilter = notice.category === 'faq' && !notice.isDeleted && (notice.boardStatus !== 'Reserved' && notice.boardStatus !== 'reserved');
                 break;
             case 'reservation':
-                // Reserved 또는 reserved 상태인 경우
+                // 예약 탭에서는 예약된 게시글만 표시
                 matchesFilter = (notice.boardStatus === 'Reserved' || notice.boardStatus === 'reserved') && !notice.isDeleted;
                 break;
             case 'deleted':
+                // 삭제 탭에서는 삭제된 게시글만 표시
                 matchesFilter = notice.isDeleted === true;
                 break;
             default:
@@ -674,12 +673,12 @@ export const CustomerSupport: React.FC = () => {
         }
     }, [searchParams]);
 
-    // 통계 정보 계산 (전체 데이터 기준)
+    // 통계 정보 계산 (실제 공지사항만 기준)
     const noticeStats = {
-        total: notices.length,
-        notice: notices.filter(n => n.category === 'notice').length,
-        faq: notices.filter(n => n.category === 'faq').length,
-        withComments: notices.filter(n => n.commentNum > 0).length
+        total: notices.filter(n => !n.isDeleted && (n.boardStatus !== 'Reserved' && n.boardStatus !== 'reserved')).length,
+        notice: notices.filter(n => n.category === 'notice' && !n.isDeleted && (n.boardStatus !== 'Reserved' && n.boardStatus !== 'reserved')).length,
+        faq: notices.filter(n => n.category === 'faq' && !n.isDeleted && (n.boardStatus !== 'Reserved' && n.boardStatus !== 'reserved')).length,
+        withComments: notices.filter(n => n.commentNum > 0 && !n.isDeleted && (n.boardStatus !== 'Reserved' && n.boardStatus !== 'reserved')).length
     };
 
     // 문의 통계 정보 수정
@@ -1378,8 +1377,8 @@ export const CustomerSupport: React.FC = () => {
                                             {ticketFilter === 'all' ? '등록된 문의가 없습니다.' : 
                                              ticketFilter === 'new' ? '신규 문의가 없습니다.' :
                                              ticketFilter === 'in_progress' ? '진행중인 문의가 없습니다.' :
-                                             ticketFilter === 'resolved' ? '해결완료된 문의가 없습니다.' :
-                                             ticketFilter === 'closed' ? '종료된 문의가 없습니다.' :
+                                             ticketFilter === 'resolved' ? '완료된 문의가 없습니다.' :
+                                             ticketFilter === 'closed' ? '삭제된 문의가 없습니다.' :
                                              '조건에 맞는 문의가 없습니다.'}
                                         </div>
                                     )}
