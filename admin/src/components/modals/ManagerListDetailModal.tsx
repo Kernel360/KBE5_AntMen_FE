@@ -177,24 +177,6 @@ export function ManagerListDetailModal({
                         <span className="text-base text-gray-900">{selectedUser.userCreatedDate?.slice(0, 10) || '-'}</span>
                       </div>
                     </div>
-
-                    {/* 셋째줄: 매니저 상세 정보 */}
-                    {managerData.managerDetail && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="flex flex-col">
-                          <label className="text-sm font-medium text-gray-500">전문 분야</label>
-                          <span className="text-base text-gray-900">{managerData.managerDetail.managerSpecialty || '-'}</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <label className="text-sm font-medium text-gray-500">경력</label>
-                          <span className="text-base text-gray-900">{managerData.managerDetail.managerExperience || '-'}</span>
-                        </div>
-                        <div className="flex flex-col">
-                          <label className="text-sm font-medium text-gray-500">승인일</label>
-                          <span className="text-base text-gray-900">{selectedUser.approvedAt?.slice(0, 10) || '-'}</span>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
