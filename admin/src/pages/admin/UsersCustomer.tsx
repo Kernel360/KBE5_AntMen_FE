@@ -12,6 +12,8 @@ import {
 } from '../../components/ui/table';
 import { Search } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { CustomerReservationStatistics, CustomerReviewInfo } from '../../api/types';
+import { ReviewListModal } from '../../components/modals/ReviewListModal';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getRoleBadge = (role: string) => {
@@ -47,12 +49,29 @@ export const UsersCustomer: React.FC = () => {
   const [showBlacklistForm, setShowBlacklistForm] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+
+
+
+  // 성별 한글 변환 함수
+  const getGenderText = (gender: string) => {
+    if (!gender) return '-';
+    return gender === 'M' ? '남성' : gender === 'F' ? '여성' : gender;
+  };
   
   const { data: userResponse, isLoading, isFetching } = useQuery({
     queryKey: ['customers', actualSearchTerm, sortBy, currentPage],
     queryFn: () => userService.getCustomers(actualSearchTerm, sortBy, currentPage),
     enabled: isInitialized, // 초기화 후에만 실행
     placeholderData: (previousData) => previousData, // 이전 데이터 유지로 깜빡임 방지
+  });
+
+  // 선택된 수요자의 상세정보 통합 조회
+  const { data: customerDetail, isLoading: detailLoading } = useQuery({
+    queryKey: ['customer-detail', selectedUser?.userId],
+    queryFn: () => userService.getCustomerDetail(selectedUser.userId),
+    enabled: !!selectedUser?.userId && showDetail,
+    retry: 1
   });
 
   // 검색 실행 함수
@@ -263,6 +282,20 @@ export const UsersCustomer: React.FC = () => {
                     size="sm"
                     className="bg-red-600 hover:bg-red-700 text-white px-4"
                     disabled={!blacklistReason.trim()}
+                    onClick={async () => {
+                      try {
+                        await userService.addToBlacklist(selectedUser.userId, blacklistReason);
+                        alert('블랙리스트에 추가되었습니다.');
+                        setShowBlacklistForm(false);
+                        setBlacklistReason('');
+                        setShowDetail(false);
+                        // 목록 새로고침
+                        window.location.reload();
+                      } catch (error) {
+                        console.error('블랙리스트 추가 실패:', error);
+                        alert('블랙리스트 추가 중 오류가 발생했습니다.');
+                      }
+                    }}
                   >
                     완료
                   </Button>
@@ -280,25 +313,58 @@ export const UsersCustomer: React.FC = () => {
                     <div className="w-1.5 h-6 bg-blue-400 rounded-full"></div>
                     기본 정보
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex flex-col">
-                        <label className="text-sm font-medium text-gray-500">이름</label>
-                        <span className="text-base text-gray-900 font-medium">{selectedUser.userName}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <label className="text-sm font-medium text-gray-500">이메일</label>
-                        <span className="text-base text-gray-900">{selectedUser.userEmail}</span>
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                    {/* 프로필 사진 */}
+                    <div className="md:col-span-1">
+                      <div className="flex flex-col items-center">
+                        <label className="text-sm font-medium text-gray-500 mb-2">프로필 사진</label>
+                        <div className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+                          <img
+                            src={customerDetail?.userInfo?.userProfile || selectedUser.userProfile || '/default-profile.png'}
+                            alt="프로필"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = '/default-profile.png';
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex flex-col">
-                        <label className="text-sm font-medium text-gray-500">전화번호</label>
-                        <span className="text-base text-gray-900">{selectedUser.userTel ?? '-'}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <label className="text-sm font-medium text-gray-500">가입일</label>
-                        <span className="text-base text-gray-900">{selectedUser.userCreatedDate?.slice(0, 10)}</span>
+                    
+                    {/* 개인정보 */}
+                    <div className="md:col-span-4">
+                      <div className="space-y-4">
+                        {/* 첫째줄: 이름, 성별, 생년월일 */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="flex flex-col">
+                            <label className="text-sm font-medium text-gray-500">이름</label>
+                            <span className="text-base text-gray-900 font-medium">{selectedUser.userName}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <label className="text-sm font-medium text-gray-500">성별</label>
+                            <span className="text-base text-gray-900">{customerDetail?.userInfo?.userGender || getGenderText(selectedUser.userGender)}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <label className="text-sm font-medium text-gray-500">생년월일</label>
+                            <span className="text-base text-gray-900">{customerDetail?.userInfo?.userBirth || selectedUser.userBirth || '-'}</span>
+                          </div>
+                        </div>
+                        
+                        {/* 둘째줄: 이메일, 전화번호, 가입일 */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="flex flex-col">
+                            <label className="text-sm font-medium text-gray-500">이메일</label>
+                            <span className="text-base text-gray-900">{selectedUser.userEmail}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <label className="text-sm font-medium text-gray-500">전화번호</label>
+                            <span className="text-base text-gray-900">{selectedUser.userTel ?? '-'}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <label className="text-sm font-medium text-gray-500">가입일</label>
+                            <span className="text-base text-gray-900">{selectedUser.userCreatedDate?.slice(0, 10)}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -310,50 +376,62 @@ export const UsersCustomer: React.FC = () => {
                     <div className="w-1.5 h-6 bg-blue-400 rounded-full"></div>
                     예약 통계 (전체 기간)
                   </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                    <div className="bg-white rounded-lg p-3 text-center">
-                      <div className="text-xl font-bold text-blue-600">24건</div>
-                      <div className="text-xs text-gray-500">총 신청</div>
+                  {detailLoading ? (
+                    <div className="text-center py-8">
+                      <div className="text-gray-500">예약 통계를 불러오는 중...</div>
                     </div>
-                    <div className="bg-white rounded-lg p-3 text-center">
-                      <div className="text-xl font-bold text-green-600">18건</div>
-                      <div className="text-xs text-gray-500">진행 완료</div>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 text-center">
-                      <div className="text-xl font-bold text-orange-600">2건</div>
-                      <div className="text-xs text-gray-500">진행 예정</div>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 text-center">
-                      <div className="text-xl font-bold text-red-600">3건</div>
-                      <div className="text-xs text-gray-500">환불 신청</div>
-                    </div>
-                    <div className="bg-white rounded-lg p-3 text-center">
-                      <div className="text-xl font-bold text-gray-600">1건</div>
-                      <div className="text-xs text-gray-500">자동 취소</div>
-                    </div>
-                  </div>
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white rounded-lg p-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-500">성공률</span>
-                        <span className="text-lg font-bold text-green-600">75%</span>
+                  ) : customerDetail?.reservationStatistics ? (
+                    <>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <div className="bg-white rounded-lg p-3 text-center">
+                          <div className="text-xl font-bold text-blue-600">{customerDetail.reservationStatistics.totalReservations}건</div>
+                          <div className="text-xs text-gray-500">총 신청</div>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 text-center">
+                          <div className="text-xl font-bold text-green-600">{customerDetail.reservationStatistics.completedReservations}건</div>
+                          <div className="text-xs text-gray-500">진행 완료</div>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 text-center">
+                          <div className="text-xl font-bold text-orange-600">{customerDetail.reservationStatistics.pendingReservations}건</div>
+                          <div className="text-xs text-gray-500">진행 예정</div>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 text-center">
+                          <div className="text-xl font-bold text-red-600">{customerDetail.reservationStatistics.refundRequests}건</div>
+                          <div className="text-xs text-gray-500">환불 신청</div>
+                        </div>
+                        <div className="bg-white rounded-lg p-3 text-center">
+                          <div className="text-xl font-bold text-gray-600">{customerDetail.reservationStatistics.cancelledReservations}건</div>
+                          <div className="text-xs text-gray-500">취소됨</div>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '75%' }}></div>
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white rounded-lg p-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-500">성공률</span>
+                            <span className="text-lg font-bold text-green-600">{customerDetail.reservationStatistics.successRate}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                            <div className="bg-green-500 h-2 rounded-full" style={{ width: `${customerDetail.reservationStatistics.successRate}%` }}></div>
+                          </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-3">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-500">평균 만족도</span>
+                            <span className="text-lg font-bold text-yellow-600">{customerDetail.reservationStatistics.averageSatisfaction}/5</span>
+                          </div>
+                          <div className="flex mt-2">
+                            {[1,2,3,4,5].map(star => (
+                              <span key={star} className={`text-lg ${star <= Math.round(customerDetail.reservationStatistics.averageSatisfaction) ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                            ))}
+                          </div>
+                        </div>
                       </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="text-gray-500">예약 통계를 불러올 수 없습니다</div>
                     </div>
-                    <div className="bg-white rounded-lg p-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-500">평균 만족도</span>
-                        <span className="text-lg font-bold text-yellow-600">4.2/5</span>
-                      </div>
-                      <div className="flex mt-2">
-                        {[1,2,3,4,5].map(star => (
-                          <span key={star} className={`text-lg ${star <= 4 ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* 리뷰 정보 */}
@@ -363,63 +441,91 @@ export const UsersCustomer: React.FC = () => {
                       <div className="w-1.5 h-6 bg-yellow-400 rounded-full"></div>
                       리뷰 정보
                     </h3>
-                    <Button variant="outline" size="sm" onClick={() => {/* 전체 리뷰 모달 */}}>
-                      전체보기
-                    </Button>
+                                    <Button variant="outline" size="sm" onClick={() => setShowReviewModal(true)}>
+                  전체보기
+                </Button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* 작성한 리뷰 */}
-                    <div className="bg-white rounded-lg p-3">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium text-gray-700">작성한 리뷰</h4>
-                        <span className="text-sm text-gray-500">총 12개</span>
-                      </div>
-                      <div className="space-y-2">
-                        {[
-                          { manager: '김매니저', rating: 5, comment: '정말 깔끔하게 잘해주셨어요!' },
-                          { manager: '이매니저', rating: 4, comment: '시간 약속 잘 지키시고 친절하세요' }
-                        ].map((review, idx) => (
-                          <div key={idx} className="p-2 bg-gray-50 rounded text-sm">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="font-medium">{review.manager}</span>
-                              <div className="flex">
-                                {[1,2,3,4,5].map(star => (
-                                  <span key={star} className={`text-xs ${star <= review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
-                                ))}
-                              </div>
+                  {detailLoading ? (
+                    <div className="text-center py-8">
+                      <div className="text-gray-500">리뷰 정보를 불러오는 중...</div>
+                    </div>
+                  ) : customerDetail?.reviewInfo ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* 작성한 리뷰 */}
+                      <div className="bg-white rounded-lg p-3">
+                        <div className="flex justify-between items-center mb-2">
+                          <h4 className="font-medium text-gray-700">작성한 리뷰</h4>
+                          <div className="text-right">
+                            <span className="text-sm text-gray-500">총 {customerDetail.reviewInfo.totalWrittenReviews}개</span>
+                            <div className="text-xs text-gray-400">
+                              평균 {customerDetail.reviewInfo.averageWrittenRating}/5점
                             </div>
-                            <p className="text-gray-600 text-xs">{review.comment}</p>
                           </div>
-                        ))}
+                        </div>
+                        <div className="space-y-2">
+                          {customerDetail.reviewInfo.writtenReviews.length > 0 ? (
+                            customerDetail.reviewInfo.writtenReviews.slice(0, 2).map((review: any, idx: number) => (
+                              <div key={idx} className="p-2 bg-gray-50 rounded text-sm">
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="font-medium">{review.targetName}</span>
+                                  <div className="flex">
+                                    {[1,2,3,4,5].map(star => (
+                                      <span key={star} className={`text-xs ${star <= review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                                    ))}
+                                  </div>
+                                </div>
+                                <p className="text-gray-600 text-xs">{review.comment}</p>
+                                <p className="text-gray-400 text-xs mt-1">{review.reviewDate?.slice(0, 10)}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-center py-4 text-gray-500 text-sm">
+                              작성한 리뷰가 없습니다
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* 받은 리뷰 */}
+                      <div className="bg-white rounded-lg p-3">
+                        <div className="flex justify-between items-center mb-2">
+                          <h4 className="font-medium text-gray-700">받은 리뷰</h4>
+                          <div className="text-right">
+                            <span className="text-sm text-gray-500">총 {customerDetail.reviewInfo.totalReceivedReviews}개</span>
+                            <div className="text-xs text-gray-400">
+                              평균 {customerDetail.reviewInfo.averageReceivedRating}/5점
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          {customerDetail.reviewInfo.receivedReviews.length > 0 ? (
+                            customerDetail.reviewInfo.receivedReviews.slice(0, 2).map((review: any, idx: number) => (
+                              <div key={idx} className="p-2 bg-gray-50 rounded text-sm">
+                                <div className="flex justify-between items-center mb-1">
+                                  <span className="font-medium">{review.targetName}</span>
+                                  <div className="flex">
+                                    {[1,2,3,4,5].map(star => (
+                                      <span key={star} className={`text-xs ${star <= review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
+                                    ))}
+                                  </div>
+                                </div>
+                                <p className="text-gray-600 text-xs">{review.comment}</p>
+                                <p className="text-gray-400 text-xs mt-1">{review.reviewDate?.slice(0, 10)}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-center py-4 text-gray-500 text-sm">
+                              받은 리뷰가 없습니다
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    
-                    {/* 받은 리뷰 */}
-                    <div className="bg-white rounded-lg p-3">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium text-gray-700">받은 리뷰</h4>
-                        <span className="text-sm text-gray-500">총 8개</span>
-                      </div>
-                      <div className="space-y-2">
-                        {[
-                          { manager: '박매니저', rating: 4, comment: '약속 시간 잘 지키시는 고객님이에요' },
-                          { manager: '최매니저', rating: 5, comment: '친절하고 배려 깊으신 분입니다' }
-                        ].map((review, idx) => (
-                          <div key={idx} className="p-2 bg-gray-50 rounded text-sm">
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="font-medium">{review.manager}</span>
-                              <div className="flex">
-                                {[1,2,3,4,5].map(star => (
-                                  <span key={star} className={`text-xs ${star <= review.rating ? 'text-yellow-400' : 'text-gray-300'}`}>★</span>
-                                ))}
-                              </div>
-                            </div>
-                            <p className="text-gray-600 text-xs">{review.comment}</p>
-                          </div>
-                        ))}
-                      </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="text-gray-500">리뷰 정보를 불러올 수 없습니다</div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
 
@@ -428,6 +534,15 @@ export const UsersCustomer: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* 리뷰 전체보기 모달 */}
+      <ReviewListModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        reviewInfo={customerDetail?.reviewInfo}
+        userName={selectedUser?.userName || ''}
+        userType="customer"
+      />
     </div>
   );
 }; 

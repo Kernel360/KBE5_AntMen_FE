@@ -74,6 +74,31 @@ export const userService = {
         });
     },
 
+    // 블랙리스트 회원 목록 조회
+    getBlacklistUsers: async (name?: string, userRole?: string, page = 0, size = 20): Promise<any> => {
+        const response = await userApi.get('/admin/users/blacklist', {
+            params: {
+                name,
+                userRole,
+                page,
+                size
+            }
+        });
+        return response.data;
+    },
+
+    // 회원을 블랙리스트에 추가
+    addToBlacklist: async (userId: number, reason: string): Promise<void> => {
+        await userApi.post(`/admin/users/${userId}/blacklist`, null, {
+            params: { reason }
+        });
+    },
+
+    // 회원을 블랙리스트에서 제거
+    removeFromBlacklist: async (userId: number): Promise<void> => {
+        await userApi.delete(`/admin/users/${userId}/blacklist`);
+    },
+
     // // 사용자 생성
     // createUser: async (userData: UserRequest): Promise<User> => {
     //     const response = await userApi.post('/admin/users', userData);
@@ -97,4 +122,55 @@ export const userService = {
         return response.data;
     },
 
+    // 수요자별 예약 통계 조회
+    getCustomerReservationStatistics: async (userId: number): Promise<any> => {
+        try {
+            const response = await userApi.get(`/customers/${userId}/reservation-statistics`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 수요자별 리뷰 정보 조회
+    getCustomerReviewInfo: async (userId: number): Promise<any> => {
+        try {
+            const response = await userApi.get(`/customers/${userId}/review-info`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 수요자 상세정보 통합 조회 (기본정보 + 예약통계 + 리뷰정보)
+    getCustomerDetail: async (userId: number): Promise<any> => {
+        try {
+            const response = await userApi.get(`/admin/users/customers/${userId}/detail`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
+    // 매니저 상세정보 통합 조회 (기본정보 + 매칭통계 + 근무내역)
+    getManagerDetail: async (userId: number): Promise<any> => {
+        try {
+            const response = await userApi.get(`/admin/users/managers/${userId}/detail`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
 }; 
