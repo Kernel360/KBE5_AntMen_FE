@@ -21,7 +21,7 @@ const PaymentPreviewSection = ({
         </div>
         <div className="flex items-center justify-between py-2 border-t border-gray-100">
           <span className="text-base font-black text-black">총 결제 금액</span>
-          <span className="text-base font-bold text-[#4abed9]">
+          <span className="text-base font-bold text-primary-500">
             {formatCurrency(paymentRequest.payAmount)}
           </span>
         </div>

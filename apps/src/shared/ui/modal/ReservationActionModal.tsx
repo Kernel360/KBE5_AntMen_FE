@@ -88,11 +88,11 @@ const ReservationActionModal = ({
             {/* Option 2: 일정 변경 */}
             <button
               onClick={() => onConfirm('reschedule')}
-              className="w-full flex items-start gap-4 p-4 border border-[#4abed9] rounded-xl relative"
+              className="w-full flex items-start gap-4 p-4 border border-primary-500 rounded-xl relative"
             >
               <div className="w-10 h-10 bg-[#E0F7FA] rounded-full flex items-center justify-center flex-shrink-0">
                 <svg
-                  className="w-5 h-5 text-[#4abed9]"
+                  className="w-5 h-5 text-primary-500"
                   viewBox="0 0 20 20"
                   fill="none"
                   stroke="currentColor"
@@ -114,7 +114,7 @@ const ReservationActionModal = ({
                 </p>
               </div>
               <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                <div className="w-6 h-6 bg-[#4abed9] rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
                   <svg
                     className="w-3.5 h-3.5 text-white"
                     viewBox="0 0 14 14"
@@ -144,7 +144,7 @@ const ReservationActionModal = ({
               </button>
               <button
                 onClick={() => onConfirm('reschedule')}
-                className="flex-1 py-3.5 rounded-lg bg-[#4abed9] text-white font-semibold text-base"
+                className="flex-1 py-3.5 rounded-lg bg-primary-500 text-white font-semibold text-base"
               >
                 일정 변경
               </button>

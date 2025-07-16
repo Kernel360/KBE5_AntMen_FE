@@ -472,6 +472,19 @@ export const adminService = {
         }
     },
 
+    // 관리자가 매니저 대신 수락 API (매니저가 응답하지 않은 경우)
+    adminAcceptMatching: async (matchingId: string): Promise<void> => {
+        try {
+            const response = await adminApi.put(`/admin/reservations/matching/${matchingId}/admin-accept`);
+            return response.data;
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                throw new Error('토큰이 만료되었습니다. 다시 로그인해주세요.');
+            }
+            throw error;
+        }
+    },
+
     // 매칭 요청 보내기 API
     sendMatchingRequest: async (matchingId: string): Promise<void> => {
         try {

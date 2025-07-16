@@ -32,7 +32,7 @@ export const StarRating = ({ rating, onRatingChange, size = 32 }: StarRatingProp
             key={star}
             type="button"
             className={`transition-colors duration-200 ${
-              isActive ? 'text-[#4ABED9]' : 'text-[#EDECEC]'
+              isActive ? 'text-yellow-400' : 'text-[#EDECEC]'
             }`}
             style={{ width: size, height: size }}
             onClick={() => handleStarClick(star)}

@@ -3,36 +3,37 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { adminRefundsService } from '../../api/adminRefunds';
 import { AdminRefundStatisticsResponseDto, AdminRefundReasonDto, AdminRefundCustomerTopDto, AdminRefundManagerTopDto } from '../../api/types';
 
-// 주요 환불 사유 정의
-const predefinedReasons = [
-  "개인 일정 변경",
-  "청소가 더 이상 필요하지 않음",
-  "서비스 불만족",
-  "매니저 불만족"
-];
+// 주요 환불 사유는 API에서 동적으로 가져옴
 
 export const StatRefund: React.FC = () => {
   const [refundStatistics, setRefundStatistics] = useState<AdminRefundStatisticsResponseDto | null>(null);
   const [refundReasons, setRefundReasons] = useState<AdminRefundReasonDto[]>([]);
+  const [topRefundReasons, setTopRefundReasons] = useState<AdminRefundReasonDto[]>([]);
+  const [autoRefundDetails, setAutoRefundDetails] = useState<AdminRefundReasonDto[]>([]);
   const [customerTop, setCustomerTop] = useState<AdminRefundCustomerTopDto[]>([]);
   const [managerTop, setManagerTop] = useState<AdminRefundManagerTopDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showOtherDetails, setShowOtherDetails] = useState(false);
+  const [showAutoRefundDetails, setShowAutoRefundDetails] = useState(false);
 
   useEffect(() => {
     const fetchRefundData = async () => {
       try {
         setLoading(true);
-        // 통계, 사유 분포, 고객/매니저별 환불금액 top3를 병렬로 가져오기
-        const [statisticsData, reasonsData, customerTopData, managerTopData] = await Promise.all([
+        // 통계, 사유 분포, 상위 사유, 자동환불 세부사유, 고객/매니저별 환불금액 top3를 병렬로 가져오기
+        const [statisticsData, reasonsData, topReasonsData, autoRefundDetailsData, customerTopData, managerTopData] = await Promise.all([
           adminRefundsService.getRefundStatistics(),
           adminRefundsService.getRefundReasons(),
+          adminRefundsService.getTopRefundReasons(5), // 상위 5개 사유
+          adminRefundsService.getAutoRefundDetails(),
           adminRefundsService.getRefundCustomerTop(),
           adminRefundsService.getRefundManagerTop()
         ]);
         setRefundStatistics(statisticsData);
         setRefundReasons(reasonsData);
+        setTopRefundReasons(topReasonsData);
+        setAutoRefundDetails(autoRefundDetailsData);
         setCustomerTop(customerTopData.slice(0, 3));
         setManagerTop(managerTopData.slice(0, 3));
         setError(null);
@@ -74,20 +75,42 @@ export const StatRefund: React.FC = () => {
     ];
   };
 
-  // 환불 사유 데이터 처리 (기타 사유 그룹화)
+  // 환불 사유 데이터 처리 (개별 사유와 기타 사유 분리)
   const getProcessedReasonData = () => {
     const 주요: AdminRefundReasonDto[] = [];
     const 기타: AdminRefundReasonDto[] = [];
 
+    // 상위 사유들의 이름 목록 생성 (자동환불 제외)
+    const topReasonNames = topRefundReasons
+      .filter(reason => reason.refundReason !== '자동환불')
+      .map(reason => reason.refundReason);
+
     refundReasons.forEach(item => {
-      if (predefinedReasons.includes(item.refundReason)) {
+      // 자동환불 사유는 별도 처리
+      if (item.refundReason.includes('[자동환불]')) {
+        // 자동환불은 이미 topRefundReasons에서 그룹화되어 있으므로 건너뜀
+        return;
+      }
+      
+      if (topReasonNames.includes(item.refundReason)) {
         주요.push(item);
       } else {
-        기타.push(item);
+        // 개별 사유가 2건 이상이면 개별로 표시, 1건이면 기타로 묶기
+        if (item.count >= 2) {
+          주요.push(item);
+        } else {
+          기타.push(item);
+        }
       }
     });
 
-    // 기타 사유들을 하나로 합치기
+    // 백엔드에서 그룹화된 자동환불 추가
+    const autoRefundReason = topRefundReasons.find(reason => reason.refundReason === '자동환불');
+    if (autoRefundReason) {
+      주요.unshift(autoRefundReason); // 맨 앞에 추가
+    }
+
+    // 기타 사유들을 하나로 합치기 (1건짜리 사유들만)
     const 기타Total = 기타.reduce((sum, item) => sum + item.count, 0);
     
     // 주요 사유들과 기타 사유 합쳐서 반환
@@ -174,6 +197,15 @@ export const StatRefund: React.FC = () => {
                         <span>세부내용 {showOtherDetails ? '숨기기' : '보기'}</span>
                       </button>
                     )}
+                    {r.refundReason === '자동환불' && autoRefundDetails.length > 0 && (
+                      <button
+                        onClick={() => setShowAutoRefundDetails(!showAutoRefundDetails)}
+                        className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 rounded-md border border-blue-200 transition-colors duration-200 whitespace-nowrap"
+                      >
+                        <span>{showAutoRefundDetails ? '▲' : '▼'}</span>
+                        <span>세부내용 {showAutoRefundDetails ? '숨기기' : '보기'}</span>
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-gray-500">
@@ -196,7 +228,28 @@ export const StatRefund: React.FC = () => {
                   <div className="ml-4 p-3 bg-gray-50 rounded-lg border-l-4 border-gray-300">
                     <div className="text-xs font-medium text-gray-600 mb-2">기타 사유 세부내용:</div>
                     <div className="space-y-1">
-                      {otherReasons.map((reason, index) => (
+                      {otherReasons
+                        .filter(reason => !reason.refundReason.includes('[자동환불]')) // 자동환불 제외
+                        .map((reason, index) => (
+                        <div key={index} className="flex justify-between items-center text-xs">
+                          <span className="text-gray-700 truncate pr-2" title={reason.refundReason}>
+                            • {reason.refundReason}
+                          </span>
+                          <span className="text-gray-600 font-medium whitespace-nowrap">
+                            {reason.count}건
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 자동환불 세부내용 */}
+                {r.refundReason === '자동환불' && showAutoRefundDetails && autoRefundDetails.length > 0 && (
+                  <div className="ml-4 p-3 bg-gray-50 rounded-lg border-l-4 border-gray-300">
+                    <div className="text-xs font-medium text-gray-600 mb-2">자동환불 세부내용:</div>
+                    <div className="space-y-1">
+                      {autoRefundDetails.map((reason, index) => (
                         <div key={index} className="flex justify-between items-center text-xs">
                           <span className="text-gray-700 truncate pr-2" title={reason.refundReason}>
                             • {reason.refundReason}

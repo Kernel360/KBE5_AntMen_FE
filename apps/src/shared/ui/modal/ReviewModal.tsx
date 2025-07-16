@@ -125,7 +125,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
             placeholder={authorType === 'MANAGER' 
               ? "업무에 대한 소감을 자유롭게 작성해주세요."
               : "서비스에 대한 평가를 자유롭게 작성해주세요."}
-            className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#4DD0E1] focus:border-transparent"
+            className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             maxLength={200}
           />
           <div className="text-right text-xs text-gray-500 mt-1">

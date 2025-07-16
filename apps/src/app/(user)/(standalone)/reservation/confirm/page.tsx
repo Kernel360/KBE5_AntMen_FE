@@ -132,7 +132,7 @@ export default function ReservationConfirmPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex justify-center">
-      <div className="w-full max-w-[375px] min-h-screen flex flex-col bg-slate-50">
+      <div className="w-full max-w-[375px] min-h-screen flex flex-col bg-slate-50 relative">
         {/* 헤더 */}
         <CommonHeader 
           title="예약 확인"
@@ -207,8 +207,8 @@ export default function ReservationConfirmPage() {
         </div>
 
         {/* 하단 버튼 */}
-        <div className="sticky bottom-0 bg-white border-t border-slate-200">
-          <div className="px-4 py-4">
+        <div className="sticky bottom-0 bg-white border-t border-slate-200 -mx-4">
+          <div className="px-8 py-4">
             <button
               onClick={handleConfirm}
               disabled={isLoading}

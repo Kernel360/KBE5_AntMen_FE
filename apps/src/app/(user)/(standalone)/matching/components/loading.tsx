@@ -87,7 +87,7 @@ export default function MatchingResultLoading() {
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200">
         <div className="flex gap-3">
           <div className="flex-1 h-[52px] bg-slate-100 rounded-lg border border-slate-200"></div>
-          <div className="flex-1 h-[52px] bg-[#4ABED9] rounded-lg"></div>
+          <div className="flex-1 h-[52px] bg-primary-500 rounded-lg"></div>
         </div>
       </div>
     </main>

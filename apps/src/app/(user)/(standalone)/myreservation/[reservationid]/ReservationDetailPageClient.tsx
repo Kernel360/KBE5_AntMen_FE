@@ -12,7 +12,7 @@ import { RejectionModal } from '@/shared/ui/modal/RejectionModal'
 import CancellationModal from '@/shared/ui/modal/CancellationModal'
 import { cancelReservation } from '@/shared/api/reservation'
 import { getReservationComment, type ReservationComment } from '@/entities/reservation/api/reservationApi'
-import { CalendarIcon, ClockIcon, MapPinIcon, CurrencyDollarIcon, UserIcon, CheckCircleIcon, HomeIcon, StarIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline'
+import { CalendarIcon, ClockIcon, MapPinIcon, CurrencyDollarIcon, UserIcon, CheckCircleIcon, HomeIcon, StarIcon, ChatBubbleLeftRightIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import { getAuthToken } from '@/features/auth/lib/auth'
 import { RefundModal } from '@/shared/ui/modal/RefundModal'
 
@@ -223,6 +223,23 @@ const ServiceDetailsSection = ({ reservation }: { reservation: ReservationHistor
                 <p className="text-xs font-semibold text-gray-600 mb-2">고객 특이사항</p>
                 <p className="text-sm text-gray-900 leading-relaxed">
                   {reservation.reservationMemo}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* 예약 취소 사유 */}
+        {reservation.reservationStatus === 'CANCEL' && (
+          <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                <XCircleIcon className="w-4 h-4 text-red-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-red-600 mb-2">취소 사유</p>
+                <p className="text-sm text-red-700 leading-relaxed font-medium">
+                  {reservation.reservationCancelReason || '취소 사유가 등록되지 않았습니다.'}
                 </p>
               </div>
             </div>
@@ -761,8 +778,8 @@ export const ReservationDetailPageClient = ({
         <PaymentSection reservation={reservation} />
       </main>
       
-      {/* 조건별 액션 버튼 표시 */}
-      {(() => {
+      {/* 조건별 액션 버튼 표시 - 취소된 예약에서는 표시하지 않음 */}
+      {reservation.reservationStatus !== 'CANCEL' && (() => {
         const acceptedMatching = getAcceptedMatching()
         
         // 매니저가 수락한 상태 → 수요자 응답 대기

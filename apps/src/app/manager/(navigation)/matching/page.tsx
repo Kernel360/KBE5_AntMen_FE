@@ -235,7 +235,7 @@ const ManagerMatchingPage = () => {
 
         {/* 총 개수 표시 */}
         {!isLoading && (
-          <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
+          <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-primary-200 rounded-xl border border-blue-100">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
               <p className="text-sm font-medium text-gray-700">
