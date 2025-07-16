@@ -12,15 +12,6 @@ import {
     TableHeader,
     TableRow,
 } from '../../components/ui/table';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '../../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { Textarea } from '../../components/ui/textarea';
 import { ChevronLeft, ChevronRight, SkipBack, SkipForward } from 'lucide-react';
 import { adminService } from '../../api/adminService';
 import { ReservationAdminListDto, ReservationStatDto } from '../../api/types';
@@ -133,34 +124,13 @@ export const ReservationStatus: React.FC = () => {
     const handleReset = useCallback(() => {
         setSearchTerm('');
         setSearchInput('');
-        setStatusFilter('all');
         setCategoryFilter('');
         setCategoryInput('');
         setStartDateFilter('');
         setEndDateFilter('');
-        // 상태 변경 후 API 호출을 위해 별도 함수로 처리
-        const resetAndLoad = async () => {
-            setLoading(true);
-            try {
-                const response = await adminService.getReservationStatus(
-                    undefined, // all
-                    undefined, // searchTerm
-                    undefined, // categoryFilter
-                    undefined, // startDateFilter
-                    undefined  // endDateFilter
-                );
-                setReservations(response.reservationAdminListDtos);
-                setStats(response.reservationStatDtoList);
-                setCurrentPage(1);
-            } catch (error: any) {
-                console.error('예약 데이터 로드 실패:', error);
-                alert('예약 데이터를 불러오는데 실패했습니다.');
-            } finally {
-                setLoading(false);
-            }
-        };
-        resetAndLoad();
-    }, []);
+        // 상태 초기화 후 기존 loadReservations 함수 재사용
+        loadReservations(statusFilter);
+    }, [loadReservations]);
 
     // 상세보기 모달 열기
     const openDetailModal = async (reservation: Reservation) => {
