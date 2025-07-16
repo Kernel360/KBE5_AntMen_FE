@@ -176,7 +176,7 @@ export const ManagerReviewModal = ({
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || rating === 0}
-            className="w-full h-12 bg-[#4ABED9] rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-12 bg-primary-500 rounded-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="text-base font-black text-white">
               {isSubmitting ? '등록 중...' : '등록'}

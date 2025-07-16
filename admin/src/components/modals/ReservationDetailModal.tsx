@@ -19,8 +19,10 @@ interface ReservationDetailModalProps {
   onOpenManagerChangeModal?: (reservation: any) => void;
   onCancelReservation?: (reservationId: string, cancelData: { status: string; reason: string }) => Promise<void>;
   onAcceptMatching?: (matchingId: string) => Promise<void>;
+  onAdminAcceptMatching?: (matchingId: string) => Promise<void>;
   onSendMatchingRequest?: (matchingId: string) => Promise<void>;
   onCreateNewCandidate?: () => void;
+  onCancelSuccess?: () => void;
 }
 
 const ReservationDetailModal: React.FC<ReservationDetailModalProps> = ({
@@ -35,8 +37,10 @@ const ReservationDetailModal: React.FC<ReservationDetailModalProps> = ({
   onOpenManagerChangeModal,
   onCancelReservation,
   onAcceptMatching,
+  onAdminAcceptMatching,
   onSendMatchingRequest,
   onCreateNewCandidate,
+  onCancelSuccess,
 }) => {
   // 모달 상태
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -498,6 +502,7 @@ const ReservationDetailModal: React.FC<ReservationDetailModalProps> = ({
           onClose={() => setIsCancelModalOpen(false)}
           reservation={reservation}
           onCancel={onCancelReservation || (async () => {})}
+          onSuccess={onCancelSuccess}
           source="detail"
         />
 
@@ -507,6 +512,7 @@ const ReservationDetailModal: React.FC<ReservationDetailModalProps> = ({
           reservation={reservation}
           reservationDetail={reservationDetail}
           onAcceptMatching={onAcceptMatching || (async () => {})}
+          onAdminAcceptMatching={onAdminAcceptMatching}
           onSendMatchingRequest={onSendMatchingRequest}
           onCreateNewCandidate={onCreateNewCandidate}
         />

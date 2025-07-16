@@ -55,10 +55,10 @@ export default function RejectionModal({ isOpen, onClose, onConfirm }: Rejection
             {/* Option 2: 다시 매칭 */}
             <button
               onClick={() => onConfirm('rematch')}
-              className="w-full flex items-start gap-4 p-4 border border-[#4ABED9] rounded-xl relative"
+              className="w-full flex items-start gap-4 p-4 border border-primary-500 rounded-xl relative"
             >
               <div className="w-10 h-10 bg-[#E0F7FA] rounded-full flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-[#4ABED9]" viewBox="0 0 20 20" fill="none" stroke="currentColor">
+                <svg className="w-5 h-5 text-primary-500" viewBox="0 0 20 20" fill="none" stroke="currentColor">
                   <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
@@ -69,7 +69,7 @@ export default function RejectionModal({ isOpen, onClose, onConfirm }: Rejection
                 </p>
               </div>
               <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                <div className="w-6 h-6 bg-[#4ABED9] rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center">
                   <svg className="w-3.5 h-3.5 text-white" viewBox="0 0 14 14" fill="none" stroke="currentColor">
                     <path d="M11.6666 3.5L5.24992 9.91667L2.33325 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -89,7 +89,7 @@ export default function RejectionModal({ isOpen, onClose, onConfirm }: Rejection
               </button>
               <button
                 onClick={() => onConfirm('rematch')}
-                className="flex-1 py-3.5 rounded-lg bg-[#4ABED9] text-white font-semibold text-base"
+                className="flex-1 py-3.5 rounded-lg bg-primary-500 text-white font-semibold text-base"
               >
                 확인
               </button>

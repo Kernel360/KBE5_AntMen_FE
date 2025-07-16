@@ -329,7 +329,7 @@ export default function MatchingResultPage({
               // TODO: 예약 확정 페이지로 이동 구현
               // 예: router.push('/reservation/[reservationId]/confirmed')
               onClick={() => router.push('/matching/accept')}
-              className="flex-1 py-3.5 rounded-lg bg-[#4ABED9] text-white font-semibold text-base"
+              className="flex-1 py-3.5 rounded-lg bg-primary-500 text-white font-semibold text-base"
             >
               매칭 수락
             </button>

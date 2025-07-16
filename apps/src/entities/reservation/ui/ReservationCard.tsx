@@ -44,7 +44,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
       case 'WAITING':
         return '대기중'
       case 'MATCHING':
-        return '매칭중'
+        return '매칭완료'
       case 'PAY':
         return '결제완료'
       case 'DONE':
@@ -63,7 +63,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
   const getStatusColor = (status: ReservationStatus) => {
     switch (status) {
       case 'WAITING':
-        return 'bg-[#E8F8FC] text-[#4DD0E1]'
+        return 'bg-[#E8F8FC] text-primary'
       case 'MATCHING':
         return 'bg-[#FFF3E0] text-[#FFB74D]'
       case 'PAY':
@@ -75,9 +75,9 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
       case 'ERROR':
         return 'bg-[#FFEBEE] text-[#E57373]'
       case 'SCHEDULED':
-        return 'bg-[#E8F8FC] text-[#4DD0E1]'
-      default:
-        return 'bg-[#E8F8FC] text-[#4DD0E1]'
+        return 'bg-[#E8F8FC] text-primary'
+              default:
+          return 'bg-[#E8F8FC] text-primary'
     }
   }
 
@@ -131,7 +131,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
             ) : (
               <button
                 onClick={() => onCheckIn?.(reservationId.toString())}
-                className="flex-1 rounded-[22px] bg-[#4DD0E1] py-3 text-sm font-medium text-white hover:bg-[#26C6DA] transition-colors"
+                className="flex-1 rounded-[22px] bg-primary py-3 text-sm font-medium text-white hover:bg-primary-600 transition-colors"
               >
                 Check-in
               </button>
@@ -201,7 +201,7 @@ export const ReservationCard: React.FC<ReservationCardProps> = ({
             </button>
             <button
               onClick={() => onWriteReview(reservationId.toString())}
-              className="flex-1 rounded-[22px] bg-[#4DD0E1] py-3 text-sm font-medium text-white hover:bg-[#26C6DA] transition-colors"
+              className="flex-1 rounded-[22px] bg-primary py-3 text-sm font-medium text-white hover:bg-primary-600 transition-colors"
             >
               리뷰 작성
             </button>
