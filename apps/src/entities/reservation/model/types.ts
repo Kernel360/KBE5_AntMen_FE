@@ -31,6 +31,7 @@ export interface ReservationHistory {
   address: string;
   selectedOptions: string[];
   matchings: Matching[];
+  reservationCancelReason?: string | null;
 }
 
 // FE에서 사용하는 예약 상태 코드 타입 (API 매핑은 ReservationStatusMap 참고)
@@ -46,7 +47,7 @@ export type ReservationStatus =
 // FE 예약 상태 코드 → 한글 라벨 매핑
 export const ReservationStatusLabel: Record<ReservationStatus, string> = {
   WAITING: '대기중',
-  MATCHING: '매칭중',
+  MATCHING: '매칭완료',
   PAY: '결제 완료',
   DONE: '완료',
   CANCEL: '취소',

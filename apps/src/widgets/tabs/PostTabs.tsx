@@ -18,7 +18,7 @@ export const PostTabs = ({ activeTab, onTabChange }: PostTabsProps) => {
           >
             Notice
             {activeTab === 'notice' && (
-              <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#4ABED9]" />
+              <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-primary-500" />
             )}
           </button>
           <button
@@ -31,7 +31,7 @@ export const PostTabs = ({ activeTab, onTabChange }: PostTabsProps) => {
           >
             Work
             {activeTab === 'work' && (
-              <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-[#4ABED9]" />
+              <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-primary-500" />
             )}
           </button>
         </div>

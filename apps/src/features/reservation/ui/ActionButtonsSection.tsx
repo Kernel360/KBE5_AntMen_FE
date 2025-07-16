@@ -86,7 +86,7 @@ const ActionButtonsSection = ({
           </button>
           <button
             onClick={onPayment}
-            className="w-full h-14 bg-[#4abed9] rounded-xl flex items-center justify-center"
+            className="w-full h-14 bg-primary-500 rounded-xl flex items-center justify-center"
           >
             <CreditCard className="w-5 h-5 text-white mr-2" />
             <span className="text-base font-black text-white">결제하기</span>

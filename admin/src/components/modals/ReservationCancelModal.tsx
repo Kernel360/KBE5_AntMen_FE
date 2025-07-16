@@ -9,6 +9,7 @@ interface ReservationCancelModalProps {
   onClose: () => void;
   reservation: any;
   onCancel: (reservationId: string, cancelData: { status: string; reason: string }) => Promise<void>;
+  onSuccess?: () => void;
   source?: 'list' | 'detail';
 }
 
@@ -17,6 +18,7 @@ const ReservationCancelModal: React.FC<ReservationCancelModalProps> = ({
   onClose,
   reservation,
   onCancel,
+  onSuccess,
   source = 'list'
 }) => {
   const [cancelReason, setCancelReason] = useState('');
@@ -54,6 +56,11 @@ const ReservationCancelModal: React.FC<ReservationCancelModalProps> = ({
       onClose();
       setCancelReason('');
       setCancelReasonType('preset1');
+      
+      // 성공 콜백 호출
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (err: any) {
       alert(err.message || '예약 취소 중 오류가 발생했습니다.');
       console.error('예약 취소 오류:', err);

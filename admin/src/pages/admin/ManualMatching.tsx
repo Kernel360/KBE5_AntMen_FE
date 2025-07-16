@@ -290,15 +290,48 @@ export const ManualMatching: React.FC = () => {
         }
     };
 
+    // 관리자 수락 처리 (매니저가 응답하지 않은 경우)
+    const handleAdminAcceptMatching = async (matchingId: string) => {
+        try {
+            await adminService.adminAcceptMatching(matchingId);
+            setNeedsRefresh(true);
+            
+            // 상세 정보 새로고침 (병렬 처리로 개선)
+            if (selectedReservation) {
+                try {
+                    const detail = await adminService.getReservationDetail(selectedReservation.reservationId.toString());
+                    setReservationDetail(detail);
+                } catch (err) {
+                    console.error('상세 정보 새로고침 실패:', err);
+                }
+            }
+            
+            alert('관리자 수락이 완료되었습니다.');
+        } catch (err: any) {
+            alert(err.message || '관리자 수락 처리 중 오류가 발생했습니다.');
+            console.error('관리자 수락 오류:', err);
+        }
+    };
+
     const handleCancelReservation = async (reservationId: string, cancelData: { status: string; reason: string }) => {
         try {
             await adminService.cancelReservation(reservationId, cancelData);
             
             // 백엔드에서 응답을 보내주지 않으므로 성공으로 처리
-            alert(`예약 ${reservationId}이(가) 취소되었습니다.`);
+            alert(`관리자에 의해 예약 ${reservationId}이(가) 취소되었습니다.\n취소 사유: ${cancelData.reason}`);
             
-            // 상태 변경 플래그 설정
-            setNeedsRefresh(true);
+            // 목록 새로고침
+            await loadReservations();
+            
+            // 상세 모달이 열려있다면 상세 정보도 새로고침
+            if (isDetailModalOpen && selectedReservation) {
+                try {
+                    const detail = await adminService.getReservationDetail(selectedReservation.reservationId.toString());
+                    setReservationDetail(detail);
+                } catch (err) {
+                    console.error('상세 정보 새로고침 실패:', err);
+                }
+            }
         } catch (err: any) {
             alert(err.message || '예약 취소 중 오류가 발생했습니다.');
             console.error('예약 취소 오류:', err);
@@ -890,6 +923,7 @@ export const ManualMatching: React.FC = () => {
                 reservation={selectedReservation}
                 reservationDetail={reservationDetail}
                 onAcceptMatching={handleAcceptMatching}
+                onAdminAcceptMatching={handleAdminAcceptMatching}
                 onSendMatchingRequest={async (matchingId: string) => {
                     try {
                         await adminService.sendMatchingRequest(matchingId);
@@ -932,6 +966,7 @@ export const ManualMatching: React.FC = () => {
                 onOpenManagerChangeModal={openManagerChangeModal}
                 onCancelReservation={handleCancelReservation}
                 onAcceptMatching={handleAcceptMatching}
+                onAdminAcceptMatching={handleAdminAcceptMatching}
                 onSendMatchingRequest={async (matchingId: string) => {
                     try {
                         await adminService.sendMatchingRequest(matchingId);
@@ -958,6 +993,10 @@ export const ManualMatching: React.FC = () => {
                 onCreateNewCandidate={() => {
                     openNewCandidateModal(selectedReservation);
                 }}
+                onCancelSuccess={() => {
+                    // 목록 새로고침
+                    loadReservations();
+                }}
             />
 
             {/* 예약 취소 모달 */}
@@ -966,6 +1005,10 @@ export const ManualMatching: React.FC = () => {
                 onClose={() => setIsCancelModalOpen(false)}
                 reservation={selectedReservation}
                 onCancel={handleCancelReservation}
+                onSuccess={() => {
+                    // 목록 새로고침
+                    loadReservations();
+                }}
                 source={cancelModalSource}
             />
 

@@ -333,14 +333,14 @@ export const ManagerReservationsClient = ({
                 <span
                   className={`text-base ${
                     activeTab === tab.id
-                      ? 'font-extrabold text-[#4DD0E1]'
+                      ? 'font-extrabold text-primary'
                       : 'font-medium text-[#B0BEC5]'
                   }`}
                 >
                   {tab.label}
                 </span>
                 {activeTab === tab.id && (
-                  <div className="h-0.5 w-full bg-[#4DD0E1]" />
+                  <div className="h-0.5 w-full bg-primary" />
                 )}
               </button>
             ))}
@@ -508,7 +508,7 @@ const CheckoutCommentModal = ({
           </button>
           <button
             onClick={handleSubmit}
-            className="flex-1 bg-[#4abed9] text-white rounded-xl py-3 font-bold"
+                          className="flex-1 bg-primary-500 text-white rounded-xl py-3 font-bold"
           >
             체크아웃 완료
           </button>

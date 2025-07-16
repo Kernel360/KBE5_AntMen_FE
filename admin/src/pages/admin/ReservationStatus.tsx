@@ -138,8 +138,29 @@ export const ReservationStatus: React.FC = () => {
         setCategoryInput('');
         setStartDateFilter('');
         setEndDateFilter('');
-        loadReservations('all');
-    }, [loadReservations]);
+        // 상태 변경 후 API 호출을 위해 별도 함수로 처리
+        const resetAndLoad = async () => {
+            setLoading(true);
+            try {
+                const response = await adminService.getReservationStatus(
+                    undefined, // all
+                    undefined, // searchTerm
+                    undefined, // categoryFilter
+                    undefined, // startDateFilter
+                    undefined  // endDateFilter
+                );
+                setReservations(response.reservationAdminListDtos);
+                setStats(response.reservationStatDtoList);
+                setCurrentPage(1);
+            } catch (error: any) {
+                console.error('예약 데이터 로드 실패:', error);
+                alert('예약 데이터를 불러오는데 실패했습니다.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        resetAndLoad();
+    }, []);
 
     // 상세보기 모달 열기
     const openDetailModal = async (reservation: Reservation) => {
@@ -293,7 +314,7 @@ export const ReservationStatus: React.FC = () => {
     const handleCancelReservation = async (reservationId: string, cancelData: { status: string; reason: string }) => {
         try {
             await adminService.cancelReservation(reservationId, cancelData);
-            alert('예약이 취소되었습니다.');
+            alert(`관리자에 의해 예약이 취소되었습니다.\n취소 사유: ${cancelData.reason}`);
             
             // 모달 닫기 및 상태 변경 플래그 설정
             setIsCancelModalOpen(false);

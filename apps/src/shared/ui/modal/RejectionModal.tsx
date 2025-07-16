@@ -60,7 +60,7 @@ export const RejectionModal = ({
           <button
             onClick={handleSubmit}
             disabled={isProcessing}
-            className="flex-1 bg-[#4abed9] text-white rounded-xl py-3 font-bold disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="flex-1 bg-primary-500 text-white rounded-xl py-3 font-bold disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             {isProcessing ? '처리 중...' : '확인'}
           </button>
