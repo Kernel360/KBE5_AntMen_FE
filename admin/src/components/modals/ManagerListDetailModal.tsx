@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { Input } from '../ui/input';
 import { WorkHistoryModal } from './WorkHistoryModal';
 import { ReviewListModal } from './ReviewListModal';
 
@@ -24,6 +25,8 @@ export function ManagerListDetailModal({
   // 전체보기 모달 상태
   const [showWorkHistoryModal, setShowWorkHistoryModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showBlacklistForm, setShowBlacklistForm] = useState(false);
+  const [blacklistReason, setBlacklistReason] = useState('');
 
   // 성별 한글 변환 함수
   const getGenderText = (gender: string) => {
@@ -100,15 +103,72 @@ export function ManagerListDetailModal({
               <div className="w-1.5 h-6 bg-blue-500 rounded-full"></div>
               매니저 상세 정보
             </DialogTitle>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={onClose}
-              className="h-7 w-7 p-0 rounded-full hover:bg-gray-100"
-            >
-              ✕
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => setShowBlacklistForm(!showBlacklistForm)}
+                className="h-8 px-3 text-sm bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+              >
+                블랙리스트 설정
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onClose}
+                className="h-7 w-7 p-0 rounded-full hover:bg-gray-100"
+              >
+                ✕
+              </Button>
+            </div>
           </div>
+          {/* 블랙리스트 폼 */}
+          {showBlacklistForm && (
+            <div className="mt-4 pt-4 space-y-3">
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-gray-700 mb-2">블랙리스트 사유</label>
+                <Input 
+                  value={blacklistReason} 
+                  onChange={e => setBlacklistReason(e.target.value)} 
+                  placeholder="블랙리스트 처리 사유를 입력하세요"
+                  className="bg-white"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setShowBlacklistForm(false);
+                    setBlacklistReason('');
+                  }}
+                  className="px-4"
+                >
+                  취소
+                </Button>
+                <Button 
+                  size="sm"
+                  className="bg-red-600 hover:bg-red-700 text-white px-4"
+                  disabled={!blacklistReason.trim()}
+                  onClick={async () => {
+                    try {
+                      await import('../../api/userService').then(m => m.userService.addToBlacklist(selectedUser.userId, blacklistReason));
+                      alert('블랙리스트에 추가되었습니다.');
+                      setShowBlacklistForm(false);
+                      setBlacklistReason('');
+                      onClose();
+                      window.location.reload();
+                    } catch (error) {
+                      console.error('블랙리스트 추가 실패:', error);
+                      alert('블랙리스트 추가 중 오류가 발생했습니다.');
+                    }
+                  }}
+                >
+                  완료
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto min-h-0">

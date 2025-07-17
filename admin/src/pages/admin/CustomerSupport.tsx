@@ -675,7 +675,7 @@ export const CustomerSupport: React.FC = () => {
 
     // 통계 정보 계산 (실제 공지사항만 기준)
     const noticeStats = {
-        total: notices.filter(n => !n.isDeleted && (n.boardStatus !== 'Reserved' && n.boardStatus !== 'reserved')).length,
+        total: notices.length, // 전체 공지사항 수 (삭제, 예약 포함)
         notice: notices.filter(n => n.category === 'notice' && !n.isDeleted && (n.boardStatus !== 'Reserved' && n.boardStatus !== 'reserved')).length,
         faq: notices.filter(n => n.category === 'faq' && !n.isDeleted && (n.boardStatus !== 'Reserved' && n.boardStatus !== 'reserved')).length,
         withComments: notices.filter(n => n.commentNum > 0 && !n.isDeleted && (n.boardStatus !== 'Reserved' && n.boardStatus !== 'reserved')).length
