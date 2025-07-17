@@ -1,13 +1,14 @@
-'use client';
-
-import { UnderConstructionPage } from '@/features/underConstruction/ui/UnderConstructionPage';
+import { CommonHeader } from '@/shared/ui/Header/CommonHeader'
+import { InvitePageClient } from '@/app/(user)/(navigation)/invite/InvitePageClient'
 
 export default function InvitePage() {
   return (
-    <UnderConstructionPage
-      title="친구초대"
-      emoji="🤝"
-      featureName="친구초대"
-    />
-  );
+    <>
+      <CommonHeader
+        title="친구초대"
+        showBackButton={true}
+      />
+      <InvitePageClient />
+    </>
+  )
 } 
